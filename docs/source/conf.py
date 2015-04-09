@@ -1,5 +1,5 @@
 
-from bravado import version
+from bravado_core import version
 
 # -- General configuration -----------------------------------------------
 
@@ -21,7 +21,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'bravado'
+project = u'bravado_core'
 copyright = u'2013, Digium, Inc.; 2014-2015, Yelp, Inc'
 
 exclude_patterns = []
@@ -35,7 +35,7 @@ html_theme = 'sphinxdoc'
 
 html_static_path = ['_static']
 
-htmlhelp_basename = 'bravado-pydoc'
+htmlhelp_basename = 'bravado_core-pydoc'
 
 
 intersphinx_mapping = {
