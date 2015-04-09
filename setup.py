@@ -6,19 +6,19 @@ import os
 
 from setuptools import setup
 
-import bravado
+import bravado.core
 
 setup(
-    name="bravado",
-    version=bravado.version,
+    name="bravado-core",
+    version=bravado.core.version,
     license="BSD 3-Clause License",
-    description="Library for accessing Swagger-enabled API's",
+    description="Library for adding Swagger support to clients and servers",
     long_description=open(os.path.join(os.path.dirname(__file__),
                                        "README.rst")).read(),
     author="Digium, Inc. and Yelp, Inc.",
-    author_email="opensource+bravado@yelp.com",
-    url="https://github.com/Yelp/bravado",
-    packages=["bravado"],
+    author_email="opensource+bravado-core@yelp.com",
+    url="https://github.com/Yelp/bravado-core",
+    packages=["bravado", "bravado.core"],
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
@@ -28,11 +28,8 @@ setup(
         "Programming Language :: Python",
     ],
     install_requires=[
-        "fido >= 1.0.1",
         "jsonref",
         "python-dateutil",
-        "requests",
         "swagger-spec-validator",
-        "yelp_uri",
     ],
 )

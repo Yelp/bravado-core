@@ -1,47 +1,32 @@
-.. image:: https://travis-ci.org/Yelp/bravado.png?branch=master
-  :target: https://travis-ci.org/Yelp/bravado?branch=master
+.. image:: https://travis-ci.org/Yelp/bravado-core.png?branch=master
+  :target: https://travis-ci.org/Yelp/bravado-core?branch=master
 
 
-Bravado
+bravado-core
 ==========
 
 About
 -----
 
-From Swagger's home page:
+bravado-core is a Python library that adds client-side and server-side support for the Swagger 2.0 Specification.
 
-    Swagger is a specification and complete framework implementation for
-    describing, producing, consuming, and visualizing RESTful web
-    services.
-
-Client libraries can automatically be generated from the `Swagger
-specification <https://github.com/wordnik/swagger-core/wiki>`__, however Bravado
-aims to be a compleate replacement for code generation (`swagger-codegen
-<https://github.com/wordnik/swagger-codegen>`__).
-
-Bravado is a forked from `digium/swagger-py <https://github.com/digium/swagger-py/>`__
-for using `Swagger <https://developers.helloreverb.com/swagger/>`__ defined API's.
-
-Example Usage
--------------
-
-.. code:: Python
-
-    from bravado.client import SwaggerClient
-    client = SwaggerClient.from_url("http://petstore.swagger.wordnik.com/api/api-docs")
-    status, pet = client.pet.getPetById(petId=42).result()
+Features:
+* Swagger schema validation
+* Marshaling, transformation, and validation of requests and responses
+* Models as Python classes or dicts
+* Custom formats for type conversion
 
 Documentation
 -------------
 
-More documentation is available at http://bravado.readthedocs.org
+More documentation is available at http://bravado-core.readthedocs.org
 
 Installation
 ------------
 
 ::
 
-    $ pip install --upgrade git+git://github.com/Yelp/bravado
+    $ pip install bravado-core
 
 Development
 ===========

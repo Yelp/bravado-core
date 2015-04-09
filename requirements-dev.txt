@@ -1,8 +1,4 @@
 # Unit test dependencies
-bottle
-httpretty
 mock
-ordereddict
 pre-commit
 pytest
-pytest-mock
