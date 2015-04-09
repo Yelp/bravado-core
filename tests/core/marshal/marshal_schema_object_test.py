@@ -1,5 +1,8 @@
 import copy
 
+import pytest
+
+from bravado.core.exception import SwaggerMappingError
 from bravado.core.marshal import marshal_schema_object
 from bravado.core.spec import Spec
 
@@ -24,3 +27,10 @@ def test_dicts_can_be_used_instead_of_models(petstore_dict):
     expected = copy.deepcopy(pet)
     result = marshal_schema_object(petstore_spec, pet_spec, pet)
     assert expected == result
+
+
+def test_unknown_type_raises_error(empty_swagger_spec):
+    invalid_spec = {'type': 'foo'}
+    with pytest.raises(SwaggerMappingError) as excinfo:
+        marshal_schema_object(empty_swagger_spec, invalid_spec, "don't matter")
+    assert 'Unknown type foo' in str(excinfo.value)

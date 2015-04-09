@@ -2,6 +2,7 @@ from collections import defaultdict
 import logging
 
 from bravado.core.docstring import operation_docstring_wrapper
+from bravado.core.exception import SwaggerMappingError
 from bravado.core.operation import Operation
 
 log = logging.getLogger(__name__)
@@ -24,11 +25,9 @@ def convert_path_to_resource(path_name):
     """
     tokens = path_name.lstrip('/').split('/')
     err_msg = "Could not extract resource name from path {0}"
-    if not tokens:
-        raise Exception(err_msg.format(path_name))
     resource_name = tokens[0]
     if not resource_name:
-        raise Exception(err_msg.format(path_name))
+        raise SwaggerMappingError(err_msg.format(path_name))
     return resource_name
 
 

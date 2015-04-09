@@ -20,3 +20,8 @@ def test_unknown_type_returns_untouched_value():
 
 def test_none_returns_none():
     assert cast_request_param('integer', 'biz_id', None) is None
+
+
+def test_cast_failure_returns_untouched_value():
+    assert 'i_cant_be_casted_to_an_integer' == cast_request_param(
+        'integer', 'biz_id', 'i_cant_be_casted_to_an_integer')
