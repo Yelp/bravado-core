@@ -35,8 +35,8 @@ def type_validator(validator, types, instance, schema):
     """
     if is_param_spec(schema) and instance is None:
         return
-    else:
-        return _validators.type_draft4(validator, types, instance, schema)
+
+    return _validators.type_draft4(validator, types, instance, schema)
 
 
 def required_validator(validator, required, instance, schema):
