@@ -2,7 +2,7 @@ from jsonschema import validators, _validators
 from jsonschema.exceptions import ValidationError
 from jsonschema.validators import Draft4Validator
 
-from bravado_core.schema import is_param_spec, is_required
+from bravado_core.schema import is_param_spec
 
 """Draft4Validator is not completely compatible with Swagger 2.0 schema
 objects like parameter, etc. Swagger20Validator is an extension of

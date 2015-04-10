@@ -5,7 +5,7 @@ from bravado_core.swagger20_validator import type_validator
 
 @patch('jsonschema._validators.type_draft4')
 def test_skip_when_validating_a_parameter_schema_and_parameter_value_is_None(
-    m_draft4_type_validator):
+        m_draft4_type_validator):
     param_schema = {'name': 'foo', 'in': 'query', 'type': 'string'}
     type_validator(
         validator=None,
