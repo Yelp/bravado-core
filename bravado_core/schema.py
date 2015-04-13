@@ -22,7 +22,7 @@ def get_default(schema_object_spec):
 
 
 def is_required(schema_object_spec):
-    return 'required' in schema_object_spec
+    return schema_object_spec.get('required', False)
 
 
 def has_format(schema_object_spec):

@@ -2,6 +2,7 @@ from functools import partial
 import logging
 import urllib
 import simplejson as json
+from bravado_core import schema
 
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.http_client import APP_JSON
@@ -142,17 +143,19 @@ def unmarshal_param(param, request):
     location = param.location
     cast_param = partial(cast_request_param, param_spec['type'], param.name)
 
+    default_value = schema.get_default(param_spec)
+
     if location == 'path':
         raw_value = cast_param(request.path.get(param.name, None))
     elif location == 'query':
-        raw_value = cast_param(request.query.get(param.name, None))
+        raw_value = cast_param(request.query.get(param.name, default_value))
     elif location == 'header':
-        raw_value = cast_param(request.headers.get(param.name, None))
+        raw_value = cast_param(request.headers.get(param.name, default_value))
     elif location == 'formData':
         if param_spec['type'] == 'file':
             raw_value = request.files.get(param.name, None)
         else:
-            raw_value = cast_param(request.form.get(param.name, None))
+            raw_value = cast_param(request.form.get(param.name, default_value))
     elif location == 'body':
         # TODO: verify content-type header
         raw_value = request.json()

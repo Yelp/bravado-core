@@ -18,24 +18,46 @@ def ignore(_validator, *args):
     return
 
 
-def required_validator(validator, req, instance, schema):
+def type_validator(validator, types, instance, schema):
+    """Skip the `type` validator when a Swagger parameter value is None.
+    Otherwise it will fail with a "None is not a valid type" failure instead
+    of letting the downstream `required_validator` do its job. In all other
+    cases, delegate to the existing Draft4 `type` validator.
+
+    :param validator: Validator class used to validate the object
+    :type validator: :class:`Swagger20Validator` or
+        :class:`jsonschema.validators.Draft4Validator`
+    :param types: validate types
+    :type types: string or list
+    :param instance: object instance value
+    :param schema: swagger spec for the object
+    :type schema: dict
+    """
+    if is_param_spec(schema) and instance is None:
+        return
+
+    return _validators.type_draft4(validator, types, instance, schema)
+
+
+def required_validator(validator, required, instance, schema):
     """Swagger 2.0 expects `required` to be a bool in the Parameter object,
     but a list of properties everywhere else.
 
     :param validator: Validator class used to validate the object
-    :type validator: :class: `Swagger20Validator` or
-                             `jsonschema.validators.Draft4Validator`
-    :param req: value of `required` field
-    :type req: boolean or list or None
+    :type validator: :class:`Swagger20Validator` or
+        :class:`jsonschema.validators.Draft4Validator`
+    :param required: value of `required` field
+    :type required: boolean or list or None
     :param instance: object instance value
     :param schema: swagger spec for the object
     :type schema: dict
     """
     if is_param_spec(schema):
-        if req is True and instance is None:
+        if required and instance is None:
             return [ValidationError("%s is required" % schema['name'])]
     else:
-        return _validators.required_draft4(validator, req, instance, schema)
+        return _validators.required_draft4(
+            validator, required, instance, schema)
 
 
 def enum_validator(validator, enums, instance, schema):
@@ -56,9 +78,11 @@ def enum_validator(validator, enums, instance, schema):
             validator, enums, item, schema))
     return _validators.enum(validator, enums, instance, schema)
 
+
 Swagger20Validator = validators.extend(
     Draft4Validator,
     {
         'required': required_validator,
         'enum': enum_validator,
+        'type': type_validator,
     })

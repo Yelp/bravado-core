@@ -7,12 +7,17 @@ from bravado_core.swagger20_validator import required_validator
 
 def test_fail_if_required_parameter_but_not_present():
     param_schema = {'name': 'foo', 'in': 'query', 'required': True}
-    assert isinstance(required_validator(
-        None, param_schema['required'], None, param_schema)[0],
-        ValidationError)
+    result = required_validator(
+        validator=None,
+        required=param_schema['required'],
+        instance=None,
+        schema=param_schema)
+    error = result[0]
+    assert isinstance(error, ValidationError)
+    assert 'foo is required' in str(error)
 
 
-def test_pass_if_not_required_paramter_and_not_present():
+def test_pass_if_not_required_parameter_and_not_present():
     param_schema = {'name': 'foo', 'in': 'query', 'required': False}
     assert required_validator(
         None, param_schema['required'], None, param_schema) is None

@@ -60,12 +60,30 @@ def test_query_string(empty_swagger_spec, string_param_spec):
     assert 'darwin' == unmarshal_param(param, request)
 
 
+def test_optional_query_string_with_default(
+        empty_swagger_spec, string_param_spec):
+    string_param_spec['required'] = True
+    string_param_spec['default'] = 'bozo'
+    param = Param(empty_swagger_spec, Mock(spec=Operation), string_param_spec)
+    request = Mock(spec=RequestLike, query={})
+    assert 'bozo' == unmarshal_param(param, request)
+
+
 def test_query_array(empty_swagger_spec, array_param_spec):
     param = Param(empty_swagger_spec, Mock(spec=Operation), array_param_spec)
     request = Mock(
         spec=RequestLike,
         query={'animals': ['cat', 'dog', 'mouse']})
     assert ['cat', 'dog', 'mouse'] == unmarshal_param(param, request)
+
+
+def test_optional_query_array_with_default(
+        empty_swagger_spec, array_param_spec):
+    array_param_spec['required'] = False
+    array_param_spec['default'] = ['bird', 'fish']
+    param = Param(empty_swagger_spec, Mock(spec=Operation), array_param_spec)
+    request = Mock(spec=RequestLike, query={})
+    assert ['bird', 'fish'] == unmarshal_param(param, request)
 
 
 def test_header_string(empty_swagger_spec, param_spec):
@@ -78,11 +96,32 @@ def test_header_string(empty_swagger_spec, param_spec):
     assert 'foo' == unmarshal_param(param, request)
 
 
+def test_optional_header_string_with_default(empty_swagger_spec, param_spec):
+    param_spec['in'] = 'header'
+    param_spec['type'] = 'string'
+    param_spec['name'] = 'X-Source-ID'
+    param_spec['required'] = False
+    param_spec['default'] = 'bar'
+    del param_spec['format']
+    param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
+    request = Mock(spec=RequestLike, headers={})
+    assert 'bar' == unmarshal_param(param, request)
+
+
 def test_formData_integer(empty_swagger_spec, param_spec):
     param_spec['in'] = 'formData'
     param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
     request = Mock(spec=RequestLike, form={'petId': '34'})
     assert 34 == unmarshal_param(param, request)
+
+
+def test_optional_formData_integer_with_default(empty_swagger_spec, param_spec):
+    param_spec['in'] = 'formData'
+    param_spec['required'] = False
+    param_spec['default'] = 99
+    param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
+    request = Mock(spec=RequestLike, form={})
+    assert 99 == unmarshal_param(param, request)
 
 
 def test_formData_file(empty_swagger_spec, param_spec):
