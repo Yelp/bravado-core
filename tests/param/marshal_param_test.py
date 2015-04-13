@@ -1,10 +1,12 @@
 import copy
-from mock import Mock
+
+from mock import Mock, patch
 import pytest
 
 from bravado_core.http_client import APP_JSON
 from bravado_core.param import Param, marshal_param
 from bravado_core.operation import Operation
+from bravado_core.spec import Spec
 
 
 @pytest.fixture
@@ -125,3 +127,21 @@ def test_formData_file(empty_swagger_spec, param_spec, request_dict):
         'files': [('file', ('petId', "i am the contents of a file"))],
     }
     assert expected == request_dict
+
+
+def assert_validate_call_count(expected_call_count, config, petstore_dict):
+    with patch('bravado_core.param.validate_schema_object') as m_validate:
+        petstore_spec = Spec.from_dict(petstore_dict, config=config)
+        request = {'url': '/pet/{petId}'}
+        op = petstore_spec.resources['pet'].operations['getPetById']
+        param = op.params['petId']
+        marshal_param(param, '34', request)
+        assert expected_call_count == m_validate.call_count
+
+
+def test_dont_validate_requests(petstore_dict):
+    assert_validate_call_count(0, {'validate_requests': False}, petstore_dict)
+
+
+def test_validate_requests(petstore_dict):
+    assert_validate_call_count(1, {'validate_requests': True}, petstore_dict)

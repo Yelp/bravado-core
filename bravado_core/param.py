@@ -106,7 +106,9 @@ def marshal_param(param, value, request):
     spec = get_param_type_spec(param)
     location = param.location
     value = marshal_schema_object(param.swagger_spec, spec, value)
-    validate_schema_object(spec, value)
+
+    if param.swagger_spec.config['validate_requests']:
+        validate_schema_object(spec, value)
 
     if spec['type'] == 'array' and location != 'body':
         value = marshal_collection_format(spec, value)
@@ -167,7 +169,9 @@ def unmarshal_param(param, request):
     if param_spec['type'] == 'array' and location != 'body':
         raw_value = unmarshal_collection_format(param_spec, raw_value)
 
-    validate_schema_object(param_spec, raw_value)
+    if param.swagger_spec.config['validate_requests']:
+        validate_schema_object(param_spec, raw_value)
+
     value = unmarshal_schema_object(param.swagger_spec, param_spec, raw_value)
     return value
 

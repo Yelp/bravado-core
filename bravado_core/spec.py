@@ -17,6 +17,10 @@ CONFIG_DEFAULTS = {
     # On the client side, validate incoming responses
     # On the server side, validate outgoing responses
     'validate_responses': True,
+
+    # On the client side, validate outgoing requests
+    # On the server side, validate incoming requests
+    'validate_requests': True,
 }
 
 
@@ -115,6 +119,9 @@ def build_api_serving_url(spec_dict, origin_url, preferred_scheme=None):
         supported by the API.
     :return: base url which services api requests
     """
+    if origin_url is None:
+        return ''
+
     origin = urlparse.urlparse(origin_url)
 
     def pick_a_scheme(schemes):
