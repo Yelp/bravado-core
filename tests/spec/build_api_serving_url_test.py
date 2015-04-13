@@ -49,3 +49,7 @@ def test_preferred_scheme_not_available(origin_url):
     with pytest.raises(Exception) as excinfo:
         build_api_serving_url(spec, origin_url, preferred_scheme='ws')
     assert 'not supported' in str(excinfo.value)
+
+
+def test_origin_url_None():
+    assert 'http://localhost/' == build_api_serving_url({})
