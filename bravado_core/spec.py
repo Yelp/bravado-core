@@ -21,6 +21,9 @@ CONFIG_DEFAULTS = {
     # On the client side, validate outgoing requests
     # On the server side, validate incoming requests
     'validate_requests': True,
+
+    # Use swagger_spec_validator to validate the swagger spec
+    'validate_swagger_spec': True
 }
 
 
@@ -37,7 +40,7 @@ class Spec(object):
         :param config: Configuration dict. See CONFIG_DEFAULTS.
         """
         self.spec_dict = spec_dict
-        self.origin_url = origin_url or 'unknown'
+        self.origin_url = origin_url
         self.http_client = http_client
         self.api_url = None
         self.config = dict(CONFIG_DEFAULTS, **(config or {}))
@@ -75,7 +78,9 @@ class Spec(object):
         return spec
 
     def build(self):
-        validator20.validate_spec(self.spec_dict)
+        if self.config['validate_swagger_spec']:
+            validator20.validate_spec(self.spec_dict)
+
         self.api_url = build_api_serving_url(self.spec_dict, self.origin_url)
         self.definitions = build_models(self.spec_dict.get('definitions', {}))
         self.responses = self.build_responses()
@@ -86,7 +91,7 @@ class Spec(object):
         return {}
 
 
-def build_api_serving_url(spec_dict, origin_url, preferred_scheme=None):
+def build_api_serving_url(spec_dict, origin_url=None, preferred_scheme=None):
     """The URL used to service API requests does not necessarily have to be the
     same URL that was used to retrieve the API spec_dict.
 
@@ -114,14 +119,13 @@ def build_api_serving_url(spec_dict, origin_url, preferred_scheme=None):
     See https://github.com/swagger-api/swagger-spec_dict/blob/master/versions/2.0.md#swagger-object-   # noqa
 
     :param spec_dict: the Swagger spec in json-like dict form
-    :param origin_url: the URL from which the spec was retrieved, if any
+    :param origin_url: the URL from which the spec was retrieved, if any. This
+        is only used in Swagger clients.
     :param preferred_scheme: preferred scheme to use if more than one scheme is
         supported by the API.
     :return: base url which services api requests
     """
-    if origin_url is None:
-        return ''
-
+    origin_url = origin_url or 'http://localhost/'
     origin = urlparse.urlparse(origin_url)
 
     def pick_a_scheme(schemes):
