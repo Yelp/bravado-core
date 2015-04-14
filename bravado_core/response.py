@@ -1,18 +1,19 @@
+from bravado_core.http_client import APP_JSON
 from bravado_core.unmarshal import unmarshal_schema_object
 from bravado_core.validate import validate_schema_object
 from bravado_core.exception import SwaggerMappingError
 
 
+# TODO: Rename to IncomingResponse
 class ResponseLike(object):
     """
-    Define a common interface for bravado_core to interface with client side
-    response objects from various 3rd party libraries.
+    Interface for incoming client-side response objects.
 
     Subclasses are responsible for providing attrs for __required_attrs__.
     """
     __required_attrs__ = [
-        'status_code',  # int
-        'text',  # str
+        'status_code',  # int - http status code
+        'text',         # string - raw text of the body
     ]
 
     def __getattr__(self, name):
@@ -43,8 +44,45 @@ class ResponseLike(object):
         raise NotImplementedError("Implement json() in {0}".format(type(self)))
 
 
+class OutgoingResponse(object):
+    """
+    Interface for outgoing server-side response objects.
+    """
+    __required_attrs__ = [
+        'content_type',  # str
+        'text',          # str
+    ]
+
+    def __getattr__(self, name):
+        """
+        When an attempt to access a required attribute that doesn't exist
+        is made, let the caller know that the type is non-compliant in its
+        attempt to be `ResponseLike`. This is in place of the usual throwing
+        of an AttributeError.
+
+        Reminder: __getattr___ is only called when it has already been
+                  determined that this object does not have the given attr.
+
+        :raises: NotImplementedError when the subclass has not provided access
+                to a required attribute.
+        """
+        if name in self.__required_attrs__:
+            raise NotImplementedError(
+                'This OutgoingResponseLike type {0} forgot to implement an attr'
+                ' for `{1}`'.format(type(self), name))
+        raise AttributeError(
+            "'{0}' object has no attribute '{1}'".format(type(self), name))
+
+    def json(self, **kwargs):
+        """
+        :return: response content in a json-like form
+        :rtype: int, float, double, string, unicode, list, dict
+        """
+        raise NotImplementedError("Implement json() in {0}".format(type(self)))
+
+
 def unmarshal_response(response, op):
-    """Unmarshal the http response into a (status_code, value) based on the
+    """Unmarshal incoming http response into a (status_code, value) based on the
     response specification.
 
     :type response: :class:`bravado_core.response.ResponseLike`
@@ -99,3 +137,58 @@ def get_response_spec(status_code, op):
             "for {1}. Either add a response specifiction for the status_code "
             "or use a `default` response.".format(op, status_code))
     return response_spec
+
+
+def validate_response(response_spec, op, response):
+    """
+    Validate an outgoing response against its Swagger specification.
+
+    :type response_spec: dict
+    :type response: :class: `bravado_core.response.OutgoingResponse`
+    """
+    validate_response_body(response_spec, op, response)
+    validate_response_headers(response_spec, response)
+
+
+def validate_response_body(op, response_spec, response):
+    """
+    Validate an outgoing response's body against the response's Swagger
+    specification.
+
+    :type response_spec: dict
+    :type response: :class: `bravado_core.response.OutgoingResponse`
+    """
+    # response that returns nothing in the body
+    response_body_spec = response_spec.get('schema')
+    if response_body_spec is None:
+        if response.text in (None, ''):
+            return
+        raise SwaggerMappingError(
+            "Response body should be empty: {0}".format(response.text))
+
+    if response.content_type not in op.produces:
+        raise SwaggerMappingError(
+            "Response content-type '{0}' is not supported by the Swagger "
+            "specification's content-types '{1}"
+            .format(response.content_type, op.produces))
+
+    if response.content_type == APP_JSON:
+        response_value = response.json()
+        validate_schema_object(response_body_spec, response_value)
+    else:
+        # TODO: Expand content-type support for non-json types
+        raise SwaggerMappingError(
+            "Unsupported content-type in response: {0}"
+            .format(response.content_type))
+
+
+def validate_response_headers(response_spec, response):
+    """
+    Validate an outgoing response's header against the response's Swagger
+    specification.
+
+    :type response_spec: dict
+    :type response: :class: `bravado_core.response.ResponseLike`
+    """
+    # TODO: something with response headers
+    pass

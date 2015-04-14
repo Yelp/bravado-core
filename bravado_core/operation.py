@@ -36,6 +36,9 @@ class Operation(object):
     @property
     def consumes(self):
         """
+        Note that the operation can override the value defined globally
+        at #/consumes.
+
         :return: List of supported mime types consumed by this operation. e.g.
             ["application/x-www-form-urlencoded"]
         :rtype: list of strings, never None
@@ -43,6 +46,21 @@ class Operation(object):
         result = self.op_spec.get('consumes')
         if result is None:
             result = self.swagger_spec.spec_dict.get('consumes', [])
+        return result
+
+    @property
+    def produces(self):
+        """
+        Note that the operation can override the value defined globally
+        at #/produces.
+
+        :return: List of supported mime types produced by this operation. e.g.
+            ["application/json"]
+        :rtype: list of strings, never None
+        """
+        result = self.op_spec.get('produces')
+        if result is None:
+            result = self.swagger_spec.spec_dict.get('produces', [])
         return result
 
     @classmethod
@@ -100,6 +118,18 @@ class Operation(object):
 
     def __repr__(self):
         return u"%s(%s)" % (self.__class__.__name__, self.operation_id)
+
+    def get_response_spec(self, http_status):
+        """
+        Get the response spec for the given http status code.
+
+        :type http_status: string
+        :return: Response specification in dict form or None if no matching
+            response is found.
+        """
+        response_specs = self.op_spec['responses']
+        default_spec = response_specs.get('default')
+        return response_specs.get(http_status, default_spec)
 
     def construct_request(self, **kwargs):
         """
