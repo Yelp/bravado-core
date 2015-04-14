@@ -93,25 +93,26 @@ class Spec(object):
         log.warn('TODO: implement Spec::build_responses()')
         return {}
 
-    def get_op_for_request(self, http_method, request_path):
+    def get_op_for_request(self, http_method, path_pattern):
         """
         Return the Swagger operation for the passed in request http method
-        and path. Makes it really easy for server-side implementations to map
-        incoming requests to the Swagger spec.
+        and path pattern. Makes it really easy for server-side implementations
+        to map incoming requests to the Swagger spec.
 
-        :type http_method: http method of the request
-        :type request_path: full request path. e.g. /foo/{bar}/baz/{some_id}
+        :param http_method: http method of the request
+        :param path_pattern: request path pattern. e.g. /foo/{bar}/baz/{id}
         :returns: the matching operation or None if a match couldn't be found
         :rtype: :class:`bravado_core.operation.Operation`
         """
         if self._request_to_op_map is None:
+            # lazy initialization
             self._request_to_op_map = {}
             for resource in self.resources.itervalues():
                 for op in resource.operations.itervalues():
                     key = (op.http_method, op.path_name)
                     self._request_to_op_map[key] = op
 
-        key = (http_method.lower(), request_path)
+        key = (http_method.lower(), path_pattern)
         return self._request_to_op_map.get(key, None)
 
 
