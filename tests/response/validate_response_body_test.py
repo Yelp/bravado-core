@@ -6,16 +6,6 @@ from bravado_core.operation import Operation
 from bravado_core.response import validate_response_body, OutgoingResponse
 
 
-@pytest.fixture
-def no_return_value_spec():
-    """
-    :return: a response_spec that has no return value
-    """
-    return {
-        'description': 'I do not return anything hence I have no "schema" key'
-    }
-
-
 def test_success_spec_empty_and_body_None(minimal_swagger_spec):
     response_spec = {
         'description': 'I do not return anything hence I have no "schema" key'

@@ -180,11 +180,15 @@ def validate_response_body(op, response_spec, response):
 
 def validate_response_headers(response_spec, response):
     """
-    Validate an outgoing response's header against the response's Swagger
+    Validate an outgoing response's headers against the response's Swagger
     specification.
 
     :type response_spec: dict
-    :type response: :class: `bravado_core.response.ResponseLike`
+    :type response: :class: `bravado_core.response.OutgoingResponse`
     """
-    # TODO: something with response headers
-    pass
+    headers_spec = response_spec.get('headers')
+    if not headers_spec:
+        return
+
+    for header_name, header_spec in headers_spec.iteritems():
+        validate_schema_object(header_spec, response.headers.get(header_name))
