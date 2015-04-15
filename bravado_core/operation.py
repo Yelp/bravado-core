@@ -119,18 +119,6 @@ class Operation(object):
     def __repr__(self):
         return u"%s(%s)" % (self.__class__.__name__, self.operation_id)
 
-    def get_response_spec(self, http_status):
-        """
-        Get the response spec for the given http status code.
-
-        :type http_status: string
-        :return: Response specification in dict form or None if no matching
-            response is found.
-        """
-        response_specs = self.op_spec['responses']
-        default_spec = response_specs.get('default')
-        return response_specs.get(http_status, default_spec)
-
     def construct_request(self, **kwargs):
         """
         :param kwargs: parameter name/value pairs to pass to the invocation of

@@ -145,6 +145,7 @@ def validate_response(response_spec, op, response):
 
     :type response_spec: dict
     :type response: :class: `bravado_core.response.OutgoingResponse`
+    :raises: SwaggerMappingError
     """
     validate_response_body(response_spec, op, response)
     validate_response_headers(response_spec, response)
@@ -157,6 +158,7 @@ def validate_response_body(op, response_spec, response):
 
     :type response_spec: dict
     :type response: :class: `bravado_core.response.OutgoingResponse`
+    :raises: SwaggerMappingError
     """
     # response that returns nothing in the body
     response_body_spec = response_spec.get('schema')
