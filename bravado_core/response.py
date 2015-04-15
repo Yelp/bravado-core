@@ -48,6 +48,7 @@ class OutgoingResponse(object):
     """
     Interface for outgoing server-side response objects.
     """
+    # TODO: charset needed?
     __required_attrs__ = [
         'content_type',  # str
         'text',          # str
@@ -55,20 +56,12 @@ class OutgoingResponse(object):
 
     def __getattr__(self, name):
         """
-        When an attempt to access a required attribute that doesn't exist
-        is made, let the caller know that the type is non-compliant in its
-        attempt to be `ResponseLike`. This is in place of the usual throwing
-        of an AttributeError.
-
-        Reminder: __getattr___ is only called when it has already been
-                  determined that this object does not have the given attr.
-
         :raises: NotImplementedError when the subclass has not provided access
                 to a required attribute.
         """
         if name in self.__required_attrs__:
             raise NotImplementedError(
-                'This OutgoingResponseLike type {0} forgot to implement an attr'
+                'This OutgoingResponse type {0} forgot to implement an attr'
                 ' for `{1}`'.format(type(self), name))
         raise AttributeError(
             "'{0}' object has no attribute '{1}'".format(type(self), name))
@@ -145,7 +138,7 @@ def validate_response(response_spec, op, response):
 
     :type response_spec: dict
     :type response: :class: `bravado_core.response.OutgoingResponse`
-    :raises: SwaggerMappingError
+
     """
     validate_response_body(response_spec, op, response)
     validate_response_headers(response_spec, response)
@@ -156,6 +149,7 @@ def validate_response_body(op, response_spec, response):
     Validate an outgoing response's body against the response's Swagger
     specification.
 
+    :type op: :class:`bravado_core.operation.Operation`
     :type response_spec: dict
     :type response: :class: `bravado_core.response.OutgoingResponse`
     :raises: SwaggerMappingError
