@@ -137,9 +137,12 @@ def validate_response(response_spec, op, response):
     Validate an outgoing response against its Swagger specification.
 
     :type response_spec: dict
-    :type response: :class: `bravado_core.response.OutgoingResponse`
-
+    :type op: :class:`bravado_core.operation.Operation`
+    :type response: :class:`bravado_core.response.OutgoingResponse`
     """
+    if not op.swagger_spec.config['validate_responses']:
+        return
+
     validate_response_body(response_spec, op, response)
     validate_response_headers(response_spec, response)
 
