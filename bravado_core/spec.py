@@ -96,7 +96,6 @@ class Spec(object):
         :param path_pattern: request path pattern. e.g. /foo/{bar}/baz/{id}
         :returns: the matching operation or None if a match couldn't be found
         :rtype: :class:`bravado_core.operation.Operation`
-        :raises: :class:`bravado_core.exception.PathNotMatchedError`
         """
         if self._request_to_op_map is None:
             # lazy initialization
