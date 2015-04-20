@@ -57,8 +57,6 @@ class Spec(object):
         # (key, value) = (#/ format ref name, param_spec in dict form)
         self.params = None
 
-        self.responses = None
-
         # Built on-demand - see get_op_for_request(..)
         self._request_to_op_map = None
 
@@ -86,12 +84,7 @@ class Spec(object):
 
         self.api_url = build_api_serving_url(self.spec_dict, self.origin_url)
         self.definitions = build_models(self.spec_dict.get('definitions', {}))
-        self.responses = self.build_responses()
         self.resources = build_resources(self)
-
-    def build_responses(self):
-        log.warn('TODO: implement Spec::build_responses()')
-        return {}
 
     def get_op_for_request(self, http_method, path_pattern):
         """
@@ -113,7 +106,7 @@ class Spec(object):
                     self._request_to_op_map[key] = op
 
         key = (http_method.lower(), path_pattern)
-        return self._request_to_op_map.get(key, None)
+        return self._request_to_op_map.get(key)
 
 
 def build_api_serving_url(spec_dict, origin_url=None, preferred_scheme=None):

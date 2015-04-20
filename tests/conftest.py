@@ -30,6 +30,11 @@ def minimal_swagger_dict():
 
 
 @pytest.fixture
+def minimal_swagger_spec(minimal_swagger_dict):
+    return Spec.from_dict(minimal_swagger_dict)
+
+
+@pytest.fixture
 def petstore_dict():
     my_dir = os.path.abspath(os.path.dirname(__file__))
     fpath = os.path.join(my_dir, '../test-data/2.0/petstore/swagger.json')
