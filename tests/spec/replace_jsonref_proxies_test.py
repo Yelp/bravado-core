@@ -4,7 +4,7 @@ import jsonref
 from bravado_core.spec import replace_jsonref_proxies
 
 
-def test_simple():
+def test_dict():
     d = {
         'foo': {
             "$ref": "#/definitions/user"
@@ -25,8 +25,10 @@ def test_simple():
     replace_jsonref_proxies(json_obj)
     assert isinstance(json_obj['foo'], dict)
 
+    assert d['definitions']['user'] == json_obj['foo']
 
-def test_nested():
+
+def test_nested_dict():
     d = {
         'foo': {
             "$ref": "#/definitions/user"
@@ -60,3 +62,32 @@ def test_nested():
     replace_jsonref_proxies(json_obj)
     assert isinstance(json_obj['foo'], dict)
     assert isinstance(json_obj['foo']['properties']['address'], dict)
+
+    assert d['definitions']['address'] == \
+        json_obj['foo']['properties']['address']
+
+
+def test_list():
+    d = {
+        'foo': [
+            {
+                "$ref": "#/definitions/user"
+            }
+        ],
+        'definitions': {
+            'user': {
+                'properties': {
+                    'first_name': {
+                        'type': 'string'
+                    }
+                }
+            }
+        }
+    }
+    json_obj = jsonref.loads(json.dumps(d))
+    assert isinstance(json_obj['foo'][0], jsonref.JsonRef)
+
+    replace_jsonref_proxies(json_obj)
+    assert isinstance(json_obj['foo'][0], dict)
+
+    assert d['definitions']['user'] == json_obj['foo'][0]
