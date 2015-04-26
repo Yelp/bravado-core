@@ -3,6 +3,9 @@ from bravado_core.unmarshal import unmarshal_schema_object
 from bravado_core.validate import validate_schema_object
 from bravado_core.exception import SwaggerMappingError
 
+# Response bodies considered to be empty
+EMPTY_BODIES = (None, '', '{}', 'null')
+
 
 # TODO: Rename to IncomingResponse
 class ResponseLike(object):
@@ -51,7 +54,8 @@ class OutgoingResponse(object):
     # TODO: charset needed?
     __required_attrs__ = [
         'content_type',  # str
-        'text',          # str
+        'text',          # str of body
+        'headers',       # dict of headers
     ]
 
     def __getattr__(self, name):
@@ -143,7 +147,7 @@ def validate_response(response_spec, op, response):
     if not op.swagger_spec.config['validate_responses']:
         return
 
-    validate_response_body(response_spec, op, response)
+    validate_response_body(op, response_spec, response)
     validate_response_headers(response_spec, response)
 
 
@@ -160,7 +164,7 @@ def validate_response_body(op, response_spec, response):
     # response that returns nothing in the body
     response_body_spec = response_spec.get('schema')
     if response_body_spec is None:
-        if response.text in (None, ''):
+        if response.text in EMPTY_BODIES:
             return
         raise SwaggerMappingError(
             "Response body should be empty: {0}".format(response.text))

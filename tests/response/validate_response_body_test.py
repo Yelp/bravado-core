@@ -3,26 +3,19 @@ import pytest
 
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.operation import Operation
-from bravado_core.response import validate_response_body, OutgoingResponse
-
-
-def test_success_spec_empty_and_body_None(minimal_swagger_spec):
-    response_spec = {
-        'description': 'I do not return anything hence I have no "schema" key'
-    }
-    response = Mock(spec=OutgoingResponse, text=None)
-    op = Operation(minimal_swagger_spec, '/foo', 'get', op_spec={})
-    # no exception raised == success
-    validate_response_body(op, response_spec, response)
+from bravado_core.response import validate_response_body, OutgoingResponse, \
+    EMPTY_BODIES
 
 
 def test_success_spec_empty_and_body_empty(minimal_swagger_spec):
     response_spec = {
         'description': 'I do not return anything hence I have no "schema" key'
     }
-    response = Mock(spec=OutgoingResponse, text='')
-    op = Operation(minimal_swagger_spec, '/foo', 'get', op_spec={})
-    validate_response_body(op, response_spec, response)
+    for empty_body in EMPTY_BODIES:
+        response = Mock(spec=OutgoingResponse, text=empty_body)
+        op = Operation(minimal_swagger_spec, '/foo', 'get', op_spec={})
+        # no exception raised == success
+        validate_response_body(op, response_spec, response)
 
 
 def test_success_json_response(minimal_swagger_spec):
