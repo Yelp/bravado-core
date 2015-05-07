@@ -25,7 +25,7 @@ def test_no_content(empty_swagger_spec):
         m.return_value = response_spec
         op = Mock(swagger_spec=empty_swagger_spec)
         result = unmarshal_response(response, op)
-        assert (200, None) == result
+        assert result is None
 
 
 def test_json_content(empty_swagger_spec, response_spec):
@@ -37,7 +37,7 @@ def test_json_content(empty_swagger_spec, response_spec):
     with patch('bravado_core.response.get_response_spec') as m:
         m.return_value = response_spec
         op = Mock(swagger_spec=empty_swagger_spec)
-        assert (200, 'Monday') == unmarshal_response(response, op)
+        assert 'Monday' == unmarshal_response(response, op)
 
 
 def test_skips_validation(empty_swagger_spec, response_spec):
