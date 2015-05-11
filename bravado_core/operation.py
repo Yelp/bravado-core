@@ -127,7 +127,7 @@ class Operation(object):
         """
         request_options = kwargs.pop('_request_options', {})
         request = {
-            'method': self.http_method,
+            'method': self.http_method.upper(),
             'url': self.swagger_spec.api_url.rstrip('/') + self.path_name,
             'params': {},
             'headers': request_options.get('headers', {}),
@@ -162,6 +162,7 @@ class Operation(object):
                 marshal_param(remaining_param, None, request)
 
     def __call__(self, **kwargs):
+        # TODO: Refactor http invocation to bravado.
         log.debug(u"%s(%s)" % (self.operation_id, kwargs))
         request = self.construct_request(**kwargs)
 
