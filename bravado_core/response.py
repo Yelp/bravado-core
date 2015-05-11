@@ -79,13 +79,13 @@ class OutgoingResponse(object):
 
 
 def unmarshal_response(response, op):
-    """Unmarshal incoming http response into a (status_code, value) based on the
+    """Unmarshal incoming http response into a value based on the
     response specification.
 
     :type response: :class:`bravado_core.response.ResponseLike`
     :type op: :class:`bravado_core.operation.Operation`
-    :returns: tuple of (status_code, value) where type(value) matches
-        response_spec['schema']['type'] if it exists, None otherwise.
+    :returns: value where type(value) matches response_spec['schema']['type']
+        if it exists, None otherwise.
     """
     response_spec = get_response_spec(response.status_code, op)
 
@@ -93,16 +93,17 @@ def unmarshal_response(response, op):
         return 'schema' in response_spec
 
     if not has_content(response_spec):
-        return response.status_code, None
+        return None
 
     # TODO: Non-json response contents
     content_spec = response_spec['schema']
     content_value = response.json()
+
     if op.swagger_spec.config['validate_responses']:
         validate_schema_object(content_spec, content_value)
-    result = unmarshal_schema_object(
+
+    return unmarshal_schema_object(
         op.swagger_spec, content_spec, content_value)
-    return response.status_code, result
 
 
 def get_response_spec(status_code, op):
