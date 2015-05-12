@@ -1,3 +1,5 @@
+from six import iteritems
+
 from bravado_core import formatter, schema
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.model import is_model, MODEL_MARKER
@@ -103,7 +105,7 @@ def unmarshal_object(swagger_spec, object_spec, object_value):
             type(object_value), object_value))
 
     result = {}
-    for k, v in object_value.iteritems():
+    for k, v in iteritems(object_value):
         prop_spec = get_spec_for_prop(object_spec, object_value, k)
         if prop_spec:
             result[k] = unmarshal_schema_object(swagger_spec, prop_spec, v)
@@ -112,7 +114,7 @@ def unmarshal_object(swagger_spec, object_spec, object_value):
             result[k] = v
 
     # re-introduce and None'ify any properties that weren't passed
-    for prop_name, prop_spec in object_spec.get('properties', {}).iteritems():
+    for prop_name, prop_spec in iteritems(object_spec.get('properties', {})):
         if prop_name not in result:
             result[prop_name] = None
     return result

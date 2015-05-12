@@ -1,6 +1,8 @@
 from collections import defaultdict
 import logging
 
+from six import iteritems
+
 from bravado_core.docstring import operation_docstring_wrapper
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.operation import Operation
@@ -46,8 +48,8 @@ def build_resources(swagger_spec):
     # key = tag_name   value = { operation_id : Operation }
     tag_to_operations = defaultdict(dict)
     paths = swagger_spec.spec_dict['paths']
-    for path_name, path_spec in paths.iteritems():
-        for http_method, operation_spec in path_spec.items():
+    for path_name, path_spec in iteritems(paths):
+        for http_method, operation_spec in iteritems(path_spec):
             operation = Operation.from_spec(
                 swagger_spec, path_name, http_method, operation_spec)
             tags = operation_spec.get('tags', [])
@@ -59,7 +61,7 @@ def build_resources(swagger_spec):
                 tag_to_operations[tag][operation.operation_id] = operation
 
     resources = {}
-    for tag, operations in tag_to_operations.iteritems():
+    for tag, operations in iteritems(tag_to_operations):
         resources[tag] = Resource(tag, operations)
     return resources
 

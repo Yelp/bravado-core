@@ -4,6 +4,8 @@
 #
 import logging
 
+from six import iteritems
+
 from bravado_core.param import Param, marshal_param
 from bravado_core.response import unmarshal_response
 
@@ -146,7 +148,7 @@ class Operation(object):
             is not supplied.
         """
         current_params = self.params.copy()
-        for param_name, param_value in op_kwargs.iteritems():
+        for param_name, param_value in iteritems(op_kwargs):
             param = current_params.pop(param_name, None)
             if param is None:
                 raise TypeError("{0} does not have parameter {1}".format(
@@ -154,7 +156,7 @@ class Operation(object):
             marshal_param(param, param_value, request)
 
         # Check required params and non-required params with a 'default' value
-        for remaining_param in current_params.itervalues():
+        for remaining_param in current_params.values():
             if remaining_param.required:
                 raise TypeError(
                     '{0} is a required parameter'.format(remaining_param.name))

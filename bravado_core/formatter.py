@@ -4,6 +4,8 @@ https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#dataType
 """
 import dateutil.parser
 
+import six
+
 from bravado_core import schema
 
 
@@ -48,6 +50,10 @@ def to_python(spec, value):
 
     _, to_python, _ = _formatters[schema.get_format(spec)]
     return to_python(value)
+
+
+if six.PY3:
+    long = int
 
 
 # Default registered formats

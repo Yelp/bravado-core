@@ -1,3 +1,5 @@
+from six import iteritems
+
 from bravado_core.operation import log
 from bravado_core.param import unmarshal_param
 
@@ -54,7 +56,7 @@ def unmarshal_request(request, op):
     :returns: dict where (key, value) = (param_name, param_value)
     """
     request_data = {}
-    for param_name, param in op.params.iteritems():
+    for param_name, param in iteritems(op.params):
         param_value = unmarshal_param(param, request)
         request_data[param_name] = param_value
 

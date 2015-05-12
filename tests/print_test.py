@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os
 import json
 
@@ -25,36 +27,36 @@ def jsonref_petstore_dict():
 @pytest.mark.xfail(reason='This is not a test. Remove later')
 def test_print(jsonref_petstore_dict):
     assert False
-    print '\n'
+    print('\n')
     print_spec(jsonref_petstore_dict)
 
 
 def print_spec(spec, level=0):
     indent = '\t' * level
     if is_dict_like(spec):
-        for k, v in spec.iteritems():
-            print indent + k + ':',
+        for k, v in spec.items():
+            print(indent + k + ':')
             if is_dict_like(v):
-                print '{'
+                print('{')
                 print_spec(v, level + 1)
-                print indent + '}'
+                print(indent + '}')
             elif is_list_like(v):
-                print ' ['
+                print(' [')
                 print_spec(v, level + 1)
-                print indent + ']'
+                print(indent + ']')
             else:
-                print str(v) + ', '
+                print(str(v) + ', ')
     elif is_list_like(spec):
         for element in spec:
             if is_list_like(element):
-                print ' ['
+                print(' [')
                 print_spec(element, level + 1)
-                print indent + ']'
+                print(indent + ']')
             elif is_dict_like(element):
-                print indent + '{'
+                print(indent + '{')
                 print_spec(element, level + 1)
-                print indent + '},'
+                print(indent + '},')
             else:
                 print_spec(element, level + 1)
     else:
-        print indent + str(spec) + ', '
+        print(indent + str(spec) + ', ')

@@ -29,8 +29,9 @@ setup(
     ],
     install_requires=[
         "jsonref",
-        "jsonschema",
+        "jsonschema>=2.5.1",
         "python-dateutil",
+        "six",
         "swagger-spec-validator",
     ],
 )

@@ -12,7 +12,7 @@ def test_success():
             'type': 'string',
             'format': 'base64',
         }
-        assert 'darwin' == to_python(spec, to_wire(spec, 'darwin'))
+        assert b'darwin' == to_python(spec, to_wire(spec, b'darwin'))
     finally:
         # I know, icky!
         del bravado_core.formatter._formatters['base64']

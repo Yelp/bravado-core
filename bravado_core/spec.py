@@ -1,7 +1,8 @@
 import logging
-import urlparse
 
 import jsonref
+from six import iteritems
+from six.moves.urllib import parse as urlparse
 from swagger_spec_validator import validator20
 
 from bravado_core.model import build_models
@@ -102,8 +103,8 @@ class Spec(object):
         if self._request_to_op_map is None:
             # lazy initialization
             self._request_to_op_map = {}
-            for resource in self.resources.itervalues():
-                for op in resource.operations.itervalues():
+            for resource in self.resources.values():
+                for op in resource.operations.values():
                     key = (op.http_method, op.path_name)
                     self._request_to_op_map[key] = op
 
@@ -187,7 +188,7 @@ def replace_jsonref_proxies(obj):
     # TODO: consider upstreaming in the jsonref library as a util method
     def descend(fragment):
         if is_dict_like(fragment):
-            for k, v in fragment.items():
+            for k, v in iteritems(fragment):
                 if isinstance(v, jsonref.JsonRef):
                     fragment[k] = v.__subject__
                 descend(fragment[k])

@@ -1,3 +1,5 @@
+from six import iteritems
+
 from bravado_core import formatter, schema
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.model import is_model, MODEL_MARKER
@@ -111,7 +113,7 @@ def marshal_object(swagger_spec, object_spec, object_value):
             type(object_value), object_value))
 
     result = {}
-    for k, v in object_value.iteritems():
+    for k, v in iteritems(object_value):
 
         # Values cannot be None - skip them entirely!
         if v is None:

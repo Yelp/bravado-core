@@ -1,3 +1,5 @@
+from six import iteritems
+
 from bravado_core.http_client import APP_JSON
 from bravado_core.unmarshal import unmarshal_schema_object
 from bravado_core.validate import validate_schema_object
@@ -198,5 +200,5 @@ def validate_response_headers(response_spec, response):
     if not headers_spec:
         return
 
-    for header_name, header_spec in headers_spec.iteritems():
+    for header_name, header_spec in iteritems(headers_spec):
         validate_schema_object(header_spec, response.headers.get(header_name))

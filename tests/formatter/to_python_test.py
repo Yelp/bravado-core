@@ -1,5 +1,7 @@
 from datetime import date, datetime
 
+import six
+
 from bravado_core.formatter import to_python
 
 
@@ -26,20 +28,30 @@ def test_datetime():
 
 def test_int64_long():
     spec = {'type': 'integer', 'format': 'int64'}
-    result = to_python(spec, 999L)
-    assert 999L == result
+    if six.PY3:
+        result = to_python(spec, 999)
+        assert 999 == result
+    else:
+        result = to_python(spec, long(999))
+        assert long(999) == result
 
 
 def test_int64_int():
     spec = {'type': 'integer', 'format': 'int64'}
     result = to_python(spec, 999)
-    assert 999L == result
-    assert isinstance(result, long)
+    if six.PY3:
+        assert 999 == result
+        assert isinstance(result, int)
+    else:
+        assert long(999) == result
+        assert isinstance(result, long)
 
 
 def test_int32_long():
+    if six.PY3:  # test irrelevant in py3
+        return
     spec = {'type': 'integer', 'format': 'int32'}
-    result = to_python(spec, 999L)
+    result = to_python(spec, long(999))
     assert 999 == result
     assert isinstance(result, int)
 
