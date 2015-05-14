@@ -1,10 +1,10 @@
-.. image:: https://travis-ci.org/Yelp/bravado-core.png?branch=master
+.. image:: https://img.shields.io/travis/Yelp/bravado-core.svg
   :target: https://travis-ci.org/Yelp/bravado-core?branch=master
 
 .. image:: https://img.shields.io/coveralls/Yelp/bravado-core.svg
   :target: https://coveralls.io/r/Yelp/bravado-core
 
-.. image:: https://pypip.in/version/bravado-core/badge.svg?style=flat
+.. image:: https://img.shields.io/pypi/v/bravado-core.svg
     :target: https://pypi.python.org/pypi/bravado-core/
     :alt: PyPi version
 
