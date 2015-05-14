@@ -4,6 +4,10 @@
 .. image:: https://coveralls.io/repos/Yelp/bravado-core/badge.png
   :target: https://coveralls.io/r/Yelp/bravado-core
 
+.. image:: https://pypip.in/version/bravado-core/badge.svg?style=flat
+    :target: https://pypi.python.org/pypi/bravado-core/
+    :alt: PyPi version
+
 .. image:: https://pypip.in/py_versions/bravado-core/badge.png
     :target: https://pypi.python.org/pypi/bravado-core/
     :alt: Supported Python versions
