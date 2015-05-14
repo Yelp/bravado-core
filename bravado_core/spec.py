@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import logging
 import urlparse
 
@@ -24,7 +25,15 @@ CONFIG_DEFAULTS = {
     'validate_requests': True,
 
     # Use swagger_spec_validator to validate the swagger spec
-    'validate_swagger_spec': True
+    'validate_swagger_spec': True,
+
+    # Use Python classes (models) instead of dicts for #/definitions/{models}
+    # On the client side, this applies to incoming responses.
+    # On the server side, this applies to incoming requests.
+    #
+    # NOTE: outgoing requests on the client side and outgoing responses on the
+    #       server side can use either models or dicts.
+    'use_models': True
 }
 
 
