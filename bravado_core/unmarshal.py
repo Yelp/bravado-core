@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from bravado_core import formatter, schema
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.model import is_model, MODEL_MARKER
@@ -33,7 +34,7 @@ def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
     if obj_type == 'array':
         return unmarshal_array(swagger_spec, schema_object_spec, value)
 
-    if is_model(schema_object_spec):
+    if is_model(schema_object_spec) and swagger_spec.config['use_models']:
         # It is important that the 'model' check comes before 'object' check.
         # Model specs also have type 'object' but also have the additional
         # MODEL_MARKER key for identification.
