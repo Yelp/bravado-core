@@ -1,7 +1,7 @@
 .. image:: https://travis-ci.org/Yelp/bravado-core.png?branch=master
   :target: https://travis-ci.org/Yelp/bravado-core?branch=master
 
-.. image:: https://coveralls.io/repos/Yelp/bravado-core/badge.png
+.. image:: https://img.shields.io/coveralls/Yelp/bravado-core.svg
   :target: https://coveralls.io/r/Yelp/bravado-core
 
 .. image:: https://pypip.in/version/bravado-core/badge.svg?style=flat
