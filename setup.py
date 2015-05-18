@@ -31,6 +31,7 @@ setup(
         "jsonref",
         "jsonschema",
         "python-dateutil",
+        "simplejson",
         "swagger-spec-validator",
     ],
 )
