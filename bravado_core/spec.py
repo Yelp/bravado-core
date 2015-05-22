@@ -4,6 +4,7 @@ import urlparse
 
 import jsonref
 from swagger_spec_validator import validator20
+from bravado_core.exception import SwaggerSchemaError
 
 from bravado_core.model import build_models
 from bravado_core.model import tag_models
@@ -153,6 +154,7 @@ def build_api_serving_url(spec_dict, origin_url=None, preferred_scheme=None):
     :param preferred_scheme: preferred scheme to use if more than one scheme is
         supported by the API.
     :return: base url which services api requests
+    :raises: SwaggerSchemaError
     """
     origin_url = origin_url or 'http://localhost/'
     origin = urlparse.urlparse(origin_url)
@@ -164,7 +166,7 @@ def build_api_serving_url(spec_dict, origin_url=None, preferred_scheme=None):
         if preferred_scheme:
             if preferred_scheme in schemes:
                 return preferred_scheme
-            raise Exception(
+            raise SwaggerSchemaError(
                 "Preferred scheme {0} not supported by API. Available schemes "
                 "include {1}".format(preferred_scheme, schemes))
 
@@ -174,7 +176,7 @@ def build_api_serving_url(spec_dict, origin_url=None, preferred_scheme=None):
         if len(schemes) == 1:
             return schemes[0]
 
-        raise Exception(
+        raise SwaggerSchemaError(
             "Origin scheme {0} not supported by API. Available schemes "
             "include {1}".format(origin.scheme, schemes))
 

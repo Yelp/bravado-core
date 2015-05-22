@@ -1,6 +1,7 @@
 from mock import patch
 import pytest
 
+from bravado_core.exception import SwaggerMappingError
 from bravado_core.operation import Operation
 from bravado_core.spec import Spec
 
@@ -54,7 +55,7 @@ def test_no_params(minimal_swagger_spec, request_dict):
 
 def test_extra_parameter_error(minimal_swagger_spec, request_dict):
     op = Operation.from_spec(minimal_swagger_spec, '/pet/{petId}', 'get', {})
-    with pytest.raises(TypeError) as excinfo:
+    with pytest.raises(SwaggerMappingError) as excinfo:
         op.construct_params(request_dict, op_kwargs={'extra_param': 'bar'})
     assert 'does not have parameter' in str(excinfo.value)
 
@@ -64,7 +65,7 @@ def test_required_parameter_missing(
     request_dict['url'] = '/pet/{petId}'
     op = Operation.from_spec(
         minimal_swagger_spec, '/pet/{petId}', 'get', getPetById_spec)
-    with pytest.raises(TypeError) as excinfo:
+    with pytest.raises(SwaggerMappingError) as excinfo:
         op.construct_params(request_dict, op_kwargs={})
     assert 'required parameter' in str(excinfo.value)
 

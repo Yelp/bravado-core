@@ -58,13 +58,14 @@ def unmarshal_primitive(spec, value):
     :type value: int, long, float, boolean, string, unicode, etc
     :rtype: int, long, float, boolean, string, unicode, or an object
         based on 'format'
-    :raises: TypeError
+    :raises: SwaggerMappingError
     """
     if value is None and schema.is_required(spec):
         # TODO: Error message needs more context. Consider adding a stack like
         #       `context` object to each `unmarshal_*` method that acts like
         #       breadcrumbs.
-        raise TypeError('Spec {0} says this is a required value'.format(spec))
+        raise SwaggerMappingError(
+            'Spec {0} says this is a required value'.format(spec))
 
     value = formatter.to_python(spec, value)
     return value
@@ -77,10 +78,10 @@ def unmarshal_array(swagger_spec, array_spec, array_value):
     :type array_spec: dict or jsonref.JsonRef
     :type array_value: list
     :rtype: list
-    :raises: TypeError
+    :raises: SwaggerMappingError
     """
     if not is_list_like(array_value):
-        raise TypeError('Expected list like type for {0}:{1}'.format(
+        raise SwaggerMappingError('Expected list like type for {0}:{1}'.format(
             type(array_value), array_value))
 
     result = []
@@ -97,10 +98,10 @@ def unmarshal_object(swagger_spec, object_spec, object_value):
     :type object_spec: dict or jsonref.JsonRef
     :type object_value: dict
     :rtype: dict
-    :raises: TypeError
+    :raises: SwaggerMappingError
     """
     if not is_dict_like(object_value):
-        raise TypeError('Expected dict like type for {0}:{1}'.format(
+        raise SwaggerMappingError('Expected dict like type for {0}:{1}'.format(
             type(object_value), object_value))
 
     result = {}
@@ -126,18 +127,18 @@ def unmarshal_model(swagger_spec, model_spec, model_value):
     :type model_spec: dict or jsonref.JsonRef
     :type model_value: dict
     :rtype: Model instance
-    :raises: TypeError
+    :raises: SwaggerMappingError
     """
     model_name = model_spec[MODEL_MARKER]
     model_type = swagger_spec.definitions.get(model_name, None)
 
     if model_type is None:
-        raise TypeError(
+        raise SwaggerMappingError(
             'Unknown model {0} when trying to unmarshal {1}'
             .format(model_name, model_value))
 
     if not is_dict_like(model_value):
-        raise TypeError(
+        raise SwaggerMappingError(
             "Expected type to be dict for value {0} to unmarshal to a {1}."
             "Was {1} instead."
             .format(model_value, model_type, type(model_value)))

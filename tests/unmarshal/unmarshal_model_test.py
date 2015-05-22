@@ -1,4 +1,5 @@
 import pytest
+from bravado_core.exception import SwaggerMappingError
 
 from bravado_core.unmarshal import unmarshal_model
 from bravado_core.spec import Spec
@@ -98,9 +99,9 @@ def test_Nones_are_reintroduced_for_declared_properties_that_are_not_present(
     assert 'brown' == pet.tags[1].name
 
 
-def test_value_is_not_dict_like_raises_TypeError(petstore_dict):
+def test_value_is_not_dict_like_raises_error(petstore_dict):
     petstore_spec = Spec.from_dict(petstore_dict)
     pet_spec = petstore_spec.spec_dict['definitions']['Pet']
-    with pytest.raises(TypeError) as excinfo:
+    with pytest.raises(SwaggerMappingError) as excinfo:
         unmarshal_model(petstore_spec, pet_spec, 'i am not a dict')
     assert 'Expected type to be dict' in str(excinfo.value)
