@@ -1,6 +1,7 @@
 import copy
 
 import pytest
+from bravado_core.exception import SwaggerMappingError
 
 from bravado_core.marshal import marshal_array
 from bravado_core.spec import Spec
@@ -154,6 +155,6 @@ def test_array_of_models(petstore_dict):
 
 def test_non_list_like_type_throws_error(empty_swagger_spec):
     i_am_not_a_list = dict()
-    with pytest.raises(TypeError) as excinfo:
+    with pytest.raises(SwaggerMappingError) as excinfo:
         marshal_array(empty_swagger_spec, i_am_not_a_list, i_am_not_a_list)
     assert 'Expected list like type' in str(excinfo.value)

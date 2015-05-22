@@ -1,29 +1,36 @@
 import copy
 
+import pytest
+
+from bravado_core.exception import SwaggerMappingError
 from bravado_core.unmarshal import unmarshal_array
 from bravado_core.spec import Spec
 
 
-def test_primitive_array(empty_swagger_spec):
-    int_array_spec = {
+@pytest.fixture
+def int_array_spec():
+    return {
         'type': 'array',
         'items': {
             'type': 'integer',
         }
     }
+
+
+def test_primitive_array(empty_swagger_spec, int_array_spec):
     result = unmarshal_array(empty_swagger_spec, int_array_spec, [1, 2, 3])
     assert [1, 2, 3] == result
 
 
-def test_empty_array(empty_swagger_spec):
-    int_array_spec = {
-        'type': 'array',
-        'items': {
-            'type': 'integer',
-        }
-    }
+def test_empty_array(empty_swagger_spec, int_array_spec):
     result = unmarshal_array(empty_swagger_spec, int_array_spec, [])
     assert [] == result
+
+
+def test_type_not_array_raises_error(empty_swagger_spec, int_array_spec):
+    with pytest.raises(SwaggerMappingError) as excinfo:
+        unmarshal_array(empty_swagger_spec, int_array_spec, 'not a list')
+    assert 'Expected list like type' in str(excinfo.value)
 
 
 def test_array_of_array(empty_swagger_spec):

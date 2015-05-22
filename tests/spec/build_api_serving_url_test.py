@@ -1,6 +1,7 @@
 import pytest
 
 from bravado_core.spec import build_api_serving_url
+from bravado_core.exception import SwaggerSchemaError
 
 
 @pytest.fixture
@@ -46,7 +47,7 @@ def test_pick_origin_scheme_when_preferred_scheme_none(origin_url):
 
 def test_preferred_scheme_not_available(origin_url):
     spec = {'schemes': ['https']}
-    with pytest.raises(Exception) as excinfo:
+    with pytest.raises(SwaggerSchemaError) as excinfo:
         build_api_serving_url(spec, origin_url, preferred_scheme='ws')
     assert 'not supported' in str(excinfo.value)
 
