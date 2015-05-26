@@ -112,9 +112,11 @@ class Spec(object):
         if self._request_to_op_map is None:
             # lazy initialization
             self._request_to_op_map = {}
+            base_path = self.spec_dict.get('basePath', '').rstrip('/')
             for resource in self.resources.itervalues():
                 for op in resource.operations.itervalues():
-                    key = (op.http_method, op.path_name)
+                    full_path = base_path + op.path_name
+                    key = (op.http_method, full_path)
                     self._request_to_op_map[key] = op
 
         key = (http_method.lower(), path_pattern)
