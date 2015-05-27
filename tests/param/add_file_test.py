@@ -18,7 +18,7 @@ def test_single_file(empty_swagger_spec):
     param = Param(empty_swagger_spec, op, param_spec)
     add_file(param, file_contents, request)
     expected_request = {
-        'files': [('file', ('photo', 'I am the contents of a file'))]
+        'files': [('photo', ('photo', 'I am the contents of a file'))]
     }
     assert expected_request == request
 
@@ -45,8 +45,8 @@ def test_multiple_files(empty_swagger_spec):
     add_file(param2, file2_contents, request)
     expected_request = {
         'files': [
-            ('file', ('photo', 'I am the contents of a file1')),
-            ('file', ('headshot', 'I am the contents of a file2')),
+            ('photo', ('photo', 'I am the contents of a file1')),
+            ('headshot', ('headshot', 'I am the contents of a file2')),
         ]
     }
     assert expected_request == request
