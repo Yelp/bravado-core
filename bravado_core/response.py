@@ -7,8 +7,7 @@ from bravado_core.exception import SwaggerMappingError
 EMPTY_BODIES = (None, '', '{}', 'null')
 
 
-# TODO: Rename to IncomingResponse
-class ResponseLike(object):
+class IncomingResponse(object):
     """
     Interface for incoming client-side response objects.
 
@@ -23,7 +22,7 @@ class ResponseLike(object):
         """
         When an attempt to access a required attribute that doesn't exist
         is made, let the caller know that the type is non-compliant in its
-        attempt to be `ResponseLike`. This is in place of the usual throwing
+        attempt to be `IncomingResponse`. This is in place of the usual throwing
         of an AttributeError.
 
         Reminder: __getattr___ is only called when it has already been
@@ -34,7 +33,7 @@ class ResponseLike(object):
         """
         if name in self.__required_attrs__:
             raise NotImplementedError(
-                'This ResponseLike type {0} forgot to implement an attr '
+                'This IncomingResponse type {0} forgot to implement an attr '
                 'for `{1}`'.format(type(self), name))
         raise AttributeError(
             "'{0}' object has no attribute '{1}'".format(type(self), name))
@@ -82,7 +81,7 @@ def unmarshal_response(response, op):
     """Unmarshal incoming http response into a value based on the
     response specification.
 
-    :type response: :class:`bravado_core.response.ResponseLike`
+    :type response: :class:`bravado_core.response.IncomingResponse`
     :type op: :class:`bravado_core.operation.Operation`
     :returns: value where type(value) matches response_spec['schema']['type']
         if it exists, None otherwise.
