@@ -1,25 +1,25 @@
 import pytest
 
-from bravado_core.response import ResponseLike
+from bravado_core.response import IncomingResponse
 
 
 def test_required_attr_returned():
 
-    class CompliantResponse(ResponseLike):
+    class CompliantIncomingResponse(IncomingResponse):
 
         def __init__(self):
             self.status_code = 99
 
-    r = CompliantResponse()
+    r = CompliantIncomingResponse()
     assert 99 == r.status_code
 
 
 def test_missing_required_attr_throws_NotImplementedError():
 
-    class NonCompliantResponse(ResponseLike):
+    class NonCompliantIncomingResponse(IncomingResponse):
         pass
 
-    r = NonCompliantResponse()
+    r = NonCompliantIncomingResponse()
     with pytest.raises(NotImplementedError) as excinfo:
         r.status_code
     assert 'forgot to implement' in str(excinfo.value)
@@ -27,7 +27,7 @@ def test_missing_required_attr_throws_NotImplementedError():
 
 def test_any_other_attr_throws_AttributeError():
 
-    class UnrelatedReponse(ResponseLike):
+    class UnrelatedReponse(IncomingResponse):
         pass
 
     r = UnrelatedReponse()

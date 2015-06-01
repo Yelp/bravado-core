@@ -13,7 +13,7 @@ def test_pet_model(pet_spec):
     assert set(dir(pet)) == expected
     assert pet == Pet(id=1, name='Darwin')
     assert pet != Pet(id=2, name='Fido')
-    assert "Pet(category=None, id=1, name=Darwin, photoUrls=None, tags=None)" \
+    assert "Pet(category=None, id=1, name='Darwin', photoUrls=None, tags=None)" \
            == repr(pet)
 
 
