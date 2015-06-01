@@ -233,7 +233,7 @@ def add_file(param, value, request):
                     param.op.consumes
                 ))
 
-    file_tuple = ('file', (param.name, value))
+    file_tuple = (param.name, (param.name, value))
     request['files'].append(file_tuple)
 
 

@@ -124,7 +124,7 @@ def test_formData_file(empty_swagger_spec, param_spec, request_dict):
     marshal_param(param, "i am the contents of a file", request_dict)
     expected = {
         'params': {},
-        'files': [('file', ('petId', "i am the contents of a file"))],
+        'files': [('petId', ('petId', "i am the contents of a file"))],
     }
     assert expected == request_dict
 
