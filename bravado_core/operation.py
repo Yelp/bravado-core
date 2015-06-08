@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
-#
-# Copyright (c) 2015, Yelp, Inc.
-#
 import logging
 
 from six import iteritems
+from six import itervalues
 
+from bravado_core.exception import SwaggerMappingError
 from bravado_core.param import Param, marshal_param
 from bravado_core.response import unmarshal_response
 
@@ -144,21 +143,22 @@ class Operation(object):
 
         :type request: dict
         :param op_kwargs: the kwargs passed to the operation invocation
-        :raises: TypeError on extra parameters or when a required parameter
-            is not supplied.
+        :raises: SwaggerMappingError on extra parameters or when a required
+            parameter is not supplied.
         """
         current_params = self.params.copy()
         for param_name, param_value in iteritems(op_kwargs):
             param = current_params.pop(param_name, None)
             if param is None:
-                raise TypeError("{0} does not have parameter {1}".format(
-                    self.operation_id, param_name))
+                raise SwaggerMappingError(
+                    "{0} does not have parameter {1}"
+                    .format(self.operation_id, param_name))
             marshal_param(param, param_value, request)
 
         # Check required params and non-required params with a 'default' value
-        for remaining_param in current_params.values():
+        for remaining_param in itervalues(current_params):
             if remaining_param.required:
-                raise TypeError(
+                raise SwaggerMappingError(
                     '{0} is a required parameter'.format(remaining_param.name))
             if not remaining_param.required and remaining_param.has_default():
                 marshal_param(remaining_param, None, request)

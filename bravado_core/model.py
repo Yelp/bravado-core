@@ -135,7 +135,7 @@ def create_model_repr(model, model_spec):
     :returns: repr string for the model
     """
     s = [
-        "{0}={1}".format(attr_name, getattr(model, attr_name))
+        "{0}={1!r}".format(attr_name, getattr(model, attr_name))
         for attr_name in sorted(model_spec['properties'].keys())
     ]
     return "{0}({1})".format(model.__class__.__name__, ', '.join(s))

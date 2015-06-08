@@ -1,9 +1,11 @@
+# -*- coding: utf-8 -*-
 import logging
 
 import jsonref
 from six import iteritems
 from six.moves.urllib import parse as urlparse
 from swagger_spec_validator import validator20
+from bravado_core.exception import SwaggerSchemaError
 
 from bravado_core.model import build_models
 from bravado_core.model import tag_models
@@ -25,7 +27,15 @@ CONFIG_DEFAULTS = {
     'validate_requests': True,
 
     # Use swagger_spec_validator to validate the swagger spec
-    'validate_swagger_spec': True
+    'validate_swagger_spec': True,
+
+    # Use Python classes (models) instead of dicts for #/definitions/{models}
+    # On the client side, this applies to incoming responses.
+    # On the server side, this applies to incoming requests.
+    #
+    # NOTE: outgoing requests on the client side and outgoing responses on the
+    #       server side can use either models or dicts.
+    'use_models': True
 }
 
 
@@ -103,9 +113,11 @@ class Spec(object):
         if self._request_to_op_map is None:
             # lazy initialization
             self._request_to_op_map = {}
+            base_path = self.spec_dict.get('basePath', '').rstrip('/')
             for resource in self.resources.values():
                 for op in resource.operations.values():
-                    key = (op.http_method, op.path_name)
+                    full_path = base_path + op.path_name
+                    key = (op.http_method, full_path)
                     self._request_to_op_map[key] = op
 
         key = (http_method.lower(), path_pattern)
@@ -145,6 +157,7 @@ def build_api_serving_url(spec_dict, origin_url=None, preferred_scheme=None):
     :param preferred_scheme: preferred scheme to use if more than one scheme is
         supported by the API.
     :return: base url which services api requests
+    :raises: SwaggerSchemaError
     """
     origin_url = origin_url or 'http://localhost/'
     origin = urlparse.urlparse(origin_url)
@@ -156,7 +169,7 @@ def build_api_serving_url(spec_dict, origin_url=None, preferred_scheme=None):
         if preferred_scheme:
             if preferred_scheme in schemes:
                 return preferred_scheme
-            raise Exception(
+            raise SwaggerSchemaError(
                 "Preferred scheme {0} not supported by API. Available schemes "
                 "include {1}".format(preferred_scheme, schemes))
 
@@ -166,7 +179,7 @@ def build_api_serving_url(spec_dict, origin_url=None, preferred_scheme=None):
         if len(schemes) == 1:
             return schemes[0]
 
-        raise Exception(
+        raise SwaggerSchemaError(
             "Origin scheme {0} not supported by API. Available schemes "
             "include {1}".format(origin.scheme, schemes))
 

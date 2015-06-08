@@ -24,6 +24,7 @@ def marshal_schema_object(swagger_spec, schema_object_spec, value):
     :type value: int, long, string, unicode, boolean, list, dict, Model type
     :return: marshaled value
     :rtype: int, long, string, unicode, boolean, list, dict
+    :raises: SwaggerMappingError
     """
     obj_type = schema_object_spec['type']
 
@@ -61,7 +62,7 @@ def marshal_primitive(spec, value):
     :type value: int, long, float, boolean, string, unicode, or an object
         based on 'format'
     :rtype: int, long, float, boolean, string, unicode, etc
-    :raises: TypeError
+    :raises: SwaggerMappingError
     """
     default_used = False
 
@@ -70,7 +71,7 @@ def marshal_primitive(spec, value):
         value = schema.get_default(spec)
 
     if value is None and schema.is_required(spec):
-        raise TypeError('Spec {0} is a required value'.format(spec))
+        raise SwaggerMappingError('Spec {0} is a required value'.format(spec))
 
     if not default_used:
         value = formatter.to_wire(spec, value)
@@ -85,10 +86,10 @@ def marshal_array(swagger_spec, array_spec, array_value):
     :type array_spec: dict or jsonref.JsonRef
     :type array_value: list
     :rtype: list
-    :raises: TypeError
+    :raises: SwaggerMappingError
     """
     if not is_list_like(array_value):
-        raise TypeError('Expected list like type for {0}:{1}'.format(
+        raise SwaggerMappingError('Expected list like type for {0}:{1}'.format(
             type(array_value), array_value))
 
     result = []
@@ -109,7 +110,7 @@ def marshal_object(swagger_spec, object_spec, object_value):
     :raises: SwaggerMappingError
     """
     if not is_dict_like(object_value):
-        raise TypeError('Expected dict like type for {0}:{1}'.format(
+        raise SwaggerMappingError('Expected dict like type for {0}:{1}'.format(
             type(object_value), object_value))
 
     result = {}
@@ -136,17 +137,18 @@ def marshal_model(swagger_spec, model_spec, model_value):
     :type model_spec: dict or jsonref.JsonRef
     :type model_value: Model instance
     :rtype: dict
-    :raises: TypeError
+    :raises: SwaggerMappingError
     """
     model_name = model_spec[MODEL_MARKER]
     model_type = swagger_spec.definitions.get(model_name, None)
 
     if model_type is None:
-        raise TypeError('Unknown model {0}'.format(model_name))
+        raise SwaggerMappingError('Unknown model {0}'.format(model_name))
 
     if not isinstance(model_value, model_type):
-        raise TypeError('Expected model of type {0} for {1}:{2}'.format(
-            model_name, type(model_value), model_value))
+        raise SwaggerMappingError(
+            'Expected model of type {0} for {1}:{2}'
+            .format(model_name, type(model_value), model_value))
 
     # just convert the model to a dict and feed into `marshal_object` because
     # models are essentially 'type':'object' when marshaled

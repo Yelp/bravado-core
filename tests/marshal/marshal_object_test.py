@@ -1,5 +1,6 @@
 import pytest
 
+from bravado_core.exception import SwaggerMappingError
 from bravado_core.marshal import marshal_object
 from bravado_core.spec import Spec
 
@@ -126,10 +127,10 @@ def test_model(minimal_swagger_dict, address_spec):
     assert expected_address == result
 
 
-def test_object_not_dict_like_raises_TypeError(
+def test_object_not_dict_like_raises_error(
         empty_swagger_spec, address_spec):
     i_am_not_dict_like = 34
-    with pytest.raises(TypeError) as excinfo:
+    with pytest.raises(SwaggerMappingError) as excinfo:
         marshal_object(empty_swagger_spec, address_spec, i_am_not_dict_like)
     assert 'Expected dict' in str(excinfo.value)
 

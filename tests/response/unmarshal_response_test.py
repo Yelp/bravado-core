@@ -2,7 +2,7 @@ from mock import Mock, patch
 
 import pytest
 
-from bravado_core.response import ResponseLike, unmarshal_response
+from bravado_core.response import IncomingResponse, unmarshal_response
 
 
 @pytest.fixture
@@ -19,7 +19,7 @@ def test_no_content(empty_swagger_spec):
     response_spec = {
         'description': "I don't have a 'schema' key so I return nothing",
     }
-    response = Mock(spec=ResponseLike, status_code=200)
+    response = Mock(spec=IncomingResponse, status_code=200)
 
     with patch('bravado_core.response.get_response_spec') as m:
         m.return_value = response_spec
@@ -30,7 +30,7 @@ def test_no_content(empty_swagger_spec):
 
 def test_json_content(empty_swagger_spec, response_spec):
     response = Mock(
-        spec=ResponseLike,
+        spec=IncomingResponse,
         status_code=200,
         json=Mock(return_value='Monday'))
 
@@ -43,7 +43,7 @@ def test_json_content(empty_swagger_spec, response_spec):
 def test_skips_validation(empty_swagger_spec, response_spec):
     empty_swagger_spec.config['validate_responses'] = False
     response = Mock(
-        spec=ResponseLike,
+        spec=IncomingResponse,
         status_code=200,
         json=Mock(return_value='Monday'))
 
@@ -58,7 +58,7 @@ def test_skips_validation(empty_swagger_spec, response_spec):
 def test_performs_validation(empty_swagger_spec, response_spec):
     empty_swagger_spec.config['validate_responses'] = True
     response = Mock(
-        spec=ResponseLike,
+        spec=IncomingResponse,
         status_code=200,
         json=Mock(return_value='Monday'))
 

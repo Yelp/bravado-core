@@ -1,5 +1,6 @@
 import pytest
 
+from bravado_core.exception import SwaggerMappingError
 from bravado_core.unmarshal import unmarshal_primitive
 
 
@@ -23,6 +24,6 @@ def test_required_failure():
         'type': 'integer',
         'required': True,
     }
-    with pytest.raises(TypeError) as excinfo:
+    with pytest.raises(SwaggerMappingError) as excinfo:
         unmarshal_primitive(integer_spec, None)
     assert 'is a required value' in str(excinfo.value)

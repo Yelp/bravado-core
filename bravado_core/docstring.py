@@ -187,6 +187,5 @@ def formatted_type(spec):
         return ref
     elif obj_type:
         return obj_type
-    else:
-        raise SwaggerMappingError(
-            "No proper type could be found from {0}".format(spec))
+    raise SwaggerMappingError(
+        "No proper type could be found from {0}".format(spec))
