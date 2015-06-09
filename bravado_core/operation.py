@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 import logging
 
+from six import iteritems
+from six import itervalues
+
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.param import Param, marshal_param
 from bravado_core.response import unmarshal_response
@@ -144,7 +147,7 @@ class Operation(object):
             parameter is not supplied.
         """
         current_params = self.params.copy()
-        for param_name, param_value in op_kwargs.iteritems():
+        for param_name, param_value in iteritems(op_kwargs):
             param = current_params.pop(param_name, None)
             if param is None:
                 raise SwaggerMappingError(
@@ -153,7 +156,7 @@ class Operation(object):
             marshal_param(param, param_value, request)
 
         # Check required params and non-required params with a 'default' value
-        for remaining_param in current_params.itervalues():
+        for remaining_param in itervalues(current_params):
             if remaining_param.required:
                 raise SwaggerMappingError(
                     '{0} is a required parameter'.format(remaining_param.name))

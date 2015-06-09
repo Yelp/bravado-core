@@ -19,7 +19,7 @@ def test_defaults_to_csv(array_spec):
 
 
 def test_formats(array_spec):
-    for fmt, sep in COLLECTION_FORMATS.iteritems():
+    for fmt, sep in COLLECTION_FORMATS.items():
         array_spec['collectionFormat'] = fmt
         result = marshal_collection_format(array_spec, [1, 2, 3])
         assert sep.join(['1', '2', '3']) == result

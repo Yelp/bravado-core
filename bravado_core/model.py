@@ -1,5 +1,7 @@
 from functools import partial
 
+from six import iteritems
+
 from bravado_core.docstring import docstring_property
 from bravado_core.schema import (
     is_dict_like,
@@ -21,7 +23,7 @@ def build_models(definitions_spec):
     :returns: dict where (name,value) = (model name, model type)
     """
     models = {}
-    for model_name, model_spec in definitions_spec.iteritems():
+    for model_name, model_spec in iteritems(definitions_spec):
         # make models available under both simple name and $ref style name
         # - Pet <-- TODO: remove eventually
         # - #/definitions/Pet
@@ -63,7 +65,7 @@ def model_dir(model, model_spec):
     :param model_spec: spec the passed in model in dict form
     :returns: list of str
     """
-    return model_spec['properties'].keys() + model._additional_props
+    return list(model_spec['properties'].keys()) + model._additional_props
 
 
 def compare(first, second):
@@ -101,9 +103,9 @@ def model_constructor(model, model_spec, constructor_kwargs):
     :raises: AttributeError on constructor_kwargs that don't exist in the
         model specification's list of properties
     """
-    arg_names = constructor_kwargs.keys()
+    arg_names = list(constructor_kwargs.keys())
 
-    for attr_name, attr_spec in model_spec['properties'].iteritems():
+    for attr_name, attr_spec in iteritems(model_spec['properties']):
         if attr_name in arg_names:
             attr_value = constructor_kwargs[attr_name]
             arg_names.remove(attr_name)
@@ -147,7 +149,7 @@ def tag_models(spec_dict):
     """
     # TODO: unit test + docstring
     models_dict = spec_dict.get('definitions', {})
-    for model_name, model_spec in models_dict.iteritems():
+    for model_name, model_spec in iteritems(models_dict):
         model_type = model_spec.get('type')
 
         # default type type to 'object' since most swagger specs don't bother
@@ -175,7 +177,7 @@ def fix_malformed_model_refs(spec):
 
     def descend(fragment):
         if is_dict_like(fragment):
-            for k, v in fragment.iteritems():
+            for k, v in iteritems(fragment):
                 if k == '$ref' and v in model_names:
                     fragment[k] = "#/definitions/{0}".format(v)
                 descend(v)
@@ -201,7 +203,7 @@ def create_model_docstring(model_spec):
     :rtype: string
     """
     s = "Attributes:\n\n\t"
-    attr_iter = iter(sorted(model_spec['properties'].iteritems()))
+    attr_iter = iter(sorted(iteritems(model_spec['properties'])))
     # TODO: Add more stuff available in the spec - 'required', 'example', etc
     for attr_name, attr_spec in attr_iter:
         schema_type = attr_spec['type']

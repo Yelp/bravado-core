@@ -8,7 +8,7 @@ def user_kwargs():
     return {
         'firstName': 'Darwin',
         'userStatus': 9,
-        'id': 999L,
+        'id': 999,
     }
 
 
@@ -16,7 +16,7 @@ def test_simple(user_spec, user, user_kwargs):
     model_constructor(user, user_spec, user_kwargs)
     assert user.firstName == 'Darwin'
     assert user.userStatus == 9
-    assert user.id == 999L
+    assert user.id == 999
     assert user.lastName is None
     assert user.email is None
     assert user.password is None

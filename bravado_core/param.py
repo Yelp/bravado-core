@@ -1,9 +1,11 @@
 from functools import partial
 import logging
-import urllib
-import simplejson as json
-from bravado_core import schema
 
+import six
+import simplejson as json
+from six.moves.urllib.parse import quote
+
+from bravado_core import schema
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.http_client import APP_JSON
 from bravado_core.marshal import marshal_schema_object
@@ -24,7 +26,7 @@ COLLECTION_FORMATS = {
 def stringify_body(value):
     """Json dump the value to string if not already in string
     """
-    if not value or isinstance(value, basestring):
+    if not value or isinstance(value, six.string_types):
         return value
     return json.dumps(value)
 
@@ -116,7 +118,7 @@ def marshal_param(param, value, request):
     if location == 'path':
         token = u'{%s}' % param.name
         request['url'] = \
-            request['url'].replace(token, urllib.quote(unicode(value)))
+            request['url'].replace(token, quote(six.text_type(value)))
     elif location == 'query':
         request['params'][param.name] = value
     elif location == 'header':
@@ -231,7 +233,7 @@ def add_file(param, value, request):
                     param.name,
                     param.op.operation_id,
                     param.op.consumes
-                ))
+            ))
 
     file_tuple = (param.name, (param.name, value))
     request['files'].append(file_tuple)

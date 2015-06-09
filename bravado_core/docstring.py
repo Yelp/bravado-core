@@ -1,5 +1,7 @@
 import logging
 
+from six import iteritems
+
 from bravado_core.exception import SwaggerMappingError
 
 
@@ -100,7 +102,7 @@ def create_operation_docstring(op):
     # TODO: add 'examples' if available
     # TODO: good idea to identify the default response?
     responses = op_spec.get('responses')
-    for http_status_code, response_spec in iter(sorted(responses.iteritems())):
+    for http_status_code, response_spec in iter(sorted(iteritems(responses))):
         response_desc = response_spec.get('description')
         s += ':returns: {0}: {1}\n'.format(http_status_code, response_desc)
         schema_spec = response_spec.get('schema')
