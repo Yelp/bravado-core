@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from bravado_core.docstring import create_operation_docstring
 from bravado_core.operation import Operation
 
@@ -73,5 +74,27 @@ def test_no_description(op_spec, empty_swagger_spec):
         ":returns: 400: Invalid status value\n"
 
     del op_spec['description']
+    op = Operation(empty_swagger_spec, '/pet', 'get', op_spec)
+    assert expected == create_operation_docstring(op)
+
+
+def test_unicode(op_spec, empty_swagger_spec):
+    # Only test freeform fields (those most likely to contain unicode)
+    op_spec['summary'] = u'Ümlaut1'
+    op_spec['description'] = u'Ümlaut2'
+    op_spec['parameters'][0]['description'] = u'Ümlaut3'
+    op_spec['parameters'][0]['default'] = u'Ümlaut4'
+    op_spec['responses']['200']['description'] = u'Ümlaut5'
+    op_spec['responses']['400']['description'] = u'Ümlaut6'
+
+    expected = \
+        u"[GET] Ümlaut1\n\n" \
+        u"Ümlaut2\n\n" \
+        u":param status: Ümlaut3 (Default: Ümlaut4) (optional)\n" \
+        u":type status: array\n" \
+        u":returns: 200: Ümlaut5\n" \
+        u":rtype: array:#/definitions/Pet\n" \
+        u":returns: 400: Ümlaut6\n"
+
     op = Operation(empty_swagger_spec, '/pet', 'get', op_spec)
     assert expected == create_operation_docstring(op)
