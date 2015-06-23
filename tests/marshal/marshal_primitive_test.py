@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import mock
 import pytest
 from bravado_core.exception import SwaggerMappingError
@@ -5,11 +6,19 @@ from bravado_core.exception import SwaggerMappingError
 from bravado_core.marshal import marshal_primitive
 
 
-def test_success():
+def test_integer():
     integer_spec = {
         'type': 'integer'
     }
     assert 10 == marshal_primitive(integer_spec, 10)
+
+
+def test_string():
+    string_spec = {
+        'type': 'string'
+    }
+    assert 'foo' == marshal_primitive(string_spec, 'foo')
+    assert u'Ümlaut' == marshal_primitive(string_spec, u'Ümlaut')
 
 
 @mock.patch('bravado_core.marshal.formatter.to_wire')
