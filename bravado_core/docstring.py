@@ -61,7 +61,7 @@ def create_operation_docstring(op):
     """Builds a comprehensive docstring for an Operation.
 
     :param op: :class:`bravado_core.operation.Operation`
-    :rtype: str
+    :rtype: str or unicode
 
     Example: ::
 
@@ -81,19 +81,19 @@ def create_operation_docstring(op):
     """
     # TODO: remove once lazy docstrings implemented
     log.debug('creating op docstring for %s' % op.operation_id)
-    s = ""
+    s = ''
     op_spec = op.op_spec
     is_deprecated = op_spec.get('deprecated', False)
     if is_deprecated:
-        s += "** DEPRECATED **\n"
+        s += '** DEPRECATED **\n'
 
     summary = op_spec.get('summary')
     if summary:
-        s += "[{0}] {1}\n\n".format(op.http_method.upper(), summary)
+        s += u'[{0}] {1}\n\n'.format(op.http_method.upper(), summary)
 
     desc = op_spec.get('description')
     if desc:
-        s += "{0}\n\n".format(desc)
+        s += u'{0}\n\n'.format(desc)
 
     # TODO: add shared parameters
     for param_spec in op_spec.get('parameters', []):
@@ -104,19 +104,18 @@ def create_operation_docstring(op):
     responses = op_spec.get('responses')
     for http_status_code, response_spec in iter(sorted(iteritems(responses))):
         response_desc = response_spec.get('description')
-        s += ':returns: {0}: {1}\n'.format(http_status_code, response_desc)
+        s += u':returns: {0}: {1}\n'.format(http_status_code, response_desc)
         schema_spec = response_spec.get('schema')
         if schema_spec:
-            s += ':rtype: {0}\n'.format(
-                formatted_type(schema_spec))
+            s += u':rtype: {0}\n'.format(formatted_type(schema_spec))
     return s
 
 
 def create_param_docstring(param_spec):
-    """Builds the docstring for a parameters from its specification.
+    """Builds the docstring for a parameter from its specification.
 
     :param param_spec: parameter spec in json-line dict form
-    :rtype: str
+    :rtype: str or unicode
 
     Example: ::
         :param status: Status to be considered for filter
@@ -129,18 +128,18 @@ def create_param_docstring(param_spec):
     location = param_spec.get('in')
     required = param_spec.get('required', False)
 
-    s = ":param {0}: {1}".format(name, desc)
+    s = u':param {0}: {1}'.format(name, desc)
     if default_value is not None:
-        s += " (Default: {0})".format(default_value)
+        s += u' (Default: {0})'.format(default_value)
     if not required:
-        s += " (optional)"
-    s += "\n"
+        s += ' (optional)'
+    s += '\n'
 
     if location == 'body':
         param_type = formatted_type(param_spec.get('schema'))
     else:
         param_type = param_spec.get('type')
-    s += ":type {0}: {1}\n".format(name, param_type)
+    s += u':type {0}: {1}\n'.format(name, param_type)
 
     # TODO: Lot more stuff can go in here - see "Parameter Object" in 2.0 Spec.
     return s
