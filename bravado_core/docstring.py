@@ -139,7 +139,7 @@ def create_param_docstring(param_spec):
         param_type = formatted_type(param_spec.get('schema'))
     else:
         param_type = param_spec.get('type')
-    s += ':type {0}: {1}\n'.format(name, param_type)
+    s += u':type {0}: {1}\n'.format(name, param_type)
 
     # TODO: Lot more stuff can go in here - see "Parameter Object" in 2.0 Spec.
     return s
