@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import pytest
 
 from bravado_core.exception import SwaggerMappingError
@@ -31,7 +32,7 @@ def address_spec():
 def address():
     return {
         'number': 1600,
-        'street_name': 'Pennsylvania',
+        'street_name': u'Ümlaut',
         'street_type': 'Avenue'
     }
 
@@ -139,7 +140,7 @@ def test_missing_properties_not_marshaled(
         empty_swagger_spec, address_spec, address):
     del address['number']
     expected_address = {
-        'street_name': 'Pennsylvania',
+        'street_name': u'Ümlaut',
         'street_type': 'Avenue'
     }
     result = marshal_object(empty_swagger_spec, address_spec, address)
@@ -150,7 +151,7 @@ def test_property_set_to_None_not_marshaled(
         empty_swagger_spec, address_spec, address):
     address['number'] = None
     expected_address = {
-        'street_name': 'Pennsylvania',
+        'street_name': u'Ümlaut',
         'street_type': 'Avenue'
     }
     result = marshal_object(empty_swagger_spec, address_spec, address)
@@ -163,7 +164,7 @@ def test_pass_through_additionalProperties_with_no_spec(
     address['city'] = 'Swaggerville'
     expected_address = {
         'number': 1600,
-        'street_name': 'Pennsylvania',
+        'street_name': u'Ümlaut',
         'street_type': 'Avenue',
         'city': 'Swaggerville',
     }
