@@ -3,7 +3,6 @@ import logging
 
 import six
 import simplejson as json
-from six.moves.urllib.parse import quote
 
 from bravado_core import schema
 from bravado_core.exception import SwaggerMappingError
@@ -117,8 +116,8 @@ def marshal_param(param, value, request):
 
     if location == 'path':
         token = u'{%s}' % param.name
-        request['url'] = \
-            request['url'].replace(token, quote(six.text_type(value)))
+        # Don't do any escaping/encoding - http_client will take care of it
+        request['url'] = request['url'].replace(token, six.text_type(value))
     elif location == 'query':
         request['params'][param.name] = value
     elif location == 'header':

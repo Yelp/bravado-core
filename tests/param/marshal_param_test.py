@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import copy
 
 from mock import Mock, patch
@@ -66,12 +67,34 @@ def test_query_array(empty_swagger_spec, array_param_spec, request_dict):
     assert expected == request_dict
 
 
-def test_path_string(empty_swagger_spec, param_spec):
+def test_path_integer(empty_swagger_spec, param_spec):
     param_spec['in'] = 'path'
     param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
     request = {'url': '/pet/{petId}'}
     marshal_param(param, 34, request)
+    # verify integer coerceced to str
     assert '/pet/34' == request['url']
+
+
+def test_path_string(empty_swagger_spec, param_spec):
+    param_spec['in'] = 'path'
+    param_spec['type'] = 'string'
+    del param_spec['format']
+    param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
+    request = {'url': '/pet/{petId}'}
+    marshal_param(param, '34', request)
+    assert '/pet/34' == request['url']
+
+
+def test_path_unicode_string(empty_swagger_spec, param_spec):
+    param_spec['in'] = 'path'
+    param_spec['type'] = 'string'
+    del param_spec['format']
+    param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
+    request = {'url': '/pet/{petId}'}
+    marshal_param(param, u'Ümlaut', request)
+    # verify no escaping/encoding takes place on URL
+    assert u'/pet/Ümlaut' == request['url']
 
 
 def test_header_string(empty_swagger_spec, param_spec):
@@ -135,7 +158,7 @@ def assert_validate_call_count(expected_call_count, config, petstore_dict):
         request = {'url': '/pet/{petId}'}
         op = petstore_spec.resources['pet'].operations['getPetById']
         param = op.params['petId']
-        marshal_param(param, '34', request)
+        marshal_param(param, 34, request)
         assert expected_call_count == m_validate.call_count
 
 
