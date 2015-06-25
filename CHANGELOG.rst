@@ -1,3 +1,8 @@
+1.1.0 (2015-06-25)
+------------------
+- Better unicode support
+- Python 3 support
+
 1.0.0-rc2 (2015-06-01)
 ------------------
 - Fixed file uploads when marshaling a request
