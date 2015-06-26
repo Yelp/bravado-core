@@ -1,3 +1,7 @@
+1.1.1 (2015-XX-XX)
+------------------
+- Fix unicode in model docstrings
+
 1.1.0 (2015-06-25)
 ------------------
 - Better unicode support
