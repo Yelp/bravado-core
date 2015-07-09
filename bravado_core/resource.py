@@ -3,7 +3,6 @@ import logging
 
 from six import iteritems
 
-from bravado_core.docstring import operation_docstring_wrapper
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.operation import Operation
 
@@ -93,7 +92,7 @@ class Resource(object):
         if not op:
             raise AttributeError(u"Resource '%s' has no operation '%s'" %
                                  (self.name, item))
-        return operation_docstring_wrapper(op)
+        return op
 
     def __dir__(self):
         """

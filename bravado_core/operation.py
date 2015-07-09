@@ -1,26 +1,22 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from six import iteritems
-from six import itervalues
-
-from bravado_core.exception import SwaggerMappingError
-from bravado_core.param import Param, marshal_param
-from bravado_core.response import unmarshal_response
+from bravado_core.param import Param
 
 log = logging.getLogger(__name__)
 
 
 class Operation(object):
-    """Perform a request by taking the kwargs passed to the call and
-    constructing an HTTP request.
-
-    :type swagger_spec: :class:`Spec`
-    :param path_name: path of the operation. e.g. /pet/{petId}
-    :param http_method: get/put/post/delete/etc
-    :param op_spec: operation specification in dict form
+    """
+    Swagger operation defined by a unique (http_method, path_name) pair.
     """
     def __init__(self, swagger_spec, path_name, http_method, op_spec):
+        """
+        :type swagger_spec: :class:`Spec`
+        :param path_name: path of the operation. e.g. /pet/{petId}
+        :param http_method: get/put/post/delete/etc
+        :param op_spec: operation specification in dict form
+        """
         self.swagger_spec = swagger_spec
         self.path_name = path_name
         self.http_method = http_method
@@ -119,56 +115,3 @@ class Operation(object):
 
     def __repr__(self):
         return u"%s(%s)" % (self.__class__.__name__, self.operation_id)
-
-    def construct_request(self, **kwargs):
-        """
-        :param kwargs: parameter name/value pairs to pass to the invocation of
-            the operation
-        :return: request in dict form
-        """
-        request_options = kwargs.pop('_request_options', {})
-        request = {
-            'method': self.http_method.upper(),
-            'url': self.swagger_spec.api_url.rstrip('/') + self.path_name,
-            'params': {},
-            'headers': request_options.get('headers', {}),
-        }
-        self.construct_params(request, kwargs)
-        return request
-
-    def construct_params(self, request, op_kwargs):
-        """
-        Given the parameters passed to the operation invocation, validates and
-        marshals the parmameters into the request dict.
-
-        :type request: dict
-        :param op_kwargs: the kwargs passed to the operation invocation
-        :raises: SwaggerMappingError on extra parameters or when a required
-            parameter is not supplied.
-        """
-        current_params = self.params.copy()
-        for param_name, param_value in iteritems(op_kwargs):
-            param = current_params.pop(param_name, None)
-            if param is None:
-                raise SwaggerMappingError(
-                    "{0} does not have parameter {1}"
-                    .format(self.operation_id, param_name))
-            marshal_param(param, param_value, request)
-
-        # Check required params and non-required params with a 'default' value
-        for remaining_param in itervalues(current_params):
-            if remaining_param.required:
-                raise SwaggerMappingError(
-                    '{0} is a required parameter'.format(remaining_param.name))
-            if not remaining_param.required and remaining_param.has_default():
-                marshal_param(remaining_param, None, request)
-
-    def __call__(self, **kwargs):
-        # TODO: Refactor http invocation to bravado.
-        log.debug(u"%s(%s)" % (self.operation_id, kwargs))
-        request = self.construct_request(**kwargs)
-
-        def response_callback(response_adapter):
-            return unmarshal_response(response_adapter, self)
-
-        return self.swagger_spec.http_client.request(request, response_callback)
