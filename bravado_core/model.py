@@ -200,9 +200,9 @@ def is_model(spec):
 def create_model_docstring(model_spec):
     """
     :param model_spec: specification for a model in dict form
-    :rtype: string
+    :rtype: string or unicode
     """
-    s = "Attributes:\n\n\t"
+    s = 'Attributes:\n\n\t'
     attr_iter = iter(sorted(iteritems(model_spec['properties'])))
     # TODO: Add more stuff available in the spec - 'required', 'example', etc
     for attr_name, attr_spec in attr_iter:
@@ -218,7 +218,7 @@ def create_model_docstring(model_spec):
                 array_type = array_spec[MODEL_MARKER]
             else:
                 array_type = array_spec['type']
-            attr_type = "list of {0}".format(array_type)
+            attr_type = u'list of {0}'.format(array_type)
 
         elif is_model(attr_spec):
             attr_type = attr_spec[MODEL_MARKER]
@@ -226,10 +226,10 @@ def create_model_docstring(model_spec):
         elif schema_type == 'object':
             attr_type = 'dict'
 
-        s += "{0}: {1}".format(attr_name, attr_type)
+        s += u'{0}: {1}'.format(attr_name, attr_type)
 
         if attr_spec.get('description'):
-            s += " - {0}".format(attr_spec['description'])
+            s += u' - {0}'.format(attr_spec['description'])
 
         s += '\n\t'
     return s
