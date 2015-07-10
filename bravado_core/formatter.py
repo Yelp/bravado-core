@@ -3,6 +3,7 @@ Support for the 'format' key in the swagger spec as outlined in
 https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#dataTypeFormat
 """
 import dateutil.parser
+from collections import namedtuple
 
 import six
 
@@ -20,6 +21,13 @@ def register_format(format, to_wire, to_python, description=None):
     :param description: useful description
     """
     _formatters[format] = (to_wire, to_python, description)
+
+
+def get_formatter(format):
+    """
+    Returns the appriopriate formatting tuples or None
+    """
+    return _formatters.get(format)
 
 
 def to_wire(spec, value):
