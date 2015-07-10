@@ -5,8 +5,8 @@ import six
 import simplejson as json
 
 from bravado_core import schema
+from bravado_core.content_type import APP_JSON
 from bravado_core.exception import SwaggerMappingError
-from bravado_core.http_client import APP_JSON
 from bravado_core.marshal import marshal_schema_object
 from bravado_core.unmarshal import unmarshal_schema_object
 from bravado_core.validate import validate_schema_object

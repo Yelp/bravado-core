@@ -1,6 +1,6 @@
 from six import iteritems
 
-from bravado_core.http_client import APP_JSON
+from bravado_core.content_type import APP_JSON
 from bravado_core.unmarshal import unmarshal_schema_object
 from bravado_core.validate import validate_schema_object
 from bravado_core.exception import SwaggerMappingError
