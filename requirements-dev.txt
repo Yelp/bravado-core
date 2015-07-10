@@ -1,4 +1,4 @@
 # Unit test dependencies
-mock
+mock<1.1.0
 pre-commit
 pytest

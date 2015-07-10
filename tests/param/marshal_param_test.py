@@ -4,7 +4,7 @@ import copy
 from mock import Mock, patch
 import pytest
 
-from bravado_core.http_client import APP_JSON
+from bravado_core.content_type import APP_JSON
 from bravado_core.param import Param, marshal_param
 from bravado_core.operation import Operation
 from bravado_core.spec import Spec
