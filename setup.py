@@ -20,7 +20,7 @@ setup(
     url="https://github.com/Yelp/bravado-core",
     packages=["bravado_core"],
     classifiers=[
-        "Development Status :: 4 - Beta",
+        "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
         "Topic :: Software Development :: Libraries :: Python Modules",
         "License :: OSI Approved :: BSD License",

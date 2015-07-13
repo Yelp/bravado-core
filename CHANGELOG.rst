@@ -1,5 +1,6 @@
-1.1.1 (2015-XX-XX)
+2.0.0 (2015-07-13)
 ------------------
+- Move http invocation to bravado
 - Fix unicode in model docstrings
 - Require swagger-spec-validator 1.0.12 to pick up bug fixes
 
