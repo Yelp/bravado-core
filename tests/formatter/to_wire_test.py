@@ -24,6 +24,11 @@ def test_datetime():
     assert '2015-03-22T13:19:54' == result
 
 
+def test_no_registered_format_returns_value_as_is():
+    spec = {'type': 'foo', 'format': 'bar'}
+    assert 'baz' == to_wire(spec, 'baz')
+
+
 def test_int64_long():
     spec = {'type': 'integer', 'format': 'int64'}
     if six.PY3:
