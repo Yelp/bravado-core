@@ -3,7 +3,8 @@ Support for the 'format' key in the swagger spec as outlined in
 https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#dataTypeFormat
 """
 
-import collections
+import warnings
+from collections import namedtuple
 
 import six
 import dateutil.parser
@@ -12,6 +13,8 @@ from bravado_core import schema
 
 if six.PY3:
     long = int
+
+NO_OP = lambda x: None
 
 
 def to_wire(spec, value):
@@ -43,26 +46,44 @@ def to_python(spec, value):
 
 
 def register_format(swagger_format):
-    """
-    Register a swagger_format to a global _formatters cache.
+    """Register a user defined format with bravado-core.
 
-    :type format: string
-    :param to_wire: single argument callable that converts a value to wire
-        format
-    :param to_python: single argument callable that converts a value to python
-    :param description: useful description
+    :type swagger_format: :class:`SwaggerFormat`
     """
     global _formatters
     _formatters[swagger_format.format] = swagger_format
 
 
 def get_format(format):
-    return _formatters.get(format)
+    """Get registered formatter mapped to given format.
+
+    :param format: Format name like int, base64, etc.
+    :type format: str
+    """
+    formatter = _formatters.get(format)
+    if not formatter:
+        warnings.warn(
+            "%s format is not registered with bravado-core!" % format, Warning)
+    return formatter
 
 
 # validate should check the correctness of `wire` value
-SwaggerFormat = collections.namedtuple(
-    'SwaggerFormat', 'format to_python to_wire validate description')
+class SwaggerFormat(namedtuple('SwaggerFormat',
+                    'format to_python to_wire validate description')):
+    """It defines a user defined format which can be registered with
+    bravado-core and then can be used for marshalling/unmarshalling data
+    as per the user defined methods. User can also add `validate` method
+    which is invoked during bravado-core's validation flow.
+
+    :param format: Name for the user format.
+    :param to_python: Lambda method to unmarshal a value of this format
+    :param to_wire: Lambda method to marshal a value of this format
+    :param validate: Lambda method to validate the marshalled value. The method
+                     should raise Exception if the value doesn't conform to the
+                     format. `bravado-core` re-raises the exception with
+                     :class:`bravado_core.exception.SwaggerValidationError`.
+    :param description: Short description of the format and conversion logic.
+    """
 
 
 _formatters = {
@@ -71,44 +92,44 @@ _formatters = {
         to_wire=lambda b: b if isinstance(b, str) else str(b),
         to_python=(
             lambda s: s if isinstance(s, str) else str(s)),
-        validate=lambda x: None,  # jsonschema validates string
+        validate=NO_OP,  # jsonschema validates string
         description='Converts [wire]string:byte <=> python byte'),
     'date': SwaggerFormat(
         format='date',
         to_wire=lambda d: d.isoformat(),
         to_python=lambda d: dateutil.parser.parse(d).date(),
-        validate=lambda x: None,  # jsonschema validates date
+        validate=NO_OP,  # jsonschema validates date
         description='Converts [wire]string:date <=> python datetime.date'),
     # Python has no double. float is C's double in CPython
     'double': SwaggerFormat(
         format='double',
         to_wire=lambda d: d if isinstance(d, float) else float(d),
         to_python=lambda d: d if isinstance(d, float) else float(d),
-        validate=lambda x: None,  # jsonschema validates number
+        validate=NO_OP,  # jsonschema validates number
         description='Converts [wire]number:double <=> python float'),
     'date-time': SwaggerFormat(
         format='date-time',
         to_wire=lambda dt: dt.isoformat(),
         to_python=lambda dt: dateutil.parser.parse(dt),
-        validate=lambda x: None,  # jsonschema validates date-time
+        validate=NO_OP,  # jsonschema validates date-time
         description=(
             'Converts string:date-time <=> python datetime.datetime')),
     'float': SwaggerFormat(
         format='float',
         to_wire=lambda f: f if isinstance(f, float) else float(f),
         to_python=lambda f: f if isinstance(f, float) else float(f),
-        validate=lambda x: None,  # jsonschema validates number
+        validate=NO_OP,  # jsonschema validates number
         description='Converts [wire]number:float <=> python float'),
     'int32': SwaggerFormat(
         format='int32',
         to_wire=lambda i: i if isinstance(i, int) else int(i),
         to_python=lambda i: i if isinstance(i, int) else int(i),
-        validate=lambda x: None,  # jsonschema validates integer
+        validate=NO_OP,  # jsonschema validates integer
         description='Converts [wire]integer:int32 <=> python int'),
     'int64': SwaggerFormat(
         format='int64',
         to_wire=lambda i: i if isinstance(i, long) else long(i),
         to_python=lambda i: i if isinstance(i, long) else long(i),
-        validate=lambda x: None,  # jsonschema validates integer
+        validate=NO_OP,  # jsonschema validates integer
         description='Converts [wire]integer:int64 <=> python long'),
     }

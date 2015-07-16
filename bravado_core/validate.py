@@ -3,15 +3,21 @@ Delegate as much validation as possible out to jsonschema. This module serves
 as the single point of entry for validations should we need to further
 customize the behavior.
 """
-from jsonschema.exceptions import ValidationError
 
-from bravado_core.exception import wrap_exception, SwaggerMappingError
+from bravado_core.exception import (wrap_exception,
+                                    SwaggerMappingError,
+                                    SwaggerValidationError)
 from bravado_core.schema import SWAGGER_PRIMITIVES
 from bravado_core.formatter import get_format
 from bravado_core.swagger20_validator import Swagger20Validator
 
 
 def validate_schema_object(spec, value):
+    """
+    :raises ValidationError: when validation error found by jsonschema.
+    :raises SwaggerMappingError: when `type` of the value is not as per v1.2
+    :raises SwaggerValidationError: when user format's `validate` raises error.
+    """
     obj_type = spec['type']
 
     if obj_type in SWAGGER_PRIMITIVES:
@@ -31,7 +37,7 @@ def validate_schema_object(spec, value):
             obj_type, value))
 
 
-@wrap_exception(ValidationError)
+@wrap_exception(SwaggerValidationError)
 def validate_user_format(spec, value):
     formatter = get_format(spec.get('format'))
     if formatter:

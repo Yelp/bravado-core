@@ -8,6 +8,6 @@ def test_exception_gets_correctly_wrapped():
     def raise_assertion_error():
         raise AssertionError('bla')
 
-    with pytest.raises(IOError) as e:
+    with pytest.raises(IOError) as excinfo:
         raise_assertion_error()
-        assert 'bla' == e.message
+    assert 'bla' == str(excinfo.value)
