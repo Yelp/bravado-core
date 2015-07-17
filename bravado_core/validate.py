@@ -15,7 +15,7 @@ from bravado_core.swagger20_validator import Swagger20Validator
 def validate_schema_object(spec, value):
     """
     :raises ValidationError: when validation error found by jsonschema.
-    :raises SwaggerMappingError: when `type` of the value is not as per v1.2
+    :raises SwaggerMappingError: when `type` of value is not as per spec v2.0
     :raises SwaggerValidationError: when user format's `validate` raises error.
     """
     obj_type = spec['type']

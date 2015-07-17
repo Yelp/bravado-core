@@ -59,9 +59,10 @@ def get_format(format):
 
     :param format: Format name like int, base64, etc.
     :type format: str
+    :rtype: :class:`SwaggerFormat` or None
     """
     formatter = _formatters.get(format)
-    if not formatter:
+    if format and not formatter:
         warnings.warn(
             "%s format is not registered with bravado-core!" % format, Warning)
     return formatter
@@ -76,9 +77,11 @@ class SwaggerFormat(namedtuple('SwaggerFormat',
     which is invoked during bravado-core's validation flow.
 
     :param format: Name for the user format.
-    :param to_python: Lambda method to unmarshal a value of this format
-    :param to_wire: Lambda method to marshal a value of this format
-    :param validate: Lambda method to validate the marshalled value. The method
+    :param to_python: function to unmarshal a value of this format.
+                      Eg. lambda str: base64.b64decode(str)
+    :param to_wire: function to marshal a value of this format
+                    Eg. lambda val: base64.b64encode(val)
+    :param validate: function to validate the marshalled value. The method
                      should raise Exception if the value doesn't conform to the
                      format. `bravado-core` re-raises the exception with
                      :class:`bravado_core.exception.SwaggerValidationError`.
