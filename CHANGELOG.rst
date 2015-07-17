@@ -1,3 +1,7 @@
+2.1.0 (2015-07-17)
+------------------
+- Handle user defined formats for serialization and validation.
+
 2.0.0 (2015-07-13)
 ------------------
 - Move http invocation to bravado
