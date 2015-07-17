@@ -78,13 +78,12 @@ class SwaggerFormat(namedtuple('SwaggerFormat',
 
     :param format: Name for the user format.
     :param to_python: function to unmarshal a value of this format.
-                      Eg. lambda str: base64.b64decode(str)
+                      Eg. lambda val_str: base64.b64decode(val_str)
     :param to_wire: function to marshal a value of this format
-                    Eg. lambda val: base64.b64encode(val)
-    :param validate: function to validate the marshalled value. The method
-                     should raise Exception if the value doesn't conform to the
-                     format. `bravado-core` re-raises the exception with
-                     :class:`bravado_core.exception.SwaggerValidationError`.
+                    Eg. lambda val_py: base64.b64encode(val_py)
+    :param validate: function to validate the marshalled value. Raises
+                     :class:`bravado_core.exception.SwaggerValidationError`
+                     if value does not conform to the format.
     :param description: Short description of the format and conversion logic.
     """
 
