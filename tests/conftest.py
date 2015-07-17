@@ -1,8 +1,10 @@
+import base64
 import os
 import simplejson as json
 
 import pytest
 
+import bravado_core.formatter
 from bravado_core.spec import Spec
 
 
@@ -45,3 +47,23 @@ def petstore_dict():
 @pytest.fixture
 def petstore_spec(petstore_dict):
     return Spec.from_dict(petstore_dict)
+
+
+def del_base64():
+    del bravado_core.formatter._formatters['base64']
+
+
+@pytest.fixture
+def base64_format():
+    return bravado_core.formatter.SwaggerFormat(
+        format='base64',
+        to_wire=base64.b64encode,
+        to_python=base64.b64decode,
+        validate=base64.b64decode,
+        description='Base64')
+
+
+@pytest.fixture(scope='function')
+def register_base64_format(base64_format, request):
+    request.addfinalizer(del_base64)
+    bravado_core.formatter.register_format(base64_format)

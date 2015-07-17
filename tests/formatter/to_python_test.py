@@ -1,6 +1,7 @@
 from datetime import date, datetime
 
 import six
+from mock import patch
 
 from bravado_core.formatter import to_python
 
@@ -24,6 +25,18 @@ def test_datetime():
     spec = {'type': 'string', 'format': 'date-time'}
     result = to_python(spec, '2015-03-22T13:19:54')
     assert datetime(2015, 3, 22, 13, 19, 54) == result
+
+
+@patch('bravado_core.formatter.warnings.warn')
+def test_no_registered_format_returns_value_as_is(_):
+    spec = {'type': 'foo', 'format': 'bar'}
+    assert 'baz' == to_python(spec, 'baz')
+
+
+@patch('bravado_core.formatter.warnings.warn')
+def test_no_registered_format_throws_warning(mock_warn):
+    to_python({'type': 'foo', 'format': 'bar'}, 'baz')
+    mock_warn.assert_called_once()
 
 
 def test_int64_long():
