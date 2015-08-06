@@ -1,4 +1,4 @@
-2.2.0 (2015-XX-XX)
+2.2.0 (2015-08-06)
 ------------------
 - Add reason to IncomingResponse
 
