@@ -16,6 +16,7 @@ class IncomingResponse(object):
     Subclasses are responsible for providing attrs for __required_attrs__.
     """
     __required_attrs__ = [
+        'reason',       # string - http reason phrase
         'status_code',  # int - http status code
         'text',         # string - raw text of the body
     ]
@@ -46,6 +47,9 @@ class IncomingResponse(object):
         :rtype: int, float, double, string, unicode, list, dict
         """
         raise NotImplementedError("Implement json() in {0}".format(type(self)))
+
+    def __str__(self):
+        return '{0} {1}'.format(self.status_code, self.reason)
 
 
 class OutgoingResponse(object):
