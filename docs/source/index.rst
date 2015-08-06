@@ -32,7 +32,7 @@ Contents:
    quickstart
    changelog
    configuration
-   bravado
+   bravado_core
 
 Indices and tables
 ==================
