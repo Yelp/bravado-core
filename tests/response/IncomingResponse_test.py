@@ -33,3 +33,15 @@ def test_any_other_attr_throws_AttributeError():
     r = UnrelatedReponse()
     with pytest.raises(AttributeError):
         r.foo
+
+
+def test_str():
+
+    class CompliantIncomingResponse(IncomingResponse):
+
+        def __init__(self):
+            self.status_code = 200
+            self.reason = 'OK'
+
+    r = CompliantIncomingResponse()
+    assert str(r) == '200 OK'

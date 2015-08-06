@@ -1,3 +1,7 @@
+2.2.0 (2015-XX-XX)
+------------------
+- Add reason to IncomingResponse
+
 2.1.0 (2015-07-17)
 ------------------
 - Handle user defined formats for serialization and validation.
