@@ -3,7 +3,7 @@ from six import iteritems
 from bravado_core.content_type import APP_JSON
 from bravado_core.unmarshal import unmarshal_schema_object
 from bravado_core.validate import validate_schema_object
-from bravado_core.exception import SwaggerMappingError
+from bravado_core.exception import SwaggerMappingError, MatchingResponseNotFound
 
 # Response bodies considered to be empty
 EMPTY_BODIES = (None, '', '{}', 'null')
@@ -126,8 +126,8 @@ def get_response_spec(status_code, op):
     :type op: :class:`bravado_core.operation.Operation`
     :return: response specification
     :rtype: dict
-    :raises: SwaggerMappingError when the status_code could not be mapped to
-        a response specification.
+    :raises: MatchingResponseNotFound when the status_code could not be mapped
+        to a response specification.
     """
     # We don't need to worry about checking #/responses/ because jsonref has
     # already inlined the $refs
@@ -135,10 +135,10 @@ def get_response_spec(status_code, op):
     default_response_spec = response_specs.get('default', None)
     response_spec = response_specs.get(str(status_code), default_response_spec)
     if response_spec is None:
-        raise SwaggerMappingError(
+        raise MatchingResponseNotFound(
             "Response specification matching http status_code {0} not found "
-            "for {1}. Either add a response specifiction for the status_code "
-            "or use a `default` response.".format(op, status_code))
+            "for operation {1}. Either add a response specification for the "
+            "status_code or use a `default` response.".format(status_code, op))
     return response_spec
 
 

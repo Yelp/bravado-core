@@ -1,6 +1,6 @@
 import pytest
 
-from bravado_core.exception import SwaggerMappingError
+from bravado_core.exception import MatchingResponseNotFound
 from bravado_core.operation import Operation
 from bravado_core.response import get_response_spec
 
@@ -34,6 +34,6 @@ def test_raise_error_when_no_default_and_no_status_code_match(
         empty_swagger_spec, op_spec):
     del op_spec['responses']['default']
     op = Operation(empty_swagger_spec, '/pet/{petId}', 'get', op_spec)
-    with pytest.raises(SwaggerMappingError) as excinfo:
+    with pytest.raises(MatchingResponseNotFound) as excinfo:
         get_response_spec(404, op)
     assert 'not found' in str(excinfo.value)

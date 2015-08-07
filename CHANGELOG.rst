@@ -1,3 +1,8 @@
+2.3.0 (2015-XX-XX)
+------------------
+- Raise MatchingResponseNotFound instead of SwaggerMappingError
+  when a response can't be matched to the Swagger schema.
+
 2.2.0 (2015-08-06)
 ------------------
 - Add reason to IncomingResponse
