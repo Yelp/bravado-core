@@ -1,4 +1,4 @@
-2.3.0 (2015-XX-XX)
+2.3.0 (2015-08-10)
 ------------------
 - Raise MatchingResponseNotFound instead of SwaggerMappingError
   when a response can't be matched to the Swagger schema.
