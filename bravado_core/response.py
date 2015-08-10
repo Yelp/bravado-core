@@ -3,7 +3,7 @@ from six import iteritems
 from bravado_core.content_type import APP_JSON
 from bravado_core.unmarshal import unmarshal_schema_object
 from bravado_core.validate import validate_schema_object
-from bravado_core.exception import SwaggerMappingError, MatchingResponseNotFound
+from bravado_core.exception import MatchingResponseNotFound, SwaggerMappingError 
 
 # Response bodies considered to be empty
 EMPTY_BODIES = (None, '', '{}', 'null')
