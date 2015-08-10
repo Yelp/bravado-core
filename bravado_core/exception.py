@@ -15,6 +15,12 @@ class SwaggerMappingError(SwaggerError):
     """
 
 
+class MatchingResponseNotFound(SwaggerMappingError):
+    """Raised when an incoming or outgoing response cannot be matched to a
+    documented response in the swagger spec.
+    """
+
+
 class SwaggerValidationError(SwaggerMappingError):
     """Raised when an error is encountered during validating user defined
     format values in a request or a resposne.
