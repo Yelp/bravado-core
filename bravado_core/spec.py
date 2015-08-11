@@ -85,7 +85,10 @@ class Spec(object):
         """
         tag_models(spec_dict)
         fix_malformed_model_refs(spec_dict)
-        spec_dict = jsonref.JsonRef.replace_refs(spec_dict)
+        kwargs = {}
+        if origin_url:
+            kwargs['base_uri'] = origin_url
+        spec_dict = jsonref.JsonRef.replace_refs(spec_dict, **kwargs)
         replace_jsonref_proxies(spec_dict)
         spec = cls(spec_dict, origin_url, http_client, config)
         spec.build()
