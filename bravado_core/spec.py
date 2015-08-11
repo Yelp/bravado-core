@@ -206,7 +206,9 @@ def replace_jsonref_proxies(obj):
                     fragment[k] = v.__subject__
                 descend(fragment[k])
         elif is_list_like(fragment):
-            for element in fragment:
+            for index, element in enumerate(fragment):
+                if isinstance(element, jsonref.JsonRef):
+                    fragment[index] = element.__subject__
                 descend(element)
 
     descend(obj)

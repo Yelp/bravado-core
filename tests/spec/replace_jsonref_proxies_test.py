@@ -20,10 +20,10 @@ def test_dict():
         }
     }
     json_obj = jsonref.loads(json.dumps(d))
-    assert isinstance(json_obj['foo'], jsonref.JsonRef)
+    assert type(json_obj['foo']) == jsonref.JsonRef
 
     replace_jsonref_proxies(json_obj)
-    assert isinstance(json_obj['foo'], dict)
+    assert type(json_obj['foo']) == dict
 
     assert d['definitions']['user'] == json_obj['foo']
 
@@ -56,12 +56,12 @@ def test_nested_dict():
         }
     }
     json_obj = jsonref.loads(json.dumps(d))
-    assert isinstance(json_obj['foo'], jsonref.JsonRef)
-    assert isinstance(json_obj['foo']['properties']['address'], jsonref.JsonRef)
+    assert type(json_obj['foo']) == jsonref.JsonRef
+    assert type(json_obj['foo']['properties']['address']) == jsonref.JsonRef
 
     replace_jsonref_proxies(json_obj)
-    assert isinstance(json_obj['foo'], dict)
-    assert isinstance(json_obj['foo']['properties']['address'], dict)
+    assert type(json_obj['foo']) == dict
+    assert type(json_obj['foo']['properties']['address']) == dict
 
     assert d['definitions']['address'] == \
         json_obj['foo']['properties']['address']
@@ -85,9 +85,9 @@ def test_list():
         }
     }
     json_obj = jsonref.loads(json.dumps(d))
-    assert isinstance(json_obj['foo'][0], jsonref.JsonRef)
+    assert type(json_obj['foo'][0]) == jsonref.JsonRef
 
     replace_jsonref_proxies(json_obj)
-    assert isinstance(json_obj['foo'][0], dict)
+    assert type(json_obj['foo'][0]) == dict
 
     assert d['definitions']['user'] == json_obj['foo'][0]
