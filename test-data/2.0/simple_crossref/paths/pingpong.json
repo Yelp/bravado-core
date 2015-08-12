@@ -1,0 +1,7 @@
+{
+  "ping": {
+    "get": {
+      "$ref": "../operations/pingpong.json#/ping/get"
+    }
+  }
+}

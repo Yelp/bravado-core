@@ -4,16 +4,46 @@
     "version": "1.0.0",
     "title": "Simple"
   },
+  "tags": [
+      {
+          "name": "pingpong",
+          "description": "pingpong related specs"
+      }
+  ],
   "paths": {
     "/ping": {
       "get": {
+        "tags": [
+            "pingpong"
+        ],
         "operationId": "ping",
+        "parameters": [
+            {
+                "name": "pung",
+                "in": "query",
+                "description": "true or false",
+                "type": "boolean"
+            }
+        ],
         "responses": {
           "200": {
-            "description": "pong"
+            "description": "pong",
+            "schema": {
+              "$ref": "#/definitions/pong"
+            }
           }
         }
       }
     }
+  },
+  "definitions": {
+      "pong": {
+          "type": "object",
+          "properties": {
+              "pang": {
+                  "type": "string"
+              }
+          }
+      }
   }
 }

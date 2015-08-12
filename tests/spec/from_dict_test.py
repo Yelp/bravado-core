@@ -1,4 +1,8 @@
+import os
+
 import mock
+import simplejson as json
+from six.moves.urllib import parse as urlparse
 
 from bravado_core.spec import Spec
 
@@ -17,3 +21,33 @@ def test_origin_uri_gets_passed_to_jsonref(mock_build, mock_prox, mock_ref,
     Spec.from_dict(minimal_swagger_dict, origin_url='file:///foo')
     mock_ref.replace_refs.assert_called_once_with(
         minimal_swagger_dict, base_uri='file:///foo')
+
+
+def get_spec_json_and_url(rel_url):
+    my_dir = os.path.abspath(os.path.dirname(__file__))
+    abs_path = os.path.join(my_dir, rel_url)
+    with open(abs_path) as f:
+        return json.loads(f.read()), urlparse.urljoin('file:', abs_path)
+
+
+def test_relative_ref_spec():
+    expected_raw_dict, _ = get_spec_json_and_url(
+        '../../test-data/2.0/simple/swagger.json')
+    expected_dict = Spec.from_dict(expected_raw_dict).spec_dict
+
+    relative_crossref_url = '../../test-data/2.0/simple_crossref/swagger.json'
+    crossref_dict, crossref_url = get_spec_json_and_url(relative_crossref_url)
+    resultant_spec = Spec.from_dict(crossref_dict, origin_url=crossref_url)
+
+    def delete_key_from_dict(dict_del, key):
+        dict_del.pop(key, None)
+
+        for v in dict_del.values():
+            if isinstance(v, dict):
+                delete_key_from_dict(v, key)
+        return dict_del
+
+    # TODO: Make the behavior of x-model consitent for both the specs. Currently
+    # it gets populated only for the former. Hence, removing that key from dict
+    delete_key_from_dict(expected_dict, 'x-model')
+    assert expected_dict == json.loads(json.dumps(resultant_spec.spec_dict))
