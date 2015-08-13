@@ -1,4 +1,4 @@
-2.4.0 (2015-08-12)
+2.4.0 (2015-08-13)
 ------------------
 - Support relative '$ref' references in swagger.json
 - Fix dereferencing of jsonref when given in a list
