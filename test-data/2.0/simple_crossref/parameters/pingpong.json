@@ -1,0 +1,8 @@
+{
+    "pung": {
+        "name": "pung",
+        "in": "query",
+        "description": "true or false",
+        "type": "boolean"
+    }
+}

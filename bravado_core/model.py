@@ -148,6 +148,7 @@ def tag_models(spec_dict):
     :param spec_dict: swagger spec in dict form
     """
     # TODO: unit test + docstring
+    # TODO: Also Tag models defined via external referencing (read #45)
     models_dict = spec_dict.get('definitions', {})
     for model_name, model_spec in iteritems(models_dict):
         model_type = model_spec.get('type')

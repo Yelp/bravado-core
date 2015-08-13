@@ -1,3 +1,8 @@
+2.4.0 (2015-08-13)
+------------------
+- Support relative '$ref' external references in swagger.json
+- Fix dereferencing of jsonref when given in a list
+
 2.3.0 (2015-08-10)
 ------------------
 - Raise MatchingResponseNotFound instead of SwaggerMappingError

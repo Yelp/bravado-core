@@ -1,0 +1,20 @@
+{
+  "ping": {
+      "get": {
+        "tags": [
+            "pingpong"
+        ],
+        "operationId": "ping",
+        "parameters": [
+            {
+                "$ref": "../parameters/pingpong.json#/pung"
+            }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "../responses/pingpong.json#/pong"
+          }
+        }
+      }
+    }
+}
