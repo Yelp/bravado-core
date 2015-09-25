@@ -5,11 +5,13 @@ https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#dataType
 
 import warnings
 from collections import namedtuple
+from jsonschema._format import FormatChecker
 
 import six
 import dateutil.parser
 
 from bravado_core import schema
+from bravado_core.exception import SwaggerValidationError
 
 if six.PY3:
     long = int
@@ -53,11 +55,27 @@ def register_format(swagger_format):
     global _formatters
     _formatters[swagger_format.format] = swagger_format
 
+    # Need to keep a separate list for UDFs for jsonschema format validation
+    global _user_defined_formats
+    _user_defined_formats.append(swagger_format)
+
+
+def unregister_format(swagger_format):
+    global _formatters
+    del _formatters[swagger_format.format]
+
+    global _user_defined_formats
+    _user_defined_formats.remove(swagger_format)
+
+    # Invalidate to it is rebuilt
+    global _format_checker
+    _format_checker = None
+
 
 def get_format(format):
     """Get registered formatter mapped to given format.
 
-    :param format: Format name like int, base64, etc.
+    :param format: Format name like int32, base64, etc.
     :type format: str
     :rtype: :class:`SwaggerFormat` or None
     """
@@ -87,6 +105,45 @@ class SwaggerFormat(namedtuple('SwaggerFormat',
     :param description: Short description of the format and conversion logic.
     """
 
+def return_true_wrapper(validate_func):
+    """Decorator for the SwaggerFormat.validate function to always return True.
+
+    The contract for SwaggerFormat.validate is to raise an exception
+    when validation fails. However, the contract for jsonschema's
+    validate function is to raise an exception or return True. This just
+    adapts jsonschema's contract to SwaggerFormat.validate's contract.
+
+    :param validate_func: SwaggerFormat.validate function
+    :return: wrapped callable
+    """
+    def wraps(validatable_primitive):
+        validate_func(validatable_primitive)
+        return True
+
+    return wraps
+
+
+def get_format_checker():
+    """
+    Build and cache FormatChecker for validating
+    user-defined Swagger formats.
+
+    :rtype: :class:`jsonschema._format.FormatChecker`
+    """
+    if _format_checker is None:
+        global _format_checker
+        _format_checker = FormatChecker()
+        for swagger_format in _user_defined_formats:
+            _format_checker.checkers[swagger_format.format] = (
+                return_true_wrapper(swagger_format.validate),
+                (SwaggerValidationError,))
+    return _format_checker
+
+# :class:`jsonschema._format.FormatChecker`
+_format_checker = None
+
+# List of newly registered user-defined :class:`SwaggerFormat`s
+_user_defined_formats = []
 
 _formatters = {
     'byte': SwaggerFormat(
