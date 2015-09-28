@@ -67,6 +67,7 @@ def email_address_array_spec():
         }
     }
 
+
 def test_user_defined_format_success(email_address_array_spec):
     request_body = ['foo@bar.com']
     with registered_format(email_address_format):
