@@ -48,19 +48,23 @@ def to_python(spec, value):
 
 
 def register_format(swagger_format):
-    """Register a user defined format with bravado-core.
+    """Register a user-defined format with bravado-core.
 
     :type swagger_format: :class:`SwaggerFormat`
     """
     global _formatters
     _formatters[swagger_format.format] = swagger_format
 
-    # Need to keep a separate list for UDFs for jsonschema format validation
+    # Need to maintain a separate list of UDFs for jsonschema validation
     global _user_defined_formats
     _user_defined_formats.append(swagger_format)
 
 
 def unregister_format(swagger_format):
+    """Unregister an existing user-defined format.
+
+    :type swagger_format: :class:`SwaggerFormat`
+    """
     global _formatters
     del _formatters[swagger_format.format]
 
@@ -105,13 +109,14 @@ class SwaggerFormat(namedtuple('SwaggerFormat',
     :param description: Short description of the format and conversion logic.
     """
 
+
 def return_true_wrapper(validate_func):
     """Decorator for the SwaggerFormat.validate function to always return True.
 
-    The contract for SwaggerFormat.validate is to raise an exception
+    The contract for `SwaggerFormat.validate` is to raise an exception
     when validation fails. However, the contract for jsonschema's
-    validate function is to raise an exception or return True. This just
-    adapts jsonschema's contract to SwaggerFormat.validate's contract.
+    validate function is to raise an exception or return True. This wrapper
+    bolts-on the `return True` part.
 
     :param validate_func: SwaggerFormat.validate function
     :return: wrapped callable
@@ -134,10 +139,10 @@ _user_defined_formats = []
 
 def get_format_checker():
     """
-    Build and cache FormatChecker for validating
+    Build and cache a :class:`jsonschema.FormatChecker` for validating
     user-defined Swagger formats.
 
-    :rtype: :class:`jsonschema._format.FormatChecker`
+    :rtype: :class:`jsonschema.FormatChecker`
     """
     global _format_checker
     if _format_checker is None:
