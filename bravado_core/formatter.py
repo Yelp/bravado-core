@@ -2,10 +2,10 @@
 Support for the 'format' key in the swagger spec as outlined in
 https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#dataTypeFormat
 """
-
+import functools
 import warnings
 from collections import namedtuple
-from jsonschema._format import FormatChecker
+from jsonschema import FormatChecker
 
 import six
 import dateutil.parser
@@ -67,7 +67,7 @@ def unregister_format(swagger_format):
     global _user_defined_formats
     _user_defined_formats.remove(swagger_format)
 
-    # Invalidate to it is rebuilt
+    # Invalidate so it is rebuilt
     global _format_checker
     _format_checker = None
 
@@ -116,11 +116,20 @@ def return_true_wrapper(validate_func):
     :param validate_func: SwaggerFormat.validate function
     :return: wrapped callable
     """
-    def wraps(validatable_primitive):
+    @functools.wraps(validate_func)
+    def wrapper(validatable_primitive):
         validate_func(validatable_primitive)
         return True
 
-    return wraps
+    return wrapper
+
+
+# jsonschema.FormatChecker
+_format_checker = None
+
+
+# List of newly registered user-defined SwaggerFormats
+_user_defined_formats = []
 
 
 def get_format_checker():
@@ -130,8 +139,8 @@ def get_format_checker():
 
     :rtype: :class:`jsonschema._format.FormatChecker`
     """
+    global _format_checker
     if _format_checker is None:
-        global _format_checker
         _format_checker = FormatChecker()
         for swagger_format in _user_defined_formats:
             _format_checker.checkers[swagger_format.format] = (
@@ -139,11 +148,6 @@ def get_format_checker():
                 (SwaggerValidationError,))
     return _format_checker
 
-# :class:`jsonschema._format.FormatChecker`
-_format_checker = None
-
-# List of newly registered user-defined :class:`SwaggerFormat`s
-_user_defined_formats = []
 
 _formatters = {
     'byte': SwaggerFormat(
