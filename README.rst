@@ -8,7 +8,7 @@
     :target: https://pypi.python.org/pypi/bravado-core/
     :alt: PyPi version
 
-.. image:: https://pypip.in/py_versions/bravado-core/badge.png
+.. image:: https://img.shields.io/pypi/pyversions/bravado_core.svg
     :target: https://pypi.python.org/pypi/bravado-core/
     :alt: Supported Python versions
 
