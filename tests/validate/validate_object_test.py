@@ -99,7 +99,7 @@ def test_user_defined_format_failure(email_address_object_spec):
             str(excinfo.value)
 
 
-def test_builtin_format_still_works():
+def test_builtin_format_still_works_when_user_defined_format_used():
     ipaddress_spec = {
         'type': 'object',
         'required': ['ipaddress'],
@@ -113,6 +113,7 @@ def test_builtin_format_still_works():
     request_body = {
         'ipaddress': 'not_an_ip_address'
     }
-    with pytest.raises(ValidationError) as excinfo:
-        validate_object(ipaddress_spec, request_body)
-    assert "'not_an_ip_address' is not a 'ipv4'" in str(excinfo.value)
+    with registered_format(email_address_format):
+        with pytest.raises(ValidationError) as excinfo:
+            validate_object(ipaddress_spec, request_body)
+        assert "'not_an_ip_address' is not a 'ipv4'" in str(excinfo.value)

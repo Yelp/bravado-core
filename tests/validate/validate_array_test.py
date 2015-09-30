@@ -85,7 +85,7 @@ def test_user_defined_format_failure(email_address_array_spec):
             str(excinfo.value)
 
 
-def test_builtin_format_still_works():
+def test_builtin_format_still_works_when_user_defined_format_used():
     ipaddress_array_spec = {
         'type': 'array',
         'items': {
@@ -94,6 +94,7 @@ def test_builtin_format_still_works():
         }
     }
     request_body = ['not_an_ip_address']
-    with pytest.raises(ValidationError) as excinfo:
-        validate_array(ipaddress_array_spec, request_body)
-    assert "'not_an_ip_address' is not a 'ipv4'" in str(excinfo.value)
+    with registered_format(email_address_format):
+        with pytest.raises(ValidationError) as excinfo:
+            validate_array(ipaddress_array_spec, request_body)
+        assert "'not_an_ip_address' is not a 'ipv4'" in str(excinfo.value)
