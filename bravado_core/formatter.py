@@ -148,9 +148,12 @@ def get_format_checker():
     if _format_checker is None:
         _format_checker = FormatChecker()
         for swagger_format in _user_defined_formats:
-            _format_checker.checkers[swagger_format.format] = (
-                return_true_wrapper(swagger_format.validate),
-                (SwaggerValidationError,))
+            validate = return_true_wrapper(swagger_format.validate)
+            # `checks` is a function decorator, hence the unusual registration
+            # mechanism.
+            _format_checker.checks(
+                swagger_format.format,
+                raises=(SwaggerValidationError,))(validate)
     return _format_checker
 
 
