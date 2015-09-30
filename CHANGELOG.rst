@@ -1,6 +1,6 @@
-2.4.1 (2015-XX-XX)
+2.4.1 (2015-09-30)
 ------------------
-- Fixed validation of user-defined formats
+- Fixed validation of user-defined formats (Issue #48)
 
 2.4.0 (2015-08-13)
 ------------------
