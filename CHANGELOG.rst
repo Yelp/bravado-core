@@ -1,3 +1,7 @@
+2.4.1 (2015-XX-XX)
+------------------
+- Fixed validation of user-defined formats
+
 2.4.0 (2015-08-13)
 ------------------
 - Support relative '$ref' external references in swagger.json
