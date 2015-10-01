@@ -29,7 +29,7 @@ def marshal_schema_object(swagger_spec, schema_object_spec, value):
     obj_type = schema_object_spec['type']
 
     if obj_type in SWAGGER_PRIMITIVES:
-        return marshal_primitive(schema_object_spec, value)
+        return marshal_primitive(swagger_spec, schema_object_spec, value)
 
     if obj_type == 'array':
         return marshal_array(swagger_spec, schema_object_spec, value)
@@ -55,10 +55,11 @@ def marshal_schema_object(swagger_spec, schema_object_spec, value):
         obj_type, value))
 
 
-def marshal_primitive(spec, value):
+def marshal_primitive(swagger_spec, primitive_spec, value):
     """Marshal a python primitive type into a jsonschema primitive.
 
-    :type spec: dict or jsonref.JsonRef
+    :type swagger_spec: :class:`bravado_core.spec.Spec`
+    :type primitive_spec: dict or jsonref.JsonRef
     :type value: int, long, float, boolean, string, unicode, or an object
         based on 'format'
     :rtype: int, long, float, boolean, string, unicode, etc
@@ -66,15 +67,16 @@ def marshal_primitive(spec, value):
     """
     default_used = False
 
-    if value is None and schema.has_default(spec):
+    if value is None and schema.has_default(primitive_spec):
         default_used = True
-        value = schema.get_default(spec)
+        value = schema.get_default(primitive_spec)
 
-    if value is None and schema.is_required(spec):
-        raise SwaggerMappingError('Spec {0} is a required value'.format(spec))
+    if value is None and schema.is_required(primitive_spec):
+        raise SwaggerMappingError(
+            'Spec {0} is a required value'.format(primitive_spec))
 
     if not default_used:
-        value = formatter.to_wire(spec, value)
+        value = formatter.to_wire(swagger_spec, primitive_spec, value)
 
     return value
 

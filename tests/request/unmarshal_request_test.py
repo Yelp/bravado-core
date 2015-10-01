@@ -1,10 +1,10 @@
 from mock import Mock
 
-from bravado_core.request import RequestLike, unmarshal_request
+from bravado_core.request import IncomingRequest, unmarshal_request
 
 
 def test_request_with_path_parameter(petstore_spec):
-    request = Mock(spec=RequestLike, path={'petId': '1234'})
+    request = Mock(spec=IncomingRequest, path={'petId': '1234'})
     # /pet/{pet_id} fits the bill
     op = petstore_spec.resources['pet'].operations['getPetById']
     request_data = unmarshal_request(request, op)
@@ -12,7 +12,7 @@ def test_request_with_path_parameter(petstore_spec):
 
 
 def test_request_with_no_parameters(petstore_spec):
-    request = Mock(spec=RequestLike)
+    request = Mock(spec=IncomingRequest)
     # /user/logout conveniently has no params
     op = petstore_spec.resources['user'].operations['logoutUser']
     request_data = unmarshal_request(request, op)

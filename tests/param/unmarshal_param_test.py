@@ -3,7 +3,7 @@ import pytest
 
 from bravado_core.operation import Operation
 from bravado_core.param import Param, unmarshal_param
-from bravado_core.request import RequestLike
+from bravado_core.request import IncomingRequest
 from bravado_core.spec import Spec
 
 
@@ -51,13 +51,13 @@ def param_spec():
 def test_path_string(empty_swagger_spec, param_spec):
     param_spec['in'] = 'path'
     param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
-    request = Mock(spec=RequestLike, path={'petId': '34'})
+    request = Mock(spec=IncomingRequest, path={'petId': '34'})
     assert 34 == unmarshal_param(param, request)
 
 
 def test_query_string(empty_swagger_spec, string_param_spec):
     param = Param(empty_swagger_spec, Mock(spec=Operation), string_param_spec)
-    request = Mock(spec=RequestLike, query={'username': 'darwin'})
+    request = Mock(spec=IncomingRequest, query={'username': 'darwin'})
     assert 'darwin' == unmarshal_param(param, request)
 
 
@@ -66,14 +66,14 @@ def test_optional_query_string_with_default(
     string_param_spec['required'] = True
     string_param_spec['default'] = 'bozo'
     param = Param(empty_swagger_spec, Mock(spec=Operation), string_param_spec)
-    request = Mock(spec=RequestLike, query={})
+    request = Mock(spec=IncomingRequest, query={})
     assert 'bozo' == unmarshal_param(param, request)
 
 
 def test_query_array(empty_swagger_spec, array_param_spec):
     param = Param(empty_swagger_spec, Mock(spec=Operation), array_param_spec)
     request = Mock(
-        spec=RequestLike,
+        spec=IncomingRequest,
         query={'animals': ['cat', 'dog', 'mouse']})
     assert ['cat', 'dog', 'mouse'] == unmarshal_param(param, request)
 
@@ -83,7 +83,7 @@ def test_optional_query_array_with_default(
     array_param_spec['required'] = False
     array_param_spec['default'] = ['bird', 'fish']
     param = Param(empty_swagger_spec, Mock(spec=Operation), array_param_spec)
-    request = Mock(spec=RequestLike, query={})
+    request = Mock(spec=IncomingRequest, query={})
     assert ['bird', 'fish'] == unmarshal_param(param, request)
 
 
@@ -93,7 +93,7 @@ def test_header_string(empty_swagger_spec, param_spec):
     param_spec['name'] = 'X-Source-ID'
     del param_spec['format']
     param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
-    request = Mock(spec=RequestLike, headers={'X-Source-ID': 'foo'})
+    request = Mock(spec=IncomingRequest, headers={'X-Source-ID': 'foo'})
     assert 'foo' == unmarshal_param(param, request)
 
 
@@ -105,14 +105,14 @@ def test_optional_header_string_with_default(empty_swagger_spec, param_spec):
     param_spec['default'] = 'bar'
     del param_spec['format']
     param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
-    request = Mock(spec=RequestLike, headers={})
+    request = Mock(spec=IncomingRequest, headers={})
     assert 'bar' == unmarshal_param(param, request)
 
 
 def test_formData_integer(empty_swagger_spec, param_spec):
     param_spec['in'] = 'formData'
     param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
-    request = Mock(spec=RequestLike, form={'petId': '34'})
+    request = Mock(spec=IncomingRequest, form={'petId': '34'})
     assert 34 == unmarshal_param(param, request)
 
 
@@ -121,7 +121,7 @@ def test_optional_formData_integer_with_default(empty_swagger_spec, param_spec):
     param_spec['required'] = False
     param_spec['default'] = 99
     param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
-    request = Mock(spec=RequestLike, form={})
+    request = Mock(spec=IncomingRequest, form={})
     assert 99 == unmarshal_param(param, request)
 
 
@@ -133,7 +133,8 @@ def test_formData_file(empty_swagger_spec, param_spec):
         empty_swagger_spec,
         Mock(spec=Operation, consumes=['multipart/form-data']),
         param_spec)
-    request = Mock(spec=RequestLike, files={'selfie': '<imagine binary data>'})
+    request = Mock(spec=IncomingRequest,
+                   files={'selfie': '<imagine binary data>'})
     assert '<imagine binary data>' == unmarshal_param(param, request)
 
 
@@ -145,7 +146,7 @@ def test_body(empty_swagger_spec, param_spec):
     del param_spec['type']
     del param_spec['format']
     param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
-    request = Mock(spec=RequestLike, json=Mock(return_value=34))
+    request = Mock(spec=IncomingRequest, json=Mock(return_value=34))
     value = unmarshal_param(param, request)
     assert 34 == value
 
@@ -153,7 +154,7 @@ def test_body(empty_swagger_spec, param_spec):
 def assert_validate_call_count(expected_call_count, config, petstore_dict):
     with patch('bravado_core.param.validate_schema_object') as m_validate:
         petstore_spec = Spec.from_dict(petstore_dict, config=config)
-        request = Mock(spec=RequestLike, path={'petId': 34})
+        request = Mock(spec=IncomingRequest, path={'petId': 34})
         op = petstore_spec.resources['pet'].operations['getPetById']
         param = op.params['petId']
         unmarshal_param(param, request)

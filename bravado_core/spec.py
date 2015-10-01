@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
 import logging
+import warnings
 
 import jsonref
+from jsonschema import FormatChecker
 from six import iteritems
 from six.moves.urllib import parse as urlparse
 from swagger_spec_validator import validator20
-from bravado_core.exception import SwaggerSchemaError
+from bravado_core import formatter
+from bravado_core.exception import SwaggerSchemaError, SwaggerValidationError
+from bravado_core.formatter import return_true_wrapper
 
 from bravado_core.model import build_models
 from bravado_core.model import tag_models
@@ -41,16 +45,15 @@ CONFIG_DEFAULTS = {
 
 class Spec(object):
     """Represents a Swagger Specification for a service.
-    """
 
+    :param spec_dict: Swagger API specification in json-like dict form
+    :param origin_url: URL from which the spec was retrieved.
+    :param http_client: Used to retrive the spec via http/https.
+    :type http_client: :class:`bravado.http_client.HTTPClient`
+    :param config: Configuration dict. See CONFIG_DEFAULTS.
+    """
     def __init__(self, spec_dict, origin_url=None, http_client=None,
                  config=None):
-        """
-        :param spec_dict: Swagger API specification in json-like dict form
-        :param origin_url: URL from which the spec was retrieved.
-        :param http_client: :class:`bravado_core.http_client.HTTPClient`
-        :param config: Configuration dict. See CONFIG_DEFAULTS.
-        """
         self.spec_dict = spec_dict
         self.origin_url = origin_url
         self.http_client = http_client
@@ -71,6 +74,10 @@ class Spec(object):
 
         # Built on-demand - see get_op_for_request(..)
         self._request_to_op_map = None
+
+        # (key, value) = (format name, SwaggerFormat)
+        self.user_defined_formats = {}
+        self.format_checker = FormatChecker()
 
     @classmethod
     def from_dict(cls, spec_dict, origin_url=None, http_client=None,
@@ -123,6 +130,31 @@ class Spec(object):
 
         key = (http_method.lower(), path_pattern)
         return self._request_to_op_map.get(key)
+
+    def register_format(self, user_defined_format):
+        """Registers a user-defined format to be used with this spec.
+
+        :type user_defined_format:
+            :class:`bravado_core.formatter.SwaggerFormat`
+        """
+        name = user_defined_format.format
+        self.user_defined_formats[name] = user_defined_format
+        validate = return_true_wrapper(user_defined_format.validate)
+        self.format_checker.checks(
+            name, raises=(SwaggerValidationError,))(validate)
+
+    def get_format(self, name):
+        """
+        :param name: Name of the format to retrieve
+        :rtype: :class:`bravado_core.formatters.SwaggerFormat`
+        """
+        if name in formatter.DEFAULT_FORMATS:
+            return formatter.DEFAULT_FORMATS[name]
+        format = self.user_defined_formats.get(name)
+        if format is None:
+            warnings.warn('{0} format is not registered with bravado-core!'
+                          .format(name), Warning)
+        return format
 
 
 def build_api_serving_url(spec_dict, origin_url=None, preferred_scheme=None):

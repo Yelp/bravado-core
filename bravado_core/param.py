@@ -109,7 +109,7 @@ def marshal_param(param, value, request):
     value = marshal_schema_object(param.swagger_spec, spec, value)
 
     if param.swagger_spec.config['validate_requests']:
-        validate_schema_object(spec, value)
+        validate_schema_object(param.swagger_spec, spec, value)
 
     if spec['type'] == 'array' and location != 'body':
         value = marshal_collection_format(spec, value)
@@ -140,7 +140,7 @@ def unmarshal_param(param, request):
     """Unmarshal the given parameter from the passed in request like object.
 
     :type param: :class:`bravado_core.param.Param`
-    :type request: :class:`bravado_core.request.RequestLike`
+    :type request: :class:`bravado_core.request.IncomingRequest`
     """
     param_spec = get_param_type_spec(param)
     location = param.location
@@ -171,7 +171,7 @@ def unmarshal_param(param, request):
         raw_value = unmarshal_collection_format(param_spec, raw_value)
 
     if param.swagger_spec.config['validate_requests']:
-        validate_schema_object(param_spec, raw_value)
+        validate_schema_object(param.swagger_spec, param_spec, raw_value)
 
     value = unmarshal_schema_object(param.swagger_spec, param_spec, raw_value)
     return value
