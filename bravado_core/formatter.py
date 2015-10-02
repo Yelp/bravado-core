@@ -60,7 +60,7 @@ class SwaggerFormat(namedtuple('SwaggerFormat',
     :param to_wire: function to marshal a value of this format
         Eg. lambda val_py: base64.b64encode(val_py)
     :param validate: function to validate the correctness of the `wire` value.
-        It shoudl raise :class:`bravado_core.exception.SwaggerValidationError`
+        It should raise :class:`bravado_core.exception.SwaggerValidationError`
         if the value does not conform to the format.
     :param description: Short description of the format and conversion logic.
     """

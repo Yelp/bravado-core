@@ -1,38 +1,27 @@
-bravado documentation
-========================
+bravado_core documentation
+==========================
 
-This project acts as a generic client library for services which follow *Swagger* schema.
+bravado_core is a Python library that implements the Swagger 2.0 Specification.
 
-More information on Swagger can be found `on the Swagger website
-<https://developers.helloreverb.com/swagger/>`_
+Client and servers alike can use bravado_core to implement these features:
 
-It aims to be a complete replacement to `swagger codegen <https://github.com/wordnik/swagger-codegen>`__.
+* Swagger Schema ingestion and validation
+* Validation and marshalling of requests and responses
+* Validation and marshalling of user-defined Swagger formats
+* Modelling Swagger `#/definitions` as Python classes or dicts
 
-Features include:
+For example:
 
-* Synchronous and Asynchronous clients out of the box.
- 
-* Caching of api-docs with regular staleness check.
-
-* Strict validations to check swagger spec is `v2.0 <https://github.com/wordnik/swagger-spec/blob/master/versions/2.0.md/>`_ compatible.
-
-* Validations on the parameter and response types.
-
-* Request and Response values are handled with Python types (no need to deal with JSON).
-
-* Doc strings are provided for Operations and Models to give more information about the API.
-
-* Local file path to api-docs is also acceptable.
+* `bravado <http://github.com/Yelp/bravado>`_ uses bravado-core to implement a fully functional Swagger client.
+* `pyramid_swagger <http://github.com/striglia/pyramid_swagger>`_ uses bravado-core to seamlessly add Swagger support to Pyramid webapps.
 
 Contents:
 
 .. toctree::
    :maxdepth: 1
 
-   quickstart
    changelog
-   configuration
-   bravado_core
+
 
 Indices and tables
 ==================
