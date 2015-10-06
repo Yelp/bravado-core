@@ -51,3 +51,26 @@ def test_relative_ref_spec():
     # it gets populated only for the former. Hence, removing that key from dict
     delete_key_from_dict(expected_dict, 'x-model')
     assert expected_dict == json.loads(json.dumps(resultant_spec.spec_dict))
+
+
+def test_ref_to_external_path_with_ref_to_local_model():
+    # Test that an an external ref to a path (in swagger.json) which contains
+    # a local ref to a model (in pet.json) works as expected:
+    # - model type for Pet is created
+    # - de-reffed spec_dict contains 'x-model' annotations
+    my_dir = os.path.abspath(os.path.dirname(__file__))
+
+    swagger_json_path = os.path.join(
+        my_dir,
+        '../../test-data/2.0/x-model/swagger.json')
+
+    with open(swagger_json_path) as f:
+        swagger_json_content = json.loads(f.read())
+
+    swagger_json_url = urlparse.urljoin('file:', swagger_json_path)
+    spec = Spec.from_dict(swagger_json_content, swagger_json_url)
+
+    assert spec.definitions['Pet']
+    assert spec.spec_dict['paths']['/pet']['get']['responses']['200'] \
+        ['schema']['x-model'] == 'Pet'
+

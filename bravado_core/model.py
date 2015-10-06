@@ -1,4 +1,5 @@
 from functools import partial
+import re
 
 from six import iteritems
 
@@ -14,22 +15,52 @@ from bravado_core.schema import (
 # differentiated from 'object' types.
 MODEL_MARKER = 'x-model'
 
+RE_MODEL_NAME = re.compile(r"""
+    [\w.]*              # Skip filename if specified
+    \#/definitions/     # match `#/definitions/`
+    (?P<model_name>\w+) # capture model_name
+    $                   # end of string
+""", re.VERBOSE)
 
-def build_models(definitions_spec):
-    """Builds the models contained in a #/definitions dict. This applies
-    to more than just definitions - generalize later.
 
-    :param definitions_spec: spec['definitions'] in dict form
-    :returns: dict where (name,value) = (model name, model type)
+def annotate_with_xmodel_callback(jsonref_proxy):
+    """Annotates the target of the passed in jsonref_proxy with `x-model` if
+    it is a Swagger model (path is #/definitions/<model name>).
+
+    :type jsonref_proxy: :class:`jsonref.JsonRef`
     """
-    models = {}
-    for model_name, model_spec in iteritems(definitions_spec):
-        # make models available under both simple name and $ref style name
-        # - Pet <-- TODO: remove eventually
-        # - #/definitions/Pet
-        models[model_name] = create_model_type(model_name, model_spec)
-        models['#/definitions/{0}'.format(model_name)] = models[model_name]
-    return models
+    ref_target = jsonref_proxy.__reference__['$ref']
+    match = RE_MODEL_NAME.match(ref_target)
+    if match is None:
+        return
+
+    model = jsonref_proxy.__subject__
+    if is_dict_like(model) and MODEL_MARKER not in model:
+        model[MODEL_MARKER] = match.group('model_name')
+
+
+def fix_models_with_no_type_callback(jsonref_proxy):
+    """For models with no `type` specifier, default it to `object`.
+
+    :type jsonref_proxy: :class:`jsonref.JsonRef`
+    """
+    model = jsonref_proxy.__subject__
+    if is_model(model) and 'type' not in model:
+        model['type'] = 'object'
+
+
+def build_models_callback(models, jsonref_proxy):
+    """Callback to build a model type for each jsonref_proxy that refers to a
+    model. The passed in models dict is used to store the built model types.
+
+    :param models: dict where (key, value) = (model_name, model_type)
+    :type jsonref_proxy: :class:`jsonref.JsonRef`
+    """
+    model = jsonref_proxy.__subject__
+    if is_model(model):
+        model_name = model['x-model']
+        if model_name not in models:
+            models[model_name] = create_model_type(model_name, model)
 
 
 def create_model_type(model_name, model_spec):
@@ -139,29 +170,6 @@ def create_model_repr(model, model_spec):
         for attr_name in sorted(model_spec['properties'].keys())
     ]
     return "{0}({1})".format(model.__class__.__name__, ', '.join(s))
-
-
-def tag_models(spec_dict):
-    """Tag #/definitions as being models with a 'x-model' key so that they can
-    be recognized after jsonref inlines $refs.
-
-    :param spec_dict: swagger spec in dict form
-    """
-    # TODO: unit test + docstring
-    # TODO: Also Tag models defined via external referencing (read #45)
-    models_dict = spec_dict.get('definitions', {})
-    for model_name, model_spec in iteritems(models_dict):
-        model_type = model_spec.get('type')
-
-        # default type type to 'object' since most swagger specs don't bother
-        # to specify this
-        if model_type is None:
-            model_type = model_spec['type'] = 'object'
-
-        # only tag objects. Not all #/definitions map to a Model type - can
-        # be primitive or array, for example
-        if model_type == 'object':
-            model_spec[MODEL_MARKER] = model_name
 
 
 def fix_malformed_model_refs(spec):

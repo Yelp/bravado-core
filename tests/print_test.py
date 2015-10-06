@@ -7,7 +7,7 @@ import jsonref
 import pytest
 from swagger_spec_validator import validator20
 
-from bravado_core.model import tag_models, fix_malformed_model_refs
+from bravado_core.model import fix_malformed_model_refs
 from bravado_core.schema import is_dict_like, is_list_like
 
 
@@ -17,7 +17,6 @@ def jsonref_petstore_dict():
     fpath = os.path.join(my_dir, '../../test-data/2.0/petstore/swagger.json')
     with open(fpath) as f:
         petstore = json.loads(f.read())
-        tag_models(petstore)
         fix_malformed_model_refs(petstore)
         unrefed_petstore = jsonref.JsonRef.replace_refs(petstore)
         validator20.validate_spec(unrefed_petstore)

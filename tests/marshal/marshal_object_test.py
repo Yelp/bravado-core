@@ -103,6 +103,24 @@ def test_model(minimal_swagger_dict, address_spec):
         }
     }
     minimal_swagger_dict['definitions']['Location'] = location_spec
+
+    # The Location model type won't be built on schema ingestion unless
+    # something actually references it. Create a throwaway response for this
+    # purpose.
+    location_response = {
+        'get': {
+            'responses': {
+                '200': {
+                    'description': 'A location',
+                    'schema': {
+                        '$ref': '#/definitions/Location',
+                    }
+                }
+            }
+        }
+    }
+    minimal_swagger_dict['paths']['/foo'] = location_response
+
     swagger_spec = Spec.from_dict(minimal_swagger_dict)
     address_spec['properties']['location'] = \
         swagger_spec.spec_dict['definitions']['Location']

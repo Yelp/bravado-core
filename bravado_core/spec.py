@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
+import functools
 
 import jsonref
 from six import iteritems
@@ -7,9 +8,10 @@ from six.moves.urllib import parse as urlparse
 from swagger_spec_validator import validator20
 from bravado_core.exception import SwaggerSchemaError
 
-from bravado_core.model import build_models
-from bravado_core.model import tag_models
+from bravado_core.model import annotate_with_xmodel_callback
+from bravado_core.model import build_models_callback
 from bravado_core.model import fix_malformed_model_refs
+from bravado_core.model import fix_models_with_no_type_callback
 from bravado_core.resource import build_resources
 from bravado_core.schema import is_dict_like, is_list_like
 
@@ -83,12 +85,22 @@ class Spec(object):
         :type  origin_url: str
         :param config: Configuration dict. See CONFIG_DEFAULTS.
         """
-        tag_models(spec_dict)
         fix_malformed_model_refs(spec_dict)
         spec_dict = jsonref.JsonRef.replace_refs(spec_dict,
                                                  base_uri=origin_url or '')
-        replace_jsonref_proxies(spec_dict)
+
+        # Populated by the build_models_callback below
+        models = {}
+
+        replace_jsonref_proxies(
+            spec_dict,
+            on_proxy_callbacks=(
+                annotate_with_xmodel_callback,
+                fix_models_with_no_type_callback,
+                functools.partial(build_models_callback, models)))
+
         spec = cls(spec_dict, origin_url, http_client, config)
+        spec.definitions = models
         spec.build()
         return spec
 
@@ -97,7 +109,6 @@ class Spec(object):
             validator20.validate_spec(self.spec_dict)
 
         self.api_url = build_api_serving_url(self.spec_dict, self.origin_url)
-        self.definitions = build_models(self.spec_dict.get('definitions', {}))
         self.resources = build_resources(self)
 
     def get_op_for_request(self, http_method, path_pattern):
@@ -190,7 +201,7 @@ def build_api_serving_url(spec_dict, origin_url=None, preferred_scheme=None):
     return urlparse.urlunparse((scheme, netloc, path, None, None, None))
 
 
-def replace_jsonref_proxies(obj):
+def replace_jsonref_proxies(obj, on_proxy_callbacks=None):
     """
     Replace jsonref proxies in the given json obj with the proxy target.
     Updates are made in place. This removes compatibility problems with 3rd
@@ -198,18 +209,27 @@ def replace_jsonref_proxies(obj):
 
     :param obj: json like object
     :type obj: int, bool, string, float, list, dict, etc
+    :param on_proxy_callbacks: iterable of single argument callables. Called
+        each time a :class:`jsonref.JsonRef` is encountered when traversing
+        the passed in obj.
     """
+    on_proxy_callbacks = on_proxy_callbacks or []
+
     # TODO: consider upstreaming in the jsonref library as a util method
     def descend(fragment):
         if is_dict_like(fragment):
             for k, v in iteritems(fragment):
                 if isinstance(v, jsonref.JsonRef):
                     fragment[k] = v.__subject__
+                    for callback in on_proxy_callbacks:
+                        callback(jsonref_proxy=v)
                 descend(fragment[k])
         elif is_list_like(fragment):
             for index, element in enumerate(fragment):
                 if isinstance(element, jsonref.JsonRef):
                     fragment[index] = element.__subject__
+                    for callback in on_proxy_callbacks:
+                        callback(jsonref_proxy=element)
                 descend(element)
 
     descend(obj)
