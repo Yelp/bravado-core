@@ -50,7 +50,7 @@ def petstore_spec(petstore_dict):
 
 
 def del_base64():
-    del bravado_core.formatter._formatters['base64']
+    del bravado_core.formatter.DEFAULT_FORMATS['base64']
 
 
 @pytest.fixture

@@ -105,7 +105,7 @@ def unmarshal_response(response, op):
     content_value = response.json()
 
     if op.swagger_spec.config['validate_responses']:
-        validate_schema_object(content_spec, content_value)
+        validate_schema_object(op.swagger_spec, content_spec, content_value)
 
     return unmarshal_schema_object(
         op.swagger_spec, content_spec, content_value)
@@ -154,7 +154,7 @@ def validate_response(response_spec, op, response):
         return
 
     validate_response_body(op, response_spec, response)
-    validate_response_headers(response_spec, response)
+    validate_response_headers(op, response_spec, response)
 
 
 def validate_response_body(op, response_spec, response):
@@ -164,7 +164,7 @@ def validate_response_body(op, response_spec, response):
 
     :type op: :class:`bravado_core.operation.Operation`
     :type response_spec: dict
-    :type response: :class: `bravado_core.response.OutgoingResponse`
+    :type response: :class:`bravado_core.response.OutgoingResponse`
     :raises: SwaggerMappingError
     """
     # response that returns nothing in the body
@@ -183,7 +183,8 @@ def validate_response_body(op, response_spec, response):
 
     if response.content_type == APP_JSON:
         response_value = response.json()
-        validate_schema_object(response_body_spec, response_value)
+        validate_schema_object(
+            op.swagger_spec, response_body_spec, response_value)
     else:
         # TODO: Expand content-type support for non-json types
         raise SwaggerMappingError(
@@ -191,17 +192,19 @@ def validate_response_body(op, response_spec, response):
             .format(response.content_type))
 
 
-def validate_response_headers(response_spec, response):
+def validate_response_headers(op, response_spec, response):
     """
     Validate an outgoing response's headers against the response's Swagger
     specification.
 
+    :type op: :class:`bravado_core.operation.Operation`
     :type response_spec: dict
-    :type response: :class: `bravado_core.response.OutgoingResponse`
+    :type response: :class:`bravado_core.response.OutgoingResponse`
     """
     headers_spec = response_spec.get('headers')
     if not headers_spec:
         return
 
     for header_name, header_spec in iteritems(headers_spec):
-        validate_schema_object(header_spec, response.headers.get(header_name))
+        validate_schema_object(
+            op.swagger_spec, header_spec, response.headers.get(header_name))

@@ -31,7 +31,7 @@ def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
     obj_type = schema_object_spec['type']
 
     if obj_type in SWAGGER_PRIMITIVES:
-        return unmarshal_primitive(schema_object_spec, value)
+        return unmarshal_primitive(swagger_spec, schema_object_spec, value)
 
     if obj_type == 'array':
         return unmarshal_array(swagger_spec, schema_object_spec, value)
@@ -53,23 +53,24 @@ def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
         .format(value, obj_type))
 
 
-def unmarshal_primitive(spec, value):
+def unmarshal_primitive(swagger_spec, primitive_spec, value):
     """Unmarshal a jsonschema primitive type into a python primitive.
 
-    :type spec: dict or jsonref.JsonRef
+    :type swagger_spec: :class:`bravado_core.spec.Spec`
+    :type primitive_spec: dict or jsonref.JsonRef
     :type value: int, long, float, boolean, string, unicode, etc
     :rtype: int, long, float, boolean, string, unicode, or an object
         based on 'format'
     :raises: SwaggerMappingError
     """
-    if value is None and schema.is_required(spec):
+    if value is None and schema.is_required(primitive_spec):
         # TODO: Error message needs more context. Consider adding a stack like
         #       `context` object to each `unmarshal_*` method that acts like
         #       breadcrumbs.
         raise SwaggerMappingError(
-            'Spec {0} says this is a required value'.format(spec))
+            'Spec {0} says this is a required value'.format(primitive_spec))
 
-    value = formatter.to_python(spec, value)
+    value = formatter.to_python(swagger_spec, primitive_spec, value)
     return value
 
 

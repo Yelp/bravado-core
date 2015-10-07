@@ -4,7 +4,7 @@ from bravado_core.operation import log
 from bravado_core.param import unmarshal_param
 
 
-class RequestLike(object):
+class IncomingRequest(object):
     """
     Common interface for server side request objects.
 
@@ -34,7 +34,7 @@ class RequestLike(object):
         """
         if name in self.__required_attrs__:
             raise NotImplementedError(
-                'This RequestLike type {0} forgot to implement an attr '
+                'This IncomingRequest type {0} forgot to implement an attr '
                 'for `{1}`'.format(type(self), name))
         raise AttributeError(
             "'{0}' object has no attribute '{1}'".format(type(self), name))
@@ -47,11 +47,15 @@ class RequestLike(object):
         raise NotImplementedError("Implement json() in {0}".format(type(self)))
 
 
+# Deprecated
+RequestLike = IncomingRequest
+
+
 def unmarshal_request(request, op):
     """Unmarshal Swagger request parameters from the passed in request like
     object.
 
-    :type request: :class: `bravado_core.request.RequestLike`.
+    :type request: :class: `bravado_core.request.IncomingRequest`.
     :type op: :class:`bravado_core.operation.Operation`
     :returns: dict where (key, value) = (param_name, param_value)
     """

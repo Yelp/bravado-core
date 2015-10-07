@@ -1,11 +1,11 @@
 import pytest
 
-from bravado_core.request import RequestLike
+from bravado_core.request import IncomingRequest
 
 
 def test_required_attr_returned():
 
-    class CompliantRequest(RequestLike):
+    class CompliantRequest(IncomingRequest):
 
         def __init__(self):
             self.path = {'biz_id': 99}
@@ -16,7 +16,7 @@ def test_required_attr_returned():
 
 def test_missing_required_attr_throws_NotImplementedError():
 
-    class NonCompliantRequest(RequestLike):
+    class NonCompliantRequest(IncomingRequest):
         pass
 
     r = NonCompliantRequest()
@@ -27,7 +27,7 @@ def test_missing_required_attr_throws_NotImplementedError():
 
 def test_any_other_attr_throws_AttributeError():
 
-    class UnrelatedRequest(RequestLike):
+    class UnrelatedRequest(IncomingRequest):
         pass
 
     r = UnrelatedRequest()
