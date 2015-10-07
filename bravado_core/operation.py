@@ -63,7 +63,7 @@ class Operation(object):
     @classmethod
     def from_spec(cls, swagger_spec, path_name, http_method, op_spec):
         """
-        Creates a :class:`Operation` and builds up its list of :class:`Param`s
+        Creates a :class:`Operation` and builds up its list of :class:`Param` s
 
         :param swagger_spec: :class:`Spec`
         :param path_name: path of the operation. e.g. /pet/{petId}

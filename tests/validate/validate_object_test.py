@@ -2,7 +2,7 @@ from jsonschema.exceptions import ValidationError
 import pytest
 
 from bravado_core.validate import validate_object
-from tests.validate.conftest import registered_format, email_address_format
+from tests.validate.conftest import email_address_format
 
 
 @pytest.fixture
@@ -27,41 +27,41 @@ def address_spec():
     }
 
 
-def test_success(address_spec):
+def test_success(minimal_swagger_spec, address_spec):
     address = {
         'number': 1000,
         'street_name': 'Main',
         'street_type': 'Street',
     }
-    validate_object(address_spec, address)
+    validate_object(minimal_swagger_spec, address_spec, address)
 
 
-def test_leaving_out_property_OK(address_spec):
+def test_leaving_out_property_OK(minimal_swagger_spec, address_spec):
     address = {
         'street_name': 'Main',
         'street_type': 'Street',
     }
-    validate_object(address_spec, address)
+    validate_object(minimal_swagger_spec, address_spec, address)
 
 
-def test_additional_property_OK(address_spec):
+def test_additional_property_OK(minimal_swagger_spec, address_spec):
     address = {
         'number': 1000,
         'street_name': 'Main',
         'street_type': 'Street',
         'city': 'Swaggerville'
     }
-    validate_object(address_spec, address)
+    validate_object(minimal_swagger_spec, address_spec, address)
 
 
-def test_required_OK(address_spec):
+def test_required_OK(minimal_swagger_spec, address_spec):
     address_spec['required'] = ['number']
     address = {
         'street_name': 'Main',
         'street_type': 'Street',
     }
     with pytest.raises(ValidationError) as excinfo:
-        validate_object(address_spec, address)
+        validate_object(minimal_swagger_spec, address_spec, address)
     assert 'is a required property' in str(excinfo.value)
 
 
@@ -79,27 +79,28 @@ def email_address_object_spec():
     }
 
 
-def test_user_defined_format_success(email_address_object_spec):
-    request_body = {
-        'email_address': 'foo@bar.com'
-    }
-    with registered_format(email_address_format):
-        # No exception thrown == success
-        validate_object(email_address_object_spec, request_body)
+def test_user_defined_format_success(minimal_swagger_spec,
+                                     email_address_object_spec):
+    request_body = {'email_address': 'foo@bar.com'}
+    minimal_swagger_spec.register_format(email_address_format)
+    # No exception thrown == success
+    validate_object(minimal_swagger_spec,
+                    email_address_object_spec, request_body)
 
 
-def test_user_defined_format_failure(email_address_object_spec):
-    request_body = {
-        'email_address': 'i_am_not_a_valid_email_address'
-    }
-    with registered_format(email_address_format):
-        with pytest.raises(ValidationError) as excinfo:
-            validate_object(email_address_object_spec, request_body)
-        assert "'i_am_not_a_valid_email_address' is not a 'email_address'" in \
-            str(excinfo.value)
+def test_user_defined_format_failure(minimal_swagger_spec,
+                                     email_address_object_spec):
+    request_body = {'email_address': 'i_am_not_a_valid_email_address'}
+    minimal_swagger_spec.register_format(email_address_format)
+    with pytest.raises(ValidationError) as excinfo:
+        validate_object(minimal_swagger_spec, email_address_object_spec,
+                        request_body)
+    assert "'i_am_not_a_valid_email_address' is not a 'email_address'" in \
+        str(excinfo.value)
 
 
-def test_builtin_format_still_works_when_user_defined_format_used():
+def test_builtin_format_still_works_when_user_defined_format_used(
+        minimal_swagger_spec):
     ipaddress_spec = {
         'type': 'object',
         'required': ['ipaddress'],
@@ -110,10 +111,8 @@ def test_builtin_format_still_works_when_user_defined_format_used():
             }
         }
     }
-    request_body = {
-        'ipaddress': 'not_an_ip_address'
-    }
-    with registered_format(email_address_format):
-        with pytest.raises(ValidationError) as excinfo:
-            validate_object(ipaddress_spec, request_body)
-        assert "'not_an_ip_address' is not a 'ipv4'" in str(excinfo.value)
+    request_body = {'ipaddress': 'not_an_ip_address'}
+    minimal_swagger_spec.register_format(email_address_format)
+    with pytest.raises(ValidationError) as excinfo:
+        validate_object(minimal_swagger_spec, ipaddress_spec, request_body)
+    assert "'not_an_ip_address' is not a 'ipv4'" in str(excinfo.value)

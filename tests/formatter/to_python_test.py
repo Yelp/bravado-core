@@ -1,57 +1,55 @@
 from datetime import date, datetime
 
-import six
 from mock import patch
+import six
 
 from bravado_core.formatter import to_python
 
 
-def test_none():
-    spec = {'type': 'string', 'format': 'date'}
-    assert to_python(spec, None) is None
+def test_none(minimal_swagger_spec):
+    string_spec = {'type': 'string', 'format': 'date'}
+    assert to_python(minimal_swagger_spec, string_spec, None) is None
 
 
-def test_no_format_returns_value():
-    spec = {'type': 'string'}
-    assert 'boo' == to_python(spec, 'boo')
+def test_no_format_returns_value(minimal_swagger_spec):
+    string_spec = {'type': 'string'}
+    assert 'boo' == to_python(minimal_swagger_spec, string_spec, 'boo')
 
 
-def test_date():
-    spec = {'type': 'string', 'format': 'date'}
-    assert date(2015, 4, 1) == to_python(spec, '2015-04-01')
+def test_date(minimal_swagger_spec):
+    string_spec = {'type': 'string', 'format': 'date'}
+    assert date(2015, 4, 1) == to_python(
+        minimal_swagger_spec, string_spec, '2015-04-01')
 
 
-def test_datetime():
-    spec = {'type': 'string', 'format': 'date-time'}
-    result = to_python(spec, '2015-03-22T13:19:54')
+def test_datetime(minimal_swagger_spec):
+    string_spec = {'type': 'string', 'format': 'date-time'}
+    result = to_python(
+        minimal_swagger_spec, string_spec, '2015-03-22T13:19:54')
     assert datetime(2015, 3, 22, 13, 19, 54) == result
 
 
-@patch('bravado_core.formatter.warnings.warn')
-def test_no_registered_format_returns_value_as_is(_):
-    spec = {'type': 'foo', 'format': 'bar'}
-    assert 'baz' == to_python(spec, 'baz')
+@patch('bravado_core.spec.warnings.warn')
+def test_no_registered_format_returns_value_as_is_and_issues_warning(
+        mock_warn, minimal_swagger_spec):
+    string_spec = {'type': 'string', 'format': 'bar'}
+    assert 'baz' == to_python(minimal_swagger_spec, string_spec, 'baz')
+    assert mock_warn.call_count == 1
 
 
-@patch('bravado_core.formatter.warnings.warn')
-def test_no_registered_format_throws_warning(mock_warn):
-    to_python({'type': 'foo', 'format': 'bar'}, 'baz')
-    mock_warn.assert_called_once()
-
-
-def test_int64_long():
-    spec = {'type': 'integer', 'format': 'int64'}
+def test_int64_long(minimal_swagger_spec):
+    integer_spec = {'type': 'integer', 'format': 'int64'}
     if six.PY3:
-        result = to_python(spec, 999)
+        result = to_python(minimal_swagger_spec, integer_spec, 999)
         assert 999 == result
     else:
-        result = to_python(spec, long(999))
+        result = to_python(minimal_swagger_spec, integer_spec, long(999))
         assert long(999) == result
 
 
-def test_int64_int():
-    spec = {'type': 'integer', 'format': 'int64'}
-    result = to_python(spec, 999)
+def test_int64_int(minimal_swagger_spec):
+    integer_spec = {'type': 'integer', 'format': 'int64'}
+    result = to_python(minimal_swagger_spec, integer_spec, 999)
     if six.PY3:
         assert 999 == result
         assert isinstance(result, int)
@@ -60,38 +58,38 @@ def test_int64_int():
         assert isinstance(result, long)
 
 
-def test_int32_long():
+def test_int32_long(minimal_swagger_spec):
     if six.PY3:  # test irrelevant in py3
         return
-    spec = {'type': 'integer', 'format': 'int32'}
-    result = to_python(spec, long(999))
+    integer_spec = {'type': 'integer', 'format': 'int32'}
+    result = to_python(minimal_swagger_spec, integer_spec, long(999))
     assert 999 == result
     assert isinstance(result, int)
 
 
-def test_int32_int():
-    spec = {'type': 'integer', 'format': 'int32'}
-    result = to_python(spec, 999)
+def test_int32_int(minimal_swagger_spec):
+    integer_spec = {'type': 'integer', 'format': 'int32'}
+    result = to_python(minimal_swagger_spec, integer_spec, 999)
     assert 999 == result
     assert isinstance(result, int)
 
 
-def test_float():
-    spec = {'type': 'number', 'format': 'float'}
-    result = to_python(spec, float(3.14))
+def test_float(minimal_swagger_spec):
+    float_spec = {'type': 'number', 'format': 'float'}
+    result = to_python(minimal_swagger_spec, float_spec, float(3.14))
     assert 3.14 == result
     assert isinstance(result, float)
 
 
-def test_double():
-    spec = {'type': 'number', 'format': 'double'}
-    result = to_python(spec, float(3.14))
+def test_double(minimal_swagger_spec):
+    double_spec = {'type': 'number', 'format': 'double'}
+    result = to_python(minimal_swagger_spec, double_spec, float(3.14))
     assert 3.14 == result
     assert isinstance(result, float)
 
 
-def test_byte():
-    spec = {'type': 'string', 'format': 'byte'}
-    result = to_python(spec, 'x')
+def test_byte(minimal_swagger_spec):
+    byte_spec = {'type': 'string', 'format': 'byte'}
+    result = to_python(minimal_swagger_spec, byte_spec, 'x')
     assert 'x' == result
     assert isinstance(result, str)
