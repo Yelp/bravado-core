@@ -1,7 +1,7 @@
 Changelog
 =========
 
-3.0.0 (2015-XX-XX)
+3.0.0 (2015-10-07)
 ------------------
 - User-defined formats are now scoped to a Swagger spec - Issue #50 (this is a non-backwards compatible change)
 - Deprecated bravado_core.request.RequestLike and renamed to bravado_core.request.IncomingRequest
