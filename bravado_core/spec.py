@@ -5,15 +5,15 @@ import warnings
 
 import jsonref
 from jsonschema import FormatChecker
-from six import iteritems
 from six.moves.urllib import parse as urlparse
 from swagger_spec_validator import validator20
 
 from bravado_core import formatter
 from bravado_core.exception import SwaggerSchemaError, SwaggerValidationError
 from bravado_core.formatter import return_true_wrapper
-from bravado_core.model import annotate_with_xmodel_callback
-from bravado_core.model import build_models_callback
+from bravado_core.model import annotate_with_xmodel_callback, \
+    create_dereffed_models_callback
+from bravado_core.model import create_reffed_models_callback
 from bravado_core.model import fix_malformed_model_refs
 from bravado_core.model import fix_models_with_no_type_callback
 from bravado_core.resource import build_resources
@@ -93,18 +93,21 @@ class Spec(object):
         :param config: Configuration dict. See CONFIG_DEFAULTS.
         """
         fix_malformed_model_refs(spec_dict)
-        spec_dict = jsonref.JsonRef.replace_refs(spec_dict,
-                                                 base_uri=origin_url or '')
+        spec_dict = jsonref.JsonRef.replace_refs(
+            spec_dict, base_uri=origin_url or '')
 
-        # Populated by the build_models_callback below
+        # Populated by post-processing callbacks below
         models = {}
 
-        replace_jsonref_proxies(
+        post_process_spec(
             spec_dict,
-            on_proxy_callbacks=(
+            on_container_callbacks=(
                 annotate_with_xmodel_callback,
                 fix_models_with_no_type_callback,
-                functools.partial(build_models_callback, models)))
+                functools.partial(create_reffed_models_callback, models),
+                functools.partial(create_dereffed_models_callback, models),
+                replace_jsonref_proxies_callback,
+            ))
 
         spec = cls(spec_dict, origin_url, http_client, config)
         spec.definitions = models
@@ -233,35 +236,51 @@ def build_api_serving_url(spec_dict, origin_url=None, preferred_scheme=None):
     return urlparse.urlunparse((scheme, netloc, path, None, None, None))
 
 
-def replace_jsonref_proxies(obj, on_proxy_callbacks=None):
-    """
-    Replace jsonref proxies in the given json obj with the proxy target.
-    Updates are made in place. This removes compatibility problems with 3rd
-    party libraries that can't handle jsonref proxy objects.
+def post_process_spec(spec_dict, on_container_callbacks):
+    """Post-process the passed in spec_dict.
 
-    :param obj: json like object
-    :type obj: int, bool, string, float, list, dict, etc
-    :param on_proxy_callbacks: iterable of single argument callables. Called
-        each time a :class:`jsonref.JsonRef` is encountered when traversing
-        the passed in obj.
-    """
-    on_proxy_callbacks = on_proxy_callbacks or []
+    For each container type (list or dict) that is traversed in spec_dict,
+    the list of passed in callbacks is called with arguments (container, key).
 
-    # TODO: consider upstreaming in the jsonref library as a util method
+    When the container is a dict, key is obviously the key for the value being
+    traversed.
+
+    When the container is a list, key is an integer index into the list of the
+    value being traversed.
+
+    :param spec_dict: Swagger spec in dict form
+    :param on_container_callbacks: list of callbacks to be invoked on each
+        container type.
+    """
+    on_container_callbacks = on_container_callbacks or []
+
+    def fire_callbacks(container, key):
+        for callback in on_container_callbacks:
+            callback(container, key)
+
     def descend(fragment):
         if is_dict_like(fragment):
-            for k, v in iteritems(fragment):
-                if isinstance(v, jsonref.JsonRef):
-                    fragment[k] = v.__subject__
-                    for callback in on_proxy_callbacks:
-                        callback(jsonref_proxy=v)
-                descend(fragment[k])
+            for key in fragment:
+                fire_callbacks(fragment, key)
+                descend(fragment[key])
         elif is_list_like(fragment):
-            for index, element in enumerate(fragment):
-                if isinstance(element, jsonref.JsonRef):
-                    fragment[index] = element.__subject__
-                    for callback in on_proxy_callbacks:
-                        callback(jsonref_proxy=element)
-                descend(element)
+            for index in xrange(len(fragment)):
+                fire_callbacks(fragment, index)
+                descend(fragment[index])
 
-    descend(obj)
+    descend(spec_dict)
+
+
+def replace_jsonref_proxies_callback(container, key):
+    """Replace jsonref proxies in the given dict or list with the proxy target.
+    Updates are made in place. This removes compatibility problems with 3rd
+    party libraries that can't handle jsonref proxy objects while traversing
+    the swagger spec dict.
+
+    :type container: list or dict
+    :type key: string when the container is a dict, integer when the container
+        is a list
+    """
+    jsonref_proxy = container[key]
+    if isinstance(jsonref_proxy, jsonref.JsonRef):
+        container[key] = jsonref_proxy.__subject__

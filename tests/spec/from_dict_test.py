@@ -14,7 +14,7 @@ def test_definitions_not_present(minimal_swagger_dict):
 
 
 @mock.patch('jsonref.JsonRef')
-@mock.patch('bravado_core.spec.replace_jsonref_proxies')
+@mock.patch('bravado_core.spec.post_process_spec')
 @mock.patch.object(Spec, 'build')
 def test_origin_uri_gets_passed_to_jsonref(mock_build, mock_prox, mock_ref,
                                            minimal_swagger_dict):
@@ -73,3 +73,31 @@ def test_ref_to_external_path_with_ref_to_local_model():
     assert spec.definitions['Pet']
     assert spec.spec_dict['paths']['/pet']['get']['responses']['200'][
         'schema']['x-model'] == 'Pet'
+
+
+def test_spec_with_dereffed_and_tagged_models_works(minimal_swagger_dict):
+    # In cases where the Swagger spec being ingested has already been de-reffed
+    # and had models tagged with 'x-model', we still need to be able to
+    # detect them and make them available as model types. For example, a spec
+    # ingested via http from pyramid_swagger contains de-reffed models.
+    pet_path_spec = {
+        'get': {
+            'responses': {
+                '200': {
+                    'description': 'Returns a Pet',
+                    'schema': {
+                        'x-model': 'Pet',
+                        'type': 'object',
+                        'properties': {
+                            'name': {
+                                'type': 'string'
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    minimal_swagger_dict['paths']['/pet'] = pet_path_spec
+    spec = Spec.from_dict(minimal_swagger_dict)
+    assert spec.definitions['Pet']

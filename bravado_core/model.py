@@ -1,6 +1,7 @@
 from functools import partial
 import re
 
+import jsonref
 from six import iteritems
 
 from bravado_core.docstring import docstring_property
@@ -23,12 +24,18 @@ RE_MODEL_NAME = re.compile(r"""
 """, re.VERBOSE)
 
 
-def annotate_with_xmodel_callback(jsonref_proxy):
-    """Annotates the target of the passed in jsonref_proxy with `x-model` if
-    it is a Swagger model (path is #/definitions/<model name>).
+def annotate_with_xmodel_callback(container, key):
+    """Tags JsonRef proxies which represent Swagger models with
+    'x-model': <model name>.
 
-    :type jsonref_proxy: :class:`jsonref.JsonRef`
+    :type container: list or dict
+    :param key: the key of the object in the container to inspect
+    :type key: string if container is a dict, int if container is a list
     """
+    jsonref_proxy = container[key]
+    if not isinstance(jsonref_proxy, jsonref.JsonRef):
+        return
+
     ref_target = jsonref_proxy.__reference__['$ref']
     match = RE_MODEL_NAME.match(ref_target)
     if match is None:
@@ -39,28 +46,57 @@ def annotate_with_xmodel_callback(jsonref_proxy):
         model[MODEL_MARKER] = match.group('model_name')
 
 
-def fix_models_with_no_type_callback(jsonref_proxy):
+def fix_models_with_no_type_callback(container, key):
     """For models with no `type` specifier, default it to `object`.
 
-    :type jsonref_proxy: :class:`jsonref.JsonRef`
+    :type container: list or dict
+    :param key: the key of the object in the container to inspect
+    :type key: string if container is a dict, int if container is a list
     """
+    jsonref_proxy = container[key]
+    if not isinstance(jsonref_proxy, jsonref.JsonRef):
+        return
+
     model = jsonref_proxy.__subject__
     if is_model(model) and 'type' not in model:
         model['type'] = 'object'
 
 
-def build_models_callback(models, jsonref_proxy):
+def create_reffed_models_callback(models, container, key):
     """Callback to build a model type for each jsonref_proxy that refers to a
     model. The passed in models dict is used to store the built model types.
 
-    :param models: dict where (key, value) = (model_name, model_type)
-    :type jsonref_proxy: :class:`jsonref.JsonRef`
+    :type models: dict where (key, value) = (model_name, model_type)
+    :type container: list or dict
+    :param key: the key of the object in the container to inspect
+    :type key: string if container is a dict, int if container is a list
     """
+    jsonref_proxy = container[key]
+    if not isinstance(jsonref_proxy, jsonref.JsonRef):
+        return
+
     model = jsonref_proxy.__subject__
     if is_model(model):
         model_name = model['x-model']
         if model_name not in models:
             models[model_name] = create_model_type(model_name, model)
+
+
+def create_dereffed_models_callback(models, container, key):
+    """Callback to build a model type for each dict that represents a model.
+    The passed in models dict is used to store the built model types.
+
+    :type models: dict where (key, value) = (model_name, model_type)
+    :type container: list or dict
+    :param key: the key of the object in the container to inspect
+    :type key: string if container is a dict, int if container is a list
+    """
+    if key != MODEL_MARKER:
+        return
+
+    model_name = container[key]
+    if model_name not in models:
+        models[model_name] = create_model_type(model_name, container)
 
 
 def create_model_type(model_name, model_spec):
