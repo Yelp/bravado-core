@@ -71,6 +71,5 @@ def test_ref_to_external_path_with_ref_to_local_model():
     spec = Spec.from_dict(swagger_json_content, swagger_json_url)
 
     assert spec.definitions['Pet']
-    assert spec.spec_dict['paths']['/pet']['get']['responses']['200'] \
-        ['schema']['x-model'] == 'Pet'
-
+    assert spec.spec_dict['paths']['/pet']['get']['responses']['200'][
+        'schema']['x-model'] == 'Pet'

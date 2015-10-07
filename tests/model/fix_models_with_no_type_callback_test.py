@@ -7,7 +7,7 @@ from bravado_core.model import fix_models_with_no_type_callback
 
 @pytest.fixture
 def pet_model_spec():
-    return  {
+    return {
         'x-model': 'Pet',
         'properties': {
             'name': {

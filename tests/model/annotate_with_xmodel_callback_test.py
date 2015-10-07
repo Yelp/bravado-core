@@ -7,7 +7,7 @@ from bravado_core.model import annotate_with_xmodel_callback
 
 @pytest.fixture
 def pet_model_spec():
-    return  {
+    return {
         'type': 'object',
         'properties': {
             'name': {
@@ -31,4 +31,3 @@ def test_annotates_external_ref(pet_model_spec):
     pet_proxy.__subject__ = pet_model_spec
     annotate_with_xmodel_callback(pet_proxy)
     assert pet_model_spec['x-model'] == 'Pet'
-
