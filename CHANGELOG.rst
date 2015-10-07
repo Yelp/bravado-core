@@ -3,7 +3,7 @@ Changelog
 
 3.0.0 (2015-XX-XX)
 ------------------
-- User-defined format are now scoped to a Swagger spec - Issue #50
+- User-defined formats are now scoped to a Swagger spec - Issue #50 (this is a non-backwards compatible change)
 - Deprecated bravado_core.request.RequestLike and renamed to bravado_core.request.IncomingRequest
 - Added `make docs` target and updated docs (still needs a lot of work though)
 
