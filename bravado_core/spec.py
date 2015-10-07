@@ -252,8 +252,6 @@ def post_process_spec(spec_dict, on_container_callbacks):
     :param on_container_callbacks: list of callbacks to be invoked on each
         container type.
     """
-    on_container_callbacks = on_container_callbacks or []
-
     def fire_callbacks(container, key):
         for callback in on_container_callbacks:
             callback(container, key)
@@ -264,7 +262,7 @@ def post_process_spec(spec_dict, on_container_callbacks):
                 fire_callbacks(fragment, key)
                 descend(fragment[key])
         elif is_list_like(fragment):
-            for index in xrange(len(fragment)):
+            for index in range(len(fragment)):
                 fire_callbacks(fragment, index)
                 descend(fragment[index])
 
