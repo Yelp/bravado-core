@@ -11,8 +11,8 @@ from swagger_spec_validator import validator20
 from bravado_core import formatter
 from bravado_core.exception import SwaggerSchemaError, SwaggerValidationError
 from bravado_core.formatter import return_true_wrapper
-from bravado_core.model import annotate_with_xmodel_callback, \
-    create_dereffed_models_callback
+from bravado_core.model import annotate_with_xmodel_callback
+from bravado_core.model import create_dereffed_models_callback
 from bravado_core.model import create_reffed_models_callback
 from bravado_core.model import fix_malformed_model_refs
 from bravado_core.model import fix_models_with_no_type_callback
