@@ -1,6 +1,10 @@
 Changelog
 =========
 
+3.0.2 (2015-XX-XX)
+------------------
+- Added Sphinx docs how to use `user-defined formats <http://bravado-core.readthedocs.org/en/latest/formats.html>`_.
+
 3.0.1 (2015-10-09)
 ------------------
 - Automatically tag models in external $refs - Issue #45 - see `Model Discovery <http://bravado-core.readthedocs.org/en/latest/models.html#model-discovery>`_ for more info.
