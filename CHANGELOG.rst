@@ -1,6 +1,10 @@
 Changelog
 =========
 
+3.0.1 (2015-XX-XX)
+------------------
+- Automatically tag models in external $refs - Issue #45 - see `Model Discovery <http://bravado-core.readthedocs.org/en/latest/models.html#model-discovery>`_ for more info.
+
 3.0.0 (2015-10-07)
 ------------------
 - User-defined formats are now scoped to a Swagger spec - Issue #50 (this is a non-backwards compatible change)

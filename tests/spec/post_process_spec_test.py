@@ -1,7 +1,8 @@
 import json
 import jsonref
 
-from bravado_core.spec import replace_jsonref_proxies
+from bravado_core.spec import post_process_spec
+from bravado_core.spec import replace_jsonref_proxies_callback
 
 
 def test_dict():
@@ -22,7 +23,8 @@ def test_dict():
     json_obj = jsonref.loads(json.dumps(d))
     assert type(json_obj['foo']) == jsonref.JsonRef
 
-    replace_jsonref_proxies(json_obj)
+    post_process_spec(
+        json_obj, on_container_callbacks=(replace_jsonref_proxies_callback,))
     assert type(json_obj['foo']) == dict
 
     assert d['definitions']['user'] == json_obj['foo']
@@ -59,7 +61,8 @@ def test_nested_dict():
     assert type(json_obj['foo']) == jsonref.JsonRef
     assert type(json_obj['foo']['properties']['address']) == jsonref.JsonRef
 
-    replace_jsonref_proxies(json_obj)
+    post_process_spec(
+        json_obj, on_container_callbacks=(replace_jsonref_proxies_callback,))
     assert type(json_obj['foo']) == dict
     assert type(json_obj['foo']['properties']['address']) == dict
 
@@ -87,7 +90,8 @@ def test_list():
     json_obj = jsonref.loads(json.dumps(d))
     assert type(json_obj['foo'][0]) == jsonref.JsonRef
 
-    replace_jsonref_proxies(json_obj)
+    post_process_spec(
+        json_obj, on_container_callbacks=(replace_jsonref_proxies_callback,))
     assert type(json_obj['foo'][0]) == dict
 
     assert d['definitions']['user'] == json_obj['foo'][0]
