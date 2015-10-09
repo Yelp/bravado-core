@@ -20,6 +20,7 @@ Contents:
 .. toctree::
    :maxdepth: 1
 
+   config
    models
    formats
    changelog

@@ -1,3 +1,5 @@
+.. _formats:
+
 User-Defined Formats
 ====================
 
@@ -33,11 +35,11 @@ that makes them easy to work with.
             """
             self.cidr = cidr
 
-        def overlaps(other_cidr):
+        def overlaps(self, other_cidr):
             """Return true if other_cidr overlaps with this cidr"""
             ...
 
-        def subnet_mask():
+        def subnet_mask(self):
             """Return the subnet mask of this cidr"""
             ...
 
