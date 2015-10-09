@@ -21,6 +21,7 @@ Contents:
    :maxdepth: 1
 
    models
+   formats
    changelog
 
 

@@ -41,7 +41,13 @@ CONFIG_DEFAULTS = {
     #
     # NOTE: outgoing requests on the client side and outgoing responses on the
     #       server side can use either models or dicts.
-    'use_models': True
+    'use_models': True,
+
+    # List of user-defined formats of type
+    # :class:`bravado_core.formatter.SwaggerFormat`. These formats are in
+    # addition to the formats already supported by the Swagger 2.0
+    # Specification.
+    'formats': []
 }
 
 
@@ -115,6 +121,9 @@ class Spec(object):
         return spec
 
     def build(self):
+        for format in self.config['formats']:
+            self.register_format(format)
+
         if self.config['validate_swagger_spec']:
             validator20.validate_spec(self.spec_dict)
 
