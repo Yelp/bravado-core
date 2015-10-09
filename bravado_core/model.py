@@ -77,7 +77,7 @@ def create_reffed_models_callback(models, container, key):
 
     model = jsonref_proxy.__subject__
     if is_model(model):
-        model_name = model['x-model']
+        model_name = model[MODEL_MARKER]
         if model_name not in models:
             models[model_name] = create_model_type(model_name, model)
 

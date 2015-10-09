@@ -1,8 +1,9 @@
 from jsonref import JsonRef
 import pytest
 
-from bravado_core.model import create_reffed_models_callback, \
-    create_dereffed_models_callback, MODEL_MARKER
+from bravado_core.model import create_reffed_models_callback
+from bravado_core.model import create_dereffed_models_callback
+from bravado_core.model import MODEL_MARKER
 
 
 @pytest.fixture
@@ -16,7 +17,7 @@ def response_spec():
 @pytest.fixture
 def pet_model_spec():
     return {
-        'x-model': 'Pet',
+        MODEL_MARKER: 'Pet',
         'type': 'object',
         'properties': {
             'name': {

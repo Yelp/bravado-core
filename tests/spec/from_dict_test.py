@@ -4,6 +4,7 @@ import mock
 import simplejson as json
 from six.moves.urllib import parse as urlparse
 
+from bravado_core.model import MODEL_MARKER
 from bravado_core.spec import Spec
 
 
@@ -49,7 +50,7 @@ def test_relative_ref_spec():
 
     # TODO: Make the behavior of x-model consitent for both the specs. Currently
     # it gets populated only for the former. Hence, removing that key from dict
-    delete_key_from_dict(expected_dict, 'x-model')
+    delete_key_from_dict(expected_dict, MODEL_MARKER)
     assert expected_dict == json.loads(json.dumps(resultant_spec.spec_dict))
 
 
@@ -72,7 +73,7 @@ def test_ref_to_external_path_with_ref_to_local_model():
 
     assert spec.definitions['Pet']
     assert spec.spec_dict['paths']['/pet']['get']['responses']['200'][
-        'schema']['x-model'] == 'Pet'
+        'schema'][MODEL_MARKER] == 'Pet'
 
 
 def test_spec_with_dereffed_and_tagged_models_works(minimal_swagger_dict):
@@ -86,7 +87,7 @@ def test_spec_with_dereffed_and_tagged_models_works(minimal_swagger_dict):
                 '200': {
                     'description': 'Returns a Pet',
                     'schema': {
-                        'x-model': 'Pet',
+                        MODEL_MARKER: 'Pet',
                         'type': 'object',
                         'properties': {
                             'name': {

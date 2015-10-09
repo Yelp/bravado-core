@@ -2,13 +2,13 @@ import pytest
 
 from jsonref import JsonRef
 
-from bravado_core.model import fix_models_with_no_type_callback
+from bravado_core.model import fix_models_with_no_type_callback, MODEL_MARKER
 
 
 @pytest.fixture
 def pet_model_spec():
     return {
-        'x-model': 'Pet',
+        MODEL_MARKER: 'Pet',
         'properties': {
             'name': {
                 'type': 'string'
@@ -18,7 +18,7 @@ def pet_model_spec():
 
 
 @pytest.fixture
-def response_spec(pet_model_spec):
+def response_spec():
     return {
         'description': 'A pet',
         'schema': 'Unit test will fill in this value'

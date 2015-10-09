@@ -3,7 +3,7 @@ Changelog
 
 3.0.1 (2015-XX-XX)
 ------------------
-- Automatically tag models in external $refs - Issue #45
+- Automatically tag models in external $refs - Issue #45 - see `Model Discovery <http://bravado-core.readthedocs.org/en/latest/models.html#model-discovery>`_ for more info.
 
 3.0.0 (2015-10-07)
 ------------------
