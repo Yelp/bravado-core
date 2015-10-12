@@ -49,6 +49,9 @@ def build_resources(swagger_spec):
     paths = swagger_spec.spec_dict['paths']
     for path_name, path_spec in iteritems(paths):
         for http_method, operation_spec in iteritems(path_spec):
+            if http_method == 'parameters':
+                continue
+
             operation = Operation.from_spec(
                 swagger_spec, path_name, http_method, operation_spec)
             tags = operation_spec.get('tags', [])
