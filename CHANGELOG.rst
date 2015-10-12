@@ -1,7 +1,7 @@
 Changelog
 =========
 
-3.0.2 (2015-XX-XX)
+3.0.2 (2015-10-12)
 ------------------
 - Added docs on how to use `user-defined formats <http://bravado-core.readthedocs.org/en/latest/formats.html>`_.
 - Added docs on how to `configure <http://bravado-core.readthedocs.org/en/latest/config.html>`_ bravado-core.
