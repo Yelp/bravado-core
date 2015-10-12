@@ -152,7 +152,7 @@ CIDR objects back from the response.
     cidr_param = op.params.get('cidr')
 
     # Create a CIDR object - to_wire() will be called on this during marshalling
-    cidr_object = CIDR('192.168.1.1/24)
+    cidr_object = CIDR('192.168.1.1/24')
     request_dict = {}
 
     # Marshal the cidr_object into the request_dict.

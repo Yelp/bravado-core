@@ -5,6 +5,7 @@ Changelog
 ------------------
 - Added docs on how to use `user-defined formats <http://bravado-core.readthedocs.org/en/latest/formats.html>`_.
 - Added docs on how to `configure <http://bravado-core.readthedocs.org/en/latest/config.html>`_ bravado-core.
+- `formats` added as a config option
 
 3.0.1 (2015-10-09)
 ------------------

@@ -32,6 +32,6 @@ Config key                Type            Default    Description
 *use_models*              boolean         True       | Use python classes to represent models
                                                      | instead of dicts. See :ref:`models`.
 ------------------------- --------------- ---------  ----------------------------------------------------
-*formats*                 list of         True       | List of user-defined formats to support.
+*formats*                 list of         []         | List of user-defined formats to support.
                           SwaggerFormat              | See :ref:`formats`.
 ========================= =============== =========  ====================================================
