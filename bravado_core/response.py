@@ -19,6 +19,7 @@ class IncomingResponse(object):
         'reason',       # string - http reason phrase
         'status_code',  # int - http status code
         'text',         # string - raw text of the body
+        'headers',      # dict of http headers
     ]
 
     def __getattr__(self, name):
