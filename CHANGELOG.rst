@@ -3,7 +3,7 @@ Changelog
 
 3.1.0 (2015-XX-XX)
 ------------------
-- Added http ``headers`` to ``bravado_core.response.IncomingResponse`` inteface.
+- Added http ``headers`` to ``bravado_core.response.IncomingResponse``.
 
 3.0.2 (2015-10-12)
 ------------------
