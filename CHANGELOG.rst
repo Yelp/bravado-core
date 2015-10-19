@@ -1,6 +1,10 @@
 Changelog
 =========
 
+3.1.0 (2015-XX-XX)
+------------------
+- Added http ``headers`` to ``bravado_core.response.IncomingResponse``.
+
 3.0.2 (2015-10-12)
 ------------------
 - Added docs on how to use `user-defined formats <http://bravado-core.readthedocs.org/en/latest/formats.html>`_.

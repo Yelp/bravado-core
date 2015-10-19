@@ -8,10 +8,14 @@ def test_required_attr_returned():
     class CompliantIncomingResponse(IncomingResponse):
 
         def __init__(self):
-            self.status_code = 99
+            self.status_code = 404
+            self.reason = 'Object not found'
+            self.text = 'Error - not found'
+            self.headers = {}
 
     r = CompliantIncomingResponse()
-    assert 99 == r.status_code
+    for attr in IncomingResponse.__required_attrs__:
+        assert hasattr(r, attr)
 
 
 def test_missing_required_attr_throws_NotImplementedError():
