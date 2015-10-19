@@ -1,6 +1,10 @@
 Changelog
 =========
 
+3.1.1 (2015-XX-XX)
+------------------
+- Fix the creation of operations that contain shared parameters for a given endpoint.
+
 3.1.0 (2015-10-19)
 ------------------
 - Added http ``headers`` to ``bravado_core.response.IncomingResponse``.
