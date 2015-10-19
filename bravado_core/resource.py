@@ -49,7 +49,6 @@ def build_resources(swagger_spec):
     paths = swagger_spec.spec_dict['paths']
     for path_name, path_spec in iteritems(paths):
         for http_method, operation_spec in iteritems(path_spec):
-            
             # parameters that are shared across all operations for
             # a given endpoint are also defined at this level - we
             # just need to skip over them.
