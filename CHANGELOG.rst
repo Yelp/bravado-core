@@ -1,7 +1,7 @@
 Changelog
 =========
 
-3.1.0 (2015-XX-XX)
+3.1.0 (2015-10-19)
 ------------------
 - Added http ``headers`` to ``bravado_core.response.IncomingResponse``.
 
