@@ -1,3 +1,4 @@
+from bravado_core.param import Param
 from bravado_core.resource import build_resources
 from bravado_core.spec import Spec
 
@@ -37,3 +38,20 @@ def test_many_resources_with_the_same_operation_cuz_multiple_tags(paths_spec):
     assert len(tags) == len(resources)
     for tag in tags:
         assert resources[tag].findPetsByStatus
+
+
+def test_resource_with_shared_parameters(paths_spec):
+    # insert a shared parameter into the spec
+    shared_parameter = {
+        'name': 'filter',
+        'in': 'query',
+        'description': 'Filter the pets by attribute',
+        'required': False,
+        'type': 'string',
+    }
+    paths_spec['/pet/findByStatus']['parameters'] = [shared_parameter]
+    spec_dict = {'paths': paths_spec}
+    resources = build_resources(Spec(spec_dict))
+    # verify shared param associated with operation
+    assert isinstance(
+        resources['pet'].findPetsByStatus.params['filter'], Param)
