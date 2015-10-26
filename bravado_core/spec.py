@@ -6,6 +6,7 @@ import warnings
 import jsonref
 from jsonschema import FormatChecker
 from six.moves.urllib import parse as urlparse
+from jsonschema.validators import RefResolver
 from swagger_spec_validator import validator20
 
 from bravado_core import formatter
@@ -87,6 +88,8 @@ class Spec(object):
         self.user_defined_formats = {}
         self.format_checker = FormatChecker()
 
+        self.resolver = RefResolver(base_uri='', referrer=self.spec_dict)
+
     @classmethod
     def from_dict(cls, spec_dict, origin_url=None, http_client=None,
                   config=None):
@@ -98,37 +101,77 @@ class Spec(object):
         :type  origin_url: str
         :param config: Configuration dict. See CONFIG_DEFAULTS.
         """
-        fix_malformed_model_refs(spec_dict)
-        spec_dict = jsonref.JsonRef.replace_refs(
-            spec_dict, base_uri=origin_url or '')
+        #fix_malformed_model_refs(spec_dict)
+        #spec_dict = jsonref.JsonRef.replace_refs(
+        #    spec_dict, base_uri=origin_url or '')
 
         # Populated by post-processing callbacks below
-        models = {}
+        #models = {}
 
-        post_process_spec(
-            spec_dict,
-            on_container_callbacks=(
-                annotate_with_xmodel_callback,
-                fix_models_with_no_type_callback,
-                functools.partial(create_reffed_models_callback, models),
-                functools.partial(create_dereffed_models_callback, models),
-                replace_jsonref_proxies_callback,
-            ))
+        # post_process_spec(
+        #     spec_dict,
+        #     on_container_callbacks=(
+        #         annotate_with_xmodel_callback,
+        #         fix_models_with_no_type_callback,
+        #         functools.partial(create_reffed_models_callback, models),
+        #         functools.partial(create_dereffed_models_callback, models),
+        #         replace_jsonref_proxies_callback,
+        #     ))
 
         spec = cls(spec_dict, origin_url, http_client, config)
-        spec.definitions = models
+        #spec.definitions = models
         spec.build()
         return spec
 
     def build(self):
+
+        post_process_spec(
+            self.spec_dict,
+            on_container_callbacks=(
+                annotate_with_xmodel_callback,
+                fix_models_with_no_type_callback,
+                #functools.partial(create_reffed_models_callback, models),
+                #functools.partial(create_dereffed_models_callback, models),
+                #replace_jsonref_proxies_callback,
+            ))
+
+
         for format in self.config['formats']:
             self.register_format(format)
 
-        if self.config['validate_swagger_spec']:
-            validator20.validate_spec(self.spec_dict)
+        log.warn('Swagger spec validation disabled until ssv can handle refs')
+        #if self.config['validate_swagger_spec']:
+        #    validator20.validate_spec(self.spec_dict)
 
         self.api_url = build_api_serving_url(self.spec_dict, self.origin_url)
         self.resources = build_resources(self)
+
+    def resolve(self, document, element, default=None):
+        if is_dict_like(document):
+            assert isinstance(element, basestring)
+
+            if element in document:
+                return document[element]
+
+            if '$ref' in document:
+                print('Dereffing %s' % document['$ref'])
+                ref = document['$ref']
+                json_pointer, target = self.resolver.resolve(ref)
+                return self.resolve(target, element, default)
+
+            return default
+
+        if is_list_like(document):
+            assert isinstance(element, int)
+            index = element
+            value = document[index]
+            if is_dict_like(value) and '$ref' in value:
+                ref = value['$ref']
+                json_pointer, target = self.resolver.resolve(ref)
+                return self.resolve(target, index, default)
+            return value
+
+        raise ValueError('Document "%s" is not a container type.' % document)
 
     def get_op_for_request(self, http_method, path_pattern):
         """

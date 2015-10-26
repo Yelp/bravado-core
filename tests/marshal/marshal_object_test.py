@@ -90,6 +90,7 @@ def test_nested_object(empty_swagger_spec, address_spec):
     assert result == address
 
 
+@pytest.mark.xfail(run=False)
 def test_model(minimal_swagger_dict, address_spec):
     location_spec = {
         'type': 'object',

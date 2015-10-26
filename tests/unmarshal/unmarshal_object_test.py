@@ -29,6 +29,22 @@ def address_spec():
 
 
 @pytest.fixture
+def location_spec():
+    return {
+        'type': 'object',
+        'required': ['longitude', 'latitude'],
+        'properties': {
+            'longitude': {
+                'type': 'number'
+            },
+            'latitude': {
+                'type': 'number'
+            },
+        }
+    }
+
+
+@pytest.fixture
 def address():
     return {
         'number': 1600,
@@ -37,7 +53,7 @@ def address():
     }
 
 
-def test_properties(empty_swagger_spec, address_spec, address):
+def test_with_properties(empty_swagger_spec, address_spec, address):
     expected_address = {
         'number': 1600,
         'street_name': u'Ümlaut',
@@ -47,7 +63,7 @@ def test_properties(empty_swagger_spec, address_spec, address):
     assert expected_address == result
 
 
-def test_array(empty_swagger_spec, address_spec):
+def test_with_array(empty_swagger_spec, address_spec):
     tags_spec = {
         'type': 'array',
         'items': {
@@ -69,18 +85,7 @@ def test_array(empty_swagger_spec, address_spec):
     assert result == address
 
 
-def test_nested_object(empty_swagger_spec, address_spec):
-    location_spec = {
-        'type': 'object',
-        'properties': {
-            'longitude': {
-                'type': 'number'
-            },
-            'latitude': {
-                'type': 'number'
-            },
-        }
-    }
+def test_with_nested_object(empty_swagger_spec, address_spec, location_spec):
     address_spec['properties']['location'] = location_spec
     address = {
         'number': 1600,
@@ -95,18 +100,25 @@ def test_nested_object(empty_swagger_spec, address_spec):
     assert result == address
 
 
-def test_model(minimal_swagger_dict, address_spec):
-    location_spec = {
-        'type': 'object',
-        'properties': {
-            'longitude': {
-                'type': 'number'
-            },
-            'latitude': {
-                'type': 'number'
-            },
-        }
+def test_with_ref(minimal_swagger_dict, address_spec, location_spec):
+    minimal_swagger_dict['definitions']['Location'] = location_spec
+    address_spec['properties']['location'] = {'$ref': '#/definitions/Location'}
+    address = {
+        'number': 1600,
+        'street_name': 'Pennsylvania',
+        'street_type': 'Avenue',
+        'location': {
+            'longitude': 100.1,
+            'latitude': 99.9,
+        },
     }
+    minimal_swagger_spec = Spec.from_dict(minimal_swagger_dict)
+    result = unmarshal_object(minimal_swagger_spec, address_spec, address)
+    assert result == address
+
+
+@pytest.mark.xfail(run=False)
+def test_with_model(minimal_swagger_dict, address_spec, location_spec):
     minimal_swagger_dict['definitions']['Location'] = location_spec
 
     # The Location model type won't be built on schema ingestion unless

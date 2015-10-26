@@ -122,7 +122,9 @@ def marshal_object(swagger_spec, object_spec, object_value):
         if v is None:
             continue
 
-        prop_spec = get_spec_for_prop(object_spec, object_value, k)
+        prop_spec = get_spec_for_prop(
+            swagger_spec, object_spec, object_value, k)
+
         if prop_spec:
             result[k] = marshal_schema_object(swagger_spec, prop_spec, v)
         else:

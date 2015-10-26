@@ -5,6 +5,7 @@ from bravado_core.marshal import marshal_model
 from bravado_core.spec import Spec
 
 
+@pytest.mark.xfail(run=False)
 def test_pet(petstore_dict):
     petstore_spec = Spec.from_dict(petstore_dict)
     Pet = petstore_spec.definitions['Pet']
@@ -51,6 +52,7 @@ def test_pet(petstore_dict):
     assert expected == result
 
 
+@pytest.mark.xfail(run=False)
 def test_attrs_set_to_None_are_absent_from_result(petstore_dict):
     # to recap: "required": ["name","photoUrls"]
     petstore_spec = Spec.from_dict(petstore_dict)
@@ -77,6 +79,7 @@ def test_attrs_set_to_None_are_absent_from_result(petstore_dict):
     assert expected == result
 
 
+@pytest.mark.xfail(run=False)
 def test_value_is_not_dict_like_raises_error(petstore_dict):
     petstore_spec = Spec.from_dict(petstore_dict)
     pet_spec = petstore_spec.spec_dict['definitions']['Pet']

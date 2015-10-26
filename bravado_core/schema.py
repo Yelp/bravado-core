@@ -21,16 +21,16 @@ def get_default(schema_object_spec):
     return schema_object_spec.get('default', None)
 
 
-def is_required(schema_object_spec):
-    return schema_object_spec.get('required', False)
+def is_required(swagger_spec, schema_object_spec):
+    return swagger_spec.resolve(schema_object_spec, 'required', False)
 
 
-def has_format(schema_object_spec):
-    return 'format' in schema_object_spec
+def has_format(swagger_spec, schema_object_spec):
+    return swagger_spec.resolve(schema_object_spec, 'format') is not None
 
 
-def get_format(schema_object_spec):
-    return schema_object_spec.get('format', None)
+def get_format(swagger_spec, schema_object_spec):
+    return swagger_spec.resolve(schema_object_spec, 'format', None)
 
 
 def is_param_spec(schema_object_spec):
@@ -68,7 +68,7 @@ def is_list_like(spec):
     return False
 
 
-def get_spec_for_prop(object_spec, object_value, prop_name):
+def get_spec_for_prop(swagger_spec, object_spec, object_value, prop_name):
     """Given a jsonschema object spec and value, retrieve the spec for the
      given property taking 'additionalProperties' into consideration.
 
@@ -78,11 +78,15 @@ def get_spec_for_prop(object_spec, object_value, prop_name):
     :return: spec for the given property or None if no spec found
     :rtype: dict
     """
-    spec = object_spec.get('properties', {}).get(prop_name)
+    #spec = object_spec.get('properties', {}).get(prop_name)
+    props = swagger_spec.resolve(object_spec, 'properties', {})
+    spec = swagger_spec.resolve(props, prop_name)
+
     if spec is not None:
         return spec
 
-    additional_props = object_spec.get('additionalProperties', True)
+    additional_props = swagger_spec.resolve(
+        object_spec, 'additionalProperties', True)
 
     if isinstance(additional_props, bool):
         # no spec for additional properties to conform to - this is basically

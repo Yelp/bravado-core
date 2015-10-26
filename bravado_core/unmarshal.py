@@ -28,7 +28,7 @@ def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
     :rtype: int, float, long, string, unicode, boolean, list, dict, object (in
         the case of a 'format' conversion', or Model type
     """
-    obj_type = schema_object_spec['type']
+    obj_type = swagger_spec.resolve(schema_object_spec, 'type')
 
     if obj_type in SWAGGER_PRIMITIVES:
         return unmarshal_primitive(swagger_spec, schema_object_spec, value)
@@ -59,14 +59,12 @@ def unmarshal_primitive(swagger_spec, primitive_spec, value):
     :type swagger_spec: :class:`bravado_core.spec.Spec`
     :type primitive_spec: dict or jsonref.JsonRef
     :type value: int, long, float, boolean, string, unicode, etc
+
     :rtype: int, long, float, boolean, string, unicode, or an object
         based on 'format'
     :raises: SwaggerMappingError
     """
-    if value is None and schema.is_required(primitive_spec):
-        # TODO: Error message needs more context. Consider adding a stack like
-        #       `context` object to each `unmarshal_*` method that acts like
-        #       breadcrumbs.
+    if value is None and schema.is_required(swagger_spec, primitive_spec):
         raise SwaggerMappingError(
             'Spec {0} says this is a required value'.format(primitive_spec))
 
@@ -89,8 +87,8 @@ def unmarshal_array(swagger_spec, array_spec, array_value):
 
     result = []
     for element in array_value:
-        result.append(unmarshal_schema_object(
-            swagger_spec, array_spec['items'], element))
+        items = swagger_spec.resolve(array_spec, 'items')
+        result.append(unmarshal_schema_object(swagger_spec, items, element))
     return result
 
 
@@ -109,7 +107,8 @@ def unmarshal_object(swagger_spec, object_spec, object_value):
 
     result = {}
     for k, v in iteritems(object_value):
-        prop_spec = get_spec_for_prop(object_spec, object_value, k)
+        prop_spec = get_spec_for_prop(
+            swagger_spec, object_spec, object_value, k)
         if prop_spec:
             result[k] = unmarshal_schema_object(swagger_spec, prop_spec, v)
         else:
@@ -117,7 +116,8 @@ def unmarshal_object(swagger_spec, object_spec, object_value):
             result[k] = v
 
     # re-introduce and None'ify any properties that weren't passed
-    for prop_name, prop_spec in iteritems(object_spec.get('properties', {})):
+    properties = swagger_spec.resolve(object_spec, 'properties', {})
+    for prop_name, prop_spec in iteritems(properties):
         if prop_name not in result:
             result[prop_name] = None
     return result
@@ -132,7 +132,7 @@ def unmarshal_model(swagger_spec, model_spec, model_value):
     :rtype: Model instance
     :raises: SwaggerMappingError
     """
-    model_name = model_spec[MODEL_MARKER]
+    model_name = swagger_spec.resolve(model_spec, MODEL_MARKER)
     model_type = swagger_spec.definitions.get(model_name, None)
 
     if model_type is None:

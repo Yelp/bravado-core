@@ -4,6 +4,7 @@ from mock import patch
 import six
 
 from bravado_core.formatter import to_python
+from bravado_core.spec import Spec
 
 
 def test_none(minimal_swagger_spec):
@@ -93,3 +94,14 @@ def test_byte(minimal_swagger_spec):
     result = to_python(minimal_swagger_spec, byte_spec, 'x')
     assert 'x' == result
     assert isinstance(result, str)
+
+
+def test_ref(minimal_swagger_dict):
+    minimal_swagger_dict['definitions']['Int32'] = {
+        'type': 'integer', 'format': 'int32'
+    }
+    int_ref_spec = {'$ref': '#/definitions/Int32'}
+    swagger_spec = Spec.from_dict(minimal_swagger_dict)
+    result = to_python(swagger_spec, int_ref_spec, 999)
+    assert 999 == result
+    assert isinstance(result, int)

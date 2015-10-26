@@ -15,7 +15,7 @@ def validate_schema_object(swagger_spec, schema_object_spec, value):
     :raises SwaggerMappingError: on invalid Swagger `type`.
     :raises SwaggerValidationError: when user-defined format validation fails.
     """
-    obj_type = schema_object_spec['type']
+    obj_type = swagger_spec.resolve(schema_object_spec, 'type')
 
     if obj_type in SWAGGER_PRIMITIVES:
         validate_primitive(swagger_spec, schema_object_spec, value)
@@ -64,4 +64,5 @@ def validate_object(swagger_spec, object_spec, value):
     """
     Swagger20Validator(
         object_spec,
-        format_checker=swagger_spec.format_checker).validate(value)
+        format_checker=swagger_spec.format_checker,
+        resolver=swagger_spec.resolver).validate(value)
