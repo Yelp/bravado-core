@@ -33,40 +33,39 @@ def stringify_body(value):
 class Param(object):
     """Thin wrapper around a param_spec dict that provides convenience functions
     for commonly requested parameter information.
+
+    :type swagger_spec: :class:`bravado_core.spec.Spec`
+    :type op: :class:`bravado_core.operation.Operation`
+    :type param_spec: parameter specification in dict form
     """
     def __init__(self, swagger_spec, op, param_spec):
-        """
-        :type swagger_spec: :class:`bravado_core.spec.Spec`
-        :type op: :class:`bravado_core.operation.Operation`
-        :type param_spec: parameter specification in dict form
-        """
         self.op = op
         self.swagger_spec = swagger_spec
         self.param_spec = param_spec
 
     @property
     def name(self):
-        return self.param_spec['name']
+        return self.swagger_spec.resolve(self.param_spec, 'name')
 
     @property
     def location(self):
         # not using 'in' as the name since it is a keyword in python
-        return self.param_spec['in']
+        return self.swagger_spec.resolve(self.param_spec, 'in')
 
     @property
     def description(self):
-        return self.param_spec.get('description', None)
+        return self.swagger_spec.resolve(self.param_spec, 'description', None)
 
     @property
     def required(self):
-        return self.param_spec.get('required', False)
+        return self.swagger_spec.resolve(self.param_spec, 'required', False)
 
     def has_default(self):
-        return 'default' in self.param_spec
+        return self.default is not None
 
     @property
     def default(self):
-        return self.param_spec['default']
+        return self.swagger_spec.resolve(self.param_spec, 'default')
 
 
 def get_param_type_spec(param):
@@ -145,8 +144,9 @@ def unmarshal_param(param, request):
     param_spec = get_param_type_spec(param)
     location = param.location
     cast_param = partial(cast_request_param, param_spec['type'], param.name)
+    swagger_spec = param.swagger_spec
 
-    default_value = schema.get_default(param_spec)
+    default_value = schema.get_default(swagger_spec, param_spec)
 
     if location == 'path':
         raw_value = cast_param(request.path.get(param.name, None))
@@ -170,10 +170,10 @@ def unmarshal_param(param, request):
     if param_spec['type'] == 'array' and location != 'body':
         raw_value = unmarshal_collection_format(param_spec, raw_value)
 
-    if param.swagger_spec.config['validate_requests']:
-        validate_schema_object(param.swagger_spec, param_spec, raw_value)
+    if swagger_spec.config['validate_requests']:
+        validate_schema_object(swagger_spec, param_spec, raw_value)
 
-    value = unmarshal_schema_object(param.swagger_spec, param_spec, raw_value)
+    value = unmarshal_schema_object(swagger_spec, param_spec, raw_value)
     return value
 
 

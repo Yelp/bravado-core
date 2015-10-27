@@ -4,12 +4,10 @@ from six import iteritems
 from bravado_core import formatter, schema
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.model import is_model, MODEL_MARKER
-from bravado_core.schema import (
-    get_spec_for_prop,
-    is_dict_like,
-    is_list_like,
-    SWAGGER_PRIMITIVES,
-)
+from bravado_core.schema import get_spec_for_prop
+from bravado_core.schema import is_dict_like
+from bravado_core.schema import is_list_like
+from bravado_core.schema import SWAGGER_PRIMITIVES
 
 
 def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
@@ -85,11 +83,11 @@ def unmarshal_array(swagger_spec, array_spec, array_value):
         raise SwaggerMappingError('Expected list like type for {0}:{1}'.format(
             type(array_value), array_value))
 
-    result = []
-    for element in array_value:
-        items = swagger_spec.resolve(array_spec, 'items')
-        result.append(unmarshal_schema_object(swagger_spec, items, element))
-    return result
+    item_spec = swagger_spec.resolve(array_spec, 'items')
+    return [
+        unmarshal_schema_object(swagger_spec, item_spec, item)
+        for item in array_value
+    ]
 
 
 def unmarshal_object(swagger_spec, object_spec, object_value):

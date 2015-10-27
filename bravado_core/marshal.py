@@ -67,11 +67,11 @@ def marshal_primitive(swagger_spec, primitive_spec, value):
     """
     default_used = False
 
-    if value is None and schema.has_default(primitive_spec):
+    if value is None and schema.has_default(swagger_spec, primitive_spec):
         default_used = True
-        value = schema.get_default(primitive_spec)
+        value = schema.get_default(swagger_spec, primitive_spec)
 
-    if value is None and schema.is_required(primitive_spec):
+    if value is None and schema.is_required(swagger_spec, primitive_spec):
         raise SwaggerMappingError(
             'Spec {0} is a required value'.format(primitive_spec))
 
@@ -94,12 +94,10 @@ def marshal_array(swagger_spec, array_spec, array_value):
         raise SwaggerMappingError('Expected list like type for {0}:{1}'.format(
             type(array_value), array_value))
 
-    result = []
-    for element in array_value:
-        result.append(marshal_schema_object(
-            swagger_spec, array_spec['items'], element))
-
-    return result
+    return [
+        marshal_schema_object(swagger_spec, array_spec['items'], element)
+        for element in array_value
+    ]
 
 
 def marshal_object(swagger_spec, object_spec, object_value):

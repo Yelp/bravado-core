@@ -13,12 +13,12 @@ SWAGGER_PRIMITIVES = (
 )
 
 
-def has_default(schema_object_spec):
-    return 'default' in schema_object_spec
+def has_default(swagger_spec, schema_object_spec):
+    return swagger_spec.resolve(schema_object_spec, 'default') is not None
 
 
-def get_default(schema_object_spec):
-    return schema_object_spec.get('default', None)
+def get_default(swagger_spec, schema_object_spec):
+    return swagger_spec.resolve(schema_object_spec, 'default')
 
 
 def is_required(swagger_spec, schema_object_spec):
@@ -30,12 +30,11 @@ def has_format(swagger_spec, schema_object_spec):
 
 
 def get_format(swagger_spec, schema_object_spec):
-    return swagger_spec.resolve(schema_object_spec, 'format', None)
+    return swagger_spec.resolve(schema_object_spec, 'format')
 
 
-def is_param_spec(schema_object_spec):
-    # TODO: Find a better way to identify if it is a Parameter schema
-    return 'in' in schema_object_spec
+def is_param_spec(swagger_spec, schema_object_spec):
+    return swagger_spec.resolve(schema_object_spec, 'in') is not None
 
 
 def is_dict_like(spec):
@@ -48,6 +47,7 @@ def is_dict_like(spec):
     """
     if type(spec) == dict:
         return True
+    # TODO: Remove when dependency on jsonref removed
     if type(spec) == jsonref.JsonRef and type(spec.__subject__) == dict:
         return True
     return False
@@ -63,6 +63,7 @@ def is_list_like(spec):
     """
     if type(spec) == list:
         return True
+    # TODO: Remove when dependency on jsonref removed
     if type(spec) == jsonref.JsonRef and type(spec.__subject__) == list:
         return True
     return False
@@ -73,17 +74,18 @@ def get_spec_for_prop(swagger_spec, object_spec, object_value, prop_name):
      given property taking 'additionalProperties' into consideration.
 
     :param object_spec: spec for a jsonschema 'object' in dict form
-    :param object_value: jsonschema object containing the given property
+    :param object_value: jsonschema object containing the given property. Only
+        used in error message.
     :param prop_name: name of the property to retrieve the spec for
+
     :return: spec for the given property or None if no spec found
     :rtype: dict
     """
-    #spec = object_spec.get('properties', {}).get(prop_name)
-    props = swagger_spec.resolve(object_spec, 'properties', {})
-    spec = swagger_spec.resolve(props, prop_name)
+    props_spec = swagger_spec.resolve(object_spec, 'properties', {})
+    prop_spec = swagger_spec.resolve(props_spec, prop_name)
 
-    if spec is not None:
-        return spec
+    if prop_spec is not None:
+        return prop_spec
 
     additional_props = swagger_spec.resolve(
         object_spec, 'additionalProperties', True)
@@ -98,5 +100,5 @@ def get_spec_for_prop(swagger_spec, object_spec, object_value, prop_name):
         return additional_props
 
     raise SwaggerMappingError(
-        "Don't know what to do with `additionalProperties` in spec {0}"
+        "Don't know what to do with `additionalProperties` in spec {0} "
         "when inspecting value {1}".format(object_spec, object_value))

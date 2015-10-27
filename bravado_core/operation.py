@@ -7,16 +7,14 @@ log = logging.getLogger(__name__)
 
 
 class Operation(object):
-    """
-    Swagger operation defined by a unique (http_method, path_name) pair.
+    """Swagger operation defined by a unique (http_method, path_name) pair.
+
+    :type swagger_spec: :class:`Spec`
+    :param path_name: path of the operation. e.g. /pet/{petId}
+    :param http_method: get/put/post/delete/etc
+    :param op_spec: operation specification in dict form
     """
     def __init__(self, swagger_spec, path_name, http_method, op_spec):
-        """
-        :type swagger_spec: :class:`Spec`
-        :param path_name: path of the operation. e.g. /pet/{petId}
-        :param http_method: get/put/post/delete/etc
-        :param op_spec: operation specification in dict form
-        """
         self.swagger_spec = swagger_spec
         self.path_name = path_name
         self.http_method = http_method
@@ -40,9 +38,10 @@ class Operation(object):
             ["application/x-www-form-urlencoded"]
         :rtype: list of strings, never None
         """
-        result = self.op_spec.get('consumes')
+        result = self.swagger_spec.resolve(self.op_spec, 'consumes')
         if result is None:
-            result = self.swagger_spec.spec_dict.get('consumes', [])
+            result = self.swagger_spec.resolve(
+                self.swagger_spec.spec_dict, 'consumes', [])
         return result
 
     @property
@@ -55,9 +54,10 @@ class Operation(object):
             ["application/json"]
         :rtype: list of strings, never None
         """
-        result = self.op_spec.get('produces')
+        result = self.swagger_spec.resolve(self.op_spec, 'produces')
         if result is None:
-            result = self.swagger_spec.spec_dict.get('produces', [])
+            return self.swagger_spec.resolve(
+                self.swagger_spec.spec_dict, 'produces', [])
         return result
 
     @classmethod
@@ -72,24 +72,8 @@ class Operation(object):
         :rtype: :class:`Operation`
         """
         op = cls(swagger_spec, path_name, http_method, op_spec)
-        op.build_params()
+        op.params = build_params(op)
         return op
-
-    def build_params(self):
-        """
-        Builds up the list of this operations parameters taking into account
-        parameters that may be available for this operation's path component.
-        """
-        # TODO: factory method
-        self.params = {}
-        op_param_specs = self.op_spec.get('parameters', [])
-        path_specs = self.swagger_spec.spec_dict['paths'][self.path_name]
-        path_param_specs = path_specs.get('parameters', [])
-        param_specs = op_param_specs + path_param_specs
-
-        for param_spec in param_specs:
-            param = Param(self.swagger_spec, self, param_spec)
-            self.params[param.name] = param
 
     @property
     def operation_id(self):
@@ -115,3 +99,31 @@ class Operation(object):
 
     def __repr__(self):
         return u"%s(%s)" % (self.__class__.__name__, self.operation_id)
+
+
+def build_params(op):
+    """Builds up the list of this operation's parameters taking into account
+    parameters that may be available for this operation's path component.
+
+    :type op: :class:`bravado_core.operation.Operation`
+
+    :returns: dict where (k,v) is (param_name, Param)
+    """
+    swagger_spec = op.swagger_spec
+    resolve = swagger_spec.resolve
+
+    op_params_spec = resolve(op.op_spec, 'parameters', [])
+    paths_spec = resolve(swagger_spec.spec_dict, 'paths')
+    path_spec = resolve(paths_spec, op.path_name)
+    path_params_spec = resolve(path_spec, 'parameters', [])
+
+    # Order of addition is *important* here. Since op_params are last in the
+    # list, they will replace any previously defined path_params with the
+    # same name when the final params dict is constructed in the loop below.
+    params_spec = path_params_spec + op_params_spec
+
+    params = {}
+    for param_spec in params_spec:
+        param = Param(swagger_spec, op, param_spec)
+        params[param.name] = param
+    return params

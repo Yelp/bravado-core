@@ -88,7 +88,9 @@ class Spec(object):
         self.user_defined_formats = {}
         self.format_checker = FormatChecker()
 
-        self.resolver = RefResolver(base_uri='', referrer=self.spec_dict)
+        self.resolver = RefResolver(
+            base_uri=origin_url or '',
+            referrer=self.spec_dict)
 
     @classmethod
     def from_dict(cls, spec_dict, origin_url=None, http_client=None,
