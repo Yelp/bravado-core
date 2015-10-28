@@ -86,7 +86,8 @@ class Operation(object):
         :rtype: str
         """
         if self._operation_id is None:
-            self._operation_id = self.op_spec.get('operationId')
+            self._operation_id = self.swagger_spec.resolve(self.op_spec,
+                                                           'operationId')
             if self._operation_id is None:
                 # build based on the http method and request path
                 self._operation_id = (self.http_method + '_' + self.path_name)\

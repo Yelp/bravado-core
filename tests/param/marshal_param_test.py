@@ -168,3 +168,17 @@ def test_dont_validate_requests(petstore_dict):
 
 def test_validate_requests(petstore_dict):
     assert_validate_call_count(1, {'validate_requests': True}, petstore_dict)
+
+
+def test_ref(minimal_swagger_dict, array_param_spec, request_dict):
+    ref_spec = {'$ref': '#/refs/ArrayParam'}
+    minimal_swagger_dict['refs'] = {
+        'ArrayParam': array_param_spec
+    }
+    swagger_spec = Spec(minimal_swagger_dict)
+    param = Param(swagger_spec, Mock(spec=Operation), ref_spec)
+    value = ['cat', 'dog', 'bird']
+    expected = copy.deepcopy(request_dict)
+    expected['params']['animals'] = ','.join(value)
+    marshal_param(param, value, request_dict)
+    assert expected == request_dict

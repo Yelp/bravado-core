@@ -55,3 +55,17 @@ def test_resource_with_shared_parameters(paths_spec):
     # verify shared param associated with operation
     assert isinstance(
         resources['pet'].findPetsByStatus.params['filter'], Param)
+
+
+def test_refs(minimal_swagger_dict, paths_spec):
+    minimal_swagger_dict['real_paths'] = paths_spec
+    minimal_swagger_dict['real_op'] = paths_spec['/pet/findByStatus']['get']
+    minimal_swagger_dict['real_tags'] = paths_spec['/pet/findByStatus']['get']['tags']
+
+    paths_spec['/pet/findByStatus']['get']['tags'] = {'$ref': '#/real_tags'}
+    paths_spec['/pet/findByStatus']['get'] = {'$ref': '#/real_op'}
+    minimal_swagger_dict['paths'] = {'$ref': '#/real_paths'}
+    swagger_spec = Spec(minimal_swagger_dict)
+    resources = build_resources(swagger_spec)
+    assert len(resources) == 1
+    assert 'pet' in resources

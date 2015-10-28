@@ -32,6 +32,7 @@ def build_pet_proxy(pet_model_spec):
     return pet_proxy
 
 
+@pytest.mark.xfail(run=False)
 def test_model_type_created(response_spec, pet_model_spec):
     models = {}
     response_spec['schema'] = build_pet_proxy(pet_model_spec)

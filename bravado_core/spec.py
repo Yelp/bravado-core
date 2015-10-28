@@ -5,6 +5,7 @@ import warnings
 
 import jsonref
 from jsonschema import FormatChecker
+from six import iteritems
 from six.moves.urllib import parse as urlparse
 from jsonschema.validators import RefResolver
 from swagger_spec_validator import validator20
@@ -18,7 +19,7 @@ from bravado_core.model import create_reffed_models_callback
 from bravado_core.model import fix_malformed_model_refs
 from bravado_core.model import fix_models_with_no_type_callback
 from bravado_core.resource import build_resources
-from bravado_core.schema import is_dict_like, is_list_like
+from bravado_core.schema import is_dict_like, is_list_like, is_ref
 
 
 log = logging.getLogger(__name__)
@@ -126,9 +127,8 @@ class Spec(object):
         return spec
 
     def build(self):
-
         post_process_spec(
-            self.spec_dict,
+            self,
             on_container_callbacks=(
                 annotate_with_xmodel_callback,
                 fix_models_with_no_type_callback,
@@ -175,14 +175,59 @@ class Spec(object):
 
         raise ValueError('Document "%s" is not a container type.' % document)
 
+    def resolve_iteritems(self, container):
+        if not is_dict_like(container):
+            raise ValueError('Expected a container type but got {0} instead.'
+                             .format(str(type(container))))
+
+        if '$ref' in container:
+            print('Dereffing items')
+            ref = container['$ref']
+            json_pointer, target = self.resolver.resolve(ref)
+        else:
+            target = container
+
+        for k, v, in iteritems(target):
+            yield k, v
+
+    def resolve_len(self, container):
+        if is_list_like(container):
+            return len(container)
+
+        if not is_dict_like(container):
+            raise ValueError('Expected a container type but bot {0} instead.'
+                             .format(type(container)))
+
+        if '$ref' in container:
+            print('Dereffing len %s' % container['$ref'])
+            ref = container['$ref']
+            json_pointer, target = self.resolver.resolve(ref)
+        else:
+            target = container
+        return len(target)
+
+    def resolve_list(self, container):
+        if is_list_like(container):
+            return container
+        if not is_dict_like(container):
+            raise ValueError('Expected a container type but bot {0} instead.'
+                             .format(type(container)))
+        if '$ref' in container:
+            print('Dereffing list %s' % container['$ref'])
+            ref = container['$ref']
+            json_pointer, target = self.resolver.resolve(ref)
+        else:
+            target = container
+        return target
+
     def get_op_for_request(self, http_method, path_pattern):
-        """
-        Return the Swagger operation for the passed in request http method
+        """Return the Swagger operation for the passed in request http method
         and path pattern. Makes it really easy for server-side implementations
         to map incoming requests to the Swagger spec.
 
         :param http_method: http method of the request
         :param path_pattern: request path pattern. e.g. /foo/{bar}/baz/{id}
+
         :returns: the matching operation or None if a match couldn't be found
         :rtype: :class:`bravado_core.operation.Operation`
         """
@@ -290,7 +335,7 @@ def build_api_serving_url(spec_dict, origin_url=None, preferred_scheme=None):
     return urlparse.urlunparse((scheme, netloc, path, None, None, None))
 
 
-def post_process_spec(spec_dict, on_container_callbacks):
+def post_process_spec(swagger_spec, on_container_callbacks):
     """Post-process the passed in spec_dict.
 
     For each container type (list or dict) that is traversed in spec_dict,
@@ -306,21 +351,36 @@ def post_process_spec(spec_dict, on_container_callbacks):
     :param on_container_callbacks: list of callbacks to be invoked on each
         container type.
     """
-    def fire_callbacks(container, key):
+    def fire_callbacks(container, key, path):
         for callback in on_container_callbacks:
-            callback(container, key)
+            callback(container, key, path)
 
-    def descend(fragment):
+    resolver = swagger_spec.resolver
+
+    def descend(fragment, path, visited_refs):
+
+        if is_ref(fragment):
+            ref = fragment['$ref']
+            # Don't recurse down already visited refs
+            if ref in visited_refs:
+                print 'Already visited %s' % ref
+                return
+            visited_refs.append(ref)
+            json_pointer, target = resolver.resolve(ref)
+            fragment = target
+
+        # fragment is guaranteed not to be a ref from this point onwards
         if is_dict_like(fragment):
-            for key in fragment:
-                fire_callbacks(fragment, key)
-                descend(fragment[key])
+            for key, value in iteritems(fragment):
+                fire_callbacks(fragment, key, path + [key])
+                descend(fragment[key], path + [key], visited_refs)
+
         elif is_list_like(fragment):
             for index in range(len(fragment)):
-                fire_callbacks(fragment, index)
-                descend(fragment[index])
+                fire_callbacks(fragment, index, path + [str(index)])
+                descend(fragment[index], path + [str(index)], visited_refs)
 
-    descend(spec_dict)
+    descend(swagger_spec.spec_dict, path=[], visited_refs=[])
 
 
 def replace_jsonref_proxies_callback(container, key):

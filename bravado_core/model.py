@@ -233,13 +233,15 @@ def fix_malformed_model_refs(spec):
     descend(spec)
 
 
-def is_model(spec):
+def is_model(swagger_spec, schema_object_spec):
     """
-    :param spec: specification for a swagger object
-    :type spec: dict
-    :return: True if the spec has been "marked" as a model type.
+    :param swagger_spec: :class:`bravado_core.spec.Spec`
+    :param schema_object_spec: specification for a swagger object
+    :type schema_object_spec: dict
+    :return: True if the spec has been "marked" as a model type, false
+        otherwise.
     """
-    return MODEL_MARKER in spec
+    return swagger_spec.resolve(schema_object_spec, MODEL_MARKER)
 
 
 def create_model_docstring(model_spec):

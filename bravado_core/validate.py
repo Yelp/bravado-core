@@ -42,7 +42,8 @@ def validate_primitive(swagger_spec, primitive_spec, value):
     """
     get_validator_type(swagger_spec)(
         primitive_spec,
-        format_checker=swagger_spec.format_checker).validate(value)
+        format_checker=swagger_spec.format_checker,
+        resolver=swagger_spec.resolver).validate(value)
 
 
 def validate_array(swagger_spec, array_spec, value):
@@ -53,7 +54,8 @@ def validate_array(swagger_spec, array_spec, value):
     """
     get_validator_type(swagger_spec)(
         array_spec,
-        format_checker=swagger_spec.format_checker).validate(value)
+        format_checker=swagger_spec.format_checker,
+        resolver=swagger_spec.resolver).validate(value)
 
 
 def validate_object(swagger_spec, object_spec, value):

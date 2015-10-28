@@ -37,6 +37,10 @@ def is_param_spec(swagger_spec, schema_object_spec):
     return swagger_spec.resolve(schema_object_spec, 'in') is not None
 
 
+def is_ref(spec):
+    return is_dict_like(spec) and '$ref' in spec
+
+
 def is_dict_like(spec):
     """Since we're using jsonref, identifying dicts while inspecting a swagger
     spec is no longer limited to the dict type. This takes into account

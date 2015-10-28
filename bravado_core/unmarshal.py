@@ -11,8 +11,7 @@ from bravado_core.schema import SWAGGER_PRIMITIVES
 
 
 def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
-    """
-    Unmarshal the value using the given schema object specification.
+    """Unmarshal the value using the given schema object specification.
 
     Unmarshaling includes:
     - transform the value according to 'format' if available
@@ -22,6 +21,7 @@ def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
     :type swagger_spec: :class:`bravado_core.spec.Spec`
     :type schema_object_spec: dict
     :type value: int, float, long, string, unicode, boolean, list, dict, etc
+
     :return: unmarshaled value
     :rtype: int, float, long, string, unicode, boolean, list, dict, object (in
         the case of a 'format' conversion', or Model type
@@ -34,7 +34,7 @@ def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
     if obj_type == 'array':
         return unmarshal_array(swagger_spec, schema_object_spec, value)
 
-    if is_model(schema_object_spec) and swagger_spec.config['use_models']:
+    if swagger_spec.config['use_models'] and is_model(swagger_spec, schema_object_spec):
         # It is important that the 'model' check comes before 'object' check.
         # Model specs also have type 'object' but also have the additional
         # MODEL_MARKER key for identification.

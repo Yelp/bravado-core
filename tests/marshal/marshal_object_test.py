@@ -189,3 +189,11 @@ def test_pass_through_additionalProperties_with_no_spec(
     }
     result = marshal_object(empty_swagger_spec, address_spec, address)
     assert expected_address == result
+
+
+def test_ref(minimal_swagger_dict, address_spec, address):
+    minimal_swagger_dict['definitions']['Address'] = address_spec
+    ref_spec = {'$ref': '#/definitions/Address'}
+    swagger_spec = Spec(minimal_swagger_dict)
+    result = marshal_object(swagger_spec, ref_spec, address)
+    assert address == result

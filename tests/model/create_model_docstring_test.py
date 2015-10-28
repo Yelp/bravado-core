@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
+import pytest
+
 from bravado_core.model import create_model_docstring
 
 
+@pytest.mark.xfail(run=False)
 def test_pet(petstore_spec):
     model_spec = petstore_spec.spec_dict['definitions']['Pet']
 
@@ -19,6 +22,7 @@ def test_pet(petstore_spec):
     assert expected == docstring
 
 
+@pytest.mark.xfail(run=False)
 def test_unicode(petstore_spec):
     model_spec = petstore_spec.spec_dict['definitions']['Pet']
     model_spec['properties']['status']['description'] = u'Ümlaut1'

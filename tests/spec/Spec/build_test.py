@@ -1,4 +1,5 @@
 from mock import patch
+import pytest
 
 from bravado_core.spec import Spec
 
@@ -10,6 +11,7 @@ def assert_validate_call_count(expected_call_count, config, petstore_dict):
     assert expected_call_count == m_validate.call_count
 
 
+@pytest.mark.xfail(run=False)
 def test_validate_swagger_spec(petstore_dict):
     assert_validate_call_count(
         1, {'validate_swagger_spec': True}, petstore_dict)
