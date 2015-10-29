@@ -5,7 +5,6 @@ from bravado_core.spec import Spec
 from bravado_core.unmarshal import unmarshal_schema_object
 
 
-@pytest.mark.xfail(run=False)
 def test_use_models_true(petstore_dict):
     petstore_spec = Spec.from_dict(petstore_dict, config={'use_models': True})
     Category = petstore_spec.definitions['Category']
@@ -19,7 +18,6 @@ def test_use_models_true(petstore_dict):
     assert isinstance(result, Category)
 
 
-@pytest.mark.xfail(run=False)
 def test_use_models_false(petstore_dict):
     petstore_spec = Spec.from_dict(petstore_dict, config={'use_models': False})
     category_spec = petstore_spec.spec_dict['definitions']['Category']

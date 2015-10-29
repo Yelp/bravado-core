@@ -2,7 +2,7 @@
     "pong": {
         "description": "pong",
         "schema": {
-          "$ref": "../definitions/pingpong.json#/pong"
+          "$ref": "../definitions/definitions.json#/pong"
         }
     }
 }

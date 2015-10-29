@@ -144,7 +144,7 @@ def marshal_model(swagger_spec, model_spec, model_value):
     :rtype: dict
     :raises: SwaggerMappingError
     """
-    model_name = model_spec[MODEL_MARKER]
+    model_name = swagger_spec.resolve(model_spec, MODEL_MARKER)
     model_type = swagger_spec.definitions.get(model_name, None)
 
     if model_type is None:

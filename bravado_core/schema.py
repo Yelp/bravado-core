@@ -14,27 +14,27 @@ SWAGGER_PRIMITIVES = (
 
 
 def has_default(swagger_spec, schema_object_spec):
-    return swagger_spec.resolve(schema_object_spec, 'default') is not None
+    return 'default' in swagger_spec.deref(schema_object_spec)
 
 
 def get_default(swagger_spec, schema_object_spec):
-    return swagger_spec.resolve(schema_object_spec, 'default')
+    return swagger_spec.deref(schema_object_spec).get('default')
 
 
 def is_required(swagger_spec, schema_object_spec):
-    return swagger_spec.resolve(schema_object_spec, 'required', False)
+    return swagger_spec.deref(schema_object_spec).get('required', False)
 
 
 def has_format(swagger_spec, schema_object_spec):
-    return swagger_spec.resolve(schema_object_spec, 'format') is not None
+    return 'format' in swagger_spec.deref(schema_object_spec)
 
 
 def get_format(swagger_spec, schema_object_spec):
-    return swagger_spec.resolve(schema_object_spec, 'format')
+    return swagger_spec.deref(schema_object_spec).get('format')
 
 
 def is_param_spec(swagger_spec, schema_object_spec):
-    return swagger_spec.resolve(schema_object_spec, 'in') is not None
+    return 'in' in swagger_spec.deref(schema_object_spec)
 
 
 def is_ref(spec):
@@ -85,20 +85,21 @@ def get_spec_for_prop(swagger_spec, object_spec, object_value, prop_name):
     :return: spec for the given property or None if no spec found
     :rtype: dict
     """
-    props_spec = swagger_spec.resolve(object_spec, 'properties', {})
-    prop_spec = swagger_spec.resolve(props_spec, prop_name)
+    deref = swagger_spec.deref
+    props_spec = deref(object_spec).get('properties', {})
+    prop_spec = deref(props_spec).get(prop_name)
 
     if prop_spec is not None:
         return prop_spec
 
-    additional_props = swagger_spec.resolve(
-        object_spec, 'additionalProperties', True)
+    additional_props = deref(object_spec).get('additionalProperties', True)
 
     if isinstance(additional_props, bool):
         # no spec for additional properties to conform to - this is basically
         # a way to send pretty much anything across the wire as is.
         return None
 
+    additional_props = deref(additional_props)
     if is_dict_like(additional_props):
         # spec that all additional props MUST conform to
         return additional_props

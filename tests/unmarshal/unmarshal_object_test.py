@@ -112,12 +112,11 @@ def test_with_ref(minimal_swagger_dict, address_spec, location_spec):
             'latitude': 99.9,
         },
     }
-    minimal_swagger_spec = Spec.from_dict(minimal_swagger_dict)
+    minimal_swagger_spec = Spec(minimal_swagger_dict)
     result = unmarshal_object(minimal_swagger_spec, address_spec, address)
     assert result == address
 
 
-@pytest.mark.xfail(run=False)
 def test_with_model(minimal_swagger_dict, address_spec, location_spec):
     minimal_swagger_dict['definitions']['Location'] = location_spec
 

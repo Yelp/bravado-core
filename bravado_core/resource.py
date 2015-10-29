@@ -50,7 +50,7 @@ def build_resources(swagger_spec):
     resolve_iteritems = swagger_spec.resolve_iteritems
     resolve_list = swagger_spec.resolve_list
 
-    paths_spec = resolve(swagger_spec.spec_dict, 'paths')
+    paths_spec = resolve(swagger_spec.spec_dict, 'paths', {})
     for path_name, path_spec in resolve_iteritems(paths_spec):
         for http_method, op_spec in resolve_iteritems(path_spec):
             # parameters that are shared across all operations for

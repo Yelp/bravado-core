@@ -7,7 +7,6 @@ from bravado_core.marshal import marshal_schema_object
 from bravado_core.spec import Spec
 
 
-@pytest.mark.xfail(run=False)
 def test_dicts_can_be_used_instead_of_models(petstore_dict):
     petstore_spec = Spec.from_dict(petstore_dict)
     pet_spec = petstore_spec.spec_dict['definitions']['Pet']

@@ -16,34 +16,81 @@ from bravado_core.schema import (
 # differentiated from 'object' types.
 MODEL_MARKER = 'x-model'
 
-RE_MODEL_NAME = re.compile(r"""
-    [\w.]*              # Skip filename if specified
-    \#/definitions/     # match `#/definitions/`
-    (?P<model_name>\w+) # capture model_name
-    $                   # end of string
-""", re.VERBOSE)
+# RE_MODEL_NAME = re.compile(r"""
+#     [\w.]*              # Skip filename if specified
+#     \#/definitions/     # match `#/definitions/`
+#     (?P<model_name>\w+) # capture model_name
+#     $                   # end of string
+# """, re.VERBOSE)
 
 
-def annotate_with_xmodel_callback(container, key):
-    """Tags JsonRef proxies which represent Swagger models with
-    'x-model': <model name>.
-
-    :type container: list or dict
-    :param key: the key of the object in the container to inspect
-    :type key: string if container is a dict, int if container is a list
-    """
-    jsonref_proxy = container[key]
-    if not isinstance(jsonref_proxy, jsonref.JsonRef):
+def tag_models(container, key, path, visited_models, swagger_spec):
+    if len(path) < 2 or path[-2] != 'definitions':
         return
 
-    ref_target = jsonref_proxy.__reference__['$ref']
-    match = RE_MODEL_NAME.match(ref_target)
-    if match is None:
+    model_name = key
+    model_spec = swagger_spec.resolve(container, key)
+
+    if swagger_spec.resolve(model_spec, 'type') != 'object':
         return
 
-    model = jsonref_proxy.__subject__
-    if is_dict_like(model) and MODEL_MARKER not in model:
-        model[MODEL_MARKER] = match.group('model_name')
+    if swagger_spec.resolve(model_spec, MODEL_MARKER) is not None:
+        return
+
+    print 'Found model: %s' % model_name
+    if model_name in visited_models:
+        raise ValueError('Duplicate "{0}" model found at path {1}. '
+            'Original "{0}" model at path {2}'.format(
+            model_name, path, visited_models[model_name]))
+
+    #model_spec = swagger_spec.resolve(container, model_name)
+    model_spec['x-model'] = model_name
+    visited_models[model_name] = path
+
+
+# TODO: remove
+#
+# def annotate_with_xmodel_callback(container, key):
+#     """Tags JsonRef proxies which represent Swagger models with
+#     'x-model': <model name>.
+#
+#     :type container: list or dict
+#     :param key: the key of the object in the container to inspect
+#     :type key: string if container is a dict, int if container is a list
+#     """
+#     jsonref_proxy = container[key]
+#     if not isinstance(jsonref_proxy, jsonref.JsonRef):
+#         return
+#
+#     ref_target = jsonref_proxy.__reference__['$ref']
+#     match = RE_MODEL_NAME.match(ref_target)
+#     if match is None:
+#         return
+#
+#     model = jsonref_proxy.__subject__
+#     if is_dict_like(model) and MODEL_MARKER not in model:
+#         model[MODEL_MARKER] = match.group('model_name')
+
+
+def collect_models(container, key, path, models, swagger_spec):
+    # spec = {
+    #     'definitions': {
+    #         'User': {
+    #             'x-model': 'User',
+    #             'type': 'object',
+    #         }
+    #     }
+    # }
+    # # Find
+    # container = {
+    #     'User':
+    #         'x-model': 'User'
+    # }
+    #
+    if key == MODEL_MARKER:
+        model_spec = container
+        model_name = swagger_spec.resolve(model_spec, MODEL_MARKER)
+        models[model_name] = create_model_type(model_name, model_spec)
 
 
 def fix_models_with_no_type_callback(container, key):
@@ -60,7 +107,6 @@ def fix_models_with_no_type_callback(container, key):
     model = jsonref_proxy.__subject__
     if is_model(model) and 'type' not in model:
         model['type'] = 'object'
-
 
 def create_reffed_models_callback(models, container, key):
     """Callback to build a model type for each jsonref_proxy that refers to a
@@ -241,7 +287,7 @@ def is_model(swagger_spec, schema_object_spec):
     :return: True if the spec has been "marked" as a model type, false
         otherwise.
     """
-    return swagger_spec.resolve(schema_object_spec, MODEL_MARKER)
+    return swagger_spec.resolve(schema_object_spec, MODEL_MARKER) is not None
 
 
 def create_model_docstring(model_spec):

@@ -5,7 +5,6 @@ from bravado_core.unmarshal import unmarshal_model
 from bravado_core.spec import Spec
 
 
-@pytest.mark.xfail(run=False)
 def test_pet(petstore_dict):
     # Covers:
     #   - model with primitives properties
@@ -57,7 +56,6 @@ def test_pet(petstore_dict):
     assert 'brown' == pet.tags[1].name
 
 
-@pytest.mark.xfail(run=False)
 def test_Nones_are_reintroduced_for_declared_properties_that_are_not_present(
         petstore_dict):
     petstore_spec = Spec.from_dict(petstore_dict)
@@ -101,7 +99,6 @@ def test_Nones_are_reintroduced_for_declared_properties_that_are_not_present(
     assert 'brown' == pet.tags[1].name
 
 
-@pytest.mark.xfail(run=False)
 def test_value_is_not_dict_like_raises_error(petstore_dict):
     petstore_spec = Spec.from_dict(petstore_dict)
     pet_spec = petstore_spec.spec_dict['definitions']['Pet']
