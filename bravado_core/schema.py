@@ -1,5 +1,3 @@
-import jsonref
-
 from bravado_core.exception import SwaggerMappingError
 
 # 'object' and 'array' are omitted since this should really be read as
@@ -42,35 +40,23 @@ def is_ref(spec):
 
 
 def is_dict_like(spec):
-    """Since we're using jsonref, identifying dicts while inspecting a swagger
-    spec is no longer limited to the dict type. This takes into account
-    jsonref's proxy objects that dereference to a dict.
+    """No longer needed since json-ref has been excised.
 
     :param spec: swagger object specification in dict form
     :rtype: boolean
     """
-    if type(spec) == dict:
-        return True
-    # TODO: Remove when dependency on jsonref removed
-    if type(spec) == jsonref.JsonRef and type(spec.__subject__) == dict:
-        return True
-    return False
+    # TODO: check magic method instead
+    return type(spec) == dict
 
 
 def is_list_like(spec):
-    """Since we're using jsonref, identifying arrays while inspecting a swagger
-    spec is no longer limited to the list type. This takes into account
-    jsonref's proxy objects that dereference to a list.
+    """No longer needed since json-ref has been excised.
 
     :param spec: swagger object specification in dict form
     :rtype: boolean
     """
-    if type(spec) == list:
-        return True
-    # TODO: Remove when dependency on jsonref removed
-    if type(spec) == jsonref.JsonRef and type(spec.__subject__) == list:
-        return True
-    return False
+    # TODO: check magic method instead
+    return type(spec) == list
 
 
 def get_spec_for_prop(swagger_spec, object_spec, object_value, prop_name):

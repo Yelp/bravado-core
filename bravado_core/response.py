@@ -130,8 +130,7 @@ def get_response_spec(status_code, op):
     :raises: MatchingResponseNotFound when the status_code could not be mapped
         to a response specification.
     """
-    # We don't need to worry about checking #/responses/ because jsonref has
-    # already inlined the $refs
+    # TODO: check global #/responses
     response_specs = op.op_spec.get('responses')
     default_response_spec = response_specs.get('default', None)
     response_spec = response_specs.get(str(status_code), default_response_spec)

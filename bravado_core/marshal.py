@@ -59,7 +59,7 @@ def marshal_primitive(swagger_spec, primitive_spec, value):
     """Marshal a python primitive type into a jsonschema primitive.
 
     :type swagger_spec: :class:`bravado_core.spec.Spec`
-    :type primitive_spec: dict or jsonref.JsonRef
+    :type primitive_spec: dict
     :type value: int, long, float, boolean, string, unicode, or an object
         based on 'format'
 
@@ -86,7 +86,7 @@ def marshal_array(swagger_spec, array_spec, array_value):
     """Marshal a jsonschema type of 'array' into a json-like list.
 
     :type swagger_spec: :class:`bravado_core.spec.Spec`
-    :type array_spec: dict or jsonref.JsonRef
+    :type array_spec: dict
     :type array_value: list
     :rtype: list
     :raises: SwaggerMappingError
@@ -145,7 +145,7 @@ def marshal_model(swagger_spec, model_spec, model_value):
     """Marshal a Model instance into a json-like dict.
 
     :type swagger_spec: :class:`bravado_core.spec.Spec`
-    :type model_spec: dict or jsonref.JsonRef
+    :type model_spec: dict
     :type model_value: Model instance
     :rtype: dict
     :raises: SwaggerMappingError

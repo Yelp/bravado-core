@@ -30,7 +30,6 @@ setup(
         "Programming Language :: Python :: 3.4",
     ],
     install_requires=[
-        "jsonref",
         "jsonschema>=2.5.1",
         "python-dateutil",
         "six",

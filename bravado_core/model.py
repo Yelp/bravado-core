@@ -1,27 +1,16 @@
 from functools import partial
-import re
 
-import jsonref
 from six import iteritems
 
 from bravado_core.docstring import docstring_property
-from bravado_core.schema import (
-    is_dict_like,
-    is_list_like,
-    SWAGGER_PRIMITIVES
-)
+from bravado_core.schema import is_dict_like
+from bravado_core.schema import is_list_like
+from bravado_core.schema import SWAGGER_PRIMITIVES
 
 
 # Models in #/definitions are tagged with this key so that they can be
 # differentiated from 'object' types.
 MODEL_MARKER = 'x-model'
-
-# RE_MODEL_NAME = re.compile(r"""
-#     [\w.]*              # Skip filename if specified
-#     \#/definitions/     # match `#/definitions/`
-#     (?P<model_name>\w+) # capture model_name
-#     $                   # end of string
-# """, re.VERBOSE)
 
 
 def tag_models(container, key, path, visited_models, swagger_spec):
@@ -47,102 +36,12 @@ def tag_models(container, key, path, visited_models, swagger_spec):
     visited_models[model_name] = path
 
 
-# TODO: remove
-#
-# def annotate_with_xmodel_callback(container, key):
-#     """Tags JsonRef proxies which represent Swagger models with
-#     'x-model': <model name>.
-#
-#     :type container: list or dict
-#     :param key: the key of the object in the container to inspect
-#     :type key: string if container is a dict, int if container is a list
-#     """
-#     jsonref_proxy = container[key]
-#     if not isinstance(jsonref_proxy, jsonref.JsonRef):
-#         return
-#
-#     ref_target = jsonref_proxy.__reference__['$ref']
-#     match = RE_MODEL_NAME.match(ref_target)
-#     if match is None:
-#         return
-#
-#     model = jsonref_proxy.__subject__
-#     if is_dict_like(model) and MODEL_MARKER not in model:
-#         model[MODEL_MARKER] = match.group('model_name')
-
-
 def collect_models(container, key, path, models, swagger_spec):
-    # spec = {
-    #     'definitions': {
-    #         'User': {
-    #             'x-model': 'User',
-    #             'type': 'object',
-    #         }
-    #     }
-    # }
-    # # Find
-    # container = {
-    #     'User':
-    #         'x-model': 'User'
-    # }
-    #
     deref = swagger_spec.deref
     if key == MODEL_MARKER:
         model_spec = container
         model_name = deref(model_spec.get(MODEL_MARKER))
         models[model_name] = create_model_type(model_name, model_spec)
-
-
-def fix_models_with_no_type_callback(container, key):
-    """For models with no `type` specifier, default it to `object`.
-
-    :type container: list or dict
-    :param key: the key of the object in the container to inspect
-    :type key: string if container is a dict, int if container is a list
-    """
-    jsonref_proxy = container[key]
-    if not isinstance(jsonref_proxy, jsonref.JsonRef):
-        return
-
-    model = jsonref_proxy.__subject__
-    if is_model(model) and 'type' not in model:
-        model['type'] = 'object'
-
-def create_reffed_models_callback(models, container, key):
-    """Callback to build a model type for each jsonref_proxy that refers to a
-    model. The passed in models dict is used to store the built model types.
-
-    :type models: dict where (key, value) = (model_name, model_type)
-    :type container: list or dict
-    :param key: the key of the object in the container to inspect
-    :type key: string if container is a dict, int if container is a list
-    """
-    jsonref_proxy = container[key]
-    if not isinstance(jsonref_proxy, jsonref.JsonRef):
-        return
-
-    model = jsonref_proxy.__subject__
-    if is_model(model):
-        model_name = model[MODEL_MARKER]
-        if model_name not in models:
-            models[model_name] = create_model_type(model_name, model)
-
-
-def create_dereffed_models_callback(models, container, key):
-    """Callback to build a model type for each dict that represents a model.
-    The passed in models dict is used to store the built model types.
-
-    :type models: dict where (key, value) = (model_name, model_type)
-    :type container: list or dict
-    :param key: the key of the object in the container to inspect
-    :type key: string if container is a dict, int if container is a list
-    """
-    if key != MODEL_MARKER:
-        return
-
-    model_name = container[key]
-    if model_name not in models:
-        models[model_name] = create_model_type(model_name, container)
 
 
 def create_model_type(model_name, model_spec):
@@ -252,31 +151,6 @@ def create_model_repr(model, model_spec):
         for attr_name in sorted(model_spec['properties'].keys())
     ]
     return "{0}({1})".format(model.__class__.__name__, ', '.join(s))
-
-
-def fix_malformed_model_refs(spec):
-    """jsonref doesn't understand  { $ref: Category } so just fix it up to
-    { $ref: #/definitions/Category } when the ref name matches a #/definitions
-    name. Yes, this is hacky!
-
-    :param spec: Swagger spec in dict form
-    """
-    # TODO: fix this in a sustainable way in a fork of jsonref and try to
-    #       upstream
-    # TODO: unit test
-    model_names = [model_name for model_name in spec.get('definitions', {})]
-
-    def descend(fragment):
-        if is_dict_like(fragment):
-            for k, v in iteritems(fragment):
-                if k == '$ref' and v in model_names:
-                    fragment[k] = "#/definitions/{0}".format(v)
-                descend(v)
-        elif is_list_like(fragment):
-            for element in fragment:
-                descend(element)
-
-    descend(spec)
 
 
 def is_model(swagger_spec, schema_object_spec):

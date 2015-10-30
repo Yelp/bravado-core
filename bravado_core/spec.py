@@ -3,7 +3,6 @@ import functools
 import logging
 import warnings
 
-import jsonref
 from jsonschema import FormatChecker
 from six import iteritems
 from six.moves.urllib import parse as urlparse
@@ -92,33 +91,14 @@ class Spec(object):
     @classmethod
     def from_dict(cls, spec_dict, origin_url=None, http_client=None,
                   config=None):
-        """
-        Build a :class:`Spec` from Swagger API Specificiation
+        """Build a :class:`Spec` from Swagger API Specificiation
 
         :param spec_dict: swagger spec in json-like dict form.
         :param origin_url: the url used to retrieve the spec, if any
         :type  origin_url: str
         :param config: Configuration dict. See CONFIG_DEFAULTS.
         """
-        #fix_malformed_model_refs(spec_dict)
-        #spec_dict = jsonref.JsonRef.replace_refs(
-        #    spec_dict, base_uri=origin_url or '')
-
-        # Populated by post-processing callbacks below
-        #models = {}
-
-        # post_process_spec(
-        #     spec_dict,
-        #     on_container_callbacks=(
-        #         annotate_with_xmodel_callback,
-        #         fix_models_with_no_type_callback,
-        #         functools.partial(create_reffed_models_callback, models),
-        #         functools.partial(create_dereffed_models_callback, models),
-        #         replace_jsonref_proxies_callback,
-        #     ))
-
         spec = cls(spec_dict, origin_url, http_client, config)
-        #spec.definitions = models
         spec.build()
         return spec
 
@@ -126,19 +106,20 @@ class Spec(object):
         post_process_spec(self,
             on_container_callbacks=[
                 functools.partial(
-                    tag_models, visited_models={}, swagger_spec=self)])
-
-        post_process_spec(self,
-            on_container_callbacks=[
+                    tag_models, visited_models={}, swagger_spec=self),
                 functools.partial(
-                    collect_models, models=self.definitions, swagger_spec=self)])
+                    collect_models, models=self.definitions,
+                    swagger_spec=self)
+            ])
 
         for format in self.config['formats']:
             self.register_format(format)
 
         log.warn('Swagger spec validation disabled until ssv can handle refs')
+
+        # TODO: re-enable when ssv refactored for recursive refs
         #if self.config['validate_swagger_spec']:
-        #    validator20.validate_spec(self.spec_dict)
+        #   validator20.validate_spec(self.spec_dict)
 
         self.api_url = build_api_serving_url(self.spec_dict, self.origin_url)
         self.resources = build_resources(self)
@@ -157,78 +138,6 @@ class Spec(object):
             return target
 
         return ref_dict
-
-    # def resolve(self, document, element, default=None):
-    #     if is_dict_like(document):
-    #         assert isinstance(element, basestring)
-    #
-    #         if element in document:
-    #             return document[element]
-    #
-    #         if '$ref' in document:
-    #             print('Dereffing %s' % document['$ref'])
-    #             ref = document['$ref']
-    #             json_pointer, target = self.resolver.resolve(ref)
-    #             return self.resolve(target, element, default)
-    #
-    #         return default
-    #
-    #     if is_list_like(document):
-    #         assert isinstance(element, int)
-    #         index = element
-    #         value = document[index]
-    #         if is_dict_like(value) and '$ref' in value:
-    #             ref = value['$ref']
-    #             json_pointer, target = self.resolver.resolve(ref)
-    #             return self.resolve(target, index, default)
-    #         return value
-    #
-    #     raise ValueError('Document "%s" is not a container type.' % document)
-    #
-    # def resolve_iteritems(self, container):
-    #     if not is_dict_like(container):
-    #         raise ValueError('Expected a container type but got {0} instead.'
-    #                          .format(str(type(container))))
-    #
-    #     if '$ref' in container:
-    #         print('Dereffing items')
-    #         ref = container['$ref']
-    #         json_pointer, target = self.resolver.resolve(ref)
-    #     else:
-    #         target = container
-    #
-    #     for k, v, in iteritems(target):
-    #         yield k, v
-    #
-    # def resolve_len(self, container):
-    #     if is_list_like(container):
-    #         return len(container)
-    #
-    #     if not is_dict_like(container):
-    #         raise ValueError('Expected a container type but bot {0} instead.'
-    #                          .format(type(container)))
-    #
-    #     if '$ref' in container:
-    #         print('Dereffing len %s' % container['$ref'])
-    #         ref = container['$ref']
-    #         json_pointer, target = self.resolver.resolve(ref)
-    #     else:
-    #         target = container
-    #     return len(target)
-    #
-    # def resolve_list(self, container):
-    #     if is_list_like(container):
-    #         return container
-    #     if not is_dict_like(container):
-    #         raise ValueError('Expected a container type but bot {0} instead.'
-    #                          .format(type(container)))
-    #     if '$ref' in container:
-    #         print('Dereffing list %s' % container['$ref'])
-    #         ref = container['$ref']
-    #         json_pointer, target = self.resolver.resolve(ref)
-    #     else:
-    #         target = container
-    #     return target
 
     def get_op_for_request(self, http_method, path_pattern):
         """Return the Swagger operation for the passed in request http method
@@ -396,18 +305,3 @@ def post_process_spec(swagger_spec, on_container_callbacks):
                 descend(fragment[index], path + [str(index)], visited_refs)
 
     descend(swagger_spec.spec_dict, path=[], visited_refs=[])
-
-
-# def replace_jsonref_proxies_callback(container, key):
-#     """Replace jsonref proxies in the given dict or list with the proxy target.
-#     Updates are made in place. This removes compatibility problems with 3rd
-#     party libraries that can't handle jsonref proxy objects while traversing
-#     the swagger spec dict.
-#
-#     :type container: list or dict
-#     :type key: string when the container is a dict, integer when the container
-#         is a list
-#     """
-#     jsonref_proxy = container[key]
-#     if isinstance(jsonref_proxy, jsonref.JsonRef):
-#         container[key] = jsonref_proxy.__subject__

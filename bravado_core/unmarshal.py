@@ -57,7 +57,7 @@ def unmarshal_primitive(swagger_spec, primitive_spec, value):
     """Unmarshal a jsonschema primitive type into a python primitive.
 
     :type swagger_spec: :class:`bravado_core.spec.Spec`
-    :type primitive_spec: dict or jsonref.JsonRef
+    :type primitive_spec: dict
     :type value: int, long, float, boolean, string, unicode, etc
 
     :rtype: int, long, float, boolean, string, unicode, or an object
@@ -76,7 +76,7 @@ def unmarshal_array(swagger_spec, array_spec, array_value):
     """Unmarshal a jsonschema type of 'array' into a python list.
 
     :type swagger_spec: :class:`bravado_core.spec.Spec`
-    :type array_spec: dict or jsonref.JsonRef
+    :type array_spec: dict
     :type array_value: list
     :rtype: list
     :raises: SwaggerMappingError
@@ -96,7 +96,7 @@ def unmarshal_object(swagger_spec, object_spec, object_value):
     """Unmarshal a jsonschema type of 'object' into a python dict.
 
     :type swagger_spec: :class:`bravado_core.spec.Spec`
-    :type object_spec: dict or jsonref.JsonRef
+    :type object_spec: dict
     :type object_value: dict
     :rtype: dict
     :raises: SwaggerMappingError
@@ -129,7 +129,7 @@ def unmarshal_model(swagger_spec, model_spec, model_value):
     """Unmarshal a dict into a Model instance.
 
     :type swagger_spec: :class:`bravado_core.spec.Spec`
-    :type model_spec: dict or jsonref.JsonRef
+    :type model_spec: dict
     :type model_value: dict
     :rtype: Model instance
     :raises: SwaggerMappingError

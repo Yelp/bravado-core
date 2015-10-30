@@ -14,16 +14,6 @@ def test_definitions_not_present(minimal_swagger_dict):
     assert 0 == len(spec.definitions)
 
 
-# @mock.patch('jsonref.JsonRef')
-# @mock.patch('bravado_core.spec.post_process_spec')
-# @mock.patch.object(Spec, 'build')
-# def test_origin_uri_gets_passed_to_jsonref(mock_build, mock_prox, mock_ref,
-#                                            minimal_swagger_dict):
-#     Spec.from_dict(minimal_swagger_dict, origin_url='file:///foo')
-#     mock_ref.replace_refs.assert_called_once_with(
-#         minimal_swagger_dict, base_uri='file:///foo')
-
-
 def get_spec_json_and_url(rel_url):
     my_dir = os.path.abspath(os.path.dirname(__file__))
     abs_path = os.path.join(my_dir, rel_url)
@@ -53,6 +43,7 @@ def test_relative_ref_spec():
     #delete_key_from_dict(expected_dict, MODEL_MARKER)
     #assert expected_dict == json.loads(json.dumps(resultant_spec.spec_dict))
     print json.dumps(resultant_spec.spec_dict, indent=2)
+    # TODO: poke around and verify the dom
 
 
 def test_ref_to_external_path_with_ref_to_local_model():
