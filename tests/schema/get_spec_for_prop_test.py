@@ -145,4 +145,4 @@ def test_property_is_ref(minimal_swagger_dict, address):
     swagger_spec = Spec.from_dict(minimal_swagger_dict)
     result = get_spec_for_prop(
         swagger_spec, address_spec, address, 'street_type')
-    assert  {'$ref': '#/definitions/StreetType'} == result
+    assert street_type_spec == result

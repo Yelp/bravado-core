@@ -26,7 +26,9 @@ def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
     :rtype: int, float, long, string, unicode, boolean, list, dict, object (in
         the case of a 'format' conversion', or Model type
     """
-    obj_type = swagger_spec.resolve(schema_object_spec, 'type')
+    deref = swagger_spec.deref
+    schema_object_spec = deref(schema_object_spec)
+    obj_type = schema_object_spec.get('type')
 
     if obj_type in SWAGGER_PRIMITIVES:
         return unmarshal_primitive(swagger_spec, schema_object_spec, value)
@@ -83,7 +85,7 @@ def unmarshal_array(swagger_spec, array_spec, array_value):
         raise SwaggerMappingError('Expected list like type for {0}:{1}'.format(
             type(array_value), array_value))
 
-    item_spec = swagger_spec.resolve(array_spec, 'items')
+    item_spec = swagger_spec.deref(array_spec).get('items')
     return [
         unmarshal_schema_object(swagger_spec, item_spec, item)
         for item in array_value
@@ -99,6 +101,8 @@ def unmarshal_object(swagger_spec, object_spec, object_value):
     :rtype: dict
     :raises: SwaggerMappingError
     """
+    deref = swagger_spec.deref
+
     if not is_dict_like(object_value):
         raise SwaggerMappingError('Expected dict like type for {0}:{1}'.format(
             type(object_value), object_value))
@@ -114,7 +118,7 @@ def unmarshal_object(swagger_spec, object_spec, object_value):
             result[k] = v
 
     # re-introduce and None'ify any properties that weren't passed
-    properties = swagger_spec.resolve(object_spec, 'properties', {})
+    properties = deref(object_spec).get('properties', {})
     for prop_name, prop_spec in iteritems(properties):
         if prop_name not in result:
             result[prop_name] = None
@@ -130,7 +134,8 @@ def unmarshal_model(swagger_spec, model_spec, model_value):
     :rtype: Model instance
     :raises: SwaggerMappingError
     """
-    model_name = swagger_spec.resolve(model_spec, MODEL_MARKER)
+    deref = swagger_spec.deref
+    model_name = deref(model_spec).get(MODEL_MARKER)
     model_type = swagger_spec.definitions.get(model_name, None)
 
     if model_type is None:

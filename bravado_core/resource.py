@@ -46,13 +46,13 @@ def build_resources(swagger_spec):
     #   path
     # key = tag_name   value = { operation_id : Operation }
     tag_to_ops = defaultdict(dict)
-    resolve = swagger_spec.resolve
-    resolve_iteritems = swagger_spec.resolve_iteritems
-    resolve_list = swagger_spec.resolve_list
-
-    paths_spec = resolve(swagger_spec.spec_dict, 'paths', {})
-    for path_name, path_spec in resolve_iteritems(paths_spec):
-        for http_method, op_spec in resolve_iteritems(path_spec):
+    deref = swagger_spec.deref
+    spec_dict = deref(swagger_spec.spec_dict)
+    paths_spec = deref(spec_dict.get('paths', {}))
+    for path_name, path_spec in iteritems(paths_spec):
+        path_spec = deref(path_spec)
+        for http_method, op_spec in iteritems(path_spec):
+            op_spec = deref(op_spec)
             # parameters that are shared across all operations for
             # a given path are also defined at this level - we
             # just need to skip over them.
@@ -61,13 +61,13 @@ def build_resources(swagger_spec):
 
             op = Operation.from_spec(swagger_spec, path_name, http_method,
                                      op_spec)
-            tags = resolve_list(resolve(op_spec, 'tags', []))
+            tags = deref(op_spec.get('tags', []))
 
             if not tags:
                 tags.append(convert_path_to_resource(path_name))
 
             for tag in tags:
-                tag_to_ops[tag][op.operation_id] = op
+                tag_to_ops[deref(tag)][op.operation_id] = op
 
     resources = {}
     for tag, ops in iteritems(tag_to_ops):

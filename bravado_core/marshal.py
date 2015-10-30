@@ -24,7 +24,9 @@ def marshal_schema_object(swagger_spec, schema_object_spec, value):
     :rtype: int, long, string, unicode, boolean, list, dict
     :raises: SwaggerMappingError
     """
-    obj_type = swagger_spec.resolve(schema_object_spec, 'type')
+    deref = swagger_spec.deref
+    schema_object_spec = deref(schema_object_spec)
+    obj_type = schema_object_spec.get('type')
 
     if obj_type in SWAGGER_PRIMITIVES:
         return marshal_primitive(swagger_spec, schema_object_spec, value)
@@ -93,10 +95,12 @@ def marshal_array(swagger_spec, array_spec, array_value):
         raise SwaggerMappingError('Expected list like type for {0}: {1}'
             .format(type(array_value), array_value))
 
+    items_spec = swagger_spec.deref(array_spec).get('items')
+
     return [
         marshal_schema_object(
             swagger_spec,
-            swagger_spec.resolve(array_spec, 'items'),
+            items_spec,
             element)
         for element in array_value
     ]
@@ -112,6 +116,8 @@ def marshal_object(swagger_spec, object_spec, object_value):
     :rtype: dict
     :raises: SwaggerMappingError
     """
+    deref = swagger_spec.deref
+
     if not is_dict_like(object_value):
         raise SwaggerMappingError('Expected dict like type for {0}:{1}'.format(
             type(object_value), object_value))
@@ -124,7 +130,7 @@ def marshal_object(swagger_spec, object_spec, object_value):
             continue
 
         prop_spec = get_spec_for_prop(
-            swagger_spec, object_spec, object_value, k)
+            swagger_spec, deref(object_spec), object_value, k)
 
         if prop_spec:
             result[k] = marshal_schema_object(swagger_spec, prop_spec, v)
@@ -144,7 +150,8 @@ def marshal_model(swagger_spec, model_spec, model_value):
     :rtype: dict
     :raises: SwaggerMappingError
     """
-    model_name = swagger_spec.resolve(model_spec, MODEL_MARKER)
+    deref = swagger_spec.deref
+    model_name = deref(model_spec).get(MODEL_MARKER)
     model_type = swagger_spec.definitions.get(model_name, None)
 
     if model_type is None:

@@ -41,31 +41,31 @@ class Param(object):
     def __init__(self, swagger_spec, op, param_spec):
         self.op = op
         self.swagger_spec = swagger_spec
-        self.param_spec = param_spec
+        self.param_spec = swagger_spec.deref(param_spec)
 
     @property
     def name(self):
-        return self.swagger_spec.resolve(self.param_spec, 'name')
+        return self.param_spec['name']
 
     @property
     def location(self):
         # not using 'in' as the name since it is a keyword in python
-        return self.swagger_spec.resolve(self.param_spec, 'in')
+        return self.param_spec['in']
 
     @property
     def description(self):
-        return self.swagger_spec.resolve(self.param_spec, 'description', None)
+        return self.param_spec.get('description')
 
     @property
     def required(self):
-        return self.swagger_spec.resolve(self.param_spec, 'required', False)
+        return self.param_spec.get('required', False)
 
     def has_default(self):
         return self.default is not None
 
     @property
     def default(self):
-        return self.swagger_spec.resolve(self.param_spec, 'default')
+        return self.param_spec.get('default')
 
 
 def get_param_type_spec(param):
@@ -83,7 +83,7 @@ def get_param_type_spec(param):
     if location in ('path', 'query', 'header', 'formData'):
         return param.param_spec
     if location == 'body':
-        return param.swagger_spec.resolve(param.param_spec, 'schema')
+        return param.swagger_spec.deref(param.param_spec).get('schema')
     raise SwaggerMappingError(
         "Don't know how to handle location {0} in parameter {1}"
         .format(location, param))
@@ -105,14 +105,16 @@ def marshal_param(param, value, request):
     :type request: dict
     """
     swagger_spec = param.swagger_spec
-    spec = get_param_type_spec(param)
+    deref = swagger_spec.deref
+
+    spec = deref(get_param_type_spec(param))
     location = param.location
     value = marshal_schema_object(swagger_spec, spec, value)
 
     if swagger_spec.config['validate_requests']:
         validate_schema_object(swagger_spec, spec, value)
 
-    param_type = swagger_spec.resolve(spec, 'type')
+    param_type = spec.get('type')
     if param_type == 'array' and location != 'body':
         value = marshal_collection_format(swagger_spec, spec, value)
 
@@ -145,9 +147,10 @@ def unmarshal_param(param, request):
     :type request: :class:`bravado_core.request.IncomingRequest`
     """
     swagger_spec = param.swagger_spec
-    param_spec = get_param_type_spec(param)
+    deref = swagger_spec.deref
+    param_spec = deref(get_param_type_spec(param))
     location = param.location
-    param_type = swagger_spec.resolve(param_spec, 'type')
+    param_type = deref(param_spec.get('type'))
     cast_param = partial(cast_request_param, param_type, param.name)
 
     default_value = schema.get_default(swagger_spec, param_spec)
@@ -252,8 +255,8 @@ def marshal_collection_format(swagger_spec, param_spec, value):
 
     :return: transformed value as a string
     """
-    collection_format = swagger_spec.resolve(
-        param_spec, 'collectionFormat', 'csv')
+    collection_format = swagger_spec.deref(
+        param_spec).get('collectionFormat', 'csv')
 
     if collection_format == 'multi':
         # http client lib should handle this
@@ -290,19 +293,18 @@ def unmarshal_collection_format(swagger_spec, param_spec, value):
 
     :rtype: list
     """
-    resolve = swagger_spec.resolve
-
-    collection_format = swagger_spec.resolve(
-        param_spec, 'collectionFormat', 'csv')
+    deref = swagger_spec.deref
+    param_spec = deref(param_spec)
+    collection_format = param_spec.get('collectionFormat', 'csv')
 
     if collection_format == 'multi':
         # http client lib should have already unmarshaled to an array
         return value
 
     sep = COLLECTION_FORMATS[collection_format]
-    items_spec = resolve(param_spec, 'items')
-    items_type = resolve(items_spec, 'type')
-    param_name = resolve(param_spec, 'name')
+    items_spec = param_spec['items']
+    items_type = deref(items_spec).get('type')
+    param_name = param_spec['name']
     return [
         cast_request_param(items_type, param_name, item)
         for item in value.split(sep)

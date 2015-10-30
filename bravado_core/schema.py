@@ -90,7 +90,7 @@ def get_spec_for_prop(swagger_spec, object_spec, object_value, prop_name):
     prop_spec = deref(props_spec).get(prop_name)
 
     if prop_spec is not None:
-        return prop_spec
+        return deref(prop_spec)
 
     additional_props = deref(object_spec).get('additionalProperties', True)
 

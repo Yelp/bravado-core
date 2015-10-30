@@ -27,14 +27,14 @@ MODEL_MARKER = 'x-model'
 def tag_models(container, key, path, visited_models, swagger_spec):
     if len(path) < 2 or path[-2] != 'definitions':
         return
-
+    deref = swagger_spec.deref
     model_name = key
-    model_spec = swagger_spec.resolve(container, key)
+    model_spec = deref(container.get(key))
 
-    if swagger_spec.resolve(model_spec, 'type') != 'object':
+    if deref(model_spec.get('type')) != 'object':
         return
 
-    if swagger_spec.resolve(model_spec, MODEL_MARKER) is not None:
+    if deref(model_spec.get(MODEL_MARKER)) is not None:
         return
 
     print 'Found model: %s' % model_name
@@ -43,7 +43,6 @@ def tag_models(container, key, path, visited_models, swagger_spec):
             'Original "{0}" model at path {2}'.format(
             model_name, path, visited_models[model_name]))
 
-    #model_spec = swagger_spec.resolve(container, model_name)
     model_spec['x-model'] = model_name
     visited_models[model_name] = path
 
@@ -87,9 +86,10 @@ def collect_models(container, key, path, models, swagger_spec):
     #         'x-model': 'User'
     # }
     #
+    deref = swagger_spec.deref
     if key == MODEL_MARKER:
         model_spec = container
-        model_name = swagger_spec.resolve(model_spec, MODEL_MARKER)
+        model_name = deref(model_spec.get(MODEL_MARKER))
         models[model_name] = create_model_type(model_name, model_spec)
 
 
@@ -287,7 +287,9 @@ def is_model(swagger_spec, schema_object_spec):
     :return: True if the spec has been "marked" as a model type, false
         otherwise.
     """
-    return swagger_spec.resolve(schema_object_spec, MODEL_MARKER) is not None
+    deref = swagger_spec.deref
+    schema_object_spec = deref(schema_object_spec)
+    return deref(schema_object_spec.get(MODEL_MARKER)) is not None
 
 
 def create_model_docstring(model_spec):

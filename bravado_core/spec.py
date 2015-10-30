@@ -158,77 +158,77 @@ class Spec(object):
 
         return ref_dict
 
-    def resolve(self, document, element, default=None):
-        if is_dict_like(document):
-            assert isinstance(element, basestring)
-
-            if element in document:
-                return document[element]
-
-            if '$ref' in document:
-                print('Dereffing %s' % document['$ref'])
-                ref = document['$ref']
-                json_pointer, target = self.resolver.resolve(ref)
-                return self.resolve(target, element, default)
-
-            return default
-
-        if is_list_like(document):
-            assert isinstance(element, int)
-            index = element
-            value = document[index]
-            if is_dict_like(value) and '$ref' in value:
-                ref = value['$ref']
-                json_pointer, target = self.resolver.resolve(ref)
-                return self.resolve(target, index, default)
-            return value
-
-        raise ValueError('Document "%s" is not a container type.' % document)
-
-    def resolve_iteritems(self, container):
-        if not is_dict_like(container):
-            raise ValueError('Expected a container type but got {0} instead.'
-                             .format(str(type(container))))
-
-        if '$ref' in container:
-            print('Dereffing items')
-            ref = container['$ref']
-            json_pointer, target = self.resolver.resolve(ref)
-        else:
-            target = container
-
-        for k, v, in iteritems(target):
-            yield k, v
-
-    def resolve_len(self, container):
-        if is_list_like(container):
-            return len(container)
-
-        if not is_dict_like(container):
-            raise ValueError('Expected a container type but bot {0} instead.'
-                             .format(type(container)))
-
-        if '$ref' in container:
-            print('Dereffing len %s' % container['$ref'])
-            ref = container['$ref']
-            json_pointer, target = self.resolver.resolve(ref)
-        else:
-            target = container
-        return len(target)
-
-    def resolve_list(self, container):
-        if is_list_like(container):
-            return container
-        if not is_dict_like(container):
-            raise ValueError('Expected a container type but bot {0} instead.'
-                             .format(type(container)))
-        if '$ref' in container:
-            print('Dereffing list %s' % container['$ref'])
-            ref = container['$ref']
-            json_pointer, target = self.resolver.resolve(ref)
-        else:
-            target = container
-        return target
+    # def resolve(self, document, element, default=None):
+    #     if is_dict_like(document):
+    #         assert isinstance(element, basestring)
+    #
+    #         if element in document:
+    #             return document[element]
+    #
+    #         if '$ref' in document:
+    #             print('Dereffing %s' % document['$ref'])
+    #             ref = document['$ref']
+    #             json_pointer, target = self.resolver.resolve(ref)
+    #             return self.resolve(target, element, default)
+    #
+    #         return default
+    #
+    #     if is_list_like(document):
+    #         assert isinstance(element, int)
+    #         index = element
+    #         value = document[index]
+    #         if is_dict_like(value) and '$ref' in value:
+    #             ref = value['$ref']
+    #             json_pointer, target = self.resolver.resolve(ref)
+    #             return self.resolve(target, index, default)
+    #         return value
+    #
+    #     raise ValueError('Document "%s" is not a container type.' % document)
+    #
+    # def resolve_iteritems(self, container):
+    #     if not is_dict_like(container):
+    #         raise ValueError('Expected a container type but got {0} instead.'
+    #                          .format(str(type(container))))
+    #
+    #     if '$ref' in container:
+    #         print('Dereffing items')
+    #         ref = container['$ref']
+    #         json_pointer, target = self.resolver.resolve(ref)
+    #     else:
+    #         target = container
+    #
+    #     for k, v, in iteritems(target):
+    #         yield k, v
+    #
+    # def resolve_len(self, container):
+    #     if is_list_like(container):
+    #         return len(container)
+    #
+    #     if not is_dict_like(container):
+    #         raise ValueError('Expected a container type but bot {0} instead.'
+    #                          .format(type(container)))
+    #
+    #     if '$ref' in container:
+    #         print('Dereffing len %s' % container['$ref'])
+    #         ref = container['$ref']
+    #         json_pointer, target = self.resolver.resolve(ref)
+    #     else:
+    #         target = container
+    #     return len(target)
+    #
+    # def resolve_list(self, container):
+    #     if is_list_like(container):
+    #         return container
+    #     if not is_dict_like(container):
+    #         raise ValueError('Expected a container type but bot {0} instead.'
+    #                          .format(type(container)))
+    #     if '$ref' in container:
+    #         print('Dereffing list %s' % container['$ref'])
+    #         ref = container['$ref']
+    #         json_pointer, target = self.resolver.resolve(ref)
+    #     else:
+    #         target = container
+    #     return target
 
     def get_op_for_request(self, http_method, path_pattern):
         """Return the Swagger operation for the passed in request http method
