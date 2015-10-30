@@ -10,8 +10,7 @@ EMPTY_BODIES = (None, '', '{}', 'null')
 
 
 class IncomingResponse(object):
-    """
-    Interface for incoming client-side response objects.
+    """Interface for incoming client-side response objects.
 
     Subclasses are responsible for providing attrs for __required_attrs__.
     """
@@ -23,8 +22,7 @@ class IncomingResponse(object):
     ]
 
     def __getattr__(self, name):
-        """
-        When an attempt to access a required attribute that doesn't exist
+        """When an attempt to access a required attribute that doesn't exist
         is made, let the caller know that the type is non-compliant in its
         attempt to be `IncomingResponse`. This is in place of the usual throwing
         of an AttributeError.
@@ -54,8 +52,7 @@ class IncomingResponse(object):
 
 
 class OutgoingResponse(object):
-    """
-    Interface for outgoing server-side response objects.
+    """Interface for outgoing server-side response objects.
     """
     # TODO: charset needed?
     __required_attrs__ = [
@@ -93,6 +90,7 @@ def unmarshal_response(response, op):
     :returns: value where type(value) matches response_spec['schema']['type']
         if it exists, None otherwise.
     """
+    deref = op.swagger_spec.deref
     response_spec = get_response_spec(response.status_code, op)
 
     def has_content(response_spec):
@@ -102,7 +100,7 @@ def unmarshal_response(response, op):
         return None
 
     # TODO: Non-json response contents
-    content_spec = response_spec['schema']
+    content_spec = deref(response_spec['schema'])
     content_value = response.json()
 
     if op.swagger_spec.config['validate_responses']:
@@ -125,15 +123,21 @@ def get_response_spec(status_code, op):
 
     :type status_code: int
     :type op: :class:`bravado_core.operation.Operation`
+
     :return: response specification
     :rtype: dict
     :raises: MatchingResponseNotFound when the status_code could not be mapped
         to a response specification.
     """
     # TODO: check global #/responses
-    response_specs = op.op_spec.get('responses')
-    default_response_spec = response_specs.get('default', None)
-    response_spec = response_specs.get(str(status_code), default_response_spec)
+    deref = op.swagger_spec.deref
+    op_spec = deref(op.op_spec)
+    response_specs = deref(op_spec.get('responses'))
+    default_response_spec = deref(response_specs.get('default', None))
+
+    response_spec = deref(
+        response_specs.get(str(status_code), default_response_spec))
+
     if response_spec is None:
         raise MatchingResponseNotFound(
             "Response specification matching http status_code {0} not found "
@@ -143,8 +147,7 @@ def get_response_spec(status_code, op):
 
 
 def validate_response(response_spec, op, response):
-    """
-    Validate an outgoing response against its Swagger specification.
+    """Validate an outgoing response against its Swagger specification.
 
     :type response_spec: dict
     :type op: :class:`bravado_core.operation.Operation`
@@ -158,17 +161,19 @@ def validate_response(response_spec, op, response):
 
 
 def validate_response_body(op, response_spec, response):
-    """
-    Validate an outgoing response's body against the response's Swagger
+    """Validate an outgoing response's body against the response's Swagger
     specification.
 
     :type op: :class:`bravado_core.operation.Operation`
     :type response_spec: dict
     :type response: :class:`bravado_core.response.OutgoingResponse`
+
     :raises: SwaggerMappingError
     """
+    deref = op.swagger_spec.deref
+
     # response that returns nothing in the body
-    response_body_spec = response_spec.get('schema')
+    response_body_spec = deref(response_spec.get('schema'))
     if response_body_spec is None:
         if response.text in EMPTY_BODIES:
             return
@@ -193,18 +198,20 @@ def validate_response_body(op, response_spec, response):
 
 
 def validate_response_headers(op, response_spec, response):
-    """
-    Validate an outgoing response's headers against the response's Swagger
+    """Validate an outgoing response's headers against the response's Swagger
     specification.
 
     :type op: :class:`bravado_core.operation.Operation`
     :type response_spec: dict
     :type response: :class:`bravado_core.response.OutgoingResponse`
     """
-    headers_spec = response_spec.get('headers')
+    deref = op.swagger_spec.deref
+
+    headers_spec = deref(response_spec.get('headers'))
     if not headers_spec:
         return
 
     for header_name, header_spec in iteritems(headers_spec):
+        header_spec = deref(header_spec)
         validate_schema_object(
             op.swagger_spec, header_spec, response.headers.get(header_name))

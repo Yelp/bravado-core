@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import contextlib
 import functools
 import logging
 import warnings
@@ -7,7 +8,6 @@ from jsonschema import FormatChecker
 from six import iteritems
 from six.moves.urllib import parse as urlparse
 from jsonschema.validators import RefResolver
-from swagger_spec_validator import validator20
 
 from bravado_core import formatter
 from bravado_core.exception import SwaggerSchemaError, SwaggerValidationError
@@ -103,7 +103,8 @@ class Spec(object):
         return spec
 
     def build(self):
-        post_process_spec(self,
+        post_process_spec(
+            self,
             on_container_callbacks=[
                 functools.partial(
                     tag_models, visited_models={}, swagger_spec=self),
@@ -116,16 +117,17 @@ class Spec(object):
             self.register_format(format)
 
         log.warn('Swagger spec validation disabled until ssv can handle refs')
-
-        # TODO: re-enable when ssv refactored for recursive refs
-        #if self.config['validate_swagger_spec']:
-        #   validator20.validate_spec(self.spec_dict)
+        # TODO: re-enable when ssv refactored to handle recursive refs
+        # if self.config['validate_swagger_spec']:
+        #    validator20.validate_spec(self.spec_dict)
 
         self.api_url = build_api_serving_url(self.spec_dict, self.origin_url)
         self.resources = build_resources(self)
 
     def deref(self, ref_dict):
-        """
+        """Dereference ref_dict (if it is indeed a ref) and return what the
+        ref points to.
+
         :param ref_dict:  {'$ref': '#/blah/blah'}
         :return: dereferenced value of ref_dict
         :rtype: scalar, list, dict
@@ -134,8 +136,18 @@ class Spec(object):
             return ref_dict
 
         if is_ref(ref_dict):
-            scope, target = self.resolver.resolve(ref_dict['$ref'])
-            return target
+            # Restore attached resolution scope before resolving
+            with in_scope(self.resolver, ref_dict):
+
+                print('resolving %s with scope %s:%s' % (
+                    ref_dict['$ref'],
+                    len(self.resolver._scopes_stack),
+                    self.resolver._scopes_stack))
+
+                scope, target = self.resolver.resolve(ref_dict['$ref'])
+                if target is None:
+                    print('Ref not found: %s' % ref_dict)
+                return target
 
         return ref_dict
 
@@ -276,20 +288,32 @@ def post_process_spec(swagger_spec, on_container_callbacks):
 
     resolver = swagger_spec.resolver
 
+    def attach_scope(ref_dict):
+        if 'x-scope' in ref_dict:
+            print('Ref %s already has scope attached' % ref_dict['$ref'])
+            return
+        print('Attaching scope to %s' % ref_dict)
+        ref_dict['x-scope'] = list(resolver._scopes_stack)
+
     def descend(fragment, path, visited_refs):
 
         if is_ref(fragment):
+            ref_dict = fragment
             ref = fragment['$ref']
-            # Don't recurse down already visited refs
-            if ref in visited_refs:
+            attach_scope(ref_dict)
+
+            # Don't recurse down already visited refs. A ref is not unique
+            # by its name alone. Its scope (attached above) is part of the
+            # equivalence comparison.
+            if ref_dict in visited_refs:
                 # TODO: remove print
-                print 'Already visited %s' % ref
+                print('Already visited %s' % ref)
                 return
-            visited_refs.append(ref)
+
+            visited_refs.append(ref_dict)
             with resolver.resolving(ref) as target:
                 # NOTE: if resolver scope is ever needed, considering annotating
                 #       the ref dict with the list of scopes from the resolver
-                #json_pointer, target = resolver.resolve(ref)
                 descend(target, path, visited_refs)
                 return
 
@@ -305,3 +329,24 @@ def post_process_spec(swagger_spec, on_container_callbacks):
                 descend(fragment[index], path + [str(index)], visited_refs)
 
     descend(swagger_spec.spec_dict, path=[], visited_refs=[])
+
+
+@contextlib.contextmanager
+def in_scope(resolver, ref_dict):
+    """Context manager to assume the given scope for the passed in resolver.
+
+    The resolver's original scope is restored when exiting the context manager.
+
+    :type resolver: :class:`jsonschama.validators.RefResolver
+    :param scope_stack: The scope to assume
+    :type scope_stack: list of strings
+    """
+    if 'x-scope' not in ref_dict:
+        yield
+    else:
+        saved_scope_stack = resolver._scopes_stack
+        try:
+            resolver._scopes_stack = ref_dict['x-scope']
+            yield
+        finally:
+            resolver._scopes_stack = saved_scope_stack

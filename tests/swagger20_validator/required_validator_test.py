@@ -20,8 +20,9 @@ def test_fail_if_required_parameter_but_not_present(minimal_swagger_spec):
 
 def test_pass_if_not_required_parameter_and_not_present(minimal_swagger_spec):
     param_schema = {'name': 'foo', 'in': 'query', 'required': False}
-    assert required_validator(minimal_swagger_spec,
-        None, param_schema['required'], None, param_schema) is None
+    assert required_validator(
+        minimal_swagger_spec, None, param_schema['required'], None,
+        param_schema) is None
 
 
 def test_call_to_jsonschema_if_not_param(minimal_swagger_spec):

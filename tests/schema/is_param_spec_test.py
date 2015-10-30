@@ -17,7 +17,7 @@ def test_false(minimal_swagger_spec):
 
 
 def test_ref_true(minimal_swagger_dict):
-    minimal_swagger_dict['parameters'] ={
+    minimal_swagger_dict['parameters'] = {
         'PetId': {
             'in': 'path',
             'name': 'petId',

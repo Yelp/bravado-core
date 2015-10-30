@@ -36,7 +36,8 @@ def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
     if obj_type == 'array':
         return unmarshal_array(swagger_spec, schema_object_spec, value)
 
-    if swagger_spec.config['use_models'] and is_model(swagger_spec, schema_object_spec):
+    if swagger_spec.config['use_models'] and \
+            is_model(swagger_spec, schema_object_spec):
         # It is important that the 'model' check comes before 'object' check.
         # Model specs also have type 'object' but also have the additional
         # MODEL_MARKER key for identification.

@@ -98,7 +98,7 @@ def test_object_is_ref(minimal_swagger_dict, address_spec, address):
     swagger_spec = Spec.from_dict(minimal_swagger_dict)
     result = get_spec_for_prop(
         swagger_spec, address_ref_spec, address, 'street_type')
-    assert  address_spec['properties']['street_type'] == result
+    assert address_spec['properties']['street_type'] == result
 
 
 def test_properties_is_ref(minimal_swagger_dict, address):
@@ -123,7 +123,7 @@ def test_properties_is_ref(minimal_swagger_dict, address):
     swagger_spec = Spec.from_dict(minimal_swagger_dict)
     result = get_spec_for_prop(
         swagger_spec, address_spec, address, 'street_type')
-    assert  street_type_spec == result
+    assert street_type_spec == result
 
 
 def test_property_is_ref(minimal_swagger_dict, address):

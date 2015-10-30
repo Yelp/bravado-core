@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import pytest
-
 from bravado_core.spec import Spec
 from bravado_core.unmarshal import unmarshal_schema_object
 

@@ -60,7 +60,8 @@ def test_resource_with_shared_parameters(paths_spec):
 def test_refs(minimal_swagger_dict, paths_spec):
     minimal_swagger_dict['real_paths'] = paths_spec
     minimal_swagger_dict['real_op'] = paths_spec['/pet/findByStatus']['get']
-    minimal_swagger_dict['real_tags'] = paths_spec['/pet/findByStatus']['get']['tags']
+    minimal_swagger_dict['real_tags'] = \
+        paths_spec['/pet/findByStatus']['get']['tags']
 
     paths_spec['/pet/findByStatus']['get']['tags'] = {'$ref': '#/real_tags'}
     paths_spec['/pet/findByStatus']['get'] = {'$ref': '#/real_op'}

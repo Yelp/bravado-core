@@ -1,10 +1,10 @@
 import os
 
-import mock
 import simplejson as json
 from six.moves.urllib import parse as urlparse
 
 from bravado_core.model import MODEL_MARKER
+from bravado_core.response import get_response_spec
 from bravado_core.spec import Spec
 
 
@@ -21,29 +21,32 @@ def get_spec_json_and_url(rel_url):
         return json.loads(f.read()), urlparse.urljoin('file:', abs_path)
 
 
-def test_relative_ref_spec():
-    #expected_raw_dict, _ = get_spec_json_and_url(
-    #    '../../test-data/2.0/simple/swagger.json')
-    #expected_dict = Spec.from_dict(expected_raw_dict).spec_dict
+def test_complicated_refs():
+    # Split the swagger spec into a bunch of different json files and use
+    # $refs all over to place to wire stuff together - see the test-data
+    # files or this will make no sense whatsoever.
+    file_path = '../../test-data/2.0/simple_crossref/swagger.json'
+    swagger_dict, origin_url = get_spec_json_and_url(file_path)
+    swagger_spec = Spec.from_dict(swagger_dict, origin_url=origin_url)
 
-    relative_crossref_url = '../../test-data/2.0/simple_crossref/swagger.json'
-    crossref_dict, crossref_url = get_spec_json_and_url(relative_crossref_url)
-    resultant_spec = Spec.from_dict(crossref_dict, origin_url=crossref_url)
+    # Verify things are 'reachable' (hence, have been ingested correctly)
 
-    def delete_key_from_dict(dict_del, key):
-        dict_del.pop(key, None)
+    # Resource
+    assert swagger_spec.resources['pingpong']
 
-        for v in dict_del.values():
-            if isinstance(v, dict):
-                delete_key_from_dict(v, key)
-        return dict_del
+    # Operation
+    op = swagger_spec.resources['pingpong'].ping
+    assert op
 
-    # TODO: Make the behavior of x-model consitent for both the specs. Currently
-    # it gets populated only for the former. Hence, removing that key from dict
-    #delete_key_from_dict(expected_dict, MODEL_MARKER)
-    #assert expected_dict == json.loads(json.dumps(resultant_spec.spec_dict))
-    print json.dumps(resultant_spec.spec_dict, indent=2)
-    # TODO: poke around and verify the dom
+    # Parameter
+    assert swagger_spec.resources['pingpong'].ping.params['pung']
+
+    # Parameter name
+    assert swagger_spec.resources['pingpong'].ping.params['pung'].name == 'pung'
+
+    # Response
+    response = get_response_spec(200, op)
+    assert response['description'] == 'pong'
 
 
 def test_ref_to_external_path_with_ref_to_local_model():

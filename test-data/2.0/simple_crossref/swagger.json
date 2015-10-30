@@ -10,6 +10,11 @@
           "description": "pingpong related specs"
       }
   ],
+  "paths": {
+    "/ping": {
+        "$ref": "paths/paths.json#/ping"
+    }
+  },
   "definitions": {
       "pong": {
           "$ref": "definitions/definitions.json#/pong"

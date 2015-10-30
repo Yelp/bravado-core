@@ -12,13 +12,6 @@ Draft4Validator which customizes/wraps some of the operations of the default
 validator.
 """
 
-# TODO: remove once verified that it is unused
-# def ignore(_validator, *args):
-#     """A validator which performs no validation. Used to `ignore` some schema
-#     fields during validation.
-#     """
-#     return
-
 
 def type_validator(swagger_spec, validator, types, instance, schema):
     """Skip the `type` validator when a Swagger parameter value is None.

@@ -6,8 +6,8 @@ from tests.model.conftest import \
     definitions_spec as definitions_spec_fixture
 
 
-def test_pet_model(pet_spec):
-    Pet = create_model_type('Pet', pet_spec)
+def test_pet_model(empty_swagger_spec, pet_spec):
+    Pet = create_model_type(empty_swagger_spec, 'Pet', pet_spec)
     expected = set(['id', 'category', 'name', 'photoUrls', 'tags'])
     pet = Pet(id=1, name='Darwin')
     assert set(dir(pet)) == expected
@@ -17,8 +17,8 @@ def test_pet_model(pet_spec):
            == repr(pet)
 
 
-def test_no_arg_constructor(pet_spec):
-    Pet = create_model_type('Pet', pet_spec)
+def test_no_arg_constructor(empty_swagger_spec, pet_spec):
+    Pet = create_model_type(empty_swagger_spec, 'Pet', pet_spec)
     attr_names = (
         # '__doc__',  <-- will trigger docstring generation so skip for now
         '__eq__',
@@ -31,39 +31,13 @@ def test_no_arg_constructor(pet_spec):
 
 
 @mock.patch('bravado_core.model.create_model_docstring', autospec=True)
-def test_create_model_type_lazy_docstring(mock_create_docstring):
+def test_create_model_type_lazy_docstring(mock_create_docstring,
+                                          empty_swagger_spec):
     # NOTE: some sort of weird interaction with pytest, pytest-mock and mock
     #       made using the 'mocker' fixture here a no-go.
     definitions_spec = definitions_spec_fixture()
     pet_spec = pet_spec_fixture(definitions_spec)
-    pet_type = create_model_type('Pet', pet_spec)
-    assert not mock_create_docstring.called
+    pet_type = create_model_type(empty_swagger_spec, 'Pet', pet_spec)
+    assert mock_create_docstring.call_count == 0
     assert pet_type.__doc__ == mock_create_docstring.return_value
-    mock_create_docstring.assert_called_once_with(pet_spec)
-
-
-# ################################################################
-# # Test that bravado_core correctly creates model_dict
-# # classes from swagger model_dict definitions
-# # API calls are not triggered here.
-# # Scope is limited to model_dict model in swagger api spec
-# ################################################################
-#
-# @httpretty.activate
-# def test_nones_for_dates_on_model_types_creation(self):
-#     # TODO: move to create_model_type_test.py
-#     self.models['User']['properties']['date'] = {
-#         'type': 'string',
-#         'format': 'date'}
-#     self.models['User']['properties']['datetime'] = {
-#         'type': 'string',
-#         'format': 'date-time'}
-#     self.register_urls()
-#     resource = SwaggerClient.from_url(
-#         u'http://localhost/api-docs').api_test
-#     User = resource.testHTTP._models['User']
-#     self.assertEqual(
-#         {"schools": [], "id": 0L, "date": None, "datetime": None},
-#         User().__dict__
-#     )
-#
+    assert mock_create_docstring.call_count == 1

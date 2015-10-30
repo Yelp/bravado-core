@@ -93,7 +93,7 @@ def marshal_array(swagger_spec, array_spec, array_value):
     """
     if not is_list_like(array_value):
         raise SwaggerMappingError('Expected list like type for {0}: {1}'
-            .format(type(array_value), array_value))
+                                  .format(type(array_value), array_value))
 
     items_spec = swagger_spec.deref(array_spec).get('items')
 
