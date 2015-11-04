@@ -196,3 +196,39 @@ def test_ref(minimal_swagger_dict, address_spec, address):
     swagger_spec = Spec(minimal_swagger_dict)
     result = marshal_object(swagger_spec, ref_spec, address)
     assert address == result
+
+
+def test_recursive_ref_with_depth_1(recursive_swagger_spec):
+    result = marshal_object(
+        recursive_swagger_spec,
+        {'$ref': '#/definitions/Node'},
+        {'name': 'foo', 'child': None})
+    assert result == {'name': 'foo'}
+
+
+def test_recursive_ref_with_depth_n(recursive_swagger_spec):
+    value = {
+        'name': 'foo',
+        'child': {
+            'name': 'bar',
+            'child': {
+                'name': 'baz',
+                'child': None,
+            }
+        }
+    }
+    result = marshal_object(
+        recursive_swagger_spec,
+        {'$ref': '#/definitions/Node'},
+        value)
+
+    expected = {
+        'name': 'foo',
+        'child': {
+            'name': 'bar',
+            'child': {
+                'name': 'baz',
+            }
+        }
+    }
+    assert result == expected

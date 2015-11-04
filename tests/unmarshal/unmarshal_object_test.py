@@ -193,3 +193,39 @@ def test_pass_through_additionalProperties_with_no_spec(
     }
     result = unmarshal_object(empty_swagger_spec, address_spec, address)
     assert expected_address == result
+
+
+def test_recursive_ref_with_depth_1(recursive_swagger_spec):
+    result = unmarshal_object(
+        recursive_swagger_spec,
+        {'$ref': '#/definitions/Node'},
+        {'name': 'foo'})
+    assert result == {'name': 'foo', 'child': None}
+
+
+def test_recursive_ref_with_depth_n(recursive_swagger_spec):
+    value = {
+        'name': 'foo',
+        'child': {
+            'name': 'bar',
+            'child': {
+                'name': 'baz'
+            }
+        }
+    }
+    result = unmarshal_object(
+        recursive_swagger_spec,
+        {'$ref': '#/definitions/Node'},
+        value)
+
+    expected = {
+        'name': 'foo',
+        'child': {
+            'name': 'bar',
+            'child': {
+                'name': 'baz',
+                'child': None
+            }
+        }
+    }
+    assert result == expected

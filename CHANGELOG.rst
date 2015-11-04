@@ -3,6 +3,7 @@ Changelog
 
 4.0.0 (2015-XX-XX)
 ------------------
+- Support for recursive $refs - Issue #35
 - Unqualified $refs no longer supported.
   Bad:  ``{"$ref": "User"}``
   Good: ``{"$ref": "#/definitions/User"}``
