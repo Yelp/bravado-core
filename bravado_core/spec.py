@@ -132,24 +132,20 @@ class Spec(object):
         :return: dereferenced value of ref_dict
         :rtype: scalar, list, dict
         """
-        if ref_dict is None:
+        if ref_dict is None or not is_ref(ref_dict):
             return ref_dict
 
-        if is_ref(ref_dict):
-            # Restore attached resolution scope before resolving
-            with in_scope(self.resolver, ref_dict):
+        # Restore attached resolution scope before resolving since the
+        # resolver doesn't have a traversal history (accumulated scope_stack)
+        # when asked to resolve.
+        with in_scope(self.resolver, ref_dict):
+            log.debug('Resolving {0} with scope {1}: {2}'.format(
+                ref_dict['$ref'],
+                len(self.resolver._scopes_stack),
+                self.resolver._scopes_stack))
 
-                print('resolving %s with scope %s:%s' % (
-                    ref_dict['$ref'],
-                    len(self.resolver._scopes_stack),
-                    self.resolver._scopes_stack))
-
-                scope, target = self.resolver.resolve(ref_dict['$ref'])
-                if target is None:
-                    print('Ref not found: %s' % ref_dict)
-                return target
-
-        return ref_dict
+            _, target = self.resolver.resolve(ref_dict['$ref'])
+            return target
 
     def get_op_for_request(self, http_method, path_pattern):
         """Return the Swagger operation for the passed in request http method
@@ -278,7 +274,13 @@ def post_process_spec(swagger_spec, on_container_callbacks):
     When the container is a list, key is an integer index into the list of the
     value being traversed.
 
-    :param spec_dict: Swagger spec in dict form
+    In addition to firing the passed in callbacks, $refs are annotated with
+    an 'x-scope' key that contains the current scope_stack of the RefResolver.
+    The 'x-scope' scope_stack is used during request/response marshalling to
+    assume a given scope before de-reffing $refs (otherwise, de-reffing won't
+    work).
+
+    :type swagger_spec: :class:`bravado_core.spec.Spec`
     :param on_container_callbacks: list of callbacks to be invoked on each
         container type.
     """
@@ -290,9 +292,9 @@ def post_process_spec(swagger_spec, on_container_callbacks):
 
     def attach_scope(ref_dict):
         if 'x-scope' in ref_dict:
-            print('Ref %s already has scope attached' % ref_dict['$ref'])
+            log.debug('Ref %s already has scope attached' % ref_dict['$ref'])
             return
-        print('Attaching scope to %s' % ref_dict)
+        log.debug('Attaching x-scope to {0}'.format(ref_dict))
         ref_dict['x-scope'] = list(resolver._scopes_stack)
 
     def descend(fragment, path, visited_refs):
@@ -306,14 +308,11 @@ def post_process_spec(swagger_spec, on_container_callbacks):
             # by its name alone. Its scope (attached above) is part of the
             # equivalence comparison.
             if ref_dict in visited_refs:
-                # TODO: remove print
-                print('Already visited %s' % ref)
+                log.debug('Already visited %s' % ref)
                 return
 
             visited_refs.append(ref_dict)
             with resolver.resolving(ref) as target:
-                # NOTE: if resolver scope is ever needed, considering annotating
-                #       the ref dict with the list of scopes from the resolver
                 descend(target, path, visited_refs)
                 return
 

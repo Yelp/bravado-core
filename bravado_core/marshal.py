@@ -26,7 +26,7 @@ def marshal_schema_object(swagger_spec, schema_object_spec, value):
     """
     deref = swagger_spec.deref
     schema_object_spec = deref(schema_object_spec)
-    obj_type = schema_object_spec.get('type')
+    obj_type = schema_object_spec['type']
 
     if obj_type in SWAGGER_PRIMITIVES:
         return marshal_primitive(swagger_spec, schema_object_spec, value)

@@ -80,8 +80,8 @@ class Resource(object):
 
     :param name: resource name
     :type name: str
-    :param operations: operations associated with this resource (by tag)
-    :type operations: dict where (key, value) = (op_name, Operation)
+    :param ops: operations associated with this resource (by tag)
+    :type ops: dict where (key, value) = (op_name, Operation)
     """
     def __init__(self, name, ops):
         log.debug(u"Building resource '%s'" % name)
