@@ -1,9 +1,10 @@
 Changelog
 =========
 
-4.0.0 (2015-XX-XX)
+4.0.0 (2015-11-17)
 ------------------
 - Support for recursive $refs - Issue #35
+- Requires swagger-spec-validator 2.0.1
 - Unqualified $refs no longer supported.
   Bad:  ``{"$ref": "User"}``
   Good: ``{"$ref": "#/definitions/User"}``
