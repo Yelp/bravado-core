@@ -28,13 +28,13 @@ def test_defaults_to_false(minimal_swagger_spec):
 
 def test_ref_true(minimal_swagger_dict, required_true):
     minimal_swagger_dict['definitions']['Foo'] = required_true
-    swagger_spec = Spec.from_dict(minimal_swagger_dict)
+    swagger_spec = Spec(minimal_swagger_dict)
     assert is_required(swagger_spec, {'$ref': '#/definitions/Foo'})
 
 
 def test_ref_false(minimal_swagger_dict, required_false):
     minimal_swagger_dict['definitions']['Foo'] = required_false
-    swagger_spec = Spec.from_dict(minimal_swagger_dict)
+    swagger_spec = Spec(minimal_swagger_dict)
     assert not is_required(swagger_spec, {'$ref': '#/definitions/Foo'})
 
 

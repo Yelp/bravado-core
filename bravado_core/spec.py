@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
-import contextlib
 import functools
 import logging
 import warnings
 
 from jsonschema import FormatChecker
+from jsonschema.validators import RefResolver
 from six import iteritems
 from six.moves.urllib import parse as urlparse
-from jsonschema.validators import RefResolver
+from swagger_spec_validator import validator20
+from swagger_spec_validator.ref_validators import attach_scope, in_scope
 
 from bravado_core import formatter
 from bravado_core.exception import SwaggerSchemaError, SwaggerValidationError
@@ -86,7 +87,8 @@ class Spec(object):
 
         self.resolver = RefResolver(
             base_uri=origin_url or '',
-            referrer=self.spec_dict)
+            referrer=self.spec_dict,
+            handlers=build_http_handlers(http_client))
 
     @classmethod
     def from_dict(cls, spec_dict, origin_url=None, http_client=None,
@@ -103,6 +105,11 @@ class Spec(object):
         return spec
 
     def build(self):
+        if self.config['validate_swagger_spec']:
+            self.resolver = validator20.validate_spec(
+                self.spec_dict, spec_url=self.origin_url or '',
+                http_handlers=build_http_handlers(self.http_client))
+
         post_process_spec(
             self,
             on_container_callbacks=[
@@ -115,11 +122,6 @@ class Spec(object):
 
         for format in self.config['formats']:
             self.register_format(format)
-
-        log.warn('Swagger spec validation disabled until ssv can handle refs')
-        # TODO: re-enable when ssv refactored to handle recursive refs
-        # if self.config['validate_swagger_spec']:
-        #    validator20.validate_spec(self.spec_dict)
 
         self.api_url = build_api_serving_url(self.spec_dict, self.origin_url)
         self.resources = build_resources(self)
@@ -195,6 +197,28 @@ class Spec(object):
             warnings.warn('{0} format is not registered with bravado-core!'
                           .format(name), Warning)
         return format
+
+
+def build_http_handlers(http_client):
+    """Create a mapping of uri schemes to callables that take a uri. The
+    callable is used by jsonschema's RefResolver to download remote $refs.
+
+    :param http_client: http_client with a request() method
+
+    :returns: dict like {'http': callable, 'https': callable)
+    """
+    def download(uri):
+        log.debug('Downloading {0}'.format(uri))
+        request_params = {
+            'method': 'GET',
+            'url': uri,
+        }
+        return http_client.request(request_params).result().json()
+
+    return {
+        'http': download,
+        'https': download,
+    }
 
 
 def build_api_serving_url(spec_dict, origin_url=None, preferred_scheme=None):
@@ -290,19 +314,12 @@ def post_process_spec(swagger_spec, on_container_callbacks):
 
     resolver = swagger_spec.resolver
 
-    def attach_scope(ref_dict):
-        if 'x-scope' in ref_dict:
-            log.debug('Ref %s already has scope attached' % ref_dict['$ref'])
-            return
-        log.debug('Attaching x-scope to {0}'.format(ref_dict))
-        ref_dict['x-scope'] = list(resolver._scopes_stack)
-
     def descend(fragment, path, visited_refs):
 
         if is_ref(fragment):
             ref_dict = fragment
             ref = fragment['$ref']
-            attach_scope(ref_dict)
+            attach_scope(ref_dict, resolver)
 
             # Don't recurse down already visited refs. A ref is not unique
             # by its name alone. Its scope (attached above) is part of the
@@ -328,24 +345,3 @@ def post_process_spec(swagger_spec, on_container_callbacks):
                 descend(fragment[index], path + [str(index)], visited_refs)
 
     descend(swagger_spec.spec_dict, path=[], visited_refs=[])
-
-
-@contextlib.contextmanager
-def in_scope(resolver, ref_dict):
-    """Context manager to assume the given scope for the passed in resolver.
-
-    The resolver's original scope is restored when exiting the context manager.
-
-    :type resolver: :class:`jsonschama.validators.RefResolver
-    :param scope_stack: The scope to assume
-    :type scope_stack: list of strings
-    """
-    if 'x-scope' not in ref_dict:
-        yield
-    else:
-        saved_scope_stack = resolver._scopes_stack
-        try:
-            resolver._scopes_stack = ref_dict['x-scope']
-            yield
-        finally:
-            resolver._scopes_stack = saved_scope_stack

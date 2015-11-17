@@ -28,7 +28,7 @@ def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
     """
     deref = swagger_spec.deref
     schema_object_spec = deref(schema_object_spec)
-    obj_type = schema_object_spec.get('type')
+    obj_type = schema_object_spec['type']
 
     if obj_type in SWAGGER_PRIMITIVES:
         return unmarshal_primitive(swagger_spec, schema_object_spec, value)
@@ -50,7 +50,7 @@ def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
         return value
 
     raise SwaggerMappingError(
-        "Don't know how to unmarshal value {0} with a value of {1}"
+        "Don't know how to unmarshal value {0} with a type of {1}"
         .format(value, obj_type))
 
 

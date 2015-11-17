@@ -34,6 +34,6 @@ setup(
         "python-dateutil",
         "six",
         "simplejson",
-        "swagger-spec-validator>=1.1.1",
+        "swagger-spec-validator>=2.0.1",
     ],
 )

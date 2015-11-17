@@ -7,9 +7,11 @@ Changelog
 - Unqualified $refs no longer supported.
   Bad:  ``{"$ref": "User"}``
   Good: ``{"$ref": "#/definitions/User"}``
-- Automatic tagging of models is only supported in the main spec. If you have
-  models defined in $ref targets that are remote, you must manually tag them
-  with 'x-model' for them to be available as python types.
+- Automatic tagging of models is only supported in the root swagger spec file. 
+  If you have models defined in $ref targets that are in other files, you must 
+  manually tag them with 'x-model' for them to be available as python types.
+  See `Model Discovery <http://bravado-core.readthedocs.org/en/latest/models.html#model-discovery>`_ 
+  for more info.
 
 3.1.1 (2015-10-19)
 ------------------

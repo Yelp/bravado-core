@@ -101,31 +101,6 @@ def test_object_is_ref(minimal_swagger_dict, address_spec, address):
     assert address_spec['properties']['street_type'] == result
 
 
-def test_properties_is_ref(minimal_swagger_dict, address):
-    street_type_spec = {
-        'type': 'string',
-        'enum': ['Street', 'Avenue', 'Boulevard']
-    }
-
-    address_properties_spec = {
-        'street_type': street_type_spec
-    }
-
-    address_spec = {
-        'type': 'object',
-        'properties': {
-            '$ref': '#/definitions/AddressProperties'
-        }
-    }
-
-    minimal_swagger_dict['definitions']['AddressProperties'] = \
-        address_properties_spec
-    swagger_spec = Spec.from_dict(minimal_swagger_dict)
-    result = get_spec_for_prop(
-        swagger_spec, address_spec, address, 'street_type')
-    assert street_type_spec == result
-
-
 def test_property_is_ref(minimal_swagger_dict, address):
     street_type_spec = {
         'type': 'string',
