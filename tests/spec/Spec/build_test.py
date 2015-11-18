@@ -1,6 +1,8 @@
 from mock import patch
+import pytest
 
 from bravado_core.spec import Spec
+from swagger_spec_validator.common import SwaggerValidationError
 
 
 def assert_validate_call_count(expected_call_count, config, petstore_dict):
@@ -18,3 +20,12 @@ def test_validate_swagger_spec(petstore_dict):
 def test_dont_validate_swagger_spec(petstore_dict):
     assert_validate_call_count(
         0, {'validate_swagger_spec': False}, petstore_dict)
+
+
+def test_validate_swagger_spec_failure(petstore_dict):
+    # induce failure
+    del petstore_dict['swagger']
+    spec = Spec(petstore_dict)
+    with pytest.raises(SwaggerValidationError) as excinfo:
+        spec.build()
+    assert "'swagger' is a required property" in str(excinfo.value)

@@ -67,3 +67,31 @@ def base64_format():
 def register_base64_format(base64_format, request):
     request.addfinalizer(del_base64)
     bravado_core.formatter.register_format(base64_format)
+
+
+@pytest.fixture
+def node_spec():
+    """Used in tests that have recursive $refs
+    """
+    return {
+        'type': 'object',
+        'properties': {
+            'name': {
+                'type': 'string'
+            },
+            'child': {
+                '$ref': '#/definitions/Node',
+            },
+        },
+        'required': ['name']
+    }
+
+
+@pytest.fixture
+def recursive_swagger_spec(minimal_swagger_dict, node_spec):
+    """
+    Return a swager_spec with a #/definitions/Node that is
+    recursive.
+    """
+    minimal_swagger_dict['definitions']['Node'] = node_spec
+    return Spec(minimal_swagger_dict)

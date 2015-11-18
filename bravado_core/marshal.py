@@ -3,17 +3,14 @@ from six import iteritems
 from bravado_core import formatter, schema
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.model import is_model, MODEL_MARKER
-from bravado_core.schema import (
-    is_dict_like,
-    is_list_like,
-    SWAGGER_PRIMITIVES,
-    get_spec_for_prop
-)
+from bravado_core.schema import is_dict_like
+from bravado_core.schema import is_list_like
+from bravado_core.schema import SWAGGER_PRIMITIVES
+from bravado_core.schema import get_spec_for_prop
 
 
 def marshal_schema_object(swagger_spec, schema_object_spec, value):
-    """
-    Marshal the value using the given schema object specification.
+    """Marshal the value using the given schema object specification.
 
     Marshaling includes:
     - transform the value according to 'format' if available
@@ -22,10 +19,13 @@ def marshal_schema_object(swagger_spec, schema_object_spec, value):
     :type swagger_spec: :class:`bravado_core.spec.Spec`
     :type schema_object_spec: dict
     :type value: int, long, string, unicode, boolean, list, dict, Model type
+
     :return: marshaled value
     :rtype: int, long, string, unicode, boolean, list, dict
     :raises: SwaggerMappingError
     """
+    deref = swagger_spec.deref
+    schema_object_spec = deref(schema_object_spec)
     obj_type = schema_object_spec['type']
 
     if obj_type in SWAGGER_PRIMITIVES:
@@ -34,7 +34,7 @@ def marshal_schema_object(swagger_spec, schema_object_spec, value):
     if obj_type == 'array':
         return marshal_array(swagger_spec, schema_object_spec, value)
 
-    if is_model(schema_object_spec):
+    if is_model(swagger_spec, schema_object_spec):
 
         # Allow models to be passed in as dicts for flexibility.
         if is_dict_like(value):
@@ -59,19 +59,20 @@ def marshal_primitive(swagger_spec, primitive_spec, value):
     """Marshal a python primitive type into a jsonschema primitive.
 
     :type swagger_spec: :class:`bravado_core.spec.Spec`
-    :type primitive_spec: dict or jsonref.JsonRef
+    :type primitive_spec: dict
     :type value: int, long, float, boolean, string, unicode, or an object
         based on 'format'
+
     :rtype: int, long, float, boolean, string, unicode, etc
     :raises: SwaggerMappingError
     """
     default_used = False
 
-    if value is None and schema.has_default(primitive_spec):
+    if value is None and schema.has_default(swagger_spec, primitive_spec):
         default_used = True
-        value = schema.get_default(primitive_spec)
+        value = schema.get_default(swagger_spec, primitive_spec)
 
-    if value is None and schema.is_required(primitive_spec):
+    if value is None and schema.is_required(swagger_spec, primitive_spec):
         raise SwaggerMappingError(
             'Spec {0} is a required value'.format(primitive_spec))
 
@@ -85,32 +86,38 @@ def marshal_array(swagger_spec, array_spec, array_value):
     """Marshal a jsonschema type of 'array' into a json-like list.
 
     :type swagger_spec: :class:`bravado_core.spec.Spec`
-    :type array_spec: dict or jsonref.JsonRef
+    :type array_spec: dict
     :type array_value: list
     :rtype: list
     :raises: SwaggerMappingError
     """
     if not is_list_like(array_value):
-        raise SwaggerMappingError('Expected list like type for {0}:{1}'.format(
-            type(array_value), array_value))
+        raise SwaggerMappingError('Expected list like type for {0}: {1}'
+                                  .format(type(array_value), array_value))
 
-    result = []
-    for element in array_value:
-        result.append(marshal_schema_object(
-            swagger_spec, array_spec['items'], element))
+    items_spec = swagger_spec.deref(array_spec).get('items')
 
-    return result
+    return [
+        marshal_schema_object(
+            swagger_spec,
+            items_spec,
+            element)
+        for element in array_value
+    ]
 
 
 def marshal_object(swagger_spec, object_spec, object_value):
-    """Marshal a jsonschema type of 'object' into a json-like dict.
+    """Marshal a python dict to json dict.
 
     :type swagger_spec: :class:`bravado_core.spec.Spec`
-    :type object_spec: dict or jsonref.JsonRef
+    :type object_spec: dict
     :type object_value: dict
+
     :rtype: dict
     :raises: SwaggerMappingError
     """
+    deref = swagger_spec.deref
+
     if not is_dict_like(object_value):
         raise SwaggerMappingError('Expected dict like type for {0}:{1}'.format(
             type(object_value), object_value))
@@ -122,7 +129,9 @@ def marshal_object(swagger_spec, object_spec, object_value):
         if v is None:
             continue
 
-        prop_spec = get_spec_for_prop(object_spec, object_value, k)
+        prop_spec = get_spec_for_prop(
+            swagger_spec, deref(object_spec), object_value, k)
+
         if prop_spec:
             result[k] = marshal_schema_object(swagger_spec, prop_spec, v)
         else:
@@ -136,12 +145,13 @@ def marshal_model(swagger_spec, model_spec, model_value):
     """Marshal a Model instance into a json-like dict.
 
     :type swagger_spec: :class:`bravado_core.spec.Spec`
-    :type model_spec: dict or jsonref.JsonRef
+    :type model_spec: dict
     :type model_value: Model instance
     :rtype: dict
     :raises: SwaggerMappingError
     """
-    model_name = model_spec[MODEL_MARKER]
+    deref = swagger_spec.deref
+    model_name = deref(model_spec).get(MODEL_MARKER)
     model_type = swagger_spec.definitions.get(model_name, None)
 
     if model_type is None:

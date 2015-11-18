@@ -7,12 +7,12 @@
         "operationId": "ping",
         "parameters": [
             {
-                "$ref": "../parameters/pingpong.json#/pung"
+                "$ref": "../parameters/parameters.json#/pung"
             }
         ],
         "responses": {
           "200": {
-            "$ref": "../responses/pingpong.json#/pong"
+            "$ref": "../responses/responses.json#/pong"
           }
         }
       }

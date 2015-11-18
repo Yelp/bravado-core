@@ -1,3 +1,5 @@
+import functools
+
 from jsonschema import validators, _validators
 from jsonschema.exceptions import ValidationError
 from jsonschema.validators import Draft4Validator
@@ -11,14 +13,7 @@ validator.
 """
 
 
-def ignore(_validator, *args):
-    """A validator which performs no validation. Used to `ignore` some schema
-    fields during validation.
-    """
-    return
-
-
-def type_validator(validator, types, instance, schema):
+def type_validator(swagger_spec, validator, types, instance, schema):
     """Skip the `type` validator when a Swagger parameter value is None.
     Otherwise it will fail with a "None is not a valid type" failure instead
     of letting the downstream `required_validator` do its job. In all other
@@ -33,13 +28,13 @@ def type_validator(validator, types, instance, schema):
     :param schema: swagger spec for the object
     :type schema: dict
     """
-    if is_param_spec(schema) and instance is None:
+    if is_param_spec(swagger_spec, schema) and instance is None:
         return
 
     return _validators.type_draft4(validator, types, instance, schema)
 
 
-def required_validator(validator, required, instance, schema):
+def required_validator(swagger_spec, validator, required, instance, schema):
     """Swagger 2.0 expects `required` to be a bool in the Parameter object,
     but a list of properties everywhere else.
 
@@ -52,7 +47,7 @@ def required_validator(validator, required, instance, schema):
     :param schema: swagger spec for the object
     :type schema: dict
     """
-    if is_param_spec(schema):
+    if is_param_spec(swagger_spec, schema):
         if required and instance is None:
             return [ValidationError("%s is required" % schema['name'])]
     else:
@@ -79,10 +74,15 @@ def enum_validator(validator, enums, instance, schema):
     return _validators.enum(validator, enums, instance, schema)
 
 
-Swagger20Validator = validators.extend(
-    Draft4Validator,
-    {
-        'required': required_validator,
-        'enum': enum_validator,
-        'type': type_validator,
-    })
+def get_validator_type(swagger_spec):
+    """Create a custom jsonschema validator for Swagger 2.0 specs.
+
+    :rtype: Its complicated. See jsonschema.validators.create()
+    """
+    return validators.extend(
+        Draft4Validator,
+        {
+            'required': functools.partial(required_validator, swagger_spec),
+            'enum': enum_validator,
+            'type': functools.partial(type_validator, swagger_spec),
+        })

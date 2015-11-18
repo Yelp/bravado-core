@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 import mock
 import pytest
-from bravado_core.exception import SwaggerMappingError
 
+from bravado_core.exception import SwaggerMappingError
 from bravado_core.marshal import marshal_primitive
+from bravado_core.spec import Spec
 
 
 def test_integer(minimal_swagger_spec):
@@ -54,3 +55,14 @@ def test_required_failure(minimal_swagger_spec):
     with pytest.raises(SwaggerMappingError) as excinfo:
         marshal_primitive(minimal_swagger_spec, integer_spec, None)
     assert 'is a required value' in str(excinfo.value)
+
+
+def test_ref(minimal_swagger_dict):
+    integer_spec = {
+        'type': 'integer',
+        'format': 'int32',
+    }
+    minimal_swagger_dict['definitions']['Integer'] = integer_spec
+    ref_spec = {'$ref': '#/definitions/Integer'}
+    swagger_spec = Spec(minimal_swagger_dict)
+    assert 10 == marshal_primitive(swagger_spec, ref_spec, 10)

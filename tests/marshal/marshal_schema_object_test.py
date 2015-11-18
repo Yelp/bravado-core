@@ -34,3 +34,11 @@ def test_unknown_type_raises_error(empty_swagger_spec):
     with pytest.raises(SwaggerMappingError) as excinfo:
         marshal_schema_object(empty_swagger_spec, invalid_spec, "don't matter")
     assert 'Unknown type foo' in str(excinfo.value)
+
+
+def test_ref(minimal_swagger_dict):
+    ref_spec = {'$ref': '#/refs/Foo'}
+    foo_spec = {'type': 'string'}
+    minimal_swagger_dict['refs'] = {'Foo': foo_spec}
+    swagger_spec = Spec(minimal_swagger_dict)
+    assert 'foo' == marshal_schema_object(swagger_spec, ref_spec, 'foo')

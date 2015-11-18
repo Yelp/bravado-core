@@ -158,3 +158,11 @@ def test_non_list_like_type_throws_error(empty_swagger_spec):
     with pytest.raises(SwaggerMappingError) as excinfo:
         marshal_array(empty_swagger_spec, i_am_not_a_list, i_am_not_a_list)
     assert 'Expected list like type' in str(excinfo.value)
+
+
+def test_ref(minimal_swagger_dict, int_array_spec):
+    minimal_swagger_dict['definitions']['IntArray'] = int_array_spec
+    ref_spec = {'$ref': '#/definitions/IntArray'}
+    swagger_spec = Spec(minimal_swagger_dict)
+    result = marshal_array(swagger_spec, ref_spec, [1, 2, 3])
+    assert [1, 2, 3] == result

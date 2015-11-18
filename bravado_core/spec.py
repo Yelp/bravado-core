@@ -3,21 +3,19 @@ import functools
 import logging
 import warnings
 
-import jsonref
 from jsonschema import FormatChecker
+from jsonschema.validators import RefResolver
+from six import iteritems
 from six.moves.urllib import parse as urlparse
 from swagger_spec_validator import validator20
+from swagger_spec_validator.ref_validators import attach_scope, in_scope
 
 from bravado_core import formatter
 from bravado_core.exception import SwaggerSchemaError, SwaggerValidationError
 from bravado_core.formatter import return_true_wrapper
-from bravado_core.model import annotate_with_xmodel_callback
-from bravado_core.model import create_dereffed_models_callback
-from bravado_core.model import create_reffed_models_callback
-from bravado_core.model import fix_malformed_model_refs
-from bravado_core.model import fix_models_with_no_type_callback
+from bravado_core.model import tag_models, collect_models
 from bravado_core.resource import build_resources
-from bravado_core.schema import is_dict_like, is_list_like
+from bravado_core.schema import is_dict_like, is_list_like, is_ref
 
 
 log = logging.getLogger(__name__)
@@ -70,7 +68,7 @@ class Spec(object):
 
         # (key, value) = (simple format def name, Model type)
         # (key, value) = (#/ format def ref, Model type)
-        self.definitions = None
+        self.definitions = {}
 
         # (key, value) = (simple resource name, Resource)
         # (key, value) = (#/ format resource ref, Resource)
@@ -87,57 +85,78 @@ class Spec(object):
         self.user_defined_formats = {}
         self.format_checker = FormatChecker()
 
+        self.resolver = RefResolver(
+            base_uri=origin_url or '',
+            referrer=self.spec_dict,
+            handlers=build_http_handlers(http_client))
+
     @classmethod
     def from_dict(cls, spec_dict, origin_url=None, http_client=None,
                   config=None):
-        """
-        Build a :class:`Spec` from Swagger API Specificiation
+        """Build a :class:`Spec` from Swagger API Specificiation
 
         :param spec_dict: swagger spec in json-like dict form.
         :param origin_url: the url used to retrieve the spec, if any
         :type  origin_url: str
         :param config: Configuration dict. See CONFIG_DEFAULTS.
         """
-        fix_malformed_model_refs(spec_dict)
-        spec_dict = jsonref.JsonRef.replace_refs(
-            spec_dict, base_uri=origin_url or '')
-
-        # Populated by post-processing callbacks below
-        models = {}
-
-        post_process_spec(
-            spec_dict,
-            on_container_callbacks=(
-                annotate_with_xmodel_callback,
-                fix_models_with_no_type_callback,
-                functools.partial(create_reffed_models_callback, models),
-                functools.partial(create_dereffed_models_callback, models),
-                replace_jsonref_proxies_callback,
-            ))
-
         spec = cls(spec_dict, origin_url, http_client, config)
-        spec.definitions = models
         spec.build()
         return spec
 
     def build(self):
+        if self.config['validate_swagger_spec']:
+            self.resolver = validator20.validate_spec(
+                self.spec_dict, spec_url=self.origin_url or '',
+                http_handlers=build_http_handlers(self.http_client))
+
+        post_process_spec(
+            self,
+            on_container_callbacks=[
+                functools.partial(
+                    tag_models, visited_models={}, swagger_spec=self),
+                functools.partial(
+                    collect_models, models=self.definitions,
+                    swagger_spec=self)
+            ])
+
         for format in self.config['formats']:
             self.register_format(format)
-
-        if self.config['validate_swagger_spec']:
-            validator20.validate_spec(self.spec_dict)
 
         self.api_url = build_api_serving_url(self.spec_dict, self.origin_url)
         self.resources = build_resources(self)
 
-    def get_op_for_request(self, http_method, path_pattern):
+    def deref(self, ref_dict):
+        """Dereference ref_dict (if it is indeed a ref) and return what the
+        ref points to.
+
+        :param ref_dict:  {'$ref': '#/blah/blah'}
+        :return: dereferenced value of ref_dict
+        :rtype: scalar, list, dict
         """
-        Return the Swagger operation for the passed in request http method
+        if ref_dict is None or not is_ref(ref_dict):
+            return ref_dict
+
+        # Restore attached resolution scope before resolving since the
+        # resolver doesn't have a traversal history (accumulated scope_stack)
+        # when asked to resolve.
+        with in_scope(self.resolver, ref_dict):
+            log.debug('Resolving {0} with scope {1}: {2}'.format(
+                ref_dict['$ref'],
+                len(self.resolver._scopes_stack),
+                self.resolver._scopes_stack))
+
+            _, target = self.resolver.resolve(ref_dict['$ref'])
+            return target
+
+    def get_op_for_request(self, http_method, path_pattern):
+        """Return the Swagger operation for the passed in request http method
         and path pattern. Makes it really easy for server-side implementations
         to map incoming requests to the Swagger spec.
 
         :param http_method: http method of the request
         :param path_pattern: request path pattern. e.g. /foo/{bar}/baz/{id}
+
         :returns: the matching operation or None if a match couldn't be found
         :rtype: :class:`bravado_core.operation.Operation`
         """
@@ -178,6 +197,28 @@ class Spec(object):
             warnings.warn('{0} format is not registered with bravado-core!'
                           .format(name), Warning)
         return format
+
+
+def build_http_handlers(http_client):
+    """Create a mapping of uri schemes to callables that take a uri. The
+    callable is used by jsonschema's RefResolver to download remote $refs.
+
+    :param http_client: http_client with a request() method
+
+    :returns: dict like {'http': callable, 'https': callable)
+    """
+    def download(uri):
+        log.debug('Downloading {0}'.format(uri))
+        request_params = {
+            'method': 'GET',
+            'url': uri,
+        }
+        return http_client.request(request_params).result().json()
+
+    return {
+        'http': download,
+        'https': download,
+    }
 
 
 def build_api_serving_url(spec_dict, origin_url=None, preferred_scheme=None):
@@ -245,7 +286,7 @@ def build_api_serving_url(spec_dict, origin_url=None, preferred_scheme=None):
     return urlparse.urlunparse((scheme, netloc, path, None, None, None))
 
 
-def post_process_spec(spec_dict, on_container_callbacks):
+def post_process_spec(swagger_spec, on_container_callbacks):
     """Post-process the passed in spec_dict.
 
     For each container type (list or dict) that is traversed in spec_dict,
@@ -257,37 +298,50 @@ def post_process_spec(spec_dict, on_container_callbacks):
     When the container is a list, key is an integer index into the list of the
     value being traversed.
 
-    :param spec_dict: Swagger spec in dict form
+    In addition to firing the passed in callbacks, $refs are annotated with
+    an 'x-scope' key that contains the current scope_stack of the RefResolver.
+    The 'x-scope' scope_stack is used during request/response marshalling to
+    assume a given scope before de-reffing $refs (otherwise, de-reffing won't
+    work).
+
+    :type swagger_spec: :class:`bravado_core.spec.Spec`
     :param on_container_callbacks: list of callbacks to be invoked on each
         container type.
     """
-    def fire_callbacks(container, key):
+    def fire_callbacks(container, key, path):
         for callback in on_container_callbacks:
-            callback(container, key)
+            callback(container, key, path)
 
-    def descend(fragment):
+    resolver = swagger_spec.resolver
+
+    def descend(fragment, path, visited_refs):
+
+        if is_ref(fragment):
+            ref_dict = fragment
+            ref = fragment['$ref']
+            attach_scope(ref_dict, resolver)
+
+            # Don't recurse down already visited refs. A ref is not unique
+            # by its name alone. Its scope (attached above) is part of the
+            # equivalence comparison.
+            if ref_dict in visited_refs:
+                log.debug('Already visited %s' % ref)
+                return
+
+            visited_refs.append(ref_dict)
+            with resolver.resolving(ref) as target:
+                descend(target, path, visited_refs)
+                return
+
+        # fragment is guaranteed not to be a ref from this point onwards
         if is_dict_like(fragment):
-            for key in fragment:
-                fire_callbacks(fragment, key)
-                descend(fragment[key])
+            for key, value in iteritems(fragment):
+                fire_callbacks(fragment, key, path + [key])
+                descend(fragment[key], path + [key], visited_refs)
+
         elif is_list_like(fragment):
             for index in range(len(fragment)):
-                fire_callbacks(fragment, index)
-                descend(fragment[index])
+                fire_callbacks(fragment, index, path + [str(index)])
+                descend(fragment[index], path + [str(index)], visited_refs)
 
-    descend(spec_dict)
-
-
-def replace_jsonref_proxies_callback(container, key):
-    """Replace jsonref proxies in the given dict or list with the proxy target.
-    Updates are made in place. This removes compatibility problems with 3rd
-    party libraries that can't handle jsonref proxy objects while traversing
-    the swagger spec dict.
-
-    :type container: list or dict
-    :type key: string when the container is a dict, integer when the container
-        is a list
-    """
-    jsonref_proxy = container[key]
-    if isinstance(jsonref_proxy, jsonref.JsonRef):
-        container[key] = jsonref_proxy.__subject__
+    descend(swagger_spec.spec_dict, path=[], visited_refs=[])

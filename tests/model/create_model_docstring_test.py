@@ -15,7 +15,7 @@ def test_pet(petstore_spec):
         "\ttags: list of Tag\n"
         "\t"
     )
-    docstring = create_model_docstring(model_spec)
+    docstring = create_model_docstring(petstore_spec, model_spec)
     assert expected == docstring
 
 
@@ -33,5 +33,5 @@ def test_unicode(petstore_spec):
         u"\ttags: list of Tag\n"
         u"\t"
     )
-    docstring = create_model_docstring(model_spec)
+    docstring = create_model_docstring(petstore_spec, model_spec)
     assert expected == docstring

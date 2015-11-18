@@ -116,3 +116,44 @@ def test_builtin_format_still_works_when_user_defined_format_used(
     with pytest.raises(ValidationError) as excinfo:
         validate_object(minimal_swagger_spec, ipaddress_spec, request_body)
     assert "'not_an_ip_address' is not a 'ipv4'" in str(excinfo.value)
+
+
+def test_recursive_ref_depth_1(recursive_swagger_spec):
+    validate_object(
+        recursive_swagger_spec,
+        {'$ref': '#/definitions/Node'},
+        {'name': 'foo'})
+
+
+def test_recursive_ref_depth_n(recursive_swagger_spec):
+    value = {
+        'name': 'foo',
+        'child': {
+            'name': 'bar',
+            'child': {
+                'name': 'baz'
+            }
+        }
+    }
+    validate_object(
+        recursive_swagger_spec,
+        {'$ref': '#/definitions/Node'},
+        value)
+
+
+def test_recursive_ref_depth_n_failure(recursive_swagger_spec):
+    value = {
+        'name': 'foo',
+        'child': {
+            'name': 'bar',
+            'child': {
+                'kaboom': 'baz'  # <-- key should be 'name', not 'kabbom'
+            }
+        }
+    }
+    with pytest.raises(ValidationError) as excinfo:
+        validate_object(
+            recursive_swagger_spec,
+            {'$ref': '#/definitions/Node'},
+            value)
+    assert "'name' is a required property" in str(excinfo.value)

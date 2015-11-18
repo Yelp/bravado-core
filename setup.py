@@ -30,11 +30,10 @@ setup(
         "Programming Language :: Python :: 3.4",
     ],
     install_requires=[
-        "jsonref",
         "jsonschema>=2.5.1",
         "python-dateutil",
         "six",
         "simplejson",
-        "swagger-spec-validator>=1.1.1",
+        "swagger-spec-validator>=2.0.1",
     ],
 )

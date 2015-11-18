@@ -12,12 +12,12 @@
   ],
   "paths": {
     "/ping": {
-        "$ref": "paths/pingpong.json#/ping"
+        "$ref": "paths/paths.json#/ping"
     }
   },
   "definitions": {
       "pong": {
-          "$ref": "definitions/pingpong.json#/pong"
+          "$ref": "definitions/definitions.json#/pong"
       }
   }
 }

@@ -6,7 +6,7 @@ customize the behavior.
 
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.schema import SWAGGER_PRIMITIVES
-from bravado_core.swagger20_validator import Swagger20Validator
+from bravado_core.swagger20_validator import get_validator_type
 
 
 def validate_schema_object(swagger_spec, schema_object_spec, value):
@@ -15,7 +15,9 @@ def validate_schema_object(swagger_spec, schema_object_spec, value):
     :raises SwaggerMappingError: on invalid Swagger `type`.
     :raises SwaggerValidationError: when user-defined format validation fails.
     """
-    obj_type = schema_object_spec['type']
+    deref = swagger_spec.deref
+    schema_object_spec = deref(schema_object_spec)
+    obj_type = deref(schema_object_spec.get('type'))
 
     if obj_type in SWAGGER_PRIMITIVES:
         validate_primitive(swagger_spec, schema_object_spec, value)
@@ -40,9 +42,10 @@ def validate_primitive(swagger_spec, primitive_spec, value):
     :param primitive_spec: spec for a swagger primitive type in dict form
     :type value: int, string, float, long, etc
     """
-    Swagger20Validator(
+    get_validator_type(swagger_spec)(
         primitive_spec,
-        format_checker=swagger_spec.format_checker).validate(value)
+        format_checker=swagger_spec.format_checker,
+        resolver=swagger_spec.resolver).validate(value)
 
 
 def validate_array(swagger_spec, array_spec, value):
@@ -51,9 +54,10 @@ def validate_array(swagger_spec, array_spec, value):
     :param spec: spec for an 'array' type in dict form
     :type value: list
     """
-    Swagger20Validator(
+    get_validator_type(swagger_spec)(
         array_spec,
-        format_checker=swagger_spec.format_checker).validate(value)
+        format_checker=swagger_spec.format_checker,
+        resolver=swagger_spec.resolver).validate(value)
 
 
 def validate_object(swagger_spec, object_spec, value):
@@ -62,6 +66,7 @@ def validate_object(swagger_spec, object_spec, value):
     :param object_spec: spec for an 'object' type in dict form
     :type value: dict
     """
-    Swagger20Validator(
+    get_validator_type(swagger_spec)(
         object_spec,
-        format_checker=swagger_spec.format_checker).validate(value)
+        format_checker=swagger_spec.format_checker,
+        resolver=swagger_spec.resolver).validate(value)

@@ -1,6 +1,8 @@
+from mock import Mock
 import pytest
 
 from bravado_core.model import create_model_type
+from bravado_core.spec import Spec
 
 
 @pytest.fixture
@@ -109,7 +111,7 @@ def user_type(user_spec):
     """
     :rtype: User
     """
-    return create_model_type('User', user_spec)
+    return create_model_type(Mock(spec=Spec), 'User', user_spec)
 
 
 @pytest.fixture
@@ -123,7 +125,7 @@ def user(user_type):
 @pytest.fixture
 def tag_model(definitions_spec):
     tag_spec = definitions_spec['Tag']
-    return create_model_type('Tag', tag_spec)
+    return create_model_type(Mock(spec=Spec), 'Tag', tag_spec)
 
 
 @pytest.fixture

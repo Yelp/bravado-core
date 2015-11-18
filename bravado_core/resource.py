@@ -45,46 +45,48 @@ def build_resources(swagger_spec):
     # - If an operation has no tags, its resource name will be derived from its
     #   path
     # key = tag_name   value = { operation_id : Operation }
-    tag_to_operations = defaultdict(dict)
-    paths = swagger_spec.spec_dict['paths']
-    for path_name, path_spec in iteritems(paths):
-        for http_method, operation_spec in iteritems(path_spec):
+    tag_to_ops = defaultdict(dict)
+    deref = swagger_spec.deref
+    spec_dict = deref(swagger_spec.spec_dict)
+    paths_spec = deref(spec_dict.get('paths', {}))
+    for path_name, path_spec in iteritems(paths_spec):
+        path_spec = deref(path_spec)
+        for http_method, op_spec in iteritems(path_spec):
+            op_spec = deref(op_spec)
             # parameters that are shared across all operations for
-            # a given endpoint are also defined at this level - we
+            # a given path are also defined at this level - we
             # just need to skip over them.
             if http_method == 'parameters':
                 continue
 
-            operation = Operation.from_spec(
-                swagger_spec, path_name, http_method, operation_spec)
-            tags = operation_spec.get('tags', [])
+            op = Operation.from_spec(swagger_spec, path_name, http_method,
+                                     op_spec)
+            tags = deref(op_spec.get('tags', []))
 
             if not tags:
                 tags.append(convert_path_to_resource(path_name))
 
             for tag in tags:
-                tag_to_operations[tag][operation.operation_id] = operation
+                tag_to_ops[deref(tag)][op.operation_id] = op
 
     resources = {}
-    for tag, operations in iteritems(tag_to_operations):
-        resources[tag] = Resource(tag, operations)
+    for tag, ops in iteritems(tag_to_ops):
+        resources[tag] = Resource(tag, ops)
     return resources
 
 
 class Resource(object):
+    """A Swagger resource is associated with multiple operations.
+
+    :param name: resource name
+    :type name: str
+    :param ops: operations associated with this resource (by tag)
+    :type ops: dict where (key, value) = (op_name, Operation)
     """
-    A Swagger resource is associated with multiple operations.
-    """
-    def __init__(self, name, operations):
-        """
-        :param name: resource name
-        :type name: str
-        :param operations: operations associated with this resource (by tag)
-        :type operations: dict where (key, value) = (op_name, Operation)
-        """
+    def __init__(self, name, ops):
         log.debug(u"Building resource '%s'" % name)
         self.name = name
-        self.operations = operations
+        self.operations = ops
 
     def __repr__(self):
         return u"%s(%s)" % (self.__class__.__name__, self.name)

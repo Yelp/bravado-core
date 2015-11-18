@@ -1,97 +1,45 @@
-import json
-import jsonref
+import functools
 
-from bravado_core.spec import post_process_spec
-from bravado_core.spec import replace_jsonref_proxies_callback
+from mock import Mock
+
+from bravado_core.spec import post_process_spec, Spec
 
 
-def test_dict():
-    d = {
-        'foo': {
-            "$ref": "#/definitions/user"
-        },
-        'definitions': {
-            'user': {
-                'properties': {
-                    'first_name': {
-                        'type': 'string'
-                    }
-                }
-            }
-        }
+def test_empty():
+    swagger_spec = Spec({})
+    callback = Mock()
+    post_process_spec(swagger_spec, [callback])
+    assert callback.call_count == 0
+
+
+def test_single_key():
+    spec_dict = {'definitions': {}}
+    swagger_spec = Spec(spec_dict)
+    callback = Mock()
+    post_process_spec(swagger_spec, [callback])
+    assert callback.call_count == 1
+    callback.assert_called_once_with(spec_dict, 'definitions', ['definitions'])
+
+
+def test_visits_refs_only_once():
+    # bar should only be de-reffed once even though there are two refs to it
+    spec_dict = {
+        'ref_one': {'$ref': '#/bar'},
+        'ref_two': {'$ref': '#/bar'},
+        'bar': 'baz'
     }
-    json_obj = jsonref.loads(json.dumps(d))
-    assert type(json_obj['foo']) == jsonref.JsonRef
+    swagger_spec = Spec(spec_dict)
+
+    # Yech! mock doesn't make this easy
+    mutable = {'cnt': 0}
+
+    def callback(container, key, path, mutable):
+        # Bump the mutable counter every time bar is de-reffed
+        if key == 'bar':
+            mutable['cnt'] += 1
 
     post_process_spec(
-        json_obj, on_container_callbacks=(replace_jsonref_proxies_callback,))
-    assert type(json_obj['foo']) == dict
+        swagger_spec,
+        [functools.partial(callback, mutable=mutable)])
 
-    assert d['definitions']['user'] == json_obj['foo']
-
-
-def test_nested_dict():
-    d = {
-        'foo': {
-            "$ref": "#/definitions/user"
-        },
-        'definitions': {
-            'user': {
-                'type': 'object',
-                'properties': {
-                    'first_name': {
-                        'type': 'string'
-                    },
-                    'address': {
-                        '$ref': '#/definitions/address',
-                    }
-                }
-            },
-            'address': {
-                'type': 'object',
-                'properties': {
-                    'street': {
-                        'type': 'string'
-                    }
-                }
-            }
-        }
-    }
-    json_obj = jsonref.loads(json.dumps(d))
-    assert type(json_obj['foo']) == jsonref.JsonRef
-    assert type(json_obj['foo']['properties']['address']) == jsonref.JsonRef
-
-    post_process_spec(
-        json_obj, on_container_callbacks=(replace_jsonref_proxies_callback,))
-    assert type(json_obj['foo']) == dict
-    assert type(json_obj['foo']['properties']['address']) == dict
-
-    assert d['definitions']['address'] == \
-        json_obj['foo']['properties']['address']
-
-
-def test_list():
-    d = {
-        'foo': [
-            {
-                "$ref": "#/definitions/user"
-            }
-        ],
-        'definitions': {
-            'user': {
-                'properties': {
-                    'first_name': {
-                        'type': 'string'
-                    }
-                }
-            }
-        }
-    }
-    json_obj = jsonref.loads(json.dumps(d))
-    assert type(json_obj['foo'][0]) == jsonref.JsonRef
-
-    post_process_spec(
-        json_obj, on_container_callbacks=(replace_jsonref_proxies_callback,))
-    assert type(json_obj['foo'][0]) == dict
-
-    assert d['definitions']['user'] == json_obj['foo'][0]
+    assert mutable['cnt'] == 1

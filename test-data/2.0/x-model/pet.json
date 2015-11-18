@@ -1,6 +1,7 @@
 {
   "definitions": {
     "Pet": {
+      "x-model": "Pet",
       "type": "object",
       "required": ["name"],
       "properties": {
