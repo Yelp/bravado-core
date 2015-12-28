@@ -4,6 +4,7 @@ from six import iteritems
 from bravado_core import formatter
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.model import is_model, MODEL_MARKER
+from bravado_core.schema import collapsed_properties
 from bravado_core.schema import get_spec_for_prop
 from bravado_core.schema import is_dict_like
 from bravado_core.schema import is_list_like
@@ -135,7 +136,7 @@ def unmarshal_object(swagger_spec, object_spec, object_value):
             result[k] = v
 
     # re-introduce and None'ify any properties that weren't passed
-    properties = deref(object_spec).get('properties', {})
+    properties = collapsed_properties(deref(object_spec), swagger_spec)
     for prop_name, prop_spec in iteritems(properties):
         if prop_name not in result:
             result[prop_name] = None

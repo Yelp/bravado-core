@@ -29,6 +29,28 @@ def pet_dict():
     }
 
 
+def test_definitions_with_ref(simple_crossref_spec):
+    xr_spec = simple_crossref_spec
+
+    PongClone = xr_spec.definitions['pongClone']
+    pong_clone_spec = xr_spec.spec_dict['definitions']['pongClone']
+    pong_clone_dict = {
+        'pang': 'hello',
+        'additionalFeature': 'new!',
+        'gameSystem': 'Fatari',
+        'releaseDate': '1981'
+    }
+
+    pong_clone = unmarshal_model(xr_spec, pong_clone_spec,
+                                 pong_clone_dict)
+
+    assert isinstance(pong_clone, PongClone)
+    assert 'hello' == pong_clone.pang
+    assert 'new!' == pong_clone.additionalFeature
+    assert 'Fatari' == pong_clone.gameSystem
+    assert '1981' == pong_clone.releaseDate
+
+
 def test_pet(petstore_dict, pet_dict):
     # Covers:
     #   - model with primitives properties
