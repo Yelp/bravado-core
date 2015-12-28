@@ -38,6 +38,10 @@ def is_param_spec(swagger_spec, schema_object_spec):
     return 'in' in swagger_spec.deref(schema_object_spec)
 
 
+def is_prop_nullable(swagger_spec, schema_object_spec):
+    return swagger_spec.deref(schema_object_spec).get('x-nullable', False)
+
+
 def is_ref(spec):
     return is_dict_like(spec) and '$ref' in spec
 
