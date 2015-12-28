@@ -117,6 +117,78 @@ def test_with_ref(minimal_swagger_dict, address_spec, location_spec):
     assert result == address
 
 
+def test_with_poly_model(minimal_swagger_dict, address_spec):
+
+    bus_address_spec = {
+        'type': 'object',
+        'allOf': [
+            {
+                '$ref': '#/definitions/Address'
+            },
+            {
+                'properties': {
+                    'name': {
+                        'type': 'string'
+                    }
+                }
+            }
+        ]
+    }
+
+    minimal_swagger_dict['definitions']['Address'] = address_spec
+    minimal_swagger_dict['definitions']['BusinessAddress'] = bus_address_spec
+
+    business_address_response = {
+        'get': {
+            'responses': {
+                '200': {
+                    'description': 'A business address',
+                    'schema': {
+                        '$ref': '#/definitions/BusinessAddress',
+                    }
+                }
+            }
+        }
+    }
+    minimal_swagger_dict['paths']['/foo'] = business_address_response
+
+    swagger_spec = Spec.from_dict(minimal_swagger_dict)
+
+    address_dict = {
+        'company': 'n/a',
+        'number': 1600,
+        'street_name': 'Pennsylvania',
+        'street_type': 'Avenue'
+    }
+    expected_address = {
+        'company': 'n/a',
+        'number': 1600,
+        'street_name': 'Pennsylvania',
+        'street_type': 'Avenue'
+    }
+
+    address = unmarshal_object(swagger_spec, address_spec, address_dict)
+    assert expected_address == address
+
+    business_address_dict = {
+        'company': 'n/a',
+        'number': 1600,
+        'street_name': 'Pennsylvania',
+        'street_type': 'Avenue'
+    }
+    expected_business_address = {
+        'company': 'n/a',
+        'number': 1600,
+        'name': None,
+        'street_name': 'Pennsylvania',
+        'street_type': 'Avenue'
+    }
+
+    business_address = unmarshal_object(swagger_spec, bus_address_spec,
+                                        business_address_dict)
+    assert expected_business_address == business_address
+
+
 def test_with_model(minimal_swagger_dict, address_spec, location_spec):
     minimal_swagger_dict['definitions']['Location'] = location_spec
 
