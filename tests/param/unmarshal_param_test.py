@@ -78,6 +78,17 @@ def test_query_array(empty_swagger_spec, array_param_spec):
     assert ['cat', 'dog', 'mouse'] == unmarshal_param(param, request)
 
 
+def test_optional_query_array_with_no_default(empty_swagger_spec,
+                                              array_param_spec):
+    array_param_spec['required'] = False
+    # Set to something other than 'mutli' because 'multi' is a no-op in
+    # unmarshal_collection_format()
+    array_param_spec['collectionFormat'] = 'csv'
+    param = Param(empty_swagger_spec, Mock(spec=Operation), array_param_spec)
+    request = Mock(spec=IncomingRequest, query={})
+    assert unmarshal_param(param, request) is None
+
+
 def test_optional_query_array_with_default(
         empty_swagger_spec, array_param_spec):
     array_param_spec['required'] = False
