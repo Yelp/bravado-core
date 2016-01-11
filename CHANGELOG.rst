@@ -1,7 +1,7 @@
 Changelog
 =========
 
-4.0.1 (2016-XX-XX)
+4.0.1 (2016-01-11)
 ------------------
 - Fix unmarshalling of an optional array query parameter when not passed in the
   query string.
