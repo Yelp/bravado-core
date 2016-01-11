@@ -1,6 +1,11 @@
 Changelog
 =========
 
+4.0.1 (2016-XX-XX)
+------------------
+- Fix unmarshalling of an optional array query parameter when not passed in the
+  query string.
+
 4.0.0 (2015-11-17)
 ------------------
 - Support for recursive $refs - Issue #35

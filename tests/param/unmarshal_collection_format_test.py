@@ -51,3 +51,8 @@ def test_ref(minimal_swagger_dict, array_spec):
         param_value = sep.join(['1', '2', '3'])
         assert [1, 2, 3] == unmarshal_collection_format(
             swagger_spec, ref_spec, param_value)
+
+
+def test_array_is_none_and_not_required(empty_swagger_spec, array_spec):
+    assert unmarshal_collection_format(empty_swagger_spec, array_spec,
+                                       value=None) is None

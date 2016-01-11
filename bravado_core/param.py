@@ -301,10 +301,15 @@ def unmarshal_collection_format(swagger_spec, param_spec, value):
         # http client lib should have already unmarshaled to an array
         return value
 
+    if value is None and not schema.is_required(swagger_spec, param_spec):
+        # Just pass through an optional array that has no value
+        return None
+
     sep = COLLECTION_FORMATS[collection_format]
     items_spec = param_spec['items']
     items_type = deref(items_spec).get('type')
     param_name = param_spec['name']
+
     return [
         cast_request_param(items_type, param_name, item)
         for item in value.split(sep)

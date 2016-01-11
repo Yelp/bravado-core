@@ -83,6 +83,9 @@ def unmarshal_array(swagger_spec, array_spec, array_value):
     :raises: SwaggerMappingError
     """
     if not is_list_like(array_value):
+        if array_value is None and not schema.is_required(swagger_spec,
+                                                          array_spec):
+            return None
         raise SwaggerMappingError('Expected list like type for {0}:{1}'.format(
             type(array_value), array_value))
 
