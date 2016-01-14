@@ -14,7 +14,9 @@ from bravado_core import schema
 if six.PY3:
     long = int
 
-NO_OP = lambda x: None
+
+def NO_OP(x):
+    return None
 
 
 def to_wire(swagger_spec, primitive_spec, value):
