@@ -38,6 +38,7 @@ class Param(object):
     :type op: :class:`bravado_core.operation.Operation`
     :type param_spec: parameter specification in dict form
     """
+
     def __init__(self, swagger_spec, op, param_spec):
         self.op = op
         self.swagger_spec = swagger_spec
@@ -204,6 +205,9 @@ def cast_request_param(param_type, param_name, param_value):
     :type  param_value: string
     """
     if param_value is None:
+        return None
+
+    if param_type in CAST_TYPE_TO_FUNC.keys() and param_value == '':
         return None
 
     try:

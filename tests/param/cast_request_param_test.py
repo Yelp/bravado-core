@@ -7,13 +7,25 @@ def test_integer():
     assert 34 == cast_request_param('integer', 'biz_id', '34')
 
 
+def test_empty_string_becomes_none_for_type_integer():
+    assert cast_request_param('integer', 'biz_id', '') is None
+
+
 def test_boolean():
     assert cast_request_param('boolean', 'is_open', 1)
     assert not cast_request_param('boolean', 'is_open', 0)
 
 
+def test_empty_string_becomes_none_for_type_boolean():
+    assert cast_request_param('boolean', 'is_open', '') is None
+
+
 def test_number():
     assert 2.34 == cast_request_param('number', 'score', '2.34')
+
+
+def test_empty_string_becomes_none_for_type_number():
+    assert cast_request_param('number', 'score', '') is None
 
 
 def test_unknown_type_returns_untouched_value():
