@@ -303,18 +303,21 @@ def unmarshal_collection_format(swagger_spec, param_spec, value):
 
     if collection_format == 'multi':
         # http client lib should have already unmarshaled to an array
-        return value
+        value_array = value
 
-    if value is None and not schema.is_required(swagger_spec, param_spec):
+    elif value is None and not schema.is_required(swagger_spec, param_spec):
         # Just pass through an optional array that has no value
         return None
 
-    sep = COLLECTION_FORMATS[collection_format]
+    else:
+        sep = COLLECTION_FORMATS[collection_format]
+        value_array = value.split(sep)
+
     items_spec = param_spec['items']
     items_type = deref(items_spec).get('type')
     param_name = param_spec['name']
 
     return [
         cast_request_param(items_type, param_name, item)
-        for item in value.split(sep)
+        for item in value_array
     ]
