@@ -63,7 +63,7 @@ def test_query_string(empty_swagger_spec, string_param_spec):
 
 def test_optional_query_string_with_default(
         empty_swagger_spec, string_param_spec):
-    string_param_spec['required'] = True
+    string_param_spec['required'] = False
     string_param_spec['default'] = 'bozo'
     param = Param(empty_swagger_spec, Mock(spec=Operation), string_param_spec)
     request = Mock(spec=IncomingRequest, query={})
