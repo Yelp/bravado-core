@@ -207,7 +207,7 @@ def cast_request_param(param_type, param_name, param_value):
     if param_value is None:
         return None
 
-    if param_type in CAST_TYPE_TO_FUNC.keys() and param_value == '':
+    if param_type in CAST_TYPE_TO_FUNC and param_value == '':
         return None
 
     try:
