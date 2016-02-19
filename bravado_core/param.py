@@ -186,10 +186,24 @@ def unmarshal_param(param, request):
     return value
 
 
+def _booleans_are_true_false_strings(value):
+    lowercase_value = value.lower()
+    if lowercase_value in ['true', 'false']:
+        if lowercase_value == 'true':
+            return True
+        else:
+            return False
+    else:
+        # raise ValueError so casting failure will be logged
+        raise ValueError()
+
+
 CAST_TYPE_TO_FUNC = {
+    # Values come in as strings, these functions try to
+    # cast them to the right type
     'integer': int,
     'number': float,
-    'boolean': bool
+    'boolean': _booleans_are_true_false_strings
 }
 
 
