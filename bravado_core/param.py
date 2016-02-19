@@ -188,11 +188,10 @@ def unmarshal_param(param, request):
 
 def _booleans_are_true_false_strings(value):
     lowercase_value = value.lower()
-    if lowercase_value in ['true', 'false']:
-        if lowercase_value == 'true':
-            return True
-        else:
-            return False
+    if lowercase_value == 'true':
+        return True
+    elif lowercase_value == 'false':
+        return False
     else:
         # raise ValueError so casting failure will be logged
         raise ValueError()
