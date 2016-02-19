@@ -29,8 +29,11 @@ def to_wire(swagger_spec, primitive_spec, value):
     :type value: int, long, float, boolean, string, unicode, object, etc
     :rtype: int, long, float, boolean, string, unicode, etc
     """
+    if not swagger_spec.config['validate_requests']:
+        return value
     if value is None or not schema.has_format(swagger_spec, primitive_spec):
         return value
+
     format_name = schema.get_format(swagger_spec, primitive_spec)
     formatter = swagger_spec.get_format(format_name)
     return formatter.to_wire(value) if formatter else value
