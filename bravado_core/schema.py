@@ -1,5 +1,7 @@
 from bravado_core.exception import SwaggerMappingError
 
+from six import iteritems
+
 # 'object' and 'array' are omitted since this should really be read as
 # "Swagger types that map to python primitives"
 SWAGGER_PRIMITIVES = (
@@ -72,8 +74,9 @@ def get_spec_for_prop(swagger_spec, object_spec, object_value, prop_name):
     :rtype: dict
     """
     deref = swagger_spec.deref
-    props_spec = deref(object_spec).get('properties', {})
-    prop_spec = deref(props_spec).get(prop_name)
+
+    properties = collapsed_properties(deref(object_spec), swagger_spec)
+    prop_spec = properties.get(prop_name)
 
     if prop_spec is not None:
         return deref(prop_spec)
@@ -93,3 +96,34 @@ def get_spec_for_prop(swagger_spec, object_spec, object_value, prop_name):
     raise SwaggerMappingError(
         "Don't know what to do with `additionalProperties` in spec {0} "
         "when inspecting value {1}".format(object_spec, object_value))
+
+
+def collapsed_properties(model_spec, swagger_spec):
+    """Processes model spec and outputs dictionary with attributes
+    as the keys and attribute spec as the value for the model.
+
+    This handles traversing any polymorphic models and the hierarchy
+    of properties properly.
+
+    :param model_spec: model specification (must be dereferenced already)
+    :type model_spec: dict
+    :param swagger_spec: :class:`bravado_core.spec.Spec`
+    :returns: dict
+    """
+
+    properties = {}
+
+    # properties may or may not be present
+    if 'properties' in model_spec:
+        for attr, attr_spec in iteritems(model_spec['properties']):
+            properties[attr] = attr_spec
+
+    # allOf may or may not be present
+    if 'allOf' in model_spec:
+        for item_spec in model_spec['allOf']:
+            deref = swagger_spec.deref
+            item_spec = deref(item_spec)
+            more_properties = collapsed_properties(item_spec, swagger_spec)
+            properties.update(more_properties)
+
+    return properties
