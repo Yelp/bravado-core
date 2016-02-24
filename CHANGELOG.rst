@@ -3,7 +3,6 @@ Changelog
 4.1.x (2016-XX-XX)
 ------------------
 - Better handling of query parameters that don't have a value - Issue #68
-- Allow marshalling of objects which are subclasses of dict - PR #61
 
 4.0.1 (2016-01-11)
 ------------------
