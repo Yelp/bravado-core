@@ -1,12 +1,21 @@
 from mock import patch
+import pytest
 
 from bravado_core.param import cast_request_param
+from bravado_core.param import string_to_boolean
 
 
 @patch('bravado_core.param.log')
 def test_logs_cast_failure(mock_logger):
     cast_request_param('integer', 'gimme_int', 'not_int')
     assert mock_logger.warn.call_count == 1
+
+
+@patch('bravado_core.param.log')
+def test_cast_failures_return_unchanged_value(unused_logger):
+    initial_val = 'not_int'
+    result_val = cast_request_param('integer', 'gimme_int', initial_val)
+    assert result_val == initial_val
 
 
 def test_integer():
@@ -18,28 +27,20 @@ def test_empty_string_becomes_none_for_type_integer():
 
 
 def test_boolean_true_is_true_or_1():
-    assert cast_request_param('boolean', 'is_open', 'true')
-    assert cast_request_param('boolean', 'is_open', 'tRUe')
-    assert cast_request_param('boolean', 'is_open', '1')
+    assert string_to_boolean('true')
+    assert string_to_boolean('tRUe')
+    assert string_to_boolean('1')
 
 
 def test_boolean_false_is_false_or_0():
-    assert not cast_request_param('boolean', 'is_open', 'false')
-    assert not cast_request_param('boolean', 'is_open', 'faLSe')
-    assert not cast_request_param('boolean', 'is_open', '0')
+    assert not string_to_boolean('false')
+    assert not string_to_boolean('faLSe')
+    assert not string_to_boolean('0')
 
 
-@patch('bravado_core.param.log')
-def test_boolean_returns_unchanged_string_for_non_bool_strings(mock_logger):
-    assert cast_request_param('boolean', 'is_open', 'PIZZA') == 'PIZZA'
-    assert not cast_request_param('boolean', 'is_open', 'PIZZA') is True
-    assert not cast_request_param('boolean', 'is_open', 'PIZZA') is False
-
-
-@patch('bravado_core.param.log')
-def test_boolean_cast_failure_is_logged(mock_logger):
-    cast_request_param('boolean', 'is_open', 'PIZZA')
-    assert mock_logger.warn.call_count == 1
+def test_boolean_cast_failure_raises_value_error():
+    with pytest.raises(ValueError):
+        string_to_boolean('PIZZA')
 
 
 def test_empty_string_becomes_none_for_type_boolean():

@@ -192,11 +192,10 @@ def string_to_boolean(value):
     false = ['false', '0']
     if lowercase_value in true:
         return True
-    elif lowercase_value in false:
+    if lowercase_value in false:
         return False
-    else:
-        # raise ValueError so casting failure will be logged
-        raise ValueError()
+    # Failed casts raise a ValueError
+    raise ValueError()
 
 
 CAST_TYPE_TO_FUNC = {
