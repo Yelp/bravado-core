@@ -35,5 +35,6 @@ setup(
         "six",
         "simplejson",
         "swagger-spec-validator>=2.0.1",
+        "pyyaml",
     ],
 )

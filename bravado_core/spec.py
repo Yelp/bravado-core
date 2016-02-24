@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 import functools
+import json
 import logging
+import os.path
 import warnings
+import yaml
 
 from jsonschema import FormatChecker
+from jsonschema.compat import urlopen
 from jsonschema.validators import RefResolver
 from six import iteritems
 from six.moves.urllib import parse as urlparse
@@ -199,6 +203,28 @@ class Spec(object):
         return format
 
 
+def is_yaml(url, content_type=None):
+    yaml_content_types = {
+        'application/yaml',
+        'application/x-yaml',
+        'text/yaml',
+    }
+
+    yaml_file_extensions = {
+        '.yaml',
+        '.yml',
+    }
+
+    if content_type in yaml_content_types:
+        return True
+
+    file, ext = os.path.splitext(url)
+    if ext.lower() in yaml_file_extensions:
+        return True
+
+    return False
+
+
 def build_http_handlers(http_client):
     """Create a mapping of uri schemes to callables that take a uri. The
     callable is used by jsonschema's RefResolver to download remote $refs.
@@ -213,11 +239,24 @@ def build_http_handlers(http_client):
             'method': 'GET',
             'url': uri,
         }
-        return http_client.request(request_params).result().json()
+        response = http_client.request(request_params).result()
+        content_type = response.headers.get('content-type', '').lower()
+        if is_yaml(uri, content_type):
+            return yaml.load(response.content)
+        else:
+            return response.json()
+
+    def read_file(uri):
+        fp = urlopen(uri)
+        if is_yaml(uri):
+            return yaml.load(fp)
+        else:
+            return json.loads(fp.read().decode("utf-8"))
 
     return {
         'http': download,
         'https': download,
+        'file': read_file,
     }
 
 
