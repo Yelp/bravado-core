@@ -186,7 +186,7 @@ def unmarshal_param(param, request):
     return value
 
 
-def _booleans_are_true_false_or_0_1_strings(value):
+def string_to_boolean(value):
     lowercase_value = value.lower()
     true = ['true', '1']
     false = ['false', '0']
@@ -204,7 +204,7 @@ CAST_TYPE_TO_FUNC = {
     # cast them to the right type
     'integer': int,
     'number': float,
-    'boolean': _booleans_are_true_false_or_0_1_strings
+    'boolean': string_to_boolean
 }
 
 
