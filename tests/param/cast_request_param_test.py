@@ -17,11 +17,16 @@ def test_empty_string_becomes_none_for_type_integer():
     assert cast_request_param('integer', 'biz_id', '') is None
 
 
-def test_boolean():
+def test_boolean_true_is_true_or_1():
     assert cast_request_param('boolean', 'is_open', 'true')
     assert cast_request_param('boolean', 'is_open', 'tRUe')
+    assert cast_request_param('boolean', 'is_open', '1')
+
+
+def test_boolean_false_is_false_or_0():
     assert not cast_request_param('boolean', 'is_open', 'false')
     assert not cast_request_param('boolean', 'is_open', 'faLSe')
+    assert not cast_request_param('boolean', 'is_open', '0')
 
 
 @patch('bravado_core.param.log')
