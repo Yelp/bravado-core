@@ -4,6 +4,7 @@ Changelog
 ------------------
 - Better handling of query parameters that don't have a value - Issue #68
 - Allow marshalling of objects which are subclasses of dict - PR #61
+- Fix boolean query params to support case-insensetive true/false and 0/1 - Issue #70
 
 4.0.1 (2016-01-11)
 ------------------
