@@ -1,5 +1,10 @@
 from bravado_core.exception import SwaggerMappingError
 
+try:
+    from collections import Mapping
+except ImportError:
+    from collections.abc import Mapping
+
 # 'object' and 'array' are omitted since this should really be read as
 # "Swagger types that map to python primitives"
 SWAGGER_PRIMITIVES = (
@@ -45,8 +50,7 @@ def is_dict_like(spec):
     :param spec: swagger object specification in dict form
     :rtype: boolean
     """
-    # TODO: check magic method instead
-    return type(spec) == dict
+    return isinstance(spec, Mapping)
 
 
 def is_list_like(spec):
