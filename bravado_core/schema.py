@@ -1,9 +1,7 @@
+from collections import Mapping
+
 from bravado_core.exception import SwaggerMappingError
 
-try:
-    from collections import Mapping
-except ImportError:
-    from collections.abc import Mapping
 
 # 'object' and 'array' are omitted since this should really be read as
 # "Swagger types that map to python primitives"
