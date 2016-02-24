@@ -43,8 +43,7 @@ def is_ref(spec):
 
 
 def is_dict_like(spec):
-    """No longer needed since json-ref has been excised.
-
+    """
     :param spec: swagger object specification in dict form
     :rtype: boolean
     """
