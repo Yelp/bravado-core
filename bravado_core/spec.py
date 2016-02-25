@@ -204,16 +204,16 @@ class Spec(object):
 
 
 def is_yaml(url, content_type=None):
-    yaml_content_types = {
+    yaml_content_types = set([
         'application/yaml',
         'application/x-yaml',
         'text/yaml',
-    }
+    ])
 
-    yaml_file_extensions = {
+    yaml_file_extensions = set([
         '.yaml',
         '.yml',
-    }
+    ])
 
     if content_type in yaml_content_types:
         return True
