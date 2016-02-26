@@ -1,4 +1,7 @@
+from collections import Mapping
+
 from bravado_core.exception import SwaggerMappingError
+
 
 # 'object' and 'array' are omitted since this should really be read as
 # "Swagger types that map to python primitives"
@@ -40,13 +43,11 @@ def is_ref(spec):
 
 
 def is_dict_like(spec):
-    """No longer needed since json-ref has been excised.
-
+    """
     :param spec: swagger object specification in dict form
     :rtype: boolean
     """
-    # TODO: check magic method instead
-    return type(spec) == dict
+    return isinstance(spec, Mapping)
 
 
 def is_list_like(spec):
