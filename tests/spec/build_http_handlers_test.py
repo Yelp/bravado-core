@@ -25,7 +25,6 @@ def _build_http_client(content):
 
     result_func.return_value = mock_response
 
-    from bravado_core.spec import build_http_handlers
     handlers = build_http_handlers(mock_http_client)
 
     return handlers, mock_response
