@@ -1,7 +1,4 @@
 import json
-import os
-import requests
-import unittest
 import yaml
 
 try:
