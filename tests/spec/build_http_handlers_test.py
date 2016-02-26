@@ -1,6 +1,8 @@
 import json
 import yaml
 
+from bravado_core.spec import build_http_handlers
+
 try:
     from unittest import mock
 except ImportError:
@@ -10,17 +12,6 @@ try:
     from StringIO import StringIO
 except ImportError:
     from io import StringIO
-
-
-def _run_test(self, path, loader):
-    http_handler = self._handlers['http']
-    http_result = http_handler('%s/%s' % (self._base_url, path))
-
-    expected_content_path = '%s/%s' % (self._content_path, path)
-    with open(expected_content_path) as fp:
-        expected_dict = loader(fp)
-
-    assert http_result == expected_dict
 
 
 def _build_http_client(content):
@@ -98,7 +89,6 @@ def test_http_handler_equals_https_handler():
     :return:
     """
 
-    from bravado_core.spec import build_http_handlers
     handlers = build_http_handlers(None)
 
     http_handler_id = id(handlers['http'])

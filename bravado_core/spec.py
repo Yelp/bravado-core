@@ -256,6 +256,10 @@ def build_http_handlers(http_client):
     return {
         'http': download,
         'https': download,
+
+        # jsonschema ordinarily handles file:// requests, but it assumes that
+        # all files are json formatted. We override it here so that we can
+        # load yaml files when necessary.
         'file': read_file,
     }
 
