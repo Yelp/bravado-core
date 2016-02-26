@@ -1,4 +1,5 @@
 import json
+import pytest
 import yaml
 
 from bravado_core.spec import build_http_handlers
@@ -30,67 +31,56 @@ def _build_http_client(content):
     return handlers, mock_response
 
 
-def test_yaml_http_handler_with_known_file_extension():
+@pytest.mark.parametrize('protocol', ['http', 'https'])
+def test_yaml_http_handler_with_known_file_extension(protocol):
     test_dict = {"hello": 'world'}
     test_yaml = yaml.dump(test_dict)
 
     handlers, response = _build_http_client(test_yaml)
 
-    http_handler = handlers['http']
-    result = http_handler('http://test.test/yaml/toys.yaml')
+    http_handler = handlers[protocol]
+    result = http_handler('%s://test.test/yaml/toys.yaml' % protocol)
 
     assert result == test_dict
 
 
-def test_yaml_http_handler_with_yaml_content_type():
+@pytest.mark.parametrize('protocol', ['http', 'https'])
+def test_yaml_http_handler_with_yaml_content_type(protocol):
     test_dict = {'hello': 'world'}
     test_yaml = yaml.dump(test_dict)
 
     handlers, response = _build_http_client(test_yaml)
     response.headers = {'content-type': 'application/yaml'}
 
-    http_handler = handlers['http']
-    result = http_handler('https://test.test/yaml/toys')
+    http_handler = handlers[protocol]
+    result = http_handler('%s://test.test/yaml/toys' % protocol)
 
     assert result == test_dict
 
 
-def test_not_yaml_content_type():
+@pytest.mark.parametrize('protocol', ['http', 'https'])
+def test_not_yaml_content_type(protocol):
     test_dict = {'hello': 'world'}
     test_json = json.dumps(test_dict)
 
     handlers, response = _build_http_client(test_json)
     response.headers = {'content-type': 'application/json'}
 
-    http_handler = handlers['http']
-    result = http_handler('https://test.test/json/test')
+    http_handler = handlers[protocol]
+    result = http_handler('%s://test.test/json/test' % protocol)
 
     assert result == test_dict
 
 
-def test_not_yaml_file_name():
+@pytest.mark.parametrize('protocol', ['http', 'https'])
+def test_not_yaml_file_name(protocol):
     test_dict = {'hello': 'world'}
     test_json = json.dumps(test_dict)
 
     handlers, response = _build_http_client(test_json)
     response.headers = {'content-type': 'text/plain'}
 
-    http_handler = handlers['http']
-    result = http_handler('https://test.test/json/test.json')
+    http_handler = handlers[protocol]
+    result = http_handler('%s://test.test/json/test.json' % protocol)
 
     assert result == test_dict
-
-
-def test_http_handler_equals_https_handler():
-    """
-    The HTTPServer class doesn't support https. Instead of
-    testing https directly, we'll just make sure that the two handlers
-    are identical.
-    :return:
-    """
-
-    handlers = build_http_handlers(None)
-
-    http_handler_id = id(handlers['http'])
-    https_handler_id = id(handlers['https'])
-    assert http_handler_id == https_handler_id
