@@ -32,9 +32,9 @@ setup(
     install_requires=[
         "jsonschema>=2.5.1",
         "python-dateutil",
+        "pyyaml",
         "six",
         "simplejson",
         "swagger-spec-validator>=2.0.1",
-        "pyyaml",
     ],
 )

@@ -99,23 +99,6 @@ def test_yaml_files():
     assert 'Pet' in spec.definitions
 
 
-def test_file_requests():
-    my_path = os.path.abspath(os.path.dirname(__file__))
-    content_path = os.path.join(
-        my_path, '../../test-data/2.0/yaml/',
-    )
-
-    expected_content_path = '%s/toys.yaml' % content_path
-    with open(expected_content_path) as fp:
-        expected_dict = yaml.load(fp)
-
-    from bravado_core.spec import build_http_handlers
-    http_handlers = build_http_handlers(None)
-
-    file_result = http_handlers['file']('file://%s/toys.yaml' % content_path)
-    assert file_result == expected_dict
-
-
 def test_spec_with_dereffed_and_tagged_models_works(minimal_swagger_dict):
     # In cases where the Swagger spec being ingested has already been de-reffed
     # and had models tagged with 'x-model', we still need to be able to

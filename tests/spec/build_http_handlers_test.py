@@ -4,104 +4,106 @@ import requests
 import unittest
 import yaml
 
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 
-class TestHttpClients(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        try:
-            from unittest import mock
-        except ImportError:
-            import mock
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
-        my_path = os.path.abspath(os.path.dirname(__file__))
-        content_path = os.path.join(
-            my_path, '../../test-data/2.0/',
-        )
 
-        def get_request(req):
-            url, method = req['url'], req['method']
+def _run_test(self, path, loader):
+    http_handler = self._handlers['http']
+    http_result = http_handler('%s/%s' % (self._base_url, path))
 
-            http_response = requests.request(method, url)
-            assert http_response.status_code == 200, "Failed to get %s" % url
+    expected_content_path = '%s/%s' % (self._content_path, path)
+    with open(expected_content_path) as fp:
+        expected_dict = loader(fp)
 
-            response = mock.Mock()
-            response.result.return_value = http_response
+    assert http_result == expected_dict
 
-            return response
 
-        http_client = mock.Mock()
-        http_client.request.side_effect = get_request
+def _build_http_client(content):
+    mock_response = mock.Mock()
+    mock_response.content = StringIO(content)
+    mock_response.json.side_effect = lambda *args, **kwargs: json.loads(content)
 
-        try:
-            from http.server import HTTPServer, SimpleHTTPRequestHandler
-        except ImportError:
-            from BaseHTTPServer import HTTPServer
-            from SimpleHTTPServer import SimpleHTTPRequestHandler
+    mock_http_client = mock.Mock()
+    result_func = mock_http_client.request.return_value.result
 
-        ext_map = SimpleHTTPRequestHandler.extensions_map
-        for file_extension in ('.yaml', '.yml', '.yiml'):
-            ext_map[file_extension] = 'application/x-yaml'
+    result_func.return_value = mock_response
 
-        listen_address = ('127.0.0.1', 19283)
+    from bravado_core.spec import build_http_handlers
+    handlers = build_http_handlers(mock_http_client)
 
-        server = HTTPServer(
-            listen_address,
-            SimpleHTTPRequestHandler,
-        )
+    return handlers, mock_response
 
-        import threading
-        server_thread = threading.Thread(
-            target=server.serve_forever,
-        )
-        server_thread.daemon = True
-        server_thread.start()
 
-        from bravado_core.spec import build_http_handlers
-        http_handlers = build_http_handlers(http_client)
+def test_yaml_http_handler_with_known_file_extension():
+    test_dict = {"hello": 'world'}
+    test_yaml = yaml.dump(test_dict)
 
-        cls._content_path = content_path
-        cls._base_url = 'http://%s:%s/test-data/2.0/' % (
-            listen_address[0], listen_address[1],
-        )
-        cls._server = server
-        cls._handlers = http_handlers
+    handlers, response = _build_http_client(test_yaml)
 
-    def _run_test(self, path, loader):
-        http_handler = self._handlers['http']
-        http_result = http_handler('%s/%s' % (self._base_url, path))
+    http_handler = handlers['http']
+    result = http_handler('http://test.test/yaml/toys.yaml')
 
-        expected_content_path = '%s/%s' % (self._content_path, path)
-        with open(expected_content_path) as fp:
-            expected_dict = loader(fp)
+    assert result == test_dict
 
-        assert http_result == expected_dict
 
-    def test_yaml_http_handler(self):
-        self._run_test('yaml/toys.yaml', yaml.load)
+def test_yaml_http_handler_with_yaml_content_type():
+    test_dict = {'hello': 'world'}
+    test_yaml = yaml.dump(test_dict)
 
-    def test_yml_http_handler(self):
-        self._run_test('yaml/swagger.yml', yaml.load)
+    handlers, response = _build_http_client(test_yaml)
+    response.headers = {'content-type': 'application/yaml'}
 
-    def test_yaml_content_type(self):
-        self._run_test('weird-extensions/fake.yiml', yaml.load)
+    http_handler = handlers['http']
+    result = http_handler('https://test.test/yaml/toys')
 
-    def test_not_yaml_content_type(self):
-        self._run_test('weird-extensions/fake.justin', json.load)
+    assert result == test_dict
 
-    def test_not_yaml_file_name(self):
-        self._run_test('x-model/pet.json', json.load)
 
-    def test_http_handler_equals_https_handler(self):
-        """
-        The HTTPServer class doesn't support https. Instead of
-        testing https directly, we'll just make sure that the two handlers
-        are identical.
-        :return:
-        """
-        http_handler_id = id(self._handlers['http'])
-        https_handler_id = id(self._handlers['https'])
-        assert http_handler_id == https_handler_id
+def test_not_yaml_content_type():
+    test_dict = {'hello': 'world'}
+    test_json = json.dumps(test_dict)
 
-    @classmethod
-    def tearDownClass(cls):
-        cls._server.shutdown()
+    handlers, response = _build_http_client(test_json)
+    response.headers = {'content-type': 'application/json'}
+
+    http_handler = handlers['http']
+    result = http_handler('https://test.test/json/test')
+
+    assert result == test_dict
+
+
+def test_not_yaml_file_name():
+    test_dict = {'hello': 'world'}
+    test_json = json.dumps(test_dict)
+
+    handlers, response = _build_http_client(test_json)
+    response.headers = {'content-type': 'text/plain'}
+
+    http_handler = handlers['http']
+    result = http_handler('https://test.test/json/test.json')
+
+    assert result == test_dict
+
+
+def test_http_handler_equals_https_handler():
+    """
+    The HTTPServer class doesn't support https. Instead of
+    testing https directly, we'll just make sure that the two handlers
+    are identical.
+    :return:
+    """
+
+    from bravado_core.spec import build_http_handlers
+    handlers = build_http_handlers(None)
+
+    http_handler_id = id(handlers['http'])
+    https_handler_id = id(handlers['https'])
+    assert http_handler_id == https_handler_id

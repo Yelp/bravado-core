@@ -1,24 +1,24 @@
 ---
-  definitions:
-    Toy:
-      x-model: "Toy"
-      type: "object"
-      required:
-        - "name"
-      properties:
-        name:
-          type: "string"
-  paths:
-    toy:
-      get:
-        operationId: "getToyById"
-        parameters:
-          - name: "toy_id"
-            in: "query"
-            description: "Toy ID"
-            type: "integer"
-        responses:
-          "200":
-            description: "Successful response"
-            schema:
-              $ref: "#/definitions/Toy"
+definitions:
+  Toy:
+    x-model: "Toy"
+    type: "object"
+    required:
+      - "name"
+    properties:
+      name:
+        type: "string"
+paths:
+  toy:
+    get:
+      operationId: "getToyById"
+      parameters:
+        - name: "toy_id"
+          in: "query"
+          description: "Toy ID"
+          type: "integer"
+      responses:
+        "200":
+          description: "Successful response"
+          schema:
+            $ref: "#/definitions/Toy"
