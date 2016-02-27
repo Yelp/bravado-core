@@ -1,21 +1,17 @@
 import json
+import mock
 import pytest
 import yaml
 
+from io import StringIO
 from bravado_core.spec import build_http_handlers
-
-try:
-    from unittest import mock
-except ImportError:
-    import mock
-
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
 
 
 def _build_http_client(content):
+    # required for py27/py34 compatibility
+    if hasattr(content, 'decode'):
+        content = content.decode("utf-8")
+
     mock_response = mock.Mock()
     mock_response.content = StringIO(content)
     mock_response.json.side_effect = lambda *args, **kwargs: json.loads(content)
