@@ -123,6 +123,16 @@ def test_query_int_array(empty_swagger_spec, int_array_param_spec):
     assert [1, 2, 3] == unmarshal_param(param, request)
 
 
+def test_query_int_singleton_array(empty_swagger_spec, int_array_param_spec):
+    param = Param(empty_swagger_spec,
+                  Mock(spec=Operation),
+                  int_array_param_spec)
+    request = Mock(
+        spec=IncomingRequest,
+        query={'numbers': '23'})
+    assert [23] == unmarshal_param(param, request)
+
+
 def test_header_string(empty_swagger_spec, param_spec):
     param_spec['in'] = 'header'
     param_spec['type'] = 'string'
