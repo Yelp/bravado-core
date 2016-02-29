@@ -112,25 +112,23 @@ def test_optional_query_array_with_default(
     request = Mock(spec=IncomingRequest, query={})
     assert ['bird', 'fish'] == unmarshal_param(param, request)
 
-
-def test_query_int_array(empty_swagger_spec, int_array_param_spec):
+@pytest.mark.parametrize("test_input,expected", [
+    (["4", "2", "3"], [4, 2, 3]),
+    ("23", [23])
+])
+def test_query_int_array(
+        test_input,
+        expected,
+        empty_swagger_spec,
+        int_array_param_spec,
+        ):
     param = Param(empty_swagger_spec,
                   Mock(spec=Operation),
                   int_array_param_spec)
     request = Mock(
         spec=IncomingRequest,
-        query={'numbers': ['1', '2', '3']})
-    assert [1, 2, 3] == unmarshal_param(param, request)
-
-
-def test_query_int_singleton_array(empty_swagger_spec, int_array_param_spec):
-    param = Param(empty_swagger_spec,
-                  Mock(spec=Operation),
-                  int_array_param_spec)
-    request = Mock(
-        spec=IncomingRequest,
-        query={'numbers': '23'})
-    assert [23] == unmarshal_param(param, request)
+        query={'numbers': test_input})
+    assert expected == unmarshal_param(param, request)
 
 
 def test_header_string(empty_swagger_spec, param_spec):
