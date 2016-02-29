@@ -112,6 +112,7 @@ def test_optional_query_array_with_default(
     request = Mock(spec=IncomingRequest, query={})
     assert ['bird', 'fish'] == unmarshal_param(param, request)
 
+
 @pytest.mark.parametrize("test_input,expected", [
     (["4", "2", "3"], [4, 2, 3]),
     ("23", [23])
