@@ -115,7 +115,8 @@ def test_optional_query_array_with_default(
 
 @pytest.mark.parametrize("test_input,expected", [
     (["4", "2", "3"], [4, 2, 3]),
-    ("23", [23])
+    ("23", [23]),
+    (None, None)
 ])
 def test_query_int_array(
         test_input,
