@@ -1,6 +1,7 @@
 import os
 
 import simplejson as json
+import yaml
 from six.moves.urllib import parse as urlparse
 
 from bravado_core.model import MODEL_MARKER
@@ -80,6 +81,21 @@ def test_ref_to_external_path_with_ref_to_local_model():
 
     swagger_json_url = urlparse.urljoin('file:', swagger_json_path)
     spec = Spec.from_dict(swagger_json_content, swagger_json_url)
+    assert 'Pet' in spec.definitions
+
+
+def test_yaml_files():
+    my_dir = os.path.abspath(os.path.dirname(__file__))
+
+    swagger_yaml_path = os.path.join(
+            my_dir,
+            '../../test-data/2.0/yaml/swagger.yml')
+
+    with open(swagger_yaml_path) as f:
+        swagger_yaml_content = yaml.load(f)
+
+    swagger_yaml_url = urlparse.urljoin('file:', swagger_yaml_path)
+    spec = Spec.from_dict(swagger_yaml_content, swagger_yaml_url)
     assert 'Pet' in spec.definitions
 
 
