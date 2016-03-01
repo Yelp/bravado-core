@@ -1,11 +1,13 @@
 Changelog
 =========
-4.1.x (2016-XX-XX)
+4.1.0 (2016-03-01)
 ------------------
 - Better handling of query parameters that don't have a value - Issue #68
 - Allow marshalling of objects which are subclasses of dict - PR #61
 - Fix boolean query params to support case-insensetive true/false and 0/1 - Issue #70
 - Support for Swagger specs in yaml format - Issue #42
+- Fix validation of server side request parameters when collectionFormat=multi and item type is not string - Issue #66
+- Fix unmarshaling of server side request parameters when collectionFormat=multi and cardinality is one - PR #75
 
 4.0.1 (2016-01-11)
 ------------------
