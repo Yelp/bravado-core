@@ -88,12 +88,17 @@ class Operation(object):
             self._operation_id = deref(self.op_spec.get('operationId'))
             if self._operation_id is None:
                 # build based on the http method and request path
-                self._operation_id = (self.http_method + '_' + self.path_name)\
-                    .replace('/', '_')\
-                    .replace('{', '_')\
-                    .replace('}', '_')\
-                    .replace('__', '_')\
-                    .strip('_')
+                self._operation_id = (self.http_method + '_' + self.path_name)
+
+        # Sanitize operation ID
+        self._operation_id = self._operation_id.replace(' ', '_')\
+                                               .replace('.', '_')\
+                                               .replace('/', '_')\
+                                               .replace('{', '_')\
+                                               .replace('}', '_')\
+                                               .replace('__', '_')\
+                                               .strip('_')
+
         return self._operation_id
 
     def __repr__(self):
