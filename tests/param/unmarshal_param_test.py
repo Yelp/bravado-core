@@ -39,6 +39,21 @@ def array_param_spec():
 
 
 @pytest.fixture
+def int_array_param_spec():
+    return {
+        'name': 'numbers',
+        'in': 'query',
+        'description': 'List of numbers',
+        'type': 'array',
+        'items': {
+            'type': 'integer',
+            'format': 'int64'
+        },
+        'collectionFormat': 'multi',
+    }
+
+
+@pytest.fixture
 def param_spec():
     return {
         'name': 'petId',
@@ -96,6 +111,26 @@ def test_optional_query_array_with_default(
     param = Param(empty_swagger_spec, Mock(spec=Operation), array_param_spec)
     request = Mock(spec=IncomingRequest, query={})
     assert ['bird', 'fish'] == unmarshal_param(param, request)
+
+
+@pytest.mark.parametrize("test_input,expected", [
+    (["4", "2", "3"], [4, 2, 3]),
+    ("23", [23]),
+    (None, None)
+])
+def test_query_int_array(
+        test_input,
+        expected,
+        empty_swagger_spec,
+        int_array_param_spec,
+        ):
+    param = Param(empty_swagger_spec,
+                  Mock(spec=Operation),
+                  int_array_param_spec)
+    request = Mock(
+        spec=IncomingRequest,
+        query={'numbers': test_input})
+    assert expected == unmarshal_param(param, request)
 
 
 def test_header_string(empty_swagger_spec, param_spec):
