@@ -23,7 +23,7 @@ def test_returns_generated_operation_id_with_path_parameters():
     assert 'get_pet_petId' == operation.operation_id
 
 
-def test_returns_generated_operation_id_when_badly_formatted():
+def test_returns_sanitized_operation_id_when_using_illegal_chars():
     spec = Spec(spec_dict={})
     operation_spec = {'operationId': 'pet.getBy Id'}
     operation = Operation(spec, '/pet/{petId}', 'get', operation_spec)
