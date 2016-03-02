@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
+import re
 
 from bravado_core.param import Param
 
@@ -88,12 +89,14 @@ class Operation(object):
             self._operation_id = deref(self.op_spec.get('operationId'))
             if self._operation_id is None:
                 # build based on the http method and request path
-                self._operation_id = (self.http_method + '_' + self.path_name)\
-                    .replace('/', '_')\
-                    .replace('{', '_')\
-                    .replace('}', '_')\
-                    .replace('__', '_')\
-                    .strip('_')
+                self._operation_id = self.http_method + '_' + self.path_name
+
+            # Sanitize operation ID
+            r = re.compile('[^A-Za-z0-9_]|_+')
+            r_ = re.compile('_+')
+            self._operation_id = r.sub('_', self._operation_id)
+            self._operation_id = r_.sub('_', self._operation_id).strip('_')
+
         return self._operation_id
 
     def __repr__(self):
