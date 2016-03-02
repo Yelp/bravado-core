@@ -1,5 +1,9 @@
 Changelog
 =========
+4.2.0 (2016-XX-XX)
+------------------
+- More robust handling of operationId which contains non-standard chars - PR #76
+
 4.1.0 (2016-03-01)
 ------------------
 - Better handling of query parameters that don't have a value - Issue #68

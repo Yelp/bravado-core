@@ -84,18 +84,26 @@ class Operation(object):
 
         :rtype: str
         """
+        def sanitize(operation_id):
+            for regex, replacement in (
+                    ('[^A-Za-z0-9_]', '_'),  # valid chars for method names
+                    ('_+', '_'),             # collapse consecutive _'s
+                    ('^_|_$', '')):          # trim leading/trailing _'s
+                operation_id = re.compile(regex).sub(replacement, operation_id)
+
+            # Handle crazy corner cases where someone explictily sets operation
+            # id a value that gets sanitized down to an empty string
+            if len(operation_id) == 0:
+                operation_id = sanitize(self.http_method + '_' + self.path_name)
+            return operation_id
+
         if self._operation_id is None:
             deref = self.swagger_spec.deref
             self._operation_id = deref(self.op_spec.get('operationId'))
             if self._operation_id is None:
                 # build based on the http method and request path
                 self._operation_id = self.http_method + '_' + self.path_name
-
-            # Sanitize operation ID
-            r = re.compile('[^A-Za-z0-9_]|_+')
-            r_ = re.compile('_+')
-            self._operation_id = r.sub('_', self._operation_id)
-            self._operation_id = r_.sub('_', self._operation_id).strip('_')
+            self._operation_id = sanitize(self._operation_id)
 
         return self._operation_id
 
