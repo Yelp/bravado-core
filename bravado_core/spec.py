@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import copy
 import functools
 import json
 import logging
@@ -70,6 +71,9 @@ class Spec(object):
         self.api_url = None
         self.config = dict(CONFIG_DEFAULTS, **(config or {}))
 
+        # Cached copy of spec_dict with x-scope metadata removed. See @property
+        self._client_spec_dict = None
+
         # (key, value) = (simple format def name, Model type)
         # (key, value) = (#/ format def ref, Model type)
         self.definitions = {}
@@ -94,6 +98,44 @@ class Spec(object):
             referrer=self.spec_dict,
             handlers=build_http_handlers(http_client))
 
+    @property
+    def client_spec_dict(self):
+        """Return a copy of spec_dict with x-scope metadata removed so that it
+        is suitable for consumption by Swagger clients.
+
+        You may be asking, "Why is there a difference between the Swagger spec
+        a client sees and the one used internally?". Well, as part of the
+        ingestion process, x-scope metadata is added to spec_dict so that
+        $refs can be de-reffed successfully during requset/response validation
+        and marshalling. This medatadata is specific to the context of the
+        server and contains files and paths that are not relevant to the
+        client. This is required so the client does not re-use (and in turn,
+        re-creates) the invalid x-scope metadata created by the server.
+
+        For example, a section of spec_dict that contains a ref would change
+        as folows.
+
+        Before:
+
+          'MON': {
+            '$ref': '#/definitions/DayHours',
+            'x-scope': [
+                'file:///happyhour/api_docs/swagger.json',
+                'file:///happyhour/api_docs/swagger.json#/definitions/WeekHours'
+            ]
+          }
+
+        After:
+
+          'MON': {
+            '$ref': '#/definitions/DayHours'
+          }
+
+        """
+        if self._client_spec_dict is None:
+            self._client_spec_dict = strip_xscope(self.spec_dict)
+        return self._client_spec_dict
+
     @classmethod
     def from_dict(cls, spec_dict, origin_url=None, http_client=None,
                   config=None):
@@ -102,6 +144,7 @@ class Spec(object):
         :param spec_dict: swagger spec in json-like dict form.
         :param origin_url: the url used to retrieve the spec, if any
         :type  origin_url: str
+        :param: http_client: http client used to download remote $refs
         :param config: Configuration dict. See CONFIG_DEFAULTS.
         """
         spec = cls(spec_dict, origin_url, http_client, config)
@@ -210,15 +253,12 @@ def is_yaml(url, content_type=None):
         'text/yaml',
     ])
 
-    yaml_file_extensions = set([
-        '.yaml',
-        '.yml',
-    ])
+    yaml_file_extensions = set(['.yaml', '.yml'])
 
     if content_type in yaml_content_types:
         return True
 
-    file, ext = os.path.splitext(url)
+    _, ext = os.path.splitext(url)
     if ext.lower() in yaml_file_extensions:
         return True
 
@@ -256,7 +296,6 @@ def build_http_handlers(http_client):
     return {
         'http': download,
         'https': download,
-
         # jsonschema ordinarily handles file:// requests, but it assumes that
         # all files are json formatted. We override it here so that we can
         # load yaml files when necessary.
@@ -330,7 +369,7 @@ def build_api_serving_url(spec_dict, origin_url=None, preferred_scheme=None):
 
 
 def post_process_spec(swagger_spec, on_container_callbacks):
-    """Post-process the passed in spec_dict.
+    """Post-process the passed in swagger_spec.spec_dict.
 
     For each container type (list or dict) that is traversed in spec_dict,
     the list of passed in callbacks is called with arguments (container, key).
@@ -342,8 +381,8 @@ def post_process_spec(swagger_spec, on_container_callbacks):
     value being traversed.
 
     In addition to firing the passed in callbacks, $refs are annotated with
-    an 'x-scope' key that contains the current scope_stack of the RefResolver.
-    The 'x-scope' scope_stack is used during request/response marshalling to
+    an 'x-scope' key that contains the current _scope_stack of the RefResolver.
+    The 'x-scope' _scope_stack is used during request/response marshalling to
     assume a given scope before de-reffing $refs (otherwise, de-reffing won't
     work).
 
@@ -357,7 +396,14 @@ def post_process_spec(swagger_spec, on_container_callbacks):
 
     resolver = swagger_spec.resolver
 
-    def descend(fragment, path, visited_refs):
+    def descend(fragment, path=None, visited_refs=None):
+        """
+        :param fragment: node in spec_dict
+        :param path: list of strings that form the current path to fragment
+        :param visited_refs: list of visted ref_dict
+        """
+        path = path or []
+        visited_refs = visited_refs or []
 
         if is_ref(fragment):
             ref_dict = fragment
@@ -387,4 +433,26 @@ def post_process_spec(swagger_spec, on_container_callbacks):
                 fire_callbacks(fragment, index, path + [str(index)])
                 descend(fragment[index], path + [str(index)], visited_refs)
 
-    descend(swagger_spec.spec_dict, path=[], visited_refs=[])
+    descend(swagger_spec.spec_dict)
+
+
+def strip_xscope(spec_dict):
+    """
+    :param spec_dict: Swagger spec in dict form. This is treated as read-only.
+    :return: deep copy of spec_dict with the x-scope metadata stripped out.
+    """
+    result = copy.deepcopy(spec_dict)
+
+    def descend(fragment):
+        if is_dict_like(fragment):
+            for key in list(fragment.keys()):
+                if key == 'x-scope':
+                    del fragment['x-scope']
+                else:
+                    descend(fragment[key])
+        elif is_list_like(fragment):
+            for element in fragment:
+                descend(element)
+
+    descend(result)
+    return result
