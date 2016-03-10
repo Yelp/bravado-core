@@ -1,8 +1,9 @@
 Changelog
 =========
-4.2.0 (2016-XX-XX)
+4.2.0 (2016-03-10)
 ------------------
 - More robust handling of operationId which contains non-standard chars - PR #76
+- Provide a client ingestible version of spec_dict with x-scope metadata removed. Accessible as Spec.client_spec_dict - Issue #78
 
 4.1.0 (2016-03-01)
 ------------------
