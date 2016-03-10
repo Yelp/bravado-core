@@ -71,7 +71,8 @@ class Spec(object):
         self.api_url = None
         self.config = dict(CONFIG_DEFAULTS, **(config or {}))
 
-        # Cached copy of spec_dict with x-scope metadata removed. See @property
+        # Cached copy of spec_dict with x-scope metadata removed.
+        # See @property client_spec_dict().
         self._client_spec_dict = None
 
         # (key, value) = (simple format def name, Model type)
