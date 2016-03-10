@@ -30,7 +30,8 @@ Features
 Documentation
 -------------
 
-More documentation is available at http://bravado-core.readthedocs.org
+Documentation is available at `readthedocs.org <http://bravado-core.readthedocs.org>`__
+
 
 Installation
 ------------
@@ -38,6 +39,12 @@ Installation
 ::
 
     $ pip install bravado-core
+
+
+Related Projects
+----------------
+* `bravado <https://github.com/Yelp/bravado>`__
+* `pyramid-swagger <https://github.com/striglia/pyramid_swagger>`__
 
 Development
 ===========
