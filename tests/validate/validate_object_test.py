@@ -21,7 +21,8 @@ def address_spec():
                 'enum': [
                     'Street',
                     'Avenue',
-                    'Boulevard']
+                    'Boulevard',
+                ]
             }
         }
     }

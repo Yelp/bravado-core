@@ -146,6 +146,7 @@ def unmarshal_param(param, request):
 
     :type param: :class:`bravado_core.param.Param`
     :type request: :class:`bravado_core.request.IncomingRequest`
+    :return: value of parameter
     """
     swagger_spec = param.swagger_spec
     deref = swagger_spec.deref

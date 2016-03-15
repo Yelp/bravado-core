@@ -5,6 +5,7 @@ from jsonschema.exceptions import ValidationError
 from jsonschema.validators import Draft4Validator
 
 from bravado_core.schema import is_param_spec
+from bravado_core.schema import is_required
 
 """Draft4Validator is not completely compatible with Swagger 2.0 schema
 objects like parameter, etc. Swagger20Validator is an extension of
@@ -19,6 +20,8 @@ def type_validator(swagger_spec, validator, types, instance, schema):
     of letting the downstream `required_validator` do its job. In all other
     cases, delegate to the existing Draft4 `type` validator.
 
+    :param swagger_spec: needed for access to deref()
+    :type swagger_spec: :class:`bravado_core.spec.Spec`
     :param validator: Validator class used to validate the object
     :type validator: :class:`Swagger20Validator` or
         :class:`jsonschema.validators.Draft4Validator`
@@ -38,6 +41,8 @@ def required_validator(swagger_spec, validator, required, instance, schema):
     """Swagger 2.0 expects `required` to be a bool in the Parameter object,
     but a list of properties everywhere else.
 
+    :param swagger_spec: needed for access to deref()
+    :type swagger_spec: :class:`bravado_core.spec.Spec`
     :param validator: Validator class used to validate the object
     :type validator: :class:`Swagger20Validator` or
         :class:`jsonschema.validators.Draft4Validator`
@@ -55,10 +60,12 @@ def required_validator(swagger_spec, validator, required, instance, schema):
             validator, required, instance, schema)
 
 
-def enum_validator(validator, enums, instance, schema):
+def enum_validator(swagger_spec, validator, enums, instance, schema):
     """Swagger 2.0 allows enums to be validated against objects of type
     arrays, like query parameter (collectionFormat: multi)
 
+    :param swagger_spec: needed for access to deref()
+    :type swagger_spec: :class:`bravado_core.spec.Spec`
     :param validator: Validator class used to validate the object
     :type validator: :class: `Swagger20Validator` or
                              `jsonschema.validators.Draft4Validator`
@@ -71,6 +78,12 @@ def enum_validator(validator, enums, instance, schema):
     if schema.get('type') == 'array':
         return (v for item in instance for v in _validators.enum(
             validator, enums, item, schema))
+
+    # Handle optional enum params with no value
+    if is_param_spec(swagger_spec, schema):
+        if not is_required(swagger_spec, schema) and instance is None:
+            return
+
     return _validators.enum(validator, enums, instance, schema)
 
 
@@ -83,6 +96,6 @@ def get_validator_type(swagger_spec):
         Draft4Validator,
         {
             'required': functools.partial(required_validator, swagger_spec),
-            'enum': enum_validator,
+            'enum': functools.partial(enum_validator, swagger_spec),
             'type': functools.partial(type_validator, swagger_spec),
         })
