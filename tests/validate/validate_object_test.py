@@ -65,6 +65,16 @@ def test_required_OK(minimal_swagger_spec, address_spec):
     assert 'is a required property' in str(excinfo.value)
 
 
+def test_property_with_no_schema(minimal_swagger_spec, address_spec):
+    address = {
+        'number': 1000,
+        'street_name': 'Main',
+        'street_type': 'Street',
+    }
+    del address_spec['properties']['street_name']['type']
+    validate_object(minimal_swagger_spec, address_spec, address)
+
+
 @pytest.fixture
 def email_address_object_spec():
     return {

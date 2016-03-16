@@ -195,6 +195,13 @@ def test_pass_through_additionalProperties_with_no_spec(
     assert expected_address == result
 
 
+def test_pass_through_property_with_no_spec(
+        empty_swagger_spec, address_spec, address):
+    del address_spec['properties']['street_name']['type']
+    result = unmarshal_object(empty_swagger_spec, address_spec, address)
+    assert result == address
+
+
 def test_recursive_ref_with_depth_1(recursive_swagger_spec):
     result = unmarshal_object(
         recursive_swagger_spec,
