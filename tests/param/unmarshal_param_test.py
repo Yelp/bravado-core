@@ -85,6 +85,23 @@ def test_optional_query_string_with_default(
     assert 'bozo' == unmarshal_param(param, request)
 
 
+def test_optional_query_string_with_no_default_and_value_is_None(
+        empty_swagger_spec, string_param_spec):
+    string_param_spec['required'] = False
+    param = Param(empty_swagger_spec, Mock(spec=Operation), string_param_spec)
+    request = Mock(spec=IncomingRequest, query={})
+    assert unmarshal_param(param, request) is None
+
+
+def test_optional_query_string_enum_with_no_default_and_value_is_None(
+        empty_swagger_spec, string_param_spec):
+    string_param_spec['required'] = False
+    string_param_spec['enum'] = ['encrypted', 'plaintext']
+    param = Param(empty_swagger_spec, Mock(spec=Operation), string_param_spec)
+    request = Mock(spec=IncomingRequest, query={})
+    assert unmarshal_param(param, request) is None
+
+
 def test_query_array(empty_swagger_spec, array_param_spec):
     param = Param(empty_swagger_spec, Mock(spec=Operation), array_param_spec)
     request = Mock(
