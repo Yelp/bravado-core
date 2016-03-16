@@ -1,5 +1,9 @@
 Changelog
 =========
+4.2.1 (2016-XX-XX)
+------------------
+- Fix optional enums in request params - Issue #77
+
 4.2.0 (2016-03-10)
 ------------------
 - More robust handling of operationId which contains non-standard chars - PR #76
