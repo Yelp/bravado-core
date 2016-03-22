@@ -97,8 +97,6 @@ def ref_validator(validator, ref, instance, schema):
      validation to use the `x-scope` annotations that were created during spec
      ingestion (see post_process_spec in spec.py).
 
-    :param swagger_spec: needed for access to deref()
-    :type swagger_spec: :class:`bravado_core.spec.Spec`
     :param validator: Validator class used to validate the object
     :type validator: :class: `Swagger20Validator` or
         :class: `jsonschema.validators.Draft4Validator`
@@ -109,7 +107,9 @@ def ref_validator(validator, ref, instance, schema):
         eg {'$ref': '#/foo/bar/Baz'}
     :type schema: dict
     """
-    resolve = getattr(validator.resolver, "resolve", None)
+    # This is a copy of jsonscehama._validators.ref(..) with the
+    # in_scope(..) context manager applied before any refs are resolved.
+    resolve = getattr(validator.resolver, "resolve")
     if resolve is None:
         with in_scope(validator.resolver, schema):
             with validator.resolver.resolving(ref) as resolved:
