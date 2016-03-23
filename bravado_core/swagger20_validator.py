@@ -6,6 +6,7 @@ from jsonschema.validators import Draft4Validator
 
 from bravado_core.schema import is_param_spec
 from bravado_core.schema import is_required
+from swagger_spec_validator.ref_validators import in_scope
 
 """Draft4Validator is not completely compatible with Swagger 2.0 schema
 objects like parameter, etc. Swagger20Validator is an extension of
@@ -68,7 +69,7 @@ def enum_validator(swagger_spec, validator, enums, instance, schema):
     :type swagger_spec: :class:`bravado_core.spec.Spec`
     :param validator: Validator class used to validate the object
     :type validator: :class: `Swagger20Validator` or
-                             `jsonschema.validators.Draft4Validator`
+        :class: `jsonschema.validators.Draft4Validator`
     :param enums: allowed enum values
     :type enums: list
     :param instance: enum instance value
@@ -87,6 +88,45 @@ def enum_validator(swagger_spec, validator, enums, instance, schema):
     return _validators.enum(validator, enums, instance, schema)
 
 
+def ref_validator(validator, ref, instance, schema):
+    """When validating a request or response that contain $refs, jsonschema's
+     RefResolver only contains scope (RefResolver._scopes_stack) for the
+     request_spec or response_spec that it is fed. This scope doesn't contain
+     the full scope built when ingesting the spec from its root
+     (#/ in swagger.json). So, we need to modify the behavior of ref
+     validation to use the `x-scope` annotations that were created during spec
+     ingestion (see post_process_spec in spec.py).
+
+    :param validator: Validator class used to validate the object
+    :type validator: :class: `Swagger20Validator` or
+        :class: `jsonschema.validators.Draft4Validator`
+    :param ref: the target of the ref. eg. #/foo/bar/Baz
+    :type ref: string
+    :param instance: the object being validated
+    :param schema: swagger spec that contains the ref.
+        eg {'$ref': '#/foo/bar/Baz'}
+    :type schema: dict
+    """
+    # This is a copy of jsonscehama._validators.ref(..) with the
+    # in_scope(..) context manager applied before any refs are resolved.
+    resolve = getattr(validator.resolver, "resolve")
+    if resolve is None:
+        with in_scope(validator.resolver, schema):
+            with validator.resolver.resolving(ref) as resolved:
+                for error in validator.descend(instance, resolved):
+                    yield error
+    else:
+        with in_scope(validator.resolver, schema):
+            scope, resolved = validator.resolver.resolve(ref)
+        validator.resolver.push_scope(scope)
+
+        try:
+            for error in validator.descend(instance, resolved):
+                yield error
+        finally:
+            validator.resolver.pop_scope()
+
+
 def get_validator_type(swagger_spec):
     """Create a custom jsonschema validator for Swagger 2.0 specs.
 
@@ -95,6 +135,7 @@ def get_validator_type(swagger_spec):
     return validators.extend(
         Draft4Validator,
         {
+            '$ref': ref_validator,
             'required': functools.partial(required_validator, swagger_spec),
             'enum': functools.partial(enum_validator, swagger_spec),
             'type': functools.partial(type_validator, swagger_spec),
