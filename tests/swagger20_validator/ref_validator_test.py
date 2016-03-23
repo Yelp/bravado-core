@@ -66,7 +66,7 @@ def mock_validator(original_scope):
     validator.resolver = Mock(spec=RefResolver)
     validator.resolver._scopes_stack = original_scope
     # Make descend() return an empty list to StopIteration.
-    validator.descend.return_value = []
+    validator.descend.return_value = [Mock()]
     return validator
 
 
