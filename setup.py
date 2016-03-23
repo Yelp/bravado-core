@@ -33,8 +33,8 @@ setup(
         "jsonschema>=2.5.1",
         "python-dateutil",
         "pyyaml",
-        "six",
         "simplejson",
+        "six",
         "swagger-spec-validator>=2.0.1",
     ],
 )
