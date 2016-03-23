@@ -91,8 +91,6 @@ def test_when_resolve_is_not_None(address_target, address, original_scope,
     assert mock_validator.resolver._scopes_stack == original_scope
 
 
-@pytest.mark.skip(reason="Can't get mock + context managers to work. "
-                         "Leaving partially authored test to pick up later.")
 def test_when_resolve_is_None(address_target, address, original_scope,
                               annotated_scope, address_ref, address_schema,
                               mock_validator):
@@ -104,7 +102,7 @@ def test_when_resolve_is_None(address_target, address, original_scope,
         return 'file:///tmp/swagger.json', address_target
 
     mock_validator.resolver.resolve = None
-    mock_validator.resolver.resolving = MagicMock(
+    mock_validator.resolver.resolving.return_value = MagicMock(
         side_effect=assert_correct_scope_and_resolve)
 
     # Force iteration over generator function
