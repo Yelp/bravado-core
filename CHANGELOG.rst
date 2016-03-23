@@ -3,6 +3,7 @@ Changelog
 4.2.1 (2016-XX-XX)
 ------------------
 - Fix optional enums in request params - Issue #77
+- Fix resolving refs during validation - Issue #82
 
 4.2.0 (2016-03-10)
 ------------------
