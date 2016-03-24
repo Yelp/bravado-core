@@ -45,6 +45,7 @@ Related Projects
 ----------------
 * `bravado <https://github.com/Yelp/bravado>`__
 * `pyramid-swagger <https://github.com/striglia/pyramid_swagger>`__
+* `swagger-spec-validator <https://github.com/Yelp/swagger_spec_validator>`__
 
 Development
 ===========
