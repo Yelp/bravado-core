@@ -192,10 +192,10 @@ def test_string_enum_failure(minimal_swagger_spec, string_spec):
     assert "is not one of" in str(excinfo.value)
 
 
-def test_doesnt_blow_up_when_spec_has_a_require_key(minimal_swagger_spec):
+def test_doesnt_blow_up_when_spec_has_a_required_key(minimal_swagger_spec):
     string_spec = {
         'type': 'string',
-        'require': True,
+        'required': True,
     }
     validate_primitive(minimal_swagger_spec, string_spec, 'foo')
 

@@ -35,7 +35,8 @@ def type_validator(swagger_spec, validator, types, instance, schema):
     if is_param_spec(swagger_spec, schema) and instance is None:
         return
 
-    return _validators.type_draft4(validator, types, instance, schema)
+    for error in _validators.type_draft4(validator, types, instance, schema):
+        yield error
 
 
 def required_validator(swagger_spec, validator, required, instance, schema):
@@ -55,10 +56,12 @@ def required_validator(swagger_spec, validator, required, instance, schema):
     """
     if is_param_spec(swagger_spec, schema):
         if required and instance is None:
-            return [ValidationError("%s is required" % schema['name'])]
+            yield ValidationError('{0} is a required parameter.'.format(
+                schema['name']))
     else:
-        return _validators.required_draft4(
-            validator, required, instance, schema)
+        for error in _validators.required_draft4(validator, required, instance,
+                                                 schema):
+            yield error
 
 
 def enum_validator(swagger_spec, validator, enums, instance, schema):
@@ -77,15 +80,18 @@ def enum_validator(swagger_spec, validator, enums, instance, schema):
     :type schema: dict
     """
     if schema.get('type') == 'array':
-        return (v for item in instance for v in _validators.enum(
-            validator, enums, item, schema))
+        for element in instance:
+            for error in _validators.enum(validator, enums, element, schema):
+                yield error
+        return
 
     # Handle optional enum params with no value
     if is_param_spec(swagger_spec, schema):
         if not is_required(swagger_spec, schema) and instance is None:
             return
 
-    return _validators.enum(validator, enums, instance, schema)
+    for error in _validators.enum(validator, enums, instance, schema):
+        yield error
 
 
 def ref_validator(validator, ref, instance, schema):
