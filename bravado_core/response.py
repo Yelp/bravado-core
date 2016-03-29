@@ -1,9 +1,13 @@
+import logging
+
 from six import iteritems
 
 from bravado_core.content_type import APP_JSON
 from bravado_core.unmarshal import unmarshal_schema_object
 from bravado_core.validate import validate_schema_object
 from bravado_core.exception import MatchingResponseNotFound, SwaggerMappingError
+
+log = logging.getLogger(__name__)
 
 # Response bodies considered to be empty
 EMPTY_BODIES = (None, '', '{}', 'null')
@@ -101,7 +105,12 @@ def unmarshal_response(response, op):
 
     # TODO: Non-json response contents
     content_spec = deref(response_spec['schema'])
-    content_value = response.json()
+
+    # TODO(schmaltz|3-28-2016)  Remove try catch and logging when done debugging
+    try:
+        content_value = response.json()
+    except ValueError:
+        log.debug('No JSON object could be decoded for response: {0}'.format(response.text))
 
     if op.swagger_spec.config['validate_responses']:
         validate_schema_object(op.swagger_spec, content_spec, content_value)
