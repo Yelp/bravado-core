@@ -109,8 +109,9 @@ def unmarshal_response(response, op):
     # TODO(schmaltz|3-28-2016)  Remove try catch and logging when done debugging
     try:
         content_value = response.json()
-    except ValueError:
+    except ValueError as error:
         log.debug('No JSON object could be decoded for response: {0}'.format(response.text))
+        raise error
 
     if op.swagger_spec.config['validate_responses']:
         validate_schema_object(op.swagger_spec, content_spec, content_value)
