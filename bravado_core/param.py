@@ -108,16 +108,22 @@ def marshal_param(param, value, request):
     swagger_spec = param.swagger_spec
     deref = swagger_spec.deref
 
-    spec = deref(get_param_type_spec(param))
+    param_spec = deref(get_param_type_spec(param))
     location = param.location
-    value = marshal_schema_object(swagger_spec, spec, value)
+
+    # Rely on unmarshalling behavior on the other side of the pipe to use
+    # the default value if one is availabe.
+    if value is None and not schema.is_required(swagger_spec, param_spec):
+        return
+
+    value = marshal_schema_object(swagger_spec, param_spec, value)
 
     if swagger_spec.config['validate_requests']:
-        validate_schema_object(swagger_spec, spec, value)
+        validate_schema_object(swagger_spec, param_spec, value)
 
-    param_type = spec.get('type')
+    param_type = param_spec.get('type')
     if param_type == 'array' and location != 'body':
-        value = marshal_collection_format(swagger_spec, spec, value)
+        value = marshal_collection_format(swagger_spec, param_spec, value)
 
     if location == 'path':
         token = u'{%s}' % param.name

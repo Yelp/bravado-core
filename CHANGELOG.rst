@@ -1,5 +1,10 @@
 Changelog
 =========
+4.2.2 (2016-XX-XX)
+------------------
+- Fix marshalling of an optional array query parameter when not passed in the
+  service call - PR TODO
+
 4.2.1 (2016-03-23)
 ------------------
 - Fix optional enums in request params - Issue #77
