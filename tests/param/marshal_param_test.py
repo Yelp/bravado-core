@@ -5,6 +5,7 @@ from mock import Mock, patch
 import pytest
 
 from bravado_core.content_type import APP_JSON
+from bravado_core.exception import SwaggerMappingError
 from bravado_core.param import Param, marshal_param
 from bravado_core.operation import Operation
 from bravado_core.spec import Spec
@@ -65,6 +66,24 @@ def test_query_array(empty_swagger_spec, array_param_spec, request_dict):
     expected['params']['animals'] = ','.join(value)
     marshal_param(param, value, request_dict)
     assert expected == request_dict
+
+
+def test_optional_query_array_with_no_value(empty_swagger_spec,
+                                            array_param_spec, request_dict):
+    array_param_spec['required'] = False
+    param = Param(empty_swagger_spec, Mock(spec=Operation), array_param_spec)
+    expected = copy.deepcopy(request_dict)
+    marshal_param(param, value=None, request=request_dict)
+    assert expected == request_dict
+
+
+def test_required_query_array_with_no_value(empty_swagger_spec,
+                                            array_param_spec, request_dict):
+    array_param_spec['required'] = True
+    param = Param(empty_swagger_spec, Mock(spec=Operation), array_param_spec)
+    with pytest.raises(SwaggerMappingError) as excinfo:
+        marshal_param(param, value=None, request=request_dict)
+    assert 'Expected list like type' in str(excinfo.value)
 
 
 def test_path_integer(empty_swagger_spec, param_spec):
