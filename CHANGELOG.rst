@@ -1,9 +1,9 @@
 Changelog
 =========
-4.2.2 (2016-XX-XX)
+4.2.2 (2016-04-01)
 ------------------
 - Fix marshalling of an optional array query parameter when not passed in the
-  service call - PR TODO
+  service call - PR #87
 
 4.2.1 (2016-03-23)
 ------------------
