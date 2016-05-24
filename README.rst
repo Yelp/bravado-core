@@ -18,11 +18,12 @@ bravado-core
 About
 -----
 
-bravado-core is a Python library that adds client-side and server-side support for the Swagger 2.0 Specification.
+bravado-core is a Python library that adds client-side and server-side support
+for the `OpenAPI Specification v2.0 <https://github.com/OAI/OpenAPI-Specification>`__.
 
 Features
 --------
-* Swagger schema validation
+* OpenAPI Specification schema validation
 * Marshaling, transformation, and validation of requests and responses
 * Models as Python classes or dicts
 * Custom formats for type conversion
