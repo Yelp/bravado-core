@@ -30,7 +30,7 @@ setup(
         "Programming Language :: Python :: 3.4",
     ],
     install_requires=[
-        "jsonschema>=2.5.1",
+        "jsonschema[format]>=2.5.1",
         "python-dateutil",
         "pyyaml",
         "simplejson",

@@ -192,6 +192,20 @@ def test_string_enum_failure(minimal_swagger_spec, string_spec):
     assert "is not one of" in str(excinfo.value)
 
 
+def test_string_datetime_success(minimal_swagger_spec, string_spec):
+    string_spec['format'] = 'date-time'
+    datestring = "2016-06-07T20:59:00.480Z"
+    validate_primitive(minimal_swagger_spec, string_spec, datestring)
+
+
+def test_string_datetime_invalid_exception(minimal_swagger_spec, string_spec):
+    string_spec['format'] = 'date-time'
+    datestring = "nope nope nope"
+    with pytest.raises(ValidationError) as excinfo:
+        validate_primitive(minimal_swagger_spec, string_spec, datestring)
+    assert "is not a 'date-time'" in str(excinfo.value)
+
+
 def test_doesnt_blow_up_when_spec_has_a_required_key(minimal_swagger_spec):
     string_spec = {
         'type': 'string',
