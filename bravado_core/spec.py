@@ -97,7 +97,7 @@ class Spec(object):
         self.resolver = RefResolver(
             base_uri=origin_url or '',
             referrer=self.spec_dict,
-            handlers=build_http_handlers(http_client))
+            handlers=self.get_ref_handlers())
 
     @property
     def client_spec_dict(self):
@@ -156,7 +156,7 @@ class Spec(object):
         if self.config['validate_swagger_spec']:
             self.resolver = validator20.validate_spec(
                 self.spec_dict, spec_url=self.origin_url or '',
-                http_handlers=build_http_handlers(self.http_client))
+                http_handlers=self.get_ref_handlers())
 
         post_process_spec(
             self,
@@ -173,6 +173,17 @@ class Spec(object):
 
         self.api_url = build_api_serving_url(self.spec_dict, self.origin_url)
         self.resources = build_resources(self)
+
+    def get_ref_handlers(self):
+        """Get mapping from URI schemes to handlers that takes a URI.
+
+        The handlers (callables) are used by the RefResolver to retrieve
+        remote specification $refs.
+
+        :returns: dict like {'http': callable, 'https': callable)
+        :rtype: dict
+        """
+        return build_http_handlers(self.http_client)
 
     def deref(self, ref_dict):
         """Dereference ref_dict (if it is indeed a ref) and return what the
