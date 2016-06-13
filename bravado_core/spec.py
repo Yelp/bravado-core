@@ -180,7 +180,7 @@ class Spec(object):
         The handlers (callables) are used by the RefResolver to retrieve
         remote specification $refs.
 
-        :returns: dict like {'http': callable, 'https': callable)
+        :returns: dict like {'http': callable, 'https': callable}
         :rtype: dict
         """
         return build_http_handlers(self.http_client)
@@ -283,7 +283,7 @@ def build_http_handlers(http_client):
 
     :param http_client: http_client with a request() method
 
-    :returns: dict like {'http': callable, 'https': callable)
+    :returns: dict like {'http': callable, 'https': callable}
     """
     def download(uri):
         log.debug('Downloading {0}'.format(uri))
