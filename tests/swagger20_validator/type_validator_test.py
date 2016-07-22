@@ -39,20 +39,20 @@ def test_validate_when_not_a_parameter_schema(m_draft4_type_validator,
 @patch('jsonschema._validators.type_draft4')
 def test_skip_when_nullable_property_schema_and_value_is_None(
         m_draft4_type_validator, minimal_swagger_spec):
-    param_schema = {'name': 'foo', 'x-nullable': True, 'type': 'string'}
-    type_validator(
+    prop_schema = {'x-nullable': True, 'type': 'string'}
+    list(type_validator(
         minimal_swagger_spec,
         validator=None,
-        types=param_schema['type'],
+        types=prop_schema['type'],
         instance=None,  # property value
-        schema=param_schema)
+        schema=prop_schema))
     assert m_draft4_type_validator.call_count == 0
 
 
 @patch('jsonschema._validators.type_draft4')
 def test_validate_when_not_nullable_property_schema_and_value_is_None(
         m_draft4_type_validator, minimal_swagger_spec):
-    param_schema = {'name': 'foo', 'x-nullable': False, 'type': 'string'}
-    args = (None, param_schema['type'], None, param_schema)
-    type_validator(minimal_swagger_spec, *args)
+    prop_schema = {'x-nullable': False, 'type': 'string'}
+    args = (None, prop_schema['type'], None, prop_schema)
+    list(type_validator(minimal_swagger_spec, *args))
     m_draft4_type_validator.assert_called_once_with(*args)
