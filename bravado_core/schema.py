@@ -56,7 +56,6 @@ def is_list_like(spec):
     :param spec: swagger object specification in dict form
     :rtype: boolean
     """
-    # TODO: check magic method instead
     return type(spec) in (list, tuple)
 
 
