@@ -57,7 +57,7 @@ def is_list_like(spec):
     :rtype: boolean
     """
     # TODO: check magic method instead
-    return type(spec) == list
+    return type(spec) in (list, tuple)
 
 
 def get_spec_for_prop(swagger_spec, object_spec, object_value, prop_name):
