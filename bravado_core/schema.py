@@ -51,13 +51,11 @@ def is_dict_like(spec):
 
 
 def is_list_like(spec):
-    """No longer needed since json-ref has been excised.
-
+    """
     :param spec: swagger object specification in dict form
     :rtype: boolean
     """
-    # TODO: check magic method instead
-    return type(spec) == list
+    return type(spec) in (list, tuple)
 
 
 def get_spec_for_prop(swagger_spec, object_spec, object_value, prop_name):

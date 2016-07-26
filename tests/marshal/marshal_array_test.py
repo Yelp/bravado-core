@@ -22,6 +22,11 @@ def test_primitive_array(empty_swagger_spec, int_array_spec):
     assert [1, 2, 3] == result
 
 
+def test_tuple(empty_swagger_spec, int_array_spec):
+    result = marshal_array(empty_swagger_spec, int_array_spec, (1, 2, 3))
+    assert [1, 2, 3] == result
+
+
 def test_empty_array(empty_swagger_spec, int_array_spec):
     result = marshal_array(empty_swagger_spec, int_array_spec, [])
     assert [] == result

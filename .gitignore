@@ -1,6 +1,7 @@
 *.egg-info/
 *.egg
 *.pyc
+.cache/*
 .coverage
 cover/
 dist/
