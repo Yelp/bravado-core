@@ -1,5 +1,9 @@
 Changelog
 =========
+4.2.3 (2016-07-26)
+------------------
+- Accept tuples as a type list as well.
+
 4.2.2 (2016-04-01)
 ------------------
 - Fix marshalling of an optional array query parameter when not passed in the
