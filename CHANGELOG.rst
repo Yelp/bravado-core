@@ -1,5 +1,9 @@
 Changelog
 =========
+4.2.5 (2016-07-27)
+------------------
+- Add basepython python2.7 for flake8, docs, and coverage tox commands
+
 4.2.4 (2016-07-26)
 ------------------
 - coverage v4.2 was incompatible and was breaking the build. Added --append for the fix.
