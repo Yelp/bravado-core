@@ -1,5 +1,9 @@
 Changelog
 =========
+4.2.4 (2016-07-26)
+------------------
+- coverage v4.2 was incompatible and was breaking the build. Added --append for the fix.
+
 4.2.3 (2016-07-26)
 ------------------
 - Accept tuples as a type list as well.
