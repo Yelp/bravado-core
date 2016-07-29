@@ -5,6 +5,7 @@ from jsonschema.exceptions import ValidationError
 from jsonschema.validators import Draft4Validator
 
 from bravado_core.schema import is_param_spec
+from bravado_core.schema import is_prop_nullable
 from bravado_core.schema import is_required
 from swagger_spec_validator.ref_validators import in_scope
 
@@ -18,8 +19,10 @@ validator.
 def type_validator(swagger_spec, validator, types, instance, schema):
     """Skip the `type` validator when a Swagger parameter value is None.
     Otherwise it will fail with a "None is not a valid type" failure instead
-    of letting the downstream `required_validator` do its job. In all other
-    cases, delegate to the existing Draft4 `type` validator.
+    of letting the downstream `required_validator` do its job.
+    Also skip when a Swagger property value is None and the schema contains
+    the extension field `x-nullable` set to True.
+    In all other cases, delegate to the existing Draft4 `type` validator.
 
     :param swagger_spec: needed for access to deref()
     :type swagger_spec: :class:`bravado_core.spec.Spec`
@@ -32,7 +35,8 @@ def type_validator(swagger_spec, validator, types, instance, schema):
     :param schema: swagger spec for the object
     :type schema: dict
     """
-    if is_param_spec(swagger_spec, schema) and instance is None:
+    if (is_param_spec(swagger_spec, schema) or
+            is_prop_nullable(swagger_spec, schema)) and instance is None:
         return
 
     for error in _validators.type_draft4(validator, types, instance, schema):
