@@ -78,6 +78,25 @@ always disable it if necessary.
     swagger_dict = {..}
     spec = Spec.from_dict(swagger_dict, config={'use_models': False})
 
+Allowing null values for properties
+-----------------------------------
+Typically, bravado-core will complain during validation if it encounters fields with ``null`` values.
+This can be problematic, especially when you're adding Swagger support to pre-existing
+APIs. In that case, declare your model properties as ``x-nullable``:
+
+.. code-block:: json
+
+    {
+        "Pet": {
+            "type": "object",
+            "properties": {
+                "breed": {
+                    "type": "string",
+                    "x-nullable": true
+                }
+            }
+        }
+    }
 
 Model Discovery
 ---------------

@@ -250,3 +250,35 @@ def test_builtin_format_still_works_when_user_defined_format_used(
     with pytest.raises(ValidationError) as excinfo:
         validate_primitive(minimal_swagger_spec, ipaddress_spec, request_body)
     assert "'not_an_ip_address' is not a 'ipv4'" in str(excinfo.value)
+
+
+# Tests related to x-nullable
+
+# Validation should pass if `x-nullable` is `True` and the value is `None`.
+# `required` is not possible in this scenario.
+#
+# +---------------------+------------------+
+# | x-nullable == False | 'x'  -> pass (1) |
+# |                     | None -> fail (2) |
+# +---------------------+------------------+
+# | x-nullable == True  | 'x'  -> pass (3) |
+# |                     | None -> pass (4) |
+# +---------------------+------------------+
+
+
+@pytest.mark.parametrize(['nullable', 'value'],
+                         [(False, 'x'), (True, 'x'), (True, None)])
+def test_nullable_pass(minimal_swagger_spec, string_spec, value, nullable):
+    """Test scenarios in which validation should pass: (1), (3), (4)"""
+    string_spec['x-nullable'] = nullable
+
+    validate_primitive(minimal_swagger_spec, string_spec, value)
+
+
+def test_nullable_fail(minimal_swagger_spec, string_spec):
+    """Test scenarios in which validation should fail: (2)"""
+
+    string_spec['x-nullable'] = False
+    with pytest.raises(ValidationError) as excinfo:
+        validate_primitive(minimal_swagger_spec, string_spec, None)
+    assert excinfo.value.message == "None is not of type 'string'"

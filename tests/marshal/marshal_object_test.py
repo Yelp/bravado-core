@@ -239,3 +239,20 @@ def test_recursive_ref_with_depth_n(recursive_swagger_spec):
         }
     }
     assert result == expected
+
+
+def test_marshal_with_object(empty_swagger_spec):
+        param_spec = {
+            'type': 'object',
+            'required': ['x'],
+            'properties': {
+                'x': {
+                    'type': 'string',
+                    'x-nullable': True,
+                }
+            }
+        }
+        value = {'x': None}
+
+        result = marshal_object(empty_swagger_spec, param_spec, value)
+        assert result == value

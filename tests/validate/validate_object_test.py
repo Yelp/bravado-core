@@ -168,3 +168,93 @@ def test_recursive_ref_depth_n_failure(recursive_swagger_spec):
             {'$ref': '#/definitions/Node'},
             value)
     assert "'name' is a required property" in str(excinfo.value)
+
+
+# x-nullable validation
+# ---------------------
+# If the value is an object, validation should pass if
+# `x-nullable` is `True` and the value is `None`. `required` doesn't
+# have an influence.
+#
+# +---------------------+-------------------------+--------------------------+
+# |                     | required == False       | required == True         |
+# +---------------------+-------------------------+--------------------------+
+# | x-nullable == False | {}          -> pass (1) | {}          -> fail  (4) |
+# |                     | {'x': 'y'}  -> pass (2) | {'x': 'y'}  -> pass  (5) |
+# |                     | {'x': None} -> fail (3) | {'x': None} -> fail  (6) |
+# +---------------------+-------------------------+--------------------------+
+# | x-nullable == True  | {}          -> pass (7) | {}          -> fail (10) |
+# |                     | {'x': 'y'}  -> pass (8) | {'x': 'y'}  -> pass (11) |
+# |                     | {'x': None} -> pass (9) | {'x': None} -> pass (12) |
+# +---------------------+-------------------------+--------------------------+
+
+
+def content_spec_factory(required, nullable):
+    return {
+        'type': 'object',
+        'required': ['x'] if required else [],
+        'properties': {
+            'x': {
+                'type': 'string',
+                'x-nullable': nullable,
+            }
+        }
+    }
+
+
+@pytest.mark.parametrize('nullable', [True, False])
+@pytest.mark.parametrize('required', [True, False])
+def test_nullable_with_value(empty_swagger_spec, nullable, required):
+    """With a value set, validation should always pass: (2), (5), (8), (11)"""
+    content_spec = content_spec_factory(required, nullable)
+    value = {'x': 'y'}
+
+    validate_object(empty_swagger_spec, content_spec, value)
+
+
+@pytest.mark.parametrize('nullable', [True, False])
+def test_nullable_required_no_value(empty_swagger_spec, nullable):
+    """When the value is required but not set at all, validation
+    should fail: (4), (10)
+    """
+    content_spec = content_spec_factory(True, nullable)
+    value = {}
+
+    with pytest.raises(ValidationError) as excinfo:
+        validate_object(empty_swagger_spec, content_spec, value)
+    assert excinfo.value.message == "'x' is a required property"
+
+
+@pytest.mark.parametrize('nullable', [True, False])
+def test_nullable_no_value(empty_swagger_spec, nullable):
+    """When the value is not required and not set at all, validation
+    should pass: (1), (7)
+    """
+    content_spec = content_spec_factory(False, nullable=nullable)
+    value = {}
+
+    validate_object(empty_swagger_spec, content_spec, value)
+
+
+@pytest.mark.parametrize('required', [True, False])
+def test_nullable_false_value_none(empty_swagger_spec, required):
+    """When nullable is `False` and the value is set to `None`, validation
+    should fail: (3), (6)
+    """
+    content_spec = content_spec_factory(required, False)
+    value = {'x': None}
+
+    with pytest.raises(ValidationError) as excinfo:
+        validate_object(empty_swagger_spec, content_spec, value)
+    assert excinfo.value.message == "None is not of type 'string'"
+
+
+@pytest.mark.parametrize('required', [True, False])
+def test_nullable_none_value(empty_swagger_spec, required):
+    """When nullable is `True` and the value is set to `None`, validation
+    should pass: (9), (12)
+    """
+    content_spec = content_spec_factory(required, True)
+    value = {'x': None}
+
+    validate_object(empty_swagger_spec, content_spec, value)

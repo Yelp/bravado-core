@@ -66,3 +66,11 @@ def test_ref(minimal_swagger_dict):
     ref_spec = {'$ref': '#/definitions/Integer'}
     swagger_spec = Spec(minimal_swagger_dict)
     assert 10 == marshal_primitive(swagger_spec, ref_spec, 10)
+
+
+def test_nullable(empty_swagger_spec):
+    string_spec = {
+        'type': 'string',
+        'x-nullable': True,
+    }
+    assert None is marshal_primitive(empty_swagger_spec, string_spec, None)
