@@ -77,7 +77,6 @@ def test_ref(minimal_swagger_dict):
 @pytest.mark.parametrize(['nullable', 'value'],
                          [(False, 'x'), (True, 'x'), (True, None)])
 def test_nullable(minimal_swagger_spec, value, nullable):
-    """Test scenarios in which validation should pass: (1), (3), (4)"""
     string_spec = {
         'type': 'string',
         'x-nullable': nullable,
