@@ -82,4 +82,5 @@ def test_nullable(minimal_swagger_spec, value, nullable):
         'type': 'string',
         'x-nullable': nullable,
     }
-    assert value == unmarshal_primitive(minimal_swagger_spec, string_spec, value)
+    result = unmarshal_primitive(minimal_swagger_spec, string_spec, value)
+    assert value == result
