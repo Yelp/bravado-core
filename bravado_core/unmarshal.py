@@ -28,7 +28,12 @@ def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
     """
     deref = swagger_spec.deref
     schema_object_spec = deref(schema_object_spec)
-    obj_type = schema_object_spec['type']
+    try:
+        obj_type = schema_object_spec['type']
+    except KeyError:
+        raise SwaggerMappingError(
+            "The following schema object is missing a type field: {0}"
+            .format(schema_object_spec.get('x-model', str(schema_object_spec))))
 
     if obj_type in SWAGGER_PRIMITIVES:
         return unmarshal_primitive(swagger_spec, schema_object_spec, value)
