@@ -98,6 +98,10 @@ APIs. In that case, declare your model properties as ``x-nullable``:
         }
     }
 
+``x-nullable`` is an extension to the Swagger 2.0 spec. A ``nullable`` attribute is being
+`considered <https://github.com/OAI/OpenAPI-Specification/pull/741>`_ for the next major
+version of Swagger.
+
 Model Discovery
 ---------------
 Keep in mind that bravado-core has to do some extra legwork to figure out which
