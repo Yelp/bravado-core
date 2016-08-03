@@ -53,10 +53,10 @@ def build_resources(swagger_spec):
         path_spec = deref(path_spec)
         for http_method, op_spec in iteritems(path_spec):
             op_spec = deref(op_spec)
-            # parameters that are shared across all operations for
-            # a given path are also defined at this level - we
+            # vendor extensions and parameters that are shared across all
+            # operations for a given path are also defined at this level - we
             # just need to skip over them.
-            if http_method == 'parameters':
+            if http_method.startswith('x-') or http_method == 'parameters':
                 continue
 
             op = Operation.from_spec(swagger_spec, path_name, http_method,
