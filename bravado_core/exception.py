@@ -41,7 +41,7 @@ def wrap_exception(exception_class):
     def generic_exception(method):
         def wrapper(*args, **kwargs):
             try:
-                method(*args, **kwargs)
+                return method(*args, **kwargs)
             except Exception as e:
                 six.reraise(
                     exception_class,
