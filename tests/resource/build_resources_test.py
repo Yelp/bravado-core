@@ -57,6 +57,15 @@ def test_resource_with_shared_parameters(paths_spec):
         resources['pet'].findPetsByStatus.params['filter'], Param)
 
 
+def test_resource_with_vendor_extension(paths_spec):
+    """Make sure vendor extensions are ignored."""
+    paths_spec['/pet/findByStatus']['x-foo'] = 'bar'
+    spec_dict = {'paths': paths_spec}
+    resources = build_resources(Spec(spec_dict))
+    assert 1 == len(resources)
+    assert resources['pet'].findPetsByStatus
+
+
 def test_refs(minimal_swagger_dict, paths_spec):
     minimal_swagger_dict['real_paths'] = paths_spec
     minimal_swagger_dict['real_op'] = paths_spec['/pet/findByStatus']['get']
