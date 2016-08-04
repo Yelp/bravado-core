@@ -1,8 +1,9 @@
 Changelog
 =========
-4.3.0 (2016-08-01)
+4.3.0 (2016-08-04)
 ------------------
-- Add support for ``x-nullable``. Thanks to Andreas Hug for the patch!
+- Add support for ``x-nullable`` - Issue #47, PR #64 and #103. Thanks to Andreas Hug for the pull request!
+- Fix support for vendor extensions at the path level - PR #95, #106. Thanks to Mikołaj Siedlarek for the initial pull request!
 
 4.2.5 (2016-07-27)
 ------------------
