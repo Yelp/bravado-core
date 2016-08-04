@@ -5,6 +5,7 @@ from bravado_core.exception import SwaggerMappingError
 from bravado_core.model import is_model, MODEL_MARKER
 from bravado_core.schema import is_dict_like
 from bravado_core.schema import is_list_like
+from bravado_core.schema import is_prop_nullable
 from bravado_core.schema import SWAGGER_PRIMITIVES
 from bravado_core.schema import get_spec_for_prop
 
@@ -125,12 +126,13 @@ def marshal_object(swagger_spec, object_spec, object_value):
     result = {}
     for k, v in iteritems(object_value):
 
-        # Values cannot be None - skip them entirely!
-        if v is None:
-            continue
-
         prop_spec = get_spec_for_prop(
             swagger_spec, deref(object_spec), object_value, k)
+
+        # Values cannot be None unless x-nullable is set
+        is_nullable = prop_spec and is_prop_nullable(swagger_spec, prop_spec)
+        if v is None and not is_nullable:
+            continue
 
         if prop_spec:
             result[k] = marshal_schema_object(swagger_spec, prop_spec, v)

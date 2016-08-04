@@ -72,3 +72,14 @@ def test_ref(minimal_swagger_dict):
     special_integer_spec = {'$ref': '#/definitions/SpecialInteger'}
     swagger_spec = Spec.from_dict(minimal_swagger_dict)
     assert 10 == unmarshal_primitive(swagger_spec, special_integer_spec, 10)
+
+
+@pytest.mark.parametrize(['nullable', 'value'],
+                         [(False, 'x'), (True, 'x'), (True, None)])
+def test_nullable(minimal_swagger_spec, value, nullable):
+    string_spec = {
+        'type': 'string',
+        'x-nullable': nullable,
+    }
+    result = unmarshal_primitive(minimal_swagger_spec, string_spec, value)
+    assert value == result

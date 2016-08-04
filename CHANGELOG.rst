@@ -1,5 +1,9 @@
 Changelog
 =========
+4.3.0 (2016-08-01)
+------------------
+- Add support for ``x-nullable``. Thanks to Andreas Hug for the patch!
+
 4.2.5 (2016-07-27)
 ------------------
 - Add basepython python2.7 for flake8, docs, and coverage tox commands

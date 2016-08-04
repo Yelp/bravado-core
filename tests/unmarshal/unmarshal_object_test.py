@@ -236,3 +236,44 @@ def test_recursive_ref_with_depth_n(recursive_swagger_spec):
         }
     }
     assert result == expected
+
+
+def nullable_spec_factory(required, nullable):
+    return {
+        'type': 'object',
+        'required': ['x'] if required else [],
+        'properties': {
+            'x': {
+                'type': 'string',
+                'x-nullable': nullable,
+            }
+        }
+    }
+
+
+@pytest.mark.parametrize('nullable', [True, False])
+@pytest.mark.parametrize('required', [True, False])
+def test_nullable_with_value(empty_swagger_spec, nullable, required):
+    content_spec = nullable_spec_factory(required, nullable)
+    value = {'x': 'y'}
+
+    result = unmarshal_object(empty_swagger_spec, content_spec, value)
+    assert result == value
+
+
+@pytest.mark.parametrize('nullable', [True, False])
+def test_nullable_no_value(empty_swagger_spec, nullable):
+    content_spec = nullable_spec_factory(False, nullable=nullable)
+    value = {}
+
+    result = unmarshal_object(empty_swagger_spec, content_spec, value)
+    assert result == {'x': None}  # Missing parameters are re-introduced
+
+
+@pytest.mark.parametrize('required', [True, False])
+def test_nullable_none_value(empty_swagger_spec, required):
+    content_spec = nullable_spec_factory(required, True)
+    value = {'x': None}
+
+    result = unmarshal_object(empty_swagger_spec, content_spec, value)
+    assert result == {'x': None}
