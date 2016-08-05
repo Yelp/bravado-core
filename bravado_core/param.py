@@ -198,8 +198,11 @@ def unmarshal_param(param, request):
 
 
 def string_to_boolean(value):
-    """Coerce the provided boolean-typed parameter value into its Python
-    boolean value if it's a string or return the value as-is if already casted.
+    """Coerce the provided value into its Python boolean value if it's a string
+    or return the value as-is if already casted.
+
+    :param value: the value of a Swagger parameter with a boolean type
+    :type value: usually string, but sometimes a bool
     """
     if isinstance(value, bool):
         return value
