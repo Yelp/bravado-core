@@ -198,6 +198,12 @@ def unmarshal_param(param, request):
 
 
 def string_to_boolean(value):
+    """Coerce the provided boolean-typed parameter value into its Python
+    boolean value if it's a string or return the value as-is if already casted.
+    """
+    if isinstance(value, bool):
+        return value
+
     lowercase_value = value.lower()
     true = ['true', '1']
     false = ['false', '0']
