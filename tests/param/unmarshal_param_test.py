@@ -63,6 +63,16 @@ def param_spec():
     }
 
 
+@pytest.fixture
+def boolean_param_spec():
+    return {
+        'name': 'isPet',
+        'in': 'query',
+        'description': 'True if resource is a pet, False otherwise.',
+        'type': 'boolean',
+    }
+
+
 def test_path_string(empty_swagger_spec, param_spec):
     param_spec['in'] = 'path'
     param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
@@ -148,6 +158,12 @@ def test_query_int_array(
         spec=IncomingRequest,
         query={'numbers': test_input})
     assert expected == unmarshal_param(param, request)
+
+
+def test_query_string_boolean_values(empty_swagger_spec, boolean_param_spec):
+    param = Param(empty_swagger_spec, Mock(spec=Operation), boolean_param_spec)
+    request = Mock(spec=IncomingRequest, query={'isPet': True})
+    assert True is unmarshal_param(param, request)
 
 
 def test_header_string(empty_swagger_spec, param_spec):
