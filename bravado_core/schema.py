@@ -1,4 +1,5 @@
 from collections import Mapping
+import copy
 
 from bravado_core.exception import SwaggerMappingError
 
@@ -79,7 +80,16 @@ def get_spec_for_prop(swagger_spec, object_spec, object_value, prop_name):
     prop_spec = deref(props_spec).get(prop_name)
 
     if prop_spec is not None:
-        return deref(prop_spec)
+        result_spec = deref(prop_spec)
+        # If the de-referenced specification is for a x-nullable property
+        # then copy the spec and add the x-nullable property.
+        # If in the future there are other attributes on the property that
+        # modify a referenced schema, it can be done here (or rewrite
+        # unmarshal to pass the unreferenced property spec as another arg).
+        if 'x-nullable' in prop_spec and 'x-nullable' not in result_spec:
+            result_spec = copy.deepcopy(result_spec)
+            result_spec['x-nullable'] = prop_spec['x-nullable']
+        return result_spec
 
     additional_props = deref(object_spec).get('additionalProperties', True)
 

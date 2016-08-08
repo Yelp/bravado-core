@@ -88,8 +88,8 @@ def unmarshal_array(swagger_spec, array_spec, array_value):
     :raises: SwaggerMappingError
     """
     if not is_list_like(array_value):
-        if array_value is None and not schema.is_required(swagger_spec,
-                                                          array_spec):
+        if (array_value is None and (schema.is_prop_nullable(swagger_spec, array_spec) or
+                                     not schema.is_required(swagger_spec, array_spec))):
             return None
         raise SwaggerMappingError('Expected list like type for {0}:{1}'.format(
             type(array_value), array_value))
@@ -111,6 +111,12 @@ def unmarshal_object(swagger_spec, object_spec, object_value):
     :raises: SwaggerMappingError
     """
     deref = swagger_spec.deref
+
+    if object_value is None:
+        if schema.is_prop_nullable(swagger_spec, object_spec):
+            return None
+        else:
+            raise SwaggerMappingError("Expected dict value for non-nullable property")
 
     if not is_dict_like(object_value):
         raise SwaggerMappingError('Expected dict like type for {0}:{1}'.format(
@@ -151,6 +157,13 @@ def unmarshal_model(swagger_spec, model_spec, model_value):
         raise SwaggerMappingError(
             'Unknown model {0} when trying to unmarshal {1}'
             .format(model_name, model_value))
+
+    if model_value is None:
+        if schema.is_prop_nullable(swagger_spec, model_spec):
+            return None
+        else:
+            raise SwaggerMappingError("Expected dict value for non-nullable property of type {0}"
+                                      .format(model_type))
 
     if not is_dict_like(model_value):
         raise SwaggerMappingError(
