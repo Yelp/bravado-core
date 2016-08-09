@@ -38,25 +38,25 @@ def minimal_swagger_spec(minimal_swagger_dict):
 
 
 @pytest.fixture
-def simple_crossref_abspath():
+def composition_abspath():
     my_dir = os.path.abspath(os.path.dirname(__file__))
-    return os.path.join(my_dir, '../test-data/2.0/simple_crossref/swagger.json')
+    return os.path.join(my_dir, '../test-data/2.0/composition/swagger.json')
 
 
 @pytest.fixture
-def simple_crossref_url(simple_crossref_abspath):
-    return urlparse.urljoin('file:', simple_crossref_abspath)
+def composition_url(composition_abspath):
+    return urlparse.urljoin('file:', composition_abspath)
 
 
 @pytest.fixture
-def simple_crossref_dict(simple_crossref_abspath):
-    with open(simple_crossref_abspath) as f:
+def composition_dict(composition_abspath):
+    with open(composition_abspath) as f:
         return json.loads(f.read())
 
 
 @pytest.fixture
-def simple_crossref_spec(simple_crossref_dict, simple_crossref_url):
-    return Spec.from_dict(simple_crossref_dict, origin_url=simple_crossref_url)
+def composition_spec(composition_dict, composition_url):
+    return Spec.from_dict(composition_dict, origin_url=composition_url)
 
 
 @pytest.fixture

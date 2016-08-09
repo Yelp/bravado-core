@@ -33,7 +33,7 @@ def tag_models(container, key, path, visited_models, swagger_spec):
     model_name = key
     model_spec = deref(container.get(key))
 
-    if deref(model_spec.get('type')) != 'object':
+    if not is_object(swagger_spec, model_spec):
         return
 
     if deref(model_spec.get(MODEL_MARKER)) is not None:
@@ -143,7 +143,6 @@ def model_constructor(model, model_spec, swagger_spec, constructor_kwargs):
     :type model: type
     :param model_spec: model specification
     :type model_spec: dict
-    :param swagger_spec: :class:`bravado_core.spec.Spec`
     :type swagger_spec: :class:`bravado_core.spec.Spec`
     :param constructor_kwargs: kwargs sent in to the constructor invocation
     :type constructor_kwargs: dict
@@ -203,6 +202,19 @@ def is_model(swagger_spec, schema_object_spec):
     deref = swagger_spec.deref
     schema_object_spec = deref(schema_object_spec)
     return deref(schema_object_spec.get(MODEL_MARKER)) is not None
+
+
+def is_object(swagger_spec, object_spec):
+    """
+    A schema definition is of type object if its type is object or if it uses
+    model composition (i.e. it has an allOf property).
+    :param swagger_spec: :class:`bravado_core.spec.Spec`
+    :param schema_object_spec: specification for a swagger object
+    :type schema_object_spec: dict
+    :return: True if the spec describes an object, False otherwise.
+    """
+    deref = swagger_spec.deref
+    return deref(object_spec.get('type')) == 'object' or 'allOf' in object_spec
 
 
 def create_model_docstring(swagger_spec, model_spec):

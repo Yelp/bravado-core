@@ -18,47 +18,6 @@
   "definitions": {
       "pong": {
           "$ref": "definitions/definitions.json#/pong"
-      },
-      "pongClone": {
-          "type": "object",
-          "allOf": [
-              {
-                  "$ref": "#/definitions/videoGame"
-              },
-              {
-                  "$ref": "#/definitions/pong"
-              },
-              {
-                  "properties": {
-                      "additionalFeature": {
-                          "type": "string"
-                      }
-                  }
-              }
-          ]
-      },
-      "game": {
-          "type": "object",
-          "properties": {
-              "releaseDate": {
-                  "type": "string"
-              }
-          }
-      },
-      "videoGame": {
-          "type": "object",
-          "allOf": [
-              {
-                  "$ref": "#/definitions/game"
-              },
-              {
-                  "properties": {
-                      "gameSystem": {
-                          "type": "string"
-                      }
-                  }
-              }
-          ]
       }
   }
 }

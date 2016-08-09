@@ -29,11 +29,9 @@ def pet_dict():
     }
 
 
-def test_definitions_with_ref(simple_crossref_spec):
-    xr_spec = simple_crossref_spec
-
-    PongClone = xr_spec.definitions['pongClone']
-    pong_clone_spec = xr_spec.spec_dict['definitions']['pongClone']
+def test_definitions_with_ref(composition_spec):
+    PongClone = composition_spec.definitions['pongClone']
+    pong_clone_spec = composition_spec.spec_dict['definitions']['pongClone']
     pong_clone_dict = {
         'pang': 'hello',
         'additionalFeature': 'new!',
@@ -41,7 +39,7 @@ def test_definitions_with_ref(simple_crossref_spec):
         'releaseDate': '1981'
     }
 
-    pong_clone = unmarshal_model(xr_spec, pong_clone_spec,
+    pong_clone = unmarshal_model(composition_spec, pong_clone_spec,
                                  pong_clone_dict)
 
     assert isinstance(pong_clone, PongClone)

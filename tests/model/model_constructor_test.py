@@ -7,6 +7,26 @@ from bravado_core.spec import Spec
 
 
 @pytest.fixture
+def cat_kwargs():
+    return {
+        'id': 12,
+        'category': {
+            'id': 42,
+            'name': 'Feline',
+        },
+        'name': 'Oskar',
+        'photoUrls': ['example.com/img1', 'example.com/img2'],
+        'tags': [
+            {
+                'id': 1,
+                'name': 'cute'
+            }
+        ],
+        'neutered': True,
+    }
+
+
+@pytest.fixture
 def user_kwargs():
     return {
         'firstName': 'Darwin',
@@ -65,3 +85,13 @@ def test_additionalProperties_false(user_spec, user, user_kwargs):
     assert "does not have attributes for: ['foo']" in str(excinfo.value)
     assert not hasattr(user, 'foo')
     assert 'foo' not in dir(user)
+
+
+def test_allOf(cat, cat_spec, cat_swagger_spec, cat_kwargs):
+    model_constructor(cat, cat_spec, cat_swagger_spec, cat_kwargs)
+    assert cat.id == 12
+    assert cat.category == {'id': 42, 'name': 'Feline'}
+    assert cat.name == 'Oskar'
+    assert cat.photoUrls == ['example.com/img1', 'example.com/img2']
+    assert cat.tags == [{'id': 1, 'name': 'cute'}]
+    assert cat.neutered is True

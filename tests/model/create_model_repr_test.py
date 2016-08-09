@@ -13,6 +13,11 @@ def test_success(user, user_spec):
     assert expected == create_model_repr(user, user_spec, Mock(spec=Spec))
 
 
+def test_allOf(cat, cat_spec, cat_swagger_spec):
+    expected = "Cat(category=None, id=None, name=None, neutered=None, photoUrls=None, tags=None)"  # noqa
+    assert expected == create_model_repr(cat, cat_spec, cat_swagger_spec)
+
+
 @pytest.mark.skipif(six.PY3, reason="py2 has ascii default strings")
 def test_unicode_py2(user, user_spec):
     user.firstName = 'Ümlaut'

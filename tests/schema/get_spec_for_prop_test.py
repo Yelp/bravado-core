@@ -28,14 +28,14 @@ def address_spec():
 
 
 @pytest.fixture
-def bus_address_spec():
+def business_address_spec():
     return {
-        'type': 'object',
         'allOf': [
             {
                 '$ref': '#/definitions/Address'
             },
             {
+                'type': 'object',
                 'properties': {
                     'company': {
                         'type': 'string'
@@ -121,10 +121,10 @@ def test_additionalProperties_not_dict_like(minimal_swagger_spec, address_spec,
     assert "Don't know what to do" in str(excinfo.value)
 
 
-def test_polymorphic_object(minimal_swagger_dict, address_spec, address,
-                            bus_address_spec, business_address):
+def test_composition(minimal_swagger_dict, address_spec, address,
+                     business_address_spec, business_address):
     minimal_swagger_dict['definitions']['Address'] = address_spec
-    minimal_swagger_dict['definitions']['BusinessAddress'] = bus_address_spec
+    minimal_swagger_dict['definitions']['BusinessAddress'] = business_address_spec
     swagger_spec = Spec.from_dict(minimal_swagger_dict)
 
     expected_spec_1 = address_spec['properties']['street_name']
@@ -132,9 +132,9 @@ def test_polymorphic_object(minimal_swagger_dict, address_spec, address,
         swagger_spec, address_spec, address, 'street_name')
     assert expected_spec_1 == result_1
 
-    expected_spec_2 = bus_address_spec['allOf'][1]['properties']['company']
+    expected_spec_2 = business_address_spec['allOf'][1]['properties']['company']
     result_2 = get_spec_for_prop(
-        swagger_spec, bus_address_spec, business_address, 'company')
+        swagger_spec, business_address_spec, business_address, 'company')
     assert expected_spec_2 == result_2
 
 
