@@ -10,3 +10,4 @@ build
 *.swp
 *.tox
 .idea/
+*.iml
