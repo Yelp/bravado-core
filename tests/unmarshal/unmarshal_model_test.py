@@ -1,3 +1,4 @@
+import copy
 import pytest
 from bravado_core.exception import SwaggerMappingError
 
@@ -105,3 +106,104 @@ def test_value_is_not_dict_like_raises_error(petstore_dict):
     with pytest.raises(SwaggerMappingError) as excinfo:
         unmarshal_model(petstore_spec, pet_spec, 'i am not a dict')
     assert 'Expected type to be dict' in str(excinfo.value)
+
+
+def test_nullable_object_properties(petstore_dict):
+    petstore_dict = copy.deepcopy(petstore_dict)
+    petstore_dict['definitions']['Pet']['properties']['category']['x-nullable'] = True
+    petstore_spec = Spec.from_dict(petstore_dict)
+    Pet = petstore_spec.definitions['Pet']
+    pet_spec = petstore_spec.spec_dict['definitions']['Pet']
+    pet_dict = {
+        'id': 1,
+        'name': 'Fido',
+        'status': 'sold',
+        'photoUrls': ['wagtail.png', 'bark.png'],
+        'category': None,
+        'tags': [
+            {
+                'id': 99,
+                'name': 'mini'
+            },
+            {
+                'id': 100,
+                'name': 'brown'
+            }
+        ],
+    }
+    pet = unmarshal_model(petstore_spec, pet_spec, pet_dict)
+
+    assert isinstance(pet, Pet)
+    assert pet.category is None
+
+
+def test_non_nullable_object_properties(petstore_dict):
+    petstore_dict = copy.deepcopy(petstore_dict)
+    petstore_spec = Spec.from_dict(petstore_dict)
+    pet_spec = petstore_spec.spec_dict['definitions']['Pet']
+    pet_dict = {
+        'id': 1,
+        'name': 'Fido',
+        'status': 'sold',
+        'photoUrls': ['wagtail.png', 'bark.png'],
+        'category': None,
+        'tags': [
+            {
+                'id': 99,
+                'name': 'mini'
+            },
+            {
+                'id': 100,
+                'name': 'brown'
+            }
+        ],
+    }
+
+    with pytest.raises(SwaggerMappingError):
+        unmarshal_model(petstore_spec, pet_spec, pet_dict)
+
+
+def test_nullable_array_properties(petstore_dict):
+    petstore_dict = copy.deepcopy(petstore_dict)
+    petstore_dict['definitions']['Pet']['properties']['tags']['x-nullable'] = True
+    petstore_dict['definitions']['Pet']['required'].append('tags')
+    petstore_spec = Spec.from_dict(petstore_dict)
+    Pet = petstore_spec.definitions['Pet']
+    pet_spec = petstore_spec.spec_dict['definitions']['Pet']
+    pet_dict = {
+        'id': 1,
+        'name': 'Fido',
+        'status': 'sold',
+        'photoUrls': ['wagtail.png', 'bark.png'],
+        'category': {
+            'id': 200,
+            'name': 'friendly',
+        },
+        'tags': None
+    }
+    pet = unmarshal_model(petstore_spec, pet_spec, pet_dict)
+
+    assert isinstance(pet, Pet)
+    assert pet.tags is None
+
+
+@pytest.mark.skip(reason="Unmarshalling of required and non-nullable array succeeds")
+def test_non_nullable_array_properties(petstore_dict):
+    petstore_dict = copy.deepcopy(petstore_dict)
+    petstore_dict['definitions']['Pet']['required'].append('tags')
+    petstore_spec = Spec.from_dict(petstore_dict)
+    pet_spec = petstore_spec.spec_dict['definitions']['Pet']
+    pet_dict = {
+        'id': 1,
+        'name': 'Fido',
+        'status': 'sold',
+        'photoUrls': ['wagtail.png', 'bark.png'],
+        'category': {
+            'id': 200,
+            'name': 'friendly',
+        },
+        'tags': None
+    }
+
+    with pytest.raises(SwaggerMappingError):
+        unmarshal_model(petstore_spec, pet_spec, pet_dict)
