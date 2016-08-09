@@ -1,5 +1,9 @@
 Changelog
 =========
+4.3.1 (2016-08-09)
+------------------
+- Check if a parameter is bool-type before assuming it's a string - PR #107. Thanks to Nick DiRienzo for the pull request!
+
 4.3.0 (2016-08-04)
 ------------------
 - Add support for ``x-nullable`` - Issue #47, PR #64 and #103. Thanks to Andreas Hug for the pull request!
