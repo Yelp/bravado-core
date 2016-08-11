@@ -83,7 +83,7 @@ def test_required_query_array_with_no_value(empty_swagger_spec,
     param = Param(empty_swagger_spec, Mock(spec=Operation), array_param_spec)
     with pytest.raises(SwaggerMappingError) as excinfo:
         marshal_param(param, value=None, request=request_dict)
-    assert 'Expected list like type' in str(excinfo.value)
+    assert 'is a required value' in str(excinfo.value)
 
 
 def test_path_integer(empty_swagger_spec, param_spec):

@@ -110,7 +110,9 @@ def test_value_is_not_dict_like_raises_error(petstore_dict):
 
 def test_nullable_object_properties(petstore_dict):
     petstore_dict = copy.deepcopy(petstore_dict)
-    petstore_dict['definitions']['Pet']['properties']['category']['x-nullable'] = True
+    pet_spec_dict = petstore_dict['definitions']['Pet']
+    pet_spec_dict['required'].append('category')
+    pet_spec_dict['properties']['category']['x-nullable'] = True
     petstore_spec = Spec.from_dict(petstore_dict)
     Pet = petstore_spec.definitions['Pet']
     pet_spec = petstore_spec.spec_dict['definitions']['Pet']
@@ -140,6 +142,8 @@ def test_nullable_object_properties(petstore_dict):
 def test_non_nullable_object_properties(petstore_dict):
     petstore_dict = copy.deepcopy(petstore_dict)
     petstore_spec = Spec.from_dict(petstore_dict)
+    pet_spec_dict = petstore_dict['definitions']['Pet']
+    pet_spec_dict['required'].append('category')
     pet_spec = petstore_spec.spec_dict['definitions']['Pet']
     pet_dict = {
         'id': 1,
@@ -165,8 +169,9 @@ def test_non_nullable_object_properties(petstore_dict):
 
 def test_nullable_array_properties(petstore_dict):
     petstore_dict = copy.deepcopy(petstore_dict)
-    petstore_dict['definitions']['Pet']['properties']['tags']['x-nullable'] = True
-    petstore_dict['definitions']['Pet']['required'].append('tags')
+    pet_spec_dict = petstore_dict['definitions']['Pet']
+    pet_spec_dict['properties']['tags']['x-nullable'] = True
+    pet_spec_dict['required'].append('tags')
     petstore_spec = Spec.from_dict(petstore_dict)
     Pet = petstore_spec.definitions['Pet']
     pet_spec = petstore_spec.spec_dict['definitions']['Pet']
@@ -187,10 +192,10 @@ def test_nullable_array_properties(petstore_dict):
     assert pet.tags is None
 
 
-@pytest.mark.skip(reason="Unmarshalling of required and non-nullable array succeeds")
 def test_non_nullable_array_properties(petstore_dict):
     petstore_dict = copy.deepcopy(petstore_dict)
-    petstore_dict['definitions']['Pet']['required'].append('tags')
+    pet_spec_dict = petstore_dict['definitions']['Pet']
+    pet_spec_dict['required'].append('tags')
     petstore_spec = Spec.from_dict(petstore_dict)
     pet_spec = petstore_spec.spec_dict['definitions']['Pet']
     pet_dict = {

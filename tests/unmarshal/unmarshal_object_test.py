@@ -258,7 +258,8 @@ def nullable_spec_factory(required, nullable, property_type):
 @pytest.mark.parametrize('nullable', [True, False])
 @pytest.mark.parametrize('required', [True, False])
 @pytest.mark.parametrize('property_type', ['string', 'object', 'array'])
-def test_nullable_with_value(empty_swagger_spec, nullable, required, property_type):
+def test_nullable_with_value(empty_swagger_spec, nullable, required,
+                             property_type):
     content_spec = nullable_spec_factory(required, nullable, property_type)
     if property_type == 'object':
         value = {'x': {'y': 'z'}}
