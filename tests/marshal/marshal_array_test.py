@@ -171,3 +171,15 @@ def test_ref(minimal_swagger_dict, int_array_spec):
     swagger_spec = Spec(minimal_swagger_dict)
     result = marshal_array(swagger_spec, ref_spec, [1, 2, 3])
     assert [1, 2, 3] == result
+
+
+def test_nullable_array(empty_swagger_spec, int_array_spec):
+    int_array_spec['x-nullable'] = True
+    result = marshal_array(empty_swagger_spec, int_array_spec, None)
+    assert result is None
+
+
+def test_non_nullable_array(empty_swagger_spec, int_array_spec):
+    with pytest.raises(SwaggerMappingError) as excinfo:
+        marshal_array(empty_swagger_spec, int_array_spec, None)
+    assert 'is a required value' in str(excinfo.value)

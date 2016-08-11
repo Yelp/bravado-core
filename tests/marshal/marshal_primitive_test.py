@@ -39,24 +39,6 @@ def test_skips_default(mock_to_wire, minimal_swagger_spec):
     assert mock_to_wire.call_count == 1
 
 
-def test_required(minimal_swagger_spec):
-    integer_spec = {
-        'type': 'integer',
-        'required': True,
-    }
-    assert 99 == marshal_primitive(minimal_swagger_spec, integer_spec, 99)
-
-
-def test_required_failure(minimal_swagger_spec):
-    integer_spec = {
-        'type': 'integer',
-        'required': True,
-    }
-    with pytest.raises(SwaggerMappingError) as excinfo:
-        marshal_primitive(minimal_swagger_spec, integer_spec, None)
-    assert 'is a required value' in str(excinfo.value)
-
-
 def test_ref(minimal_swagger_dict):
     integer_spec = {
         'type': 'integer',
@@ -68,9 +50,18 @@ def test_ref(minimal_swagger_dict):
     assert 10 == marshal_primitive(swagger_spec, ref_spec, 10)
 
 
-def test_nullable(empty_swagger_spec):
+def test_nullable_primitive(empty_swagger_spec):
     string_spec = {
         'type': 'string',
         'x-nullable': True,
     }
-    assert None is marshal_primitive(empty_swagger_spec, string_spec, None)
+    assert marshal_primitive(empty_swagger_spec, string_spec, None) is None
+
+
+def test_not_nullable_primitive(empty_swagger_spec):
+    string_spec = {
+        'type': 'string',
+    }
+    with pytest.raises(SwaggerMappingError) as excinfo:
+        marshal_primitive(empty_swagger_spec, string_spec, None)
+    assert 'is a required value' in str(excinfo.value)

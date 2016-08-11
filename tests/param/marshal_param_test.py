@@ -201,3 +201,25 @@ def test_ref(minimal_swagger_dict, array_param_spec, request_dict):
     expected['params']['animals'] = ','.join(value)
     marshal_param(param, value, request_dict)
     assert expected == request_dict
+
+
+def test_required_param(minimal_swagger_spec, string_param_spec, request_dict):
+    string_param_spec['required'] = True
+    value = 'abc'
+    param = Param(minimal_swagger_spec, Mock(
+        spec=Operation), string_param_spec)
+    expected = copy.deepcopy(request_dict)
+    expected['params']['username'] = value
+    marshal_param(param, value, request_dict)
+    assert expected == request_dict
+
+
+def test_required_param_failure(minimal_swagger_spec, string_param_spec,
+                                request_dict):
+    string_param_spec['required'] = True
+    value = None
+    param = Param(minimal_swagger_spec, Mock(
+        spec=Operation), string_param_spec)
+    with pytest.raises(SwaggerMappingError) as excinfo:
+        marshal_param(param, value, request_dict)
+    assert 'is a required value' in str(excinfo.value)

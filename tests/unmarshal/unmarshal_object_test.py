@@ -292,3 +292,31 @@ def test_nullable_none_value(empty_swagger_spec, required, property_type):
 
     result = unmarshal_object(empty_swagger_spec, content_spec, value)
     assert result == {'x': None}
+
+
+@pytest.mark.parametrize('property_type', ['string', 'object', 'array'])
+def test_non_nullable_none_value(empty_swagger_spec, property_type):
+    content_spec = nullable_spec_factory(True, False, property_type)
+    value = {'x': None}
+    with pytest.raises(SwaggerMappingError) as excinfo:
+        unmarshal_object(empty_swagger_spec, content_spec, value)
+    assert 'is a required value' in str(excinfo.value)
+
+
+def test_unmarshal_object_with_required_boolean(empty_swagger_spec):
+    """
+    Test the case where the type of the required attribute
+        is a boolean instead of the expected list.
+    """
+    object_spec = {
+        'type': 'object',
+        'required': True,
+        'properties': {
+            'x': {
+                'type': 'string'
+            }
+        }
+    }
+    value = {'x': None}
+    result = unmarshal_object(empty_swagger_spec, object_spec, value)
+    assert result == {'x': None}

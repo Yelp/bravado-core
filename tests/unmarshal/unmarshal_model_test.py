@@ -212,3 +212,25 @@ def test_non_nullable_array_properties(petstore_dict):
 
     with pytest.raises(SwaggerMappingError):
         unmarshal_model(petstore_spec, pet_spec, pet_dict)
+
+
+def test_unmarshal_model_with_none_model_type(petstore_spec):
+    model_spec = {'x-model': 'Foobar'}
+    pet_dict = {
+        'id': 1,
+        'name': 'Fido',
+        'photoUrls': ['wagtail.png', 'bark.png'],
+        'tags': [
+            {
+                'id': 99,
+                'name': 'mini'
+            },
+            {
+                'id': 100,
+                'name': 'brown'
+            }
+        ],
+    }
+    with pytest.raises(SwaggerMappingError) as excinfo:
+        unmarshal_model(petstore_spec, model_spec, pet_dict)
+    assert 'Unknown model Foobar' in str(excinfo.value)
