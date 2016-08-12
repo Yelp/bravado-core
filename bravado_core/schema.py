@@ -106,3 +106,19 @@ def get_spec_for_prop(swagger_spec, object_spec, object_value, prop_name):
     raise SwaggerMappingError(
         "Don't know what to do with `additionalProperties` in spec {0} "
         "when inspecting value {1}".format(object_spec, object_value))
+
+
+def handle_null_value(swagger_spec, schema_object_spec):
+    """Handle a null value for the associated schema object spec. Checks the
+     x-nullable attribute in the spec to see if it is allowed and returns None
+     if so and raises an exception otherwise.
+
+    :param swagger_spec: :class:`bravado_core.spec.Spec`
+    :param schema_object_spec: dict
+    :return: None if the spec is nullable
+    :raises: SwaggerMappingError if the spec is not nullable
+    """
+    if is_prop_nullable(swagger_spec, schema_object_spec):
+        return None
+    raise SwaggerMappingError(
+        'Spec {0} is a required value'.format(schema_object_spec))

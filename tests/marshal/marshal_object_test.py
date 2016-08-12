@@ -301,22 +301,3 @@ def test_marshal_with_required_property(empty_swagger_spec):
     with pytest.raises(SwaggerMappingError) as excinfo:
         marshal_object(empty_swagger_spec, object_spec, value)
     assert 'is a required value' in str(excinfo.value)
-
-
-def test_marshal_with_required_boolean(empty_swagger_spec):
-    """
-    Test the case where the type of the required attribute
-        is a boolean instead of the expected list.
-    """
-    object_spec = {
-        'type': 'object',
-        'required': True,
-        'properties': {
-            'x': {
-                'type': 'string'
-            }
-        }
-    }
-    value = {'x': None}
-    result = marshal_object(empty_swagger_spec, object_spec, value)
-    assert result == {}

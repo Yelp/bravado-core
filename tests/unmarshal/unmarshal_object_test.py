@@ -257,29 +257,26 @@ def nullable_spec_factory(required, nullable, property_type):
 
 @pytest.mark.parametrize('nullable', [True, False])
 @pytest.mark.parametrize('required', [True, False])
-@pytest.mark.parametrize('property_type', ['string', 'object', 'array'])
+@pytest.mark.parametrize('property_type, value',
+                         [('string', 'y'),
+                          ('object', {'y': 'z'}),
+                          ('array', ['one', 'two', 'three'])])
 def test_nullable_with_value(empty_swagger_spec, nullable, required,
-                             property_type):
+                             property_type, value):
     content_spec = nullable_spec_factory(required, nullable, property_type)
-    if property_type == 'object':
-        value = {'x': {'y': 'z'}}
-    elif property_type == 'array':
-        content_spec['properties']['x']['items'] = {'type': 'string'}
-        value = {'x': ['one', 'two', 'three']}
-    else:
-        value = {'x': 'y'}
-
-    expected = copy.deepcopy(value)
-    result = unmarshal_object(empty_swagger_spec, content_spec, value)
+    obj = {'x': value}
+    expected = copy.deepcopy(obj)
+    result = unmarshal_object(empty_swagger_spec, content_spec, obj)
     assert expected == result
 
 
 @pytest.mark.parametrize('nullable', [True, False])
 @pytest.mark.parametrize('property_type', ['string', 'object', 'array'])
 def test_nullable_no_value(empty_swagger_spec, nullable, property_type):
-    content_spec = nullable_spec_factory(False, nullable, property_type)
+    content_spec = nullable_spec_factory(required=False,
+                                         nullable=nullable,
+                                         property_type=property_type)
     value = {}
-
     result = unmarshal_object(empty_swagger_spec, content_spec, value)
     assert result == {'x': None}  # Missing parameters are re-introduced
 
@@ -287,36 +284,20 @@ def test_nullable_no_value(empty_swagger_spec, nullable, property_type):
 @pytest.mark.parametrize('required', [True, False])
 @pytest.mark.parametrize('property_type', ['string', 'object', 'array'])
 def test_nullable_none_value(empty_swagger_spec, required, property_type):
-    content_spec = nullable_spec_factory(required, True, property_type)
+    content_spec = nullable_spec_factory(required=required,
+                                         nullable=True,
+                                         property_type=property_type)
     value = {'x': None}
-
     result = unmarshal_object(empty_swagger_spec, content_spec, value)
     assert result == {'x': None}
 
 
 @pytest.mark.parametrize('property_type', ['string', 'object', 'array'])
 def test_non_nullable_none_value(empty_swagger_spec, property_type):
-    content_spec = nullable_spec_factory(True, False, property_type)
+    content_spec = nullable_spec_factory(required=True,
+                                         nullable=False,
+                                         property_type=property_type)
     value = {'x': None}
     with pytest.raises(SwaggerMappingError) as excinfo:
         unmarshal_object(empty_swagger_spec, content_spec, value)
     assert 'is a required value' in str(excinfo.value)
-
-
-def test_unmarshal_object_with_required_boolean(empty_swagger_spec):
-    """
-    Test the case where the type of the required attribute
-        is a boolean instead of the expected list.
-    """
-    object_spec = {
-        'type': 'object',
-        'required': True,
-        'properties': {
-            'x': {
-                'type': 'string'
-            }
-        }
-    }
-    value = {'x': None}
-    result = unmarshal_object(empty_swagger_spec, object_spec, value)
-    assert result == {'x': None}

@@ -88,17 +88,8 @@ def test_value_is_not_dict_like_raises_error(petstore_dict):
 
 def test_marshal_model_with_none_model_type(petstore_spec):
     model_spec = {'x-model': 'Foobar'}
-    Pet = petstore_spec.definitions['Pet']
-    pet = Pet(
-        id=1,
-        name='Fido',
-        status=None,
-        photoUrls=['wagtail.png', 'bark.png'],
-        category=None,
-        tags=None
-    )
     with pytest.raises(SwaggerMappingError) as excinfo:
-        marshal_model(petstore_spec, model_spec, pet)
+        marshal_model(petstore_spec, model_spec, object())
     assert 'Unknown model Foobar' in str(excinfo.value)
 
 
