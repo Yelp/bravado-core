@@ -301,3 +301,13 @@ def test_non_nullable_none_value(empty_swagger_spec, property_type):
     with pytest.raises(SwaggerMappingError) as excinfo:
         unmarshal_object(empty_swagger_spec, content_spec, value)
     assert 'is a required value' in str(excinfo.value)
+
+
+@pytest.mark.parametrize('property_type', ['string', 'object', 'array'])
+def test_non_required_none_value(empty_swagger_spec, property_type):
+    content_spec = nullable_spec_factory(required=False,
+                                         nullable=False,
+                                         property_type=property_type)
+    value = {'x': None}
+    result = unmarshal_object(empty_swagger_spec, content_spec, value)
+    assert result == {'x': None}
