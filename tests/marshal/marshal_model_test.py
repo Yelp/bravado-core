@@ -1,3 +1,4 @@
+import copy
 import pytest
 
 from bravado_core.exception import SwaggerMappingError
@@ -83,3 +84,23 @@ def test_value_is_not_dict_like_raises_error(petstore_dict):
     with pytest.raises(SwaggerMappingError) as excinfo:
         marshal_model(petstore_spec, pet_spec, 'i am not a dict')
     assert 'Expected model of type' in str(excinfo.value)
+
+
+def test_marshal_model_with_none_model_type(petstore_spec):
+    model_spec = {'x-model': 'Foobar'}
+    with pytest.raises(SwaggerMappingError) as excinfo:
+        marshal_model(petstore_spec, model_spec, object())
+    assert 'Unknown model Foobar' in str(excinfo.value)
+
+
+def test_marshal_nullable_model(petstore_spec):
+    pet_spec = copy.deepcopy(petstore_spec.spec_dict['definitions']['Pet'])
+    pet_spec['x-nullable'] = True
+    assert marshal_model(petstore_spec, pet_spec, None) is None
+
+
+def test_marshal_non_nullable_model(petstore_spec):
+    pet_spec = petstore_spec.spec_dict['definitions']['Pet']
+    with pytest.raises(SwaggerMappingError) as excinfo:
+        marshal_model(petstore_spec, pet_spec, None)
+    assert 'is a required value' in str(excinfo.value)

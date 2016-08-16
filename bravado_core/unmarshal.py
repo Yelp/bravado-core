@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 from six import iteritems
 
-from bravado_core import formatter, schema
+from bravado_core import formatter
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.model import is_model, MODEL_MARKER
 from bravado_core.schema import get_spec_for_prop
 from bravado_core.schema import is_dict_like
 from bravado_core.schema import is_list_like
+from bravado_core.schema import handle_null_value
 from bravado_core.schema import SWAGGER_PRIMITIVES
 
 
@@ -70,9 +71,8 @@ def unmarshal_primitive(swagger_spec, primitive_spec, value):
         based on 'format'
     :raises: SwaggerMappingError
     """
-    if value is None and schema.is_required(swagger_spec, primitive_spec):
-        raise SwaggerMappingError(
-            'Spec {0} says this is a required value'.format(primitive_spec))
+    if value is None:
+        return handle_null_value(swagger_spec, primitive_spec)
 
     value = formatter.to_python(swagger_spec, primitive_spec, value)
     return value
@@ -87,10 +87,10 @@ def unmarshal_array(swagger_spec, array_spec, array_value):
     :rtype: list
     :raises: SwaggerMappingError
     """
+    if array_value is None:
+        return handle_null_value(swagger_spec, array_spec)
+
     if not is_list_like(array_value):
-        if array_value is None and not schema.is_required(swagger_spec,
-                                                          array_spec):
-            return None
         raise SwaggerMappingError('Expected list like type for {0}:{1}'.format(
             type(array_value), array_value))
 
@@ -112,15 +112,23 @@ def unmarshal_object(swagger_spec, object_spec, object_value):
     """
     deref = swagger_spec.deref
 
+    if object_value is None:
+        return handle_null_value(swagger_spec, object_spec)
+
     if not is_dict_like(object_value):
         raise SwaggerMappingError('Expected dict like type for {0}:{1}'.format(
             type(object_value), object_value))
+
+    object_spec = deref(object_spec)
+    required_fields = object_spec.get('required', [])
 
     result = {}
     for k, v in iteritems(object_value):
         prop_spec = get_spec_for_prop(
             swagger_spec, object_spec, object_value, k)
-        if prop_spec:
+        if v is None and k not in required_fields:
+            result[k] = None
+        elif prop_spec:
             result[k] = unmarshal_schema_object(swagger_spec, prop_spec, v)
         else:
             # Don't marshal when a spec is not available - just pass through
@@ -151,6 +159,9 @@ def unmarshal_model(swagger_spec, model_spec, model_value):
         raise SwaggerMappingError(
             'Unknown model {0} when trying to unmarshal {1}'
             .format(model_name, model_value))
+
+    if model_value is None:
+        return handle_null_value(swagger_spec, model_spec)
 
     if not is_dict_like(model_value):
         raise SwaggerMappingError(

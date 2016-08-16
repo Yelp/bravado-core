@@ -241,18 +241,63 @@ def test_recursive_ref_with_depth_n(recursive_swagger_spec):
     assert result == expected
 
 
-def test_marshal_with_object(empty_swagger_spec):
-        param_spec = {
-            'type': 'object',
-            'required': ['x'],
-            'properties': {
-                'x': {
-                    'type': 'string',
-                    'x-nullable': True,
-                }
+def test_marshal_with_nullable_property(empty_swagger_spec):
+    object_spec = {
+        'type': 'object',
+        'required': ['x'],
+        'properties': {
+            'x': {
+                'type': 'string',
+                'x-nullable': True,
             }
         }
-        value = {'x': None}
+    }
+    value = {'x': None}
+    result = marshal_object(empty_swagger_spec, object_spec, value)
+    assert result == value
 
-        result = marshal_object(empty_swagger_spec, param_spec, value)
-        assert result == value
+
+def test_marshal_with_non_nullable_property(empty_swagger_spec):
+    object_spec = {
+        'type': 'object',
+        'required': ['x'],
+        'properties': {
+            'x': {
+                'type': 'string'
+            }
+        }
+    }
+    value = {'x': None}
+    with pytest.raises(SwaggerMappingError) as excinfo:
+        marshal_object(empty_swagger_spec, object_spec, value)
+    assert 'is a required value' in str(excinfo.value)
+
+
+def test_marshal_with_non_required_property(empty_swagger_spec):
+    object_spec = {
+        'type': 'object',
+        'properties': {
+            'x': {
+                'type': 'string'
+            }
+        }
+    }
+    value = {'x': None}
+    result = marshal_object(empty_swagger_spec, object_spec, value)
+    assert result == {}
+
+
+def test_marshal_with_required_property(empty_swagger_spec):
+    object_spec = {
+        'type': 'object',
+        'required': ['x'],
+        'properties': {
+            'x': {
+                'type': 'string'
+            }
+        }
+    }
+    value = {'x': None}
+    with pytest.raises(SwaggerMappingError) as excinfo:
+        marshal_object(empty_swagger_spec, object_spec, value)
+    assert 'is a required value' in str(excinfo.value)

@@ -5,17 +5,9 @@ from bravado_core.unmarshal import unmarshal_model
 from bravado_core.spec import Spec
 
 
-def test_pet(petstore_dict):
-    # Covers:
-    #   - model with primitives properties
-    #   - model with an array
-    #   - model with a nested model
-    petstore_spec = Spec.from_dict(petstore_dict)
-    Pet = petstore_spec.definitions['Pet']
-    Category = petstore_spec.definitions['Category']
-    Tag = petstore_spec.definitions['Tag']
-    pet_spec = petstore_spec.spec_dict['definitions']['Pet']
-    pet_dict = {
+@pytest.fixture
+def pet_dict():
+    return {
         'id': 1,
         'name': 'Fido',
         'status': 'sold',
@@ -35,6 +27,18 @@ def test_pet(petstore_dict):
             }
         ],
     }
+
+
+def test_pet(petstore_dict, pet_dict):
+    # Covers:
+    #   - model with primitives properties
+    #   - model with an array
+    #   - model with a nested model
+    petstore_spec = Spec.from_dict(petstore_dict)
+    Pet = petstore_spec.definitions['Pet']
+    Category = petstore_spec.definitions['Category']
+    Tag = petstore_spec.definitions['Tag']
+    pet_spec = petstore_spec.spec_dict['definitions']['Pet']
 
     pet = unmarshal_model(petstore_spec, pet_spec, pet_dict)
 
@@ -57,7 +61,7 @@ def test_pet(petstore_dict):
 
 
 def test_Nones_are_reintroduced_for_declared_properties_that_are_not_present(
-        petstore_dict):
+        petstore_dict, pet_dict):
     petstore_spec = Spec.from_dict(petstore_dict)
     Pet = petstore_spec.definitions['Pet']
     Tag = petstore_spec.definitions['Tag']
@@ -65,21 +69,8 @@ def test_Nones_are_reintroduced_for_declared_properties_that_are_not_present(
 
     # Deleting "status" and "category" from pet_dict means that should still be
     # attrs on Pet with a None value after unmarshaling
-    pet_dict = {
-        'id': 1,
-        'name': 'Fido',
-        'photoUrls': ['wagtail.png', 'bark.png'],
-        'tags': [
-            {
-                'id': 99,
-                'name': 'mini'
-            },
-            {
-                'id': 100,
-                'name': 'brown'
-            }
-        ],
-    }
+    del pet_dict['status']
+    del pet_dict['category']
 
     pet = unmarshal_model(petstore_spec, pet_spec, pet_dict)
 
@@ -102,6 +93,69 @@ def test_Nones_are_reintroduced_for_declared_properties_that_are_not_present(
 def test_value_is_not_dict_like_raises_error(petstore_dict):
     petstore_spec = Spec.from_dict(petstore_dict)
     pet_spec = petstore_spec.spec_dict['definitions']['Pet']
+
     with pytest.raises(SwaggerMappingError) as excinfo:
         unmarshal_model(petstore_spec, pet_spec, 'i am not a dict')
+
     assert 'Expected type to be dict' in str(excinfo.value)
+
+
+def test_nullable_object_properties(petstore_dict, pet_dict):
+    pet_spec_dict = petstore_dict['definitions']['Pet']
+    pet_spec_dict['required'].append('category')
+    pet_spec_dict['properties']['category']['x-nullable'] = True
+    petstore_spec = Spec.from_dict(petstore_dict)
+    Pet = petstore_spec.definitions['Pet']
+    pet_spec = petstore_spec.spec_dict['definitions']['Pet']
+    pet_dict['category'] = None
+
+    pet = unmarshal_model(petstore_spec, pet_spec, pet_dict)
+
+    assert isinstance(pet, Pet)
+    assert pet.category is None
+
+
+def test_non_nullable_object_properties(petstore_dict, pet_dict):
+    pet_spec_dict = petstore_dict['definitions']['Pet']
+    pet_spec_dict['required'].append('category')
+    petstore_spec = Spec.from_dict(petstore_dict)
+    pet_spec = petstore_spec.spec_dict['definitions']['Pet']
+    pet_dict['category'] = None
+
+    with pytest.raises(SwaggerMappingError):
+        unmarshal_model(petstore_spec, pet_spec, pet_dict)
+
+
+def test_nullable_array_properties(petstore_dict, pet_dict):
+    pet_spec_dict = petstore_dict['definitions']['Pet']
+    pet_spec_dict['properties']['tags']['x-nullable'] = True
+    pet_spec_dict['required'].append('tags')
+    petstore_spec = Spec.from_dict(petstore_dict)
+    Pet = petstore_spec.definitions['Pet']
+    pet_spec = petstore_spec.spec_dict['definitions']['Pet']
+    pet_dict['tags'] = None
+
+    pet = unmarshal_model(petstore_spec, pet_spec, pet_dict)
+
+    assert isinstance(pet, Pet)
+    assert pet.tags is None
+
+
+def test_non_nullable_array_properties(petstore_dict, pet_dict):
+    pet_spec_dict = petstore_dict['definitions']['Pet']
+    pet_spec_dict['required'].append('tags')
+    petstore_spec = Spec.from_dict(petstore_dict)
+    pet_spec = petstore_spec.spec_dict['definitions']['Pet']
+    pet_dict['tags'] = None
+
+    with pytest.raises(SwaggerMappingError):
+        unmarshal_model(petstore_spec, pet_spec, pet_dict)
+
+
+def test_unmarshal_model_with_none_model_type(petstore_spec):
+    model_spec = {'x-model': 'Foobar'}
+
+    with pytest.raises(SwaggerMappingError) as excinfo:
+        unmarshal_model(petstore_spec, model_spec, {})
+
+    assert 'Unknown model Foobar' in str(excinfo.value)

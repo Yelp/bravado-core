@@ -186,6 +186,9 @@ def unmarshal_param(param, request):
             "Don't know how to unmarshal_param with location {0}".
             format(location))
 
+    if raw_value is None and not schema.is_required(swagger_spec, param_spec):
+        return None
+
     if param_type == 'array' and location != 'body':
         raw_value = unmarshal_collection_format(swagger_spec, param_spec,
                                                 raw_value)
