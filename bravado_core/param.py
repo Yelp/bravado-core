@@ -338,9 +338,11 @@ def unmarshal_collection_format(swagger_spec, param_spec, value):
     param_spec = deref(param_spec)
     collection_format = param_spec.get('collectionFormat', 'csv')
 
-    if value is None and not schema.is_required(swagger_spec, param_spec):
-        # Just pass through an optional array that has no value
-        return None
+    if value is None:
+        if not schema.is_required(swagger_spec, param_spec):
+            # Just pass through an optional array that has no value
+            return None
+        return schema.handle_null_value(swagger_spec, param_spec)
 
     if collection_format == 'multi':
         # http client lib should have already unmarshaled to an array
