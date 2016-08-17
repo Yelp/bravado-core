@@ -1,5 +1,6 @@
 import pytest
 
+from bravado_core.exception import SwaggerMappingError
 from bravado_core.param import unmarshal_collection_format
 from bravado_core.param import COLLECTION_FORMATS
 from bravado_core.spec import Spec
@@ -54,5 +55,19 @@ def test_ref(minimal_swagger_dict, array_spec):
 
 
 def test_array_is_none_and_not_required(empty_swagger_spec, array_spec):
+    assert unmarshal_collection_format(empty_swagger_spec, array_spec,
+                                       value=None) is None
+
+
+def test_array_is_none_and_required(empty_swagger_spec, array_spec):
+    array_spec['required'] = True
+    with pytest.raises(SwaggerMappingError) as excinfo:
+        unmarshal_collection_format(empty_swagger_spec, array_spec, value=None)
+    assert 'is a required value' in str(excinfo.value)
+
+
+def test_array_is_none_and_nullable(empty_swagger_spec, array_spec):
+    array_spec['required'] = True
+    array_spec['x-nullable'] = True
     assert unmarshal_collection_format(empty_swagger_spec, array_spec,
                                        value=None) is None
