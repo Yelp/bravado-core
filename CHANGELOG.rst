@@ -1,5 +1,10 @@
 Changelog
 =========
+4.3.2 (2016-08-17)
+------------------
+- Fixes around unmarshalling, x-nullable and required behavior - Issue #108, PR #109. Big thanks to Zachary Roadhouse for the report and pull request!
+- Fix AttributeError when trying to unmarshal a required array param that's not present - PR #111.
+
 4.3.1 (2016-08-09)
 ------------------
 - Check if a parameter is bool-type before assuming it's a string - PR #107. Thanks to Nick DiRienzo for the pull request!
