@@ -54,7 +54,10 @@
                       "additionalFeature": {
                           "type": "string"
                       }
-                  }
+                  },
+                  "required": [
+                      "additionalFeature"
+                  ]
               }
           ]
       },
@@ -77,7 +80,10 @@
                       "gameSystem": {
                           "type": "string"
                       }
-                  }
+                  },
+                  "required": [
+                      "gameSystem"
+                  ]
               }
           ]
       }
