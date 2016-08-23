@@ -15,6 +15,7 @@ def test_request_with_path_parameter(petstore_spec):
     op = petstore_spec.resources['pet'].operations['getPetById']
     request_data = unmarshal_request(request, op)
     assert request_data['petId'] == 1234
+    assert request_data['api_key'] == 'key1'
 
 
 def test_request_with_no_parameters(petstore_spec):
