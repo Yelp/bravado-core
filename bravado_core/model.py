@@ -94,7 +94,7 @@ def create_model_type(swagger_spec, model_name, model_spec):
         __repr__=lambda self: create_model_repr(self, model_spec),
         __dir__=lambda self: model_dir(self, model_spec),
         marshal=lambda self: marshal_model(swagger_spec, model_spec, self),
-        unmarshal=lambda value: unmarshal_model(swagger_spec, model_spec, value),
+        unmarshal=lambda val: unmarshal_model(swagger_spec, model_spec, val),
     )
     return type(str(model_name), (object,), methods)
 
