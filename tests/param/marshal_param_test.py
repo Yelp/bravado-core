@@ -128,6 +128,18 @@ def test_header_string(empty_swagger_spec, param_spec):
     assert {'petId': '34'} == request['headers']
 
 
+def test_header_integer(empty_swagger_spec, param_spec):
+    param_spec['in'] = 'header'
+    param_spec['type'] = 'integer'
+    del param_spec['format']
+    param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
+    request = {
+        'headers': {}
+    }
+    marshal_param(param, 34, request)
+    assert {'petId': '34'} == request['headers']
+
+
 def test_body(empty_swagger_spec, param_spec):
     param_spec['in'] = 'body'
     param_spec['schema'] = {

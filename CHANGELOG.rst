@@ -1,5 +1,9 @@
 Changelog
 =========
+4.4.0 (2016-08-26)
+------------------
+- Adds support for security scheme definitions, mostly focusing on the "apiKey" type - PR #112.
+
 4.3.2 (2016-08-17)
 ------------------
 - Fixes around unmarshalling, x-nullable and required behavior - Issue #108, PR #109. Big thanks to Zachary Roadhouse for the report and pull request!
