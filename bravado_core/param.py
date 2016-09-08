@@ -132,7 +132,7 @@ def marshal_param(param, value, request):
     elif location == 'query':
         request['params'][param.name] = value
     elif location == 'header':
-        request['headers'][param.name] = value
+        request['headers'][param.name] = str(value)
     elif location == 'formData':
         if param_type == 'file':
             add_file(param, value, request)
