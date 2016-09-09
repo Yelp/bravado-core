@@ -3,7 +3,6 @@ import logging
 
 from six import iteritems
 
-from bravado_core.exception import SwaggerMappingError
 from bravado_core.operation import Operation
 
 log = logging.getLogger(__name__)
@@ -15,6 +14,7 @@ def convert_path_to_resource(path_name):
     name on a best effort basis when an operation has no tags.
 
     Examples:
+      /                   ->  _
       /pet                ->  pet
       /pet/findByStatus   ->  pet
       /pet/findByTags     ->  pet
@@ -25,10 +25,9 @@ def convert_path_to_resource(path_name):
         should be associated with.
     """
     tokens = path_name.lstrip('/').split('/')
-    err_msg = "Could not extract resource name from path {0}"
     resource_name = tokens[0]
     if not resource_name:
-        raise SwaggerMappingError(err_msg.format(path_name))
+        return '_'
     return resource_name
 
 
@@ -83,6 +82,7 @@ class Resource(object):
     :param ops: operations associated with this resource (by tag)
     :type ops: dict where (key, value) = (op_name, Operation)
     """
+
     def __init__(self, name, ops):
         log.debug(u"Building resource '%s'" % name)
         self.name = name
