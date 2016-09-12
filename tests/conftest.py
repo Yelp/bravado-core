@@ -1,6 +1,7 @@
 import base64
 import os
 import simplejson as json
+from six.moves.urllib import parse as urlparse
 
 import pytest
 
@@ -34,6 +35,28 @@ def minimal_swagger_dict():
 @pytest.fixture
 def minimal_swagger_spec(minimal_swagger_dict):
     return Spec.from_dict(minimal_swagger_dict)
+
+
+@pytest.fixture
+def composition_abspath():
+    my_dir = os.path.abspath(os.path.dirname(__file__))
+    return os.path.join(my_dir, '../test-data/2.0/composition/swagger.json')
+
+
+@pytest.fixture
+def composition_url(composition_abspath):
+    return urlparse.urljoin('file:', composition_abspath)
+
+
+@pytest.fixture
+def composition_dict(composition_abspath):
+    with open(composition_abspath) as f:
+        return json.loads(f.read())
+
+
+@pytest.fixture
+def composition_spec(composition_dict, composition_url):
+    return Spec.from_dict(composition_dict, origin_url=composition_url)
 
 
 @pytest.fixture

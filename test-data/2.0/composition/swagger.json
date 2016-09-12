@@ -1,0 +1,91 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "Composition"
+  },
+  "tags": [
+      {
+          "name": "pingpong",
+          "description": "pingpong related specs"
+      }
+  ],
+  "paths": {
+    "/ping": {
+      "get": {
+        "tags": [
+            "pingpong"
+        ],
+        "operationId": "ping",
+        "parameters": [
+            {
+                "name": "pung",
+                "in": "query",
+                "description": "true or false",
+                "type": "boolean"
+            }
+        ],
+        "responses": {
+          "200": {
+            "description": "pong",
+            "schema": {
+              "$ref": "#/definitions/pong"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+      "pong": {
+          "$ref": "definitions/definitions.json#/pong"
+      },
+      "pongClone": {
+          "allOf": [
+              {
+                  "$ref": "#/definitions/videoGame"
+              },
+              {
+                  "$ref": "#/definitions/pong"
+              },
+              {
+                  "type": "object",
+                  "properties": {
+                      "additionalFeature": {
+                          "type": "string"
+                      }
+                  },
+                  "required": [
+                      "additionalFeature"
+                  ]
+              }
+          ]
+      },
+      "game": {
+          "type": "object",
+          "properties": {
+              "releaseDate": {
+                  "type": "string"
+              }
+          }
+      },
+      "videoGame": {
+          "type": "object",
+          "allOf": [
+              {
+                  "$ref": "#/definitions/game"
+              },
+              {
+                  "properties": {
+                      "gameSystem": {
+                          "type": "string"
+                      }
+                  },
+                  "required": [
+                      "gameSystem"
+                  ]
+              }
+          ]
+      }
+  }
+}

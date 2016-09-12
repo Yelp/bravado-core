@@ -28,6 +28,24 @@ def address_spec():
     }
 
 
+@pytest.fixture
+def allOf_spec(address_spec):
+    return {
+        'allOf': [
+            {
+                'type': 'object',
+                'properties': {
+                    'business': {
+                        'type': 'string'
+                    },
+                },
+                'required': ['business'],
+            },
+            address_spec,
+        ]
+    }
+
+
 def test_success(minimal_swagger_spec, address_spec):
     address = {
         'number': 1000,
@@ -258,3 +276,44 @@ def test_nullable_none_value(empty_swagger_spec, required):
     value = {'x': None}
 
     validate_object(empty_swagger_spec, content_spec, value)
+
+
+def test_allOf_minimal(empty_swagger_spec, allOf_spec):
+    value = {
+        'business': 'Yelp',
+    }
+
+    validate_object(empty_swagger_spec, allOf_spec, value)
+
+
+def test_allOf_fails(empty_swagger_spec, allOf_spec):
+    with pytest.raises(ValidationError) as excinfo:
+        validate_object(empty_swagger_spec, allOf_spec, {})
+    assert excinfo.value.message == "'business' is a required property"
+
+
+def test_allOf_complex(composition_spec):
+    pongclone_spec = composition_spec.spec_dict['definitions']['pongClone']
+
+    value = {
+        'additionalFeature': 'Badges',
+        'gameSystem': 'NES',
+        'pang': 'value',
+        'releaseDate': 'October',
+    }
+
+    validate_object(composition_spec, pongclone_spec, value)
+
+
+def test_allOf_complex_failure(composition_spec):
+    pongclone_spec = composition_spec.spec_dict['definitions']['pongClone']
+
+    value = {
+        'additionalFeature': 'Badges',
+        'pang': 'value',
+        'releaseDate': 'October',
+    }
+
+    with pytest.raises(ValidationError) as excinfo:
+        validate_object(composition_spec, pongclone_spec, value)
+    assert excinfo.value.message == "'gameSystem' is a required property"

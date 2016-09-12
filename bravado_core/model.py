@@ -4,6 +4,7 @@ import logging
 from six import iteritems
 
 from bravado_core.docstring import docstring_property
+from bravado_core.schema import collapsed_properties
 from bravado_core.schema import SWAGGER_PRIMITIVES
 
 
@@ -32,7 +33,7 @@ def tag_models(container, key, path, visited_models, swagger_spec):
     model_name = key
     model_spec = deref(container.get(key))
 
-    if deref(model_spec.get('type')) != 'object':
+    if not is_object(swagger_spec, model_spec):
         return
 
     if deref(model_spec.get(MODEL_MARKER)) is not None:
@@ -88,23 +89,28 @@ def create_model_type(swagger_spec, model_name, model_spec):
         __doc__=doc,
         __eq__=lambda self, other: compare(self, other),
         __init__=lambda self, **kwargs: model_constructor(self, model_spec,
+                                                          swagger_spec,
                                                           kwargs),
-        __repr__=lambda self: create_model_repr(self, model_spec),
-        __dir__=lambda self: model_dir(self, model_spec),
+        __repr__=lambda self: create_model_repr(self, model_spec,
+                                                swagger_spec),
+        __dir__=lambda self: model_dir(self, model_spec, swagger_spec),
     )
     return type(str(model_name), (object,), methods)
 
 
-def model_dir(model, model_spec):
+def model_dir(model, model_spec, swagger_spec):
     """Responsible for returning the names of the valid attributes on this
-    model object.  This includes any properties defined in this model's spec
+    model object.  This includes any properties defined in this model's spec,
+    any properties that happen to be defined in parent polymorphic models,
     plus additional attibutes that exist as `additionalProperties`.
 
     :param model: instance of a model
     :param model_spec: spec the passed in model in dict form
+    :type swagger_spec: :class:`bravado_core.spec.Spec`
     :returns: list of str
     """
-    return list(model_spec['properties'].keys()) + model._additional_props
+    return (list(collapsed_properties(model_spec, swagger_spec).keys()) +
+            model._additional_props)
 
 
 def compare(first, second):
@@ -129,7 +135,7 @@ def compare(first, second):
     return norm_dict(first.__dict__) == norm_dict(second.__dict__)
 
 
-def model_constructor(model, model_spec, constructor_kwargs):
+def model_constructor(model, model_spec, swagger_spec, constructor_kwargs):
     """Constructor for the given model instance. Just assigns kwargs as attrs
     on the model based on the 'properties' in the model specification.
 
@@ -137,6 +143,7 @@ def model_constructor(model, model_spec, constructor_kwargs):
     :type model: type
     :param model_spec: model specification
     :type model_spec: dict
+    :type swagger_spec: :class:`bravado_core.spec.Spec`
     :param constructor_kwargs: kwargs sent in to the constructor invocation
     :type constructor_kwargs: dict
     :raises: AttributeError on constructor_kwargs that don't exist in the
@@ -144,7 +151,9 @@ def model_constructor(model, model_spec, constructor_kwargs):
     """
     arg_names = list(constructor_kwargs.keys())
 
-    for attr_name, attr_spec in iteritems(model_spec['properties']):
+    properties = collapsed_properties(model_spec, swagger_spec)
+
+    for attr_name, attr_spec in iteritems(properties):
         if attr_name in arg_names:
             attr_value = constructor_kwargs[attr_name]
             arg_names.remove(attr_name)
@@ -165,17 +174,19 @@ def model_constructor(model, model_spec, constructor_kwargs):
     model._additional_props = arg_names
 
 
-def create_model_repr(model, model_spec):
+def create_model_repr(model, model_spec, swagger_spec):
     """Generates the repr string for the model.
 
     :param model: Instance of a model
     :param model_spec: model specification
     :type model_spec: dict
+    :param swagger_spec: :class:`bravado_core.spec.Spec`
     :returns: repr string for the model
     """
+    properties = collapsed_properties(model_spec, swagger_spec)
     s = [
         "{0}={1!r}".format(attr_name, getattr(model, attr_name))
-        for attr_name in sorted(model_spec['properties'].keys())
+        for attr_name in sorted(properties.keys())
     ]
     return "{0}({1})".format(model.__class__.__name__, ', '.join(s))
 
@@ -193,6 +204,19 @@ def is_model(swagger_spec, schema_object_spec):
     return deref(schema_object_spec.get(MODEL_MARKER)) is not None
 
 
+def is_object(swagger_spec, object_spec):
+    """
+    A schema definition is of type object if its type is object or if it uses
+    model composition (i.e. it has an allOf property).
+    :param swagger_spec: :class:`bravado_core.spec.Spec`
+    :param schema_object_spec: specification for a swagger object
+    :type schema_object_spec: dict
+    :return: True if the spec describes an object, False otherwise.
+    """
+    deref = swagger_spec.deref
+    return deref(object_spec.get('type')) == 'object' or 'allOf' in object_spec
+
+
 def create_model_docstring(swagger_spec, model_spec):
     """
     :type swagger_spec: :class:`bravado_core.spec.Spec`
@@ -203,7 +227,8 @@ def create_model_docstring(swagger_spec, model_spec):
     model_spec = deref(model_spec)
 
     s = 'Attributes:\n\n\t'
-    attr_iter = iter(sorted(iteritems(model_spec['properties'])))
+    properties = collapsed_properties(model_spec, swagger_spec)
+    attr_iter = iter(sorted(iteritems(properties)))
     # TODO: Add more stuff available in the spec - 'required', 'example', etc
     for attr_name, attr_spec in attr_iter:
         attr_spec = deref(attr_spec)

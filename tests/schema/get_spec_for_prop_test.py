@@ -28,8 +28,37 @@ def address_spec():
 
 
 @pytest.fixture
+def business_address_spec():
+    return {
+        'allOf': [
+            {
+                '$ref': '#/definitions/Address'
+            },
+            {
+                'type': 'object',
+                'properties': {
+                    'company': {
+                        'type': 'string'
+                    },
+                }
+            }
+        ]
+    }
+
+
+@pytest.fixture
 def address():
     return {
+        'number': 1600,
+        'street_name': 'Pennsylvania',
+        'street_type': 'Avenue'
+    }
+
+
+@pytest.fixture
+def business_address():
+    return {
+        'company': 'White House',
         'number': 1600,
         'street_name': 'Pennsylvania',
         'street_type': 'Avenue'
@@ -90,6 +119,23 @@ def test_additionalProperties_not_dict_like(minimal_swagger_spec, address_spec,
     with pytest.raises(SwaggerMappingError) as excinfo:
         get_spec_for_prop(minimal_swagger_spec, address_spec, address, 'city')
     assert "Don't know what to do" in str(excinfo.value)
+
+
+def test_composition(minimal_swagger_dict, address_spec, address,
+                     business_address_spec, business_address):
+    minimal_swagger_dict['definitions']['Address'] = address_spec
+    minimal_swagger_dict['definitions']['BusinessAddress'] = business_address_spec
+    swagger_spec = Spec.from_dict(minimal_swagger_dict)
+
+    expected_spec_1 = address_spec['properties']['street_name']
+    result_1 = get_spec_for_prop(
+        swagger_spec, address_spec, address, 'street_name')
+    assert expected_spec_1 == result_1
+
+    expected_spec_2 = business_address_spec['allOf'][1]['properties']['company']
+    result_2 = get_spec_for_prop(
+        swagger_spec, business_address_spec, business_address, 'company')
+    assert expected_spec_2 == result_2
 
 
 def test_object_is_ref(minimal_swagger_dict, address_spec, address):

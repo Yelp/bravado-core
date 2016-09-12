@@ -84,6 +84,22 @@ def definitions_spec():
                 },
             },
         },
+        "Cat": {
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Pet",
+                },
+                {
+                    "type": "object",
+                    "required": ["neutered"],
+                    "properties": {
+                        "neutered": {
+                            "type": "boolean",
+                        }
+                    }
+                }
+            ]
+        },
         "Tag": {
             "properties": {
                 "id": {
@@ -131,3 +147,24 @@ def tag_model(definitions_spec):
 @pytest.fixture
 def pet_spec(definitions_spec):
     return definitions_spec['Pet']
+
+
+@pytest.fixture
+def cat_spec(definitions_spec):
+    return definitions_spec['Cat']
+
+
+@pytest.fixture
+def cat_swagger_spec(minimal_swagger_dict, definitions_spec):
+    minimal_swagger_dict['definitions'] = definitions_spec
+    return Spec.from_dict(minimal_swagger_dict)
+
+
+@pytest.fixture
+def cat_type(cat_swagger_spec, cat_spec):
+    return create_model_type(cat_swagger_spec, 'Cat', cat_spec)
+
+
+@pytest.fixture
+def cat(cat_type):
+    return cat_type()

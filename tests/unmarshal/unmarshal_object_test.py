@@ -30,6 +30,25 @@ def address_spec():
 
 
 @pytest.fixture
+def business_address_spec():
+    return {
+        'allOf': [
+            {
+                '$ref': '#/definitions/Address'
+            },
+            {
+                'type': 'object',
+                'properties': {
+                    'name': {
+                        'type': 'string'
+                    }
+                }
+            }
+        ]
+    }
+
+
+@pytest.fixture
 def location_spec():
     return {
         'type': 'object',
@@ -43,6 +62,28 @@ def location_spec():
             },
         }
     }
+
+
+@pytest.fixture
+def business_address_swagger_spec(minimal_swagger_dict, address_spec, business_address_spec):
+    minimal_swagger_dict['definitions']['Address'] = address_spec
+    minimal_swagger_dict['definitions']['BusinessAddress'] = business_address_spec
+
+    business_address_response = {
+        'get': {
+            'responses': {
+                '200': {
+                    'description': 'A business address',
+                    'schema': {
+                        '$ref': '#/definitions/BusinessAddress',
+                    }
+                }
+            }
+        }
+    }
+    minimal_swagger_dict['paths']['/foo'] = business_address_response
+
+    return Spec.from_dict(minimal_swagger_dict)
 
 
 @pytest.fixture
@@ -116,6 +157,26 @@ def test_with_ref(minimal_swagger_dict, address_spec, location_spec):
     minimal_swagger_spec = Spec(minimal_swagger_dict)
     result = unmarshal_object(minimal_swagger_spec, address_spec, address)
     assert result == address
+
+
+def test_with_model_composition(business_address_swagger_spec, address_spec, business_address_spec):
+    business_address_dict = {
+        'company': 'n/a',
+        'number': 1600,
+        'street_name': 'Pennsylvania',
+        'street_type': 'Avenue'
+    }
+    expected_business_address = {
+        'company': 'n/a',
+        'number': 1600,
+        'name': None,
+        'street_name': 'Pennsylvania',
+        'street_type': 'Avenue'
+    }
+
+    business_address = unmarshal_object(business_address_swagger_spec, business_address_spec,
+                                        business_address_dict)
+    assert expected_business_address == business_address
 
 
 def test_with_model(minimal_swagger_dict, address_spec, location_spec):
