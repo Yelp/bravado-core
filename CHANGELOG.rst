@@ -1,5 +1,10 @@
 Changelog
 =========
+4.5.0 (2016-09-12)
+------------------
+- Support for model composition through the allOf property - Issue #7, PR #63, #110. Thanks David Bartle for the initial contribution!
+- Fix issue with header parameter values being non-string types - PR #115.
+
 4.4.0 (2016-08-26)
 ------------------
 - Adds support for security scheme definitions, mostly focusing on the "apiKey" type - PR #112.
