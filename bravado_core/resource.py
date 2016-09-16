@@ -49,8 +49,11 @@ def build_resources(swagger_spec):
     deref = swagger_spec.deref
     spec_dict = deref(swagger_spec.spec_dict)
     paths_spec = deref(spec_dict.get('paths', {}))
+    timeout = spec_dict.get('x-timeout')
     for path_name, path_spec in iteritems(paths_spec):
         path_spec = deref(path_spec)
+        timeout = path_spec.get('x-timeout', timeout)
+
         for http_method, op_spec in iteritems(path_spec):
             op_spec = deref(op_spec)
             # vendor extensions and parameters that are shared across all
@@ -59,8 +62,11 @@ def build_resources(swagger_spec):
             if http_method.startswith('x-') or http_method == 'parameters':
                 continue
 
+            timeout = op_spec.get('x-timeout', timeout)
+
             op = Operation.from_spec(swagger_spec, path_name, http_method,
-                                     op_spec)
+                                     op_spec, timeout)
+
             tags = deref(op_spec.get('tags', []))
 
             if not tags:
