@@ -1,5 +1,9 @@
 Changelog
 =========
+4.5.1 (2016-09-27)
+------------------
+- Add marshal and unmarshal methods to models - PR #113, #120.
+
 4.5.0 (2016-09-12)
 ------------------
 - Support for model composition through the allOf property - Issue #7, PR #63, #110. Thanks David Bartle for the initial contribution!
