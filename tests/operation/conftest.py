@@ -146,3 +146,15 @@ def specs_with_security_obj_in_root_and_no_security_specs(
 ):
     del specs_with_security_obj_in_root_and_security_specs['securityDefinitions']  # noqa
     return specs_with_security_obj_in_root_and_security_specs
+
+
+@pytest.fixture
+def specs_with_security_obj_in_root_and_empty_security_spec(
+    specs_with_security_obj_in_root_and_security_specs
+):
+    path_spec = specs_with_security_obj_in_root_and_security_specs['paths']
+    for path, path_item in iteritems(path_spec):
+        for http_method in path_item.keys():
+            path_item[http_method]['security'] = []
+
+    return specs_with_security_obj_in_root_and_security_specs
