@@ -82,6 +82,8 @@ def create_model_type(swagger_spec, model_name, model_spec):
     :returns: dynamic type created with attributes, docstrings attached
     :rtype: type
     """
+    from bravado_core.marshal import marshal_model
+    from bravado_core.unmarshal import unmarshal_model
     doc = docstring_property(partial(
         create_model_docstring, swagger_spec, model_spec))
 
@@ -94,6 +96,8 @@ def create_model_type(swagger_spec, model_name, model_spec):
         __repr__=lambda self: create_model_repr(self, model_spec,
                                                 swagger_spec),
         __dir__=lambda self: model_dir(self, model_spec, swagger_spec),
+        marshal=lambda self: marshal_model(swagger_spec, model_spec, self),
+        unmarshal=staticmethod(lambda val: unmarshal_model(swagger_spec, model_spec, val)),
     )
     return type(str(model_name), (object,), methods)
 
