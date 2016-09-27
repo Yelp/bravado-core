@@ -41,3 +41,19 @@ def test_create_model_type_lazy_docstring(mock_create_docstring,
     assert mock_create_docstring.call_count == 0
     assert pet_type.__doc__ == mock_create_docstring.return_value
     assert mock_create_docstring.call_count == 1
+
+
+def test_marshal_and_unmarshal(petstore_spec):
+    Pet = petstore_spec.definitions['Pet']
+    pet_id = 1
+    pet_name = 'Darwin'
+    pet_photo_urls = []
+    pet = Pet(id=pet_id, name=pet_name, photoUrls=pet_photo_urls)
+    marshalled_model = pet.marshal()
+    unmarshalled_marshalled_model = Pet.unmarshal(marshalled_model)
+
+    assert marshalled_model == {'id': pet_id, 'name': pet_name, 'photoUrls': pet_photo_urls}
+    assert isinstance(unmarshalled_marshalled_model, Pet)
+    assert unmarshalled_marshalled_model.id == pet_id
+    assert unmarshalled_marshalled_model.name == pet_name
+    assert unmarshalled_marshalled_model.photoUrls == pet_photo_urls

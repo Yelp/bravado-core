@@ -83,6 +83,7 @@ def definitions_spec():
                     }
                 },
             },
+            "x-model": "Pet",
         },
         "Cat": {
             "allOf": [
