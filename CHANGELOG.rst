@@ -1,5 +1,10 @@
 Changelog
 =========
+X.X.X (XXXX-XX-XX)
+------------------
+- The content will be used to build the Changelog for the new bravado-core release
+  (add before this line your modifications summary and PR reference)
+
 4.5.1 (2016-09-27)
 ------------------
 - Add marshal and unmarshal methods to models - PR #113, #120.

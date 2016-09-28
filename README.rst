@@ -67,6 +67,17 @@ Setup
     .tox/py27/bin/pre-commit install
 
 
+Contributing
+------------
+
+1. Fork it ( http://github.com/Yelp/bravado-core/fork )
+2. Create your feature branch (``git checkout -b my-new-feature``)
+3. Add your modifications
+4. Add short summary of your modifications on ``CHANGELOG.rst``
+5. Commit your changes (``git commit -m "Add some feature"``)
+6. Push to the branch (``git push origin my-new-feature``)
+7. Create new Pull Request
+
 License
 -------
 
