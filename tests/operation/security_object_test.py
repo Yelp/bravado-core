@@ -67,6 +67,21 @@ def test_op_with_security_in_root_with_security_defs(
     )
 
 
+def test_op_with_security_in_root_with_empty_security_spec(
+        specs_with_security_obj_in_root_and_empty_security_spec,
+):
+    resources = build_resources(Spec(
+            specs_with_security_obj_in_root_and_empty_security_spec,
+    ))
+
+    resource = resources.get('pet')
+    assert resource is not None
+
+    operation = getattr(resource, 'findPetsByStatus')
+    assert operation is not None
+    assert len(operation.security_objects) == 0
+
+
 def test_correct_request_with_apiKey_security(petstore_spec):
     request = Mock(
         spec=IncomingRequest,

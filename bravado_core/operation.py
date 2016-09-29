@@ -59,8 +59,9 @@ class Operation(object):
             deref = self.swagger_spec.deref
             op_spec = deref(self.op_spec)
             spec_dict = deref(self.swagger_spec.spec_dict)
-            security_spec = deref(op_spec.get('security', []))
-            if len(security_spec) == 0:
+            if 'security' in op_spec:
+                security_spec = deref(op_spec['security'])
+            else:
                 security_spec = spec_dict.get('security', [])
             security_defs_dict = spec_dict.get('securityDefinitions', {})
 
