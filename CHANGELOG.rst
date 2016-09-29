@@ -2,6 +2,7 @@ Changelog
 =========
 X.X.X (XXXX-XX-XX)
 ------------------
+- Allow overriding of security specs - PR #121
 - The content will be used to build the Changelog for the new bravado-core release
   (add before this line your modifications summary and PR reference)
 
