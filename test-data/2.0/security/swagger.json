@@ -1,0 +1,98 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Test",
+    "version": "1.0"
+  },
+  "securityDefinitions": {
+    "apiKey1": {
+      "type": "apiKey",
+      "name": "apiKey1",
+      "in": "header"
+    },
+    "apiKey2": {
+      "type": "apiKey",
+      "name": "apiKey2",
+      "in": "header"
+    },
+    "apiKey3": {
+      "type": "apiKey",
+      "name": "apiKey3",
+      "in": "header"
+    },
+    "oauth2": {
+      "type": "oauth2",
+      "authorizationUrl": "http://domain/oauth/dialog",
+      "flow": "implicit",
+      "scopes": {
+        "write:resource": "modify resource",
+        "read:resource": "read your resource"
+      }
+    }
+  },
+  "security": [
+    {
+      "apiKey1": []
+    },
+    {
+      "apiKey2": []
+    }
+  ],
+  "paths": {
+    "/example1": {
+      "get": {
+        "description": "Endpoint requires apiKey1 or apiKey2 header parameter",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/example2": {
+      "get": {
+        "description": "Endpoint requires apiKey3 header parameter",
+        "security": [
+          {
+            "apiKey3": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/example3": {
+      "get": {
+        "description": "Endpoint requires (apiKey1,apiKey2) or (apiKey2) header parameters",
+        "security": [
+          {
+            "apiKey1": [],
+            "apiKey2": []
+          },
+          {
+            "apiKey2": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/example4": {
+      "get": {
+        "description": "Endpoint not requires any header parameter",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  }
+}

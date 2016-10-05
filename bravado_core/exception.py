@@ -32,6 +32,12 @@ class SwaggerSchemaError(SwaggerError):
     """
 
 
+class SwaggerSecurityValidationError(SwaggerValidationError):
+    """Raised when an error is encountered during processing of
+    security related Swagger definitions
+    """
+
+
 def wrap_exception(exception_class):
     """Helper decorator method to modify the raised exception class to
     `exception_class` but keeps the message and trace intact.
