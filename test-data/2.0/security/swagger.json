@@ -85,6 +85,23 @@
     },
     "/example4": {
       "get": {
+        "description": "Endpoint uses oauth2, no handling provided at the moment",
+        "security": [
+          {
+            "oauth2": [
+              "write:resource"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/example5": {
+      "get": {
         "description": "Endpoint not requires any header parameter",
         "security": [],
         "responses": {

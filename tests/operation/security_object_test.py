@@ -111,7 +111,8 @@ def test_wrong_request_with_apiKey_security(petstore_spec):
         ('example1', 'get_example1', (('apiKey1',), ('apiKey2',))),
         ('example2', 'get_example2', (('apiKey3',),)),
         ('example3', 'get_example3', (('apiKey1', 'apiKey2',), ('apiKey2',))),
-        ('example4', 'get_example4', ()),
+        ('example4', 'get_example4', (('oauth2',),)),
+        ('example5', 'get_example5', ()),
     ]
 )
 def test_security_parameters_selection(
