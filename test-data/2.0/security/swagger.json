@@ -18,7 +18,7 @@
     "apiKey3": {
       "type": "apiKey",
       "name": "apiKey3",
-      "in": "header"
+      "in": "query"
     },
     "oauth2": {
       "type": "oauth2",

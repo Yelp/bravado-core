@@ -141,23 +141,27 @@ def test_security_parameter_cannot_override_path_or_operation_parameter(
 
 
 @pytest.mark.parametrize(
-    'resource, operation, headers, expect_to_raise',
+    'resource, operation, query, headers, expect_to_raise',
     [
-        ('example1', 'get_example1', {'sec1': 'sec1', 'sec2': 'sec2'}, True),
-        ('example2', 'get_example2', {}, True),
-        ('example3', 'get_example3', {'sec1': 'sec1', 'sec2': 'sec2'}, False),
+        ('example1', 'get_example1', {}, {'sec1': 'sec1', 'sec2': 'sec2'}, True),
+        ('example2', 'get_example2', {}, {}, True),
+        ('example2', 'get_example2', {}, {'sec3': 'sec3'}, True),
+        ('example2', 'get_example2', {'sec3': 'sec3'}, {}, False),
+        ('example3', 'get_example3', {}, {'sec1': 'sec1', 'sec2': 'sec2'}, False),
     ]
 )
 def test_only_one_security_definition_in_use_at_time(
         security_spec,
         resource,
         operation,
+        query,
         headers,
         expect_to_raise,
 ):
     request = Mock(
         spec=IncomingRequest,
         headers=headers,
+        query=query,
     )
 
     op = security_spec.resources[resource].operations[operation]
