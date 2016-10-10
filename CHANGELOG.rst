@@ -2,6 +2,7 @@ Changelog
 =========
 X.X.X (XXXX-XX-XX)
 ------------------
+- Allow self as name for model property, adds new "create" alternate model constructor - Issue #125, PR #126.
 - Allow overriding of security specs - PR #121
 - The content will be used to build the Changelog for the new bravado-core release
   (add before this line your modifications summary and PR reference)

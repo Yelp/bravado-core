@@ -171,5 +171,5 @@ def unmarshal_model(swagger_spec, model_spec, model_value):
             .format(model_value, model_type, type(model_value)))
 
     model_as_dict = unmarshal_object(swagger_spec, model_spec, model_value)
-    model_instance = model_type(**model_as_dict)
+    model_instance = model_type.create(model_as_dict)
     return model_instance
