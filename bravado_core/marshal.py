@@ -174,9 +174,6 @@ def marshal_model(swagger_spec, model_spec, model_value):
 
     # just convert the model to a dict and feed into `marshal_object` because
     # models are essentially 'type':'object' when marshaled
-    attr_names = dir(model_value)
-    object_value = dict(
-        (attr_name, getattr(model_value, attr_name))
-        for attr_name in attr_names)
+    object_value = model_value._as_dict()
 
     return marshal_object(swagger_spec, model_spec, object_value)
