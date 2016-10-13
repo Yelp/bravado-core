@@ -93,3 +93,18 @@ def test_failure_response_content_type_not_supported_by_bravado_core(
     with pytest.raises(SwaggerMappingError) as excinfo:
         validate_response_body(op, response_spec, response)
     assert 'Unsupported content-type' in str(excinfo.value)
+
+
+def test_success_text_plain_response(minimal_swagger_spec):
+    response_spec = {
+        'description': 'Plain Text Response',
+        'schema': {}
+    }
+    op = Operation(minimal_swagger_spec, '/foo', 'get',
+                   op_spec={'produces': ['text/plain']})
+    response = Mock(
+        spec=OutgoingResponse,
+        content_type='text/plain',
+        text="Plain Text"
+    )
+    validate_response_body(op, response_spec, response)
