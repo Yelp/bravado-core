@@ -224,6 +224,65 @@ def test_with_model(minimal_swagger_dict, address_spec, location_spec):
     assert expected_address == address
 
 
+def test_self_property_with_model(minimal_swagger_dict):
+    link_spec = {
+        'type': 'object',
+        'required': ['_links'],
+        'properties': {
+            '_links': {
+                '$ref': '#/definitions/Self',
+            },
+        },
+    }
+
+    self_spec = {
+        'type': 'object',
+        'required': ['self'],
+        'properties': {
+            'self': {
+                'type': 'object',
+                'required': ['href'],
+                'properties': {
+                    'href': {
+                        'type': 'string',
+                    },
+                },
+            },
+        },
+    }
+
+    minimal_swagger_dict['definitions']['Links'] = link_spec
+    minimal_swagger_dict['definitions']['Self'] = self_spec
+
+    self_link_response = {
+        'get': {
+            'responses': {
+                '200': {
+                    'description': 'A self link.',
+                    'schema': {
+                        '$ref': '#/definitions/Links',
+                    }
+                }
+            }
+        }
+    }
+    minimal_swagger_dict['paths']['/foo'] = self_link_response
+
+    self_link_swagger_spec = Spec.from_dict(minimal_swagger_dict)
+
+    href = "http://example.com"
+    self_link_dict = {
+        "_links": {
+            "self": {
+                "href": href,
+            },
+        },
+    }
+
+    self_link = unmarshal_object(self_link_swagger_spec, link_spec, self_link_dict)
+    assert self_link["_links"].self["href"] == href
+
+
 def test_object_not_dict_like_raises_error(empty_swagger_spec, address_spec):
     i_am_not_dict_like = 34
     with pytest.raises(SwaggerMappingError) as excinfo:
