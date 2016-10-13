@@ -170,6 +170,19 @@ def unmarshal_model(swagger_spec, model_spec, model_value):
             "Was {1} instead."
             .format(model_value, model_type, type(model_value)))
 
+    # Check if model is polymorphic
+    discriminator = model_spec.get('discriminator')
+    if discriminator is not None:
+        child_model_name = model_value.get(discriminator, None)
+        if child_model_name not in swagger_spec.definitions:
+            raise SwaggerMappingError(
+                'Unknown model {0} when trying to unmarshal {1}. '
+                'Value of {2}\'s discriminator {3} did not match any definitions.'
+                .format(child_model_name, model_value, model_name, discriminator)
+            )
+        model_type = swagger_spec.definitions.get(child_model_name)
+        model_spec = model_type._model_spec
+
     model_as_dict = unmarshal_object(swagger_spec, model_spec, model_value)
     model_instance = model_type._from_dict(model_as_dict)
     return model_instance
