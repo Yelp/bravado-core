@@ -1,8 +1,5 @@
 import pytest
 
-from mock import Mock
-from bravado_core.spec import Spec
-
 
 @pytest.fixture
 def cat_kwargs():
