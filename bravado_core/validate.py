@@ -84,11 +84,11 @@ def validate_security_object(op, request_data):
     :raise: SwaggerSecurityValidationError
     """
 
-    security_types = set([
+    security_types = set(
         definition.type
         for security_requirement in op.security_requirements
         for definition in itervalues(security_requirement.security_definitions)
-    ])
+    )
 
     # At the moment we are handling only apiKey securities
     if 'apiKey' in security_types:
