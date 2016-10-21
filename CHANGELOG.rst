@@ -2,6 +2,7 @@ Changelog
 =========
 X.X.X (XXXX-XX-XX)
 ------------------
+- Security Requirement validation (for ApiKey) - PR #124
 - Allow self as name for model property, adds new "create" alternate model constructor - Issue #125, PR #126.
 - Allow overriding of security specs - PR #121
 - Adds minimal support for responses with text/* content_type.

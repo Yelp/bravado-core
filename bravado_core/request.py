@@ -2,6 +2,7 @@ from six import iteritems
 
 from bravado_core.operation import log
 from bravado_core.param import unmarshal_param
+from bravado_core.validate import validate_security_object
 
 
 class IncomingRequest(object):
@@ -63,6 +64,9 @@ def unmarshal_request(request, op):
     for param_name, param in iteritems(op.params):
         param_value = unmarshal_param(param, request)
         request_data[param_name] = param_value
+
+    if op.swagger_spec.config['validate_requests']:
+        validate_security_object(op, request_data)
 
     log.debug("Swagger request_data: {0}".format(request_data))
     return request_data

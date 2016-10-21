@@ -72,6 +72,19 @@ def petstore_spec(petstore_dict):
     return Spec.from_dict(petstore_dict)
 
 
+@pytest.fixture
+def security_dict():
+    my_dir = os.path.abspath(os.path.dirname(__file__))
+    fpath = os.path.join(my_dir, '../test-data/2.0/security/swagger.json')
+    with open(fpath) as f:
+        return json.loads(f.read())
+
+
+@pytest.fixture
+def security_spec(security_dict):
+    return Spec.from_dict(security_dict)
+
+
 def del_base64():
     del bravado_core.formatter.DEFAULT_FORMATS['base64']
 

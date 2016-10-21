@@ -2,11 +2,10 @@ from mock import Mock
 import pytest
 from six import iteritems
 
-from bravado_core.exception import SwaggerSchemaError
+from bravado_core.exception import SwaggerSchemaError, SwaggerSecurityValidationError
 from bravado_core.request import IncomingRequest, unmarshal_request
 from bravado_core.resource import build_resources
 from bravado_core.spec import Spec
-from jsonschema import ValidationError
 
 
 def test_op_with_security_in_op_without_security_defs(
@@ -33,12 +32,15 @@ def _validate_resources(resources, security_definitions_spec):
     for security_option, security_obj in iteritems(security_definitions_spec):
         operation = getattr(resource, 'findPetsByStatus')
         assert operation is not None
-        assert security_obj in operation.security_objects
+        assert len(operation.security_requirements) == len(security_definitions_spec)
+        assert operation.security_requirements[0].security_definitions
         if security_option == 'apiKey':
             assert len(operation.params) == 2
             assert security_obj['name'] in operation.params
+            assert len(operation.security_parameters) == 1
         else:
             assert len(operation.params) == 1
+            assert len(operation.security_parameters) == 0
 
 
 def test_op_with_security_in_op_with_security_defs(
@@ -71,7 +73,7 @@ def test_op_with_security_in_root_with_empty_security_spec(
         specs_with_security_obj_in_root_and_empty_security_spec,
 ):
     resources = build_resources(Spec(
-            specs_with_security_obj_in_root_and_empty_security_spec,
+        specs_with_security_obj_in_root_and_empty_security_spec,
     ))
 
     resource = resources.get('pet')
@@ -79,7 +81,7 @@ def test_op_with_security_in_root_with_empty_security_spec(
 
     operation = getattr(resource, 'findPetsByStatus')
     assert operation is not None
-    assert len(operation.security_objects) == 0
+    assert len(operation.security_requirements) == 0
 
 
 def test_correct_request_with_apiKey_security(petstore_spec):
@@ -99,5 +101,73 @@ def test_wrong_request_with_apiKey_security(petstore_spec):
         headers={},
     )
     op = petstore_spec.resources['pet'].operations['getPetById']
-    with pytest.raises(ValidationError):
+    with pytest.raises(SwaggerSecurityValidationError):
         unmarshal_request(request, op)
+
+
+@pytest.mark.parametrize(
+    'resource, operation, expected_combinations',
+    [
+        ('example1', 'get_example1', (('apiKey1',), ('apiKey2',))),
+        ('example2', 'get_example2', (('apiKey3',),)),
+        ('example3', 'get_example3', (('apiKey1', 'apiKey2',), ('apiKey2',))),
+        ('example4', 'get_example4', (('oauth2',),)),
+        ('example5', 'get_example5', ()),
+    ]
+)
+def test_security_parameters_selection(
+        security_spec,
+        resource,
+        operation,
+        expected_combinations,
+):
+    op = security_spec.resources[resource].operations[operation]
+    assert set(map(tuple, op.acceptable_security_definition_combinations)) == set(expected_combinations)
+
+
+def test_security_parameter_cannot_override_path_or_operation_parameter(
+        security_dict,
+):
+    security_dict['paths']['/example1']['get']['parameters'] = [{
+        'description': 'sec1 as query parameter',
+        'required': True,
+        'in': 'query',
+        'type': 'integer',
+        'name': 'apiKey1',
+    }]
+
+    with pytest.raises(SwaggerSchemaError):
+        Spec.from_dict(security_dict)
+
+
+@pytest.mark.parametrize(
+    'resource, operation, query, headers, expect_to_raise',
+    [
+        ('example1', 'get_example1', {}, {'sec1': 'sec1', 'sec2': 'sec2'}, True),
+        ('example2', 'get_example2', {}, {}, True),
+        ('example2', 'get_example2', {}, {'sec3': 'sec3'}, True),
+        ('example2', 'get_example2', {'sec3': 'sec3'}, {}, False),
+        ('example3', 'get_example3', {}, {'sec1': 'sec1', 'sec2': 'sec2'}, False),
+    ]
+)
+def test_only_one_security_definition_in_use_at_time(
+        security_spec,
+        resource,
+        operation,
+        query,
+        headers,
+        expect_to_raise,
+):
+    request = Mock(
+        spec=IncomingRequest,
+        headers=headers,
+        query=query,
+    )
+
+    op = security_spec.resources[resource].operations[operation]
+    try:
+        with pytest.raises(SwaggerSecurityValidationError):
+            unmarshal_request(request, op)
+    except:
+        if expect_to_raise:
+            raise
