@@ -97,9 +97,9 @@ def test_properties_not_present_and_additionalProperties_False(
         'type': 'object',
         'additionalProperties': False
     }
-    result = get_spec_for_prop(
-        minimal_swagger_spec, object_spec, address, 'street_name')
-    assert result is None
+    with pytest.raises(SwaggerMappingError):
+        result = get_spec_for_prop(
+            minimal_swagger_spec, object_spec, address, 'unknown')
 
 
 def test_additionalProperties_with_spec(minimal_swagger_spec, address_spec,

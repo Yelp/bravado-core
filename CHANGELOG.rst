@@ -2,6 +2,7 @@ Changelog
 =========
 X.X.X (XXXX-XX-XX)
 ------------------
+- raises exception when additionalProperty is false and a property has no specification - Issue #129.
 - Security Requirement validation (for ApiKey) - PR #124
 - Allow self as name for model property, adds new "create" alternate model constructor - Issue #125, PR #126.
 - Allow overriding of security specs - PR #121

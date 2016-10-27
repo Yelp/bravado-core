@@ -74,8 +74,9 @@ def get_spec_for_prop(swagger_spec, object_spec, object_value, prop_name):
         used in error message.
     :param prop_name: name of the property to retrieve the spec for
 
-    :return: spec for the given property or None if no spec found
+    :return: spec for the given property or None if no spec found and 'additionalProperties' is true
     :rtype: dict
+        :raises: SwaggerMappingError  if no spec found and 'additionalProperties' is false
     """
     deref = swagger_spec.deref
 
@@ -94,13 +95,15 @@ def get_spec_for_prop(swagger_spec, object_spec, object_value, prop_name):
             result_spec['x-nullable'] = prop_spec['x-nullable']
         return result_spec
 
-    additional_props = deref(object_spec).get('additionalProperties', True)
+    additional_props = deref(object_spec).get('additionalProperties', False)
 
-    if isinstance(additional_props, bool):
+    if additional_props == True:
         # no spec for additional properties to conform to - this is basically
         # a way to send pretty much anything across the wire as is.
         return None
 
+    if additional_props == False:
+        raise SwaggerMappingError("found unspecified property {0} in value {1} with spec {2}".format(prop_name, object_value, object_spec))
     additional_props = deref(additional_props)
     if is_dict_like(additional_props):
         # spec that all additional props MUST conform to
