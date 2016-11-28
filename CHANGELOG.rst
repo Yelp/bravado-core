@@ -2,12 +2,15 @@ Changelog
 =========
 X.X.X (XXXX-XX-XX)
 ------------------
+- The content will be used to build the Changelog for the new bravado-core release
+  (add before this line your modifications summary and PR reference)
+
+4.6.0 (2016-11-28)
+------------------
 - Security Requirement validation (for ApiKey) - PR #124
 - Allow self as name for model property, adds new "create" alternate model constructor - Issue #125, PR #126.
 - Allow overriding of security specs - PR #121
 - Adds minimal support for responses with text/* content_type.
-- The content will be used to build the Changelog for the new bravado-core release
-  (add before this line your modifications summary and PR reference)
 
 4.5.1 (2016-09-27)
 ------------------
