@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import collections
+
 from six import iteritems
 
 from bravado_core import formatter
@@ -37,7 +39,9 @@ def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
             "The following schema object is missing a type field: {0}"
             .format(schema_object_spec.get('x-model', str(schema_object_spec))))
 
-    if obj_type in SWAGGER_PRIMITIVES:
+    if (obj_type in SWAGGER_PRIMITIVES or
+        (isinstance(obj_type, collections.Iterable) and
+         not isinstance(obj_type, str))):
         return unmarshal_primitive(swagger_spec, schema_object_spec, value)
 
     if obj_type == 'array':
