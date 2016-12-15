@@ -167,7 +167,7 @@ def marshal_model(swagger_spec, model_spec, model_value):
     if model_value is None:
         return handle_null_value(swagger_spec, model_spec)
 
-    if not isinstance(model_value, model_type):
+    if not model_type._isinstance(model_value):
         raise SwaggerMappingError(
             'Expected model of type {0} for {1}:{2}'
             .format(model_name, type(model_value), model_value))

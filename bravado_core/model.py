@@ -304,6 +304,22 @@ class Model(object):
         from bravado_core.unmarshal import unmarshal_model
         return unmarshal_model(cls._swagger_spec, cls._model_spec, val)
 
+    @classmethod
+    def _isinstance(cls, obj):
+        """Check if an object is an instance of this model or a model inheriting
+        from it.
+
+        :param obj: Object to check.
+        :rtype: bool
+        """
+        if isinstance(obj, cls):
+            return True
+
+        if isinstance(obj, Model):
+            return cls.__name__ in type(obj)._inherits_from
+
+        return False
+
 
 class ModelDocstring(object):
     """Descriptor for model classes that dynamically generates docstrings.
@@ -344,11 +360,20 @@ def create_model_type(swagger_spec, model_name, model_spec, bases=(Model,)):
     :returns: dynamic type inheriting from ``bases``.
     :rtype: type
     """
+
+    inherits_from = []
+    if 'allOf' in model_spec:
+        for schema in model_spec['allOf']:
+            inherited_name = swagger_spec.deref(schema).get(MODEL_MARKER, None)
+            if inherited_name:
+                inherits_from.append(inherited_name)
+
     return type(str(model_name), bases, dict(
         __doc__=ModelDocstring(),
         _swagger_spec=swagger_spec,
         _model_spec=model_spec,
         _properties=collapsed_properties(model_spec, swagger_spec),
+        _inherits_from=inherits_from,
     ))
 
 
