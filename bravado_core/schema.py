@@ -65,6 +65,56 @@ def is_list_like(spec):
     return type(spec) in (list, tuple)
 
 
+def get_schema_object_type(swagger_spec, object_spec):
+    """Get the type of a jsonschema object spec, taking composition into
+    consideration.
+
+    Most schema objects specify a type directly with the "type" property.
+    However schemas using the "allOf" property for composition can leave the
+    "type" property out, in which case each item of "allOf" must be checked.
+
+    :param dict object_spec: spec for a jsonschema 'object' in dict form
+    :return: Type for schmea object or ``None`` if it could not be determined
+    :rtype: str
+    """
+    deref = swagger_spec.deref
+
+    # Easy case
+    try:
+        return object_spec['type']
+    except KeyError:
+        pass
+
+    # Check for allOf
+    try:
+        composed_schemas = object_spec['allOf']
+    except KeyError:
+        return None
+
+    # Find types in all composed schemas
+    found_types = set()
+    for schema in composed_schemas:
+        composed_type = get_schema_object_type(swagger_spec, deref(schema))
+
+        if composed_type is not None:
+            found_types.add(composed_type)
+        else:
+            # Fail if we can't determine this unambiguously
+            return None
+
+    if len(found_types) == 1:
+        # Found a single type
+        return found_types.pop()
+
+    if found_types == {'integer', 'number'}:
+        # "integer" and "number" are the only two types compatible with each
+        # other. Return the more specific one.
+        return 'integer'
+
+    # Composed from multiple types, can't resolve
+    return None
+
+
 def get_spec_for_prop(swagger_spec, object_spec, object_value, prop_name):
     """Given a jsonschema object spec and value, retrieve the spec for the
      given property taking 'additionalProperties' into consideration.

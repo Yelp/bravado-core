@@ -10,6 +10,7 @@ from bravado_core.schema import is_dict_like
 from bravado_core.schema import is_list_like
 from bravado_core.schema import handle_null_value
 from bravado_core.schema import SWAGGER_PRIMITIVES
+from bravado_core.schema import get_schema_object_type
 
 
 def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
@@ -30,11 +31,10 @@ def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
     """
     deref = swagger_spec.deref
     schema_object_spec = deref(schema_object_spec)
-    try:
-        obj_type = schema_object_spec['type']
-    except KeyError:
+    obj_type = get_schema_object_type(swagger_spec, schema_object_spec)
+    if obj_type is None:
         raise SwaggerMappingError(
-            "The following schema object is missing a type field: {0}"
+            "Could not determine the type of the following schema object: {0}"
             .format(schema_object_spec.get('x-model', str(schema_object_spec))))
 
     if obj_type in SWAGGER_PRIMITIVES:
