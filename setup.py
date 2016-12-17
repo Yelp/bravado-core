@@ -3,10 +3,33 @@
 # Copyright (c) 2014-2015, Yelp, Inc.
 
 import os
+import sys
 
 from setuptools import setup
 
 import bravado_core
+
+
+install_requires = [
+    "python-dateutil",
+    "pyyaml",
+    "simplejson",
+    "six",
+    "swagger-spec-validator>=2.0.1",
+]
+
+
+# The [format] extras of jsonschema installs and imports some packages
+# (webcolors) that raise a syntax error in Python 2.6.
+if sys.version_info[:2] >= (2, 7):
+    install_requires.append("jsonschema[format]>=2.5.1")
+else:
+    install_requires.extend([
+        "jsonschema>=2.5.1",
+        "rfc3987",
+        "strict-rfc3339",
+    ])
+
 
 setup(
     name="bravado-core",
@@ -29,12 +52,5 @@ setup(
         "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3.4",
     ],
-    install_requires=[
-        "jsonschema[format]>=2.5.1",
-        "python-dateutil",
-        "pyyaml",
-        "simplejson",
-        "six",
-        "swagger-spec-validator>=2.0.1",
-    ],
+    install_requires=install_requires,
 )
