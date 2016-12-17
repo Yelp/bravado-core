@@ -1,7 +1,6 @@
 import base64
 import os
 import simplejson as json
-from six.moves.urllib import parse as urlparse
 
 import pytest
 
@@ -44,19 +43,14 @@ def composition_abspath():
 
 
 @pytest.fixture
-def composition_url(composition_abspath):
-    return urlparse.urljoin('file:', composition_abspath)
-
-
-@pytest.fixture
 def composition_dict(composition_abspath):
     with open(composition_abspath) as f:
         return json.loads(f.read())
 
 
 @pytest.fixture
-def composition_spec(composition_dict, composition_url):
-    return Spec.from_dict(composition_dict, origin_url=composition_url)
+def composition_spec(composition_dict, composition_abspath):
+    return Spec.from_dict(composition_dict, origin_file=composition_abspath)
 
 
 @pytest.fixture

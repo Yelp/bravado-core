@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 import copy
 import functools
 import json
@@ -12,6 +13,7 @@ from jsonschema.compat import urlopen
 from jsonschema.validators import RefResolver
 from six import iteritems
 from six.moves.urllib import parse as urlparse
+from six.moves.urllib.request import pathname2url
 from swagger_spec_validator import validator20
 from swagger_spec_validator.ref_validators import attach_scope, in_scope
 
@@ -55,23 +57,51 @@ CONFIG_DEFAULTS = {
 }
 
 
+def get_file_uri(abs_path):
+    """Get the URI of a file given its absolute path.
+
+    This should work with windows paths beginning with a drive letter
+    (e.g. ``c:\``) as well.
+
+    :param str abs_path: Absolute path to file.
+    :return: File URI beginning with ``file://``.
+    :rtype: str
+    """
+    return urlparse.urljoin('file:', pathname2url(abs_path))
+
+
 class Spec(object):
     """Represents a Swagger Specification for a service.
 
     :param spec_dict: Swagger API specification in json-like dict form
     :param origin_url: URL from which the spec was retrieved.
-    :param http_client: Used to retrive the spec via http/https.
+    :param origin_file: Path to file spec was loaded from, if any. Used to
+        build correct ``origin_url``.
+    :param http_client: Used to retrieve the spec via http/https.
     :type http_client: :class:`bravado.http_client.HTTPClient`
     :param config: Configuration dict. See CONFIG_DEFAULTS.
     """
 
-    def __init__(self, spec_dict, origin_url=None, http_client=None,
-                 config=None):
+    def __init__(self, spec_dict, origin_url=None, origin_file=None,
+                 http_client=None, config=None):
         self.spec_dict = spec_dict
-        self.origin_url = origin_url
         self.http_client = http_client
         self.api_url = None
         self.config = dict(CONFIG_DEFAULTS, **(config or {}))
+
+        if origin_url is not None:
+            if origin_file is not None:
+                raise TypeError(
+                    'At most one of "origin_url" and "origin_file" '
+                    'should be given'
+                )
+            self.origin_url = origin_url
+
+        elif origin_file is not None:
+            self.origin_url = get_file_uri(os.path.abspath(origin_file))
+
+        else:
+            self.origin_url = None
 
         # Cached copy of spec_dict with x-scope metadata removed.
         # See @property client_spec_dict().
@@ -97,7 +127,7 @@ class Spec(object):
         self.format_checker = FormatChecker()
 
         self.resolver = RefResolver(
-            base_uri=origin_url or '',
+            base_uri=self.origin_url or '',
             referrer=self.spec_dict,
             handlers=build_http_handlers(http_client))
 
@@ -143,17 +173,13 @@ class Spec(object):
         return self._client_spec_dict
 
     @classmethod
-    def from_dict(cls, spec_dict, origin_url=None, http_client=None,
-                  config=None):
+    def from_dict(cls, spec_dict, **kwargs):
         """Build a :class:`Spec` from Swagger API Specificiation
 
         :param spec_dict: swagger spec in json-like dict form.
-        :param origin_url: the url used to retrieve the spec, if any
-        :type  origin_url: str
-        :param: http_client: http client used to download remote $refs
-        :param config: Configuration dict. See CONFIG_DEFAULTS.
+        :param \\**kwargs: keyword arguments passed to constructor.
         """
-        spec = cls(spec_dict, origin_url, http_client, config)
+        spec = cls(spec_dict, **kwargs)
         spec.build()
         return spec
 

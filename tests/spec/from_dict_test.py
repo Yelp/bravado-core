@@ -2,11 +2,11 @@ import os
 
 import simplejson as json
 import yaml
-from six.moves.urllib import parse as urlparse
+import pytest
 
 from bravado_core.model import MODEL_MARKER
 from bravado_core.response import get_response_spec
-from bravado_core.spec import Spec
+from bravado_core.spec import Spec, get_file_uri
 
 
 def test_definitions_not_present(minimal_swagger_dict):
@@ -15,11 +15,11 @@ def test_definitions_not_present(minimal_swagger_dict):
     assert 0 == len(spec.definitions)
 
 
-def get_spec_json_and_url(rel_url):
-    my_dir = os.path.abspath(os.path.dirname(__file__))
-    abs_path = os.path.join(my_dir, rel_url)
+def get_spec_json_and_path(rel_path):
+    my_dir = os.path.dirname(__file__)
+    abs_path = os.path.abspath(os.path.join(my_dir, rel_path))
     with open(abs_path) as f:
-        return json.loads(f.read()), urlparse.urljoin('file:', abs_path)
+        return json.loads(f.read()), abs_path
 
 
 def test_complicated_refs():
@@ -27,8 +27,8 @@ def test_complicated_refs():
     # $refs all over to place to wire stuff together - see the test-data
     # files or this will make no sense whatsoever.
     file_path = '../../test-data/2.0/simple_crossref/swagger.json'
-    swagger_dict, origin_url = get_spec_json_and_url(file_path)
-    swagger_spec = Spec.from_dict(swagger_dict, origin_url=origin_url)
+    swagger_dict, origin_file = get_spec_json_and_path(file_path)
+    swagger_spec = Spec.from_dict(swagger_dict, origin_file=origin_file)
 
     # Verify things are 'reachable' (hence, have been ingested correctly)
 
@@ -79,8 +79,7 @@ def test_ref_to_external_path_with_ref_to_local_model():
     with open(swagger_json_path) as f:
         swagger_json_content = json.loads(f.read())
 
-    swagger_json_url = urlparse.urljoin('file:', swagger_json_path)
-    spec = Spec.from_dict(swagger_json_content, swagger_json_url)
+    spec = Spec.from_dict(swagger_json_content, origin_file=swagger_json_path)
     assert 'Pet' in spec.definitions
 
 
@@ -88,14 +87,13 @@ def test_yaml_files():
     my_dir = os.path.abspath(os.path.dirname(__file__))
 
     swagger_yaml_path = os.path.join(
-            my_dir,
-            '../../test-data/2.0/yaml/swagger.yml')
+        my_dir,
+        '../../test-data/2.0/yaml/swagger.yml')
 
     with open(swagger_yaml_path) as f:
         swagger_yaml_content = yaml.load(f)
 
-    swagger_yaml_url = urlparse.urljoin('file:', swagger_yaml_path)
-    spec = Spec.from_dict(swagger_yaml_content, swagger_yaml_url)
+    spec = Spec.from_dict(swagger_yaml_content, origin_file=swagger_yaml_path)
     assert 'Pet' in spec.definitions
 
 
@@ -125,3 +123,33 @@ def test_spec_with_dereffed_and_tagged_models_works(minimal_swagger_dict):
     minimal_swagger_dict['paths']['/pet'] = pet_path_spec
     spec = Spec.from_dict(minimal_swagger_dict)
     assert spec.definitions['Pet']
+
+
+def test_url_and_file():
+    """
+    Try calling Spec.from_dict with both the origin_url and origin_file
+    arguments.
+    """
+    my_dir = os.path.abspath(os.path.dirname(__file__))
+
+    swagger_yaml_path = os.path.join(
+        my_dir,
+        '../../test-data/2.0/yaml/swagger.yml')
+
+    with open(swagger_yaml_path) as f:
+        swagger_yaml_content = yaml.load(f)
+
+    with pytest.raises(TypeError) as excinfo:
+        # Call with both arguments, which are valid individually
+        Spec.from_dict(
+            swagger_yaml_content,
+            origin_url=get_file_uri(swagger_yaml_path),
+            origin_file=swagger_yaml_path,
+        )
+
+    # Check the content of the message - don't want to accidentally catch
+    # TypeErrors thrown if the API changes and we're now using non-existant
+    # arguments (that would raise an error with only one argument name in
+    # the message).
+    message = str(excinfo.value)
+    assert 'origin_url' in message and 'origin_file' in message

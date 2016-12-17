@@ -2,6 +2,8 @@ Changelog
 =========
 X.X.X (XXXX-XX-XX)
 ------------------
+- Add ``origin_file`` argument to ``Spec`` constructor to build file URIs
+  correctly on Windows.
 - The content will be used to build the Changelog for the new bravado-core release
   (add before this line your modifications summary and PR reference)
 
