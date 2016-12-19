@@ -5,6 +5,7 @@ import six
 
 from bravado_core.formatter import to_wire
 from bravado_core.spec import Spec
+from pytz import timezone
 
 
 def test_none(minimal_swagger_spec):
@@ -23,10 +24,19 @@ def test_date(minimal_swagger_spec):
         minimal_swagger_spec, string_spec, date(2015, 4, 1))
 
 
-def test_datetime(minimal_swagger_spec):
+def test_naive_datetime(minimal_swagger_spec):
     string_spec = {'type': 'string', 'format': 'date-time'}
-    assert '2015-03-22T13:19:54' == to_wire(
+    assert '2015-03-22T13:19:54+00:00' == to_wire(
         minimal_swagger_spec, string_spec, datetime(2015, 3, 22, 13, 19, 54))
+
+
+def test_localized_datetime(minimal_swagger_spec):
+    string_spec = {'type': 'string', 'format': 'date-time'}
+    assert '2015-03-22T13:19:54-07:00' == to_wire(
+        minimal_swagger_spec,
+        string_spec,
+        timezone('America/Los_Angeles').localize(datetime(2015, 3, 22, 13, 19, 54)),
+    )
 
 
 @patch('bravado_core.spec.warnings.warn')

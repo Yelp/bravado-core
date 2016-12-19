@@ -9,7 +9,7 @@ import six
 import dateutil.parser
 
 from bravado_core import schema
-
+import pytz
 
 if six.PY3:
     long = int
@@ -53,7 +53,7 @@ def to_python(swagger_spec, primitive_spec, value):
 
 
 class SwaggerFormat(namedtuple('SwaggerFormat',
-                    'format to_python to_wire validate description')):
+                               'format to_python to_wire validate description')):
     """User-defined format which can be registered with a
     :class:`bravado_core.spec.Spec` to handle marshalling to wire format,
     unmarshalling to a python type, and format specific validation.
@@ -111,7 +111,7 @@ DEFAULT_FORMATS = {
         description='Converts [wire]number:double <=> python float'),
     'date-time': SwaggerFormat(
         format='date-time',
-        to_wire=lambda dt: dt.isoformat(),
+        to_wire=lambda dt: (dt if dt.tzinfo else pytz.utc.localize(dt)).isoformat(),
         to_python=lambda dt: dateutil.parser.parse(dt),
         validate=NO_OP,  # jsonschema validates date-time
         description=(
@@ -134,4 +134,4 @@ DEFAULT_FORMATS = {
         to_python=lambda i: i if isinstance(i, long) else long(i),
         validate=NO_OP,  # jsonschema validates integer
         description='Converts [wire]integer:int64 <=> python long'),
-    }
+}
