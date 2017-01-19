@@ -16,6 +16,23 @@ validator.
 """
 
 
+def format_validator(swagger_spec, validator, format, instance, schema):
+    """Skip the `format` validator when a Swagger parameter value is None.
+    Otherwise it will fail with a "Failed validating u'format' in schema" failure instead
+    of letting the downstream `required_validator` do its job.
+    Also skip when a Swagger property value is None and the schema contains
+    the extension field `x-nullable` set to True.
+    In all other cases, delegate to the existing Draft4 `format` validator.
+
+    """
+    if (is_param_spec(swagger_spec, schema) or
+            is_prop_nullable(swagger_spec, schema)) and instance is None:
+        return
+
+    for error in _validators.format(validator, format, instance, schema):
+        yield error
+
+
 def type_validator(swagger_spec, validator, types, instance, schema):
     """Skip the `type` validator when a Swagger parameter value is None.
     Otherwise it will fail with a "None is not a valid type" failure instead
@@ -149,4 +166,5 @@ def get_validator_type(swagger_spec):
             'required': functools.partial(required_validator, swagger_spec),
             'enum': functools.partial(enum_validator, swagger_spec),
             'type': functools.partial(type_validator, swagger_spec),
+            'format': functools.partial(format_validator, swagger_spec),
         })
