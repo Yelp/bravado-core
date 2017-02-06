@@ -7,7 +7,11 @@ from jsonschema.validators import Draft4Validator
 from bravado_core.schema import is_param_spec
 from bravado_core.schema import is_prop_nullable
 from bravado_core.schema import is_required
+from bravado_core.schema import has_format
+from bravado_core.schema import get_format
 from swagger_spec_validator.ref_validators import in_scope
+
+import six
 
 """Draft4Validator is not completely compatible with Swagger 2.0 schema
 objects like parameter, etc. Swagger20Validator is an extension of
@@ -39,8 +43,14 @@ def type_validator(swagger_spec, validator, types, instance, schema):
             is_prop_nullable(swagger_spec, schema)) and instance is None:
         return
 
-    for error in _validators.type_draft4(validator, types, instance, schema):
-        yield error
+    if has_format(swagger_spec, schema) and (get_format(swagger_spec, schema) == 'binary') and six.PY3:
+        if not isinstance(instance, bytes):
+            yield ValidationError("bad type")
+        else:
+            return
+    else:
+        for error in _validators.type_draft4(validator, types, instance, schema):
+            yield error
 
 
 def required_validator(swagger_spec, validator, required, instance, schema):
