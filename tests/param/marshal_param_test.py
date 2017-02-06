@@ -157,6 +157,63 @@ def test_body(empty_swagger_spec, param_spec):
     assert APP_JSON == request['headers']['Content-Type']
 
 
+def test_body_binary_octet_stream(empty_swagger_spec, param_spec):
+    param_spec['in'] = 'body'
+    param_spec['schema'] = {
+        'type': 'string',
+        'format': 'binary'
+    }
+    del param_spec['type']
+    del param_spec['format']
+    param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
+    request = {
+        'headers': {
+            'Content-Type': 'application/octet-stream'
+        }
+    }
+    marshal_param(param, bytes(10), request)
+    assert b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00' == request['data']
+    assert 'application/octet-stream' == request['headers']['Content-Type']
+
+
+def test_body_binary_json(empty_swagger_spec, param_spec):
+    param_spec['in'] = 'body'
+    param_spec['schema'] = {
+        'type': 'string',
+        'format': 'binary'
+    }
+    del param_spec['type']
+    del param_spec['format']
+    param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
+    request = {
+        'headers': {
+            'Content-Type': 'application/json'
+        }
+    }
+    marshal_param(param, bytes(10), request)
+    assert b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00' == request['data']
+    assert 'application/json' == request['headers']['Content-Type']
+
+
+def test_body_binary_foo(empty_swagger_spec, param_spec):
+    param_spec['in'] = 'body'
+    param_spec['schema'] = {
+        'type': 'string',
+        'format': 'binary'
+    }
+    del param_spec['type']
+    del param_spec['format']
+    param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
+    request = {
+        'headers': {
+            'Content-Type': 'application/foo'
+        }
+    }
+    marshal_param(param, bytes(10), request)
+    assert b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00' == request['data']
+    assert 'application/foo' == request['headers']['Content-Type']
+
+
 def test_formData_integer(empty_swagger_spec, param_spec):
     param_spec['in'] = 'formData'
     param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
