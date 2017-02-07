@@ -1,12 +1,20 @@
+import pytest
+from jsonschema import ValidationError
 from mock import patch
 
 from bravado_core.swagger20_validator import format_validator
+from bravado_core.validate import validate_object
 
 
 @patch('jsonschema._validators.format')
 def test_skip_when_validating_a_parameter_schema_and_parameter_value_is_None(
         m_format_validator, minimal_swagger_spec):
-    param_schema = {'name': 'foo', 'in': 'query', 'type': 'string', 'format': 'url'}
+    param_schema = {
+        'name': 'foo',
+        'in': 'query',
+        'type': 'string',
+        'format': 'url',
+    }
     list(format_validator(
         minimal_swagger_spec,
         validator=None,
@@ -19,7 +27,12 @@ def test_skip_when_validating_a_parameter_schema_and_parameter_value_is_None(
 @patch('jsonschema._validators.format')
 def test_validate_when_parameter_schema_and_parameter_value_is_not_None(
         m_format_validator, minimal_swagger_spec):
-    param_schema = {'name': 'foo', 'in': 'query', 'type': 'string', 'format': 'url'}
+    param_schema = {
+        'name': 'foo',
+        'in': 'query',
+        'type': 'string',
+        'format': 'url',
+    }
     args = (None, param_schema['format'], 'foo',
             param_schema)
     list(format_validator(minimal_swagger_spec, *args))
@@ -29,7 +42,11 @@ def test_validate_when_parameter_schema_and_parameter_value_is_not_None(
 @patch('jsonschema._validators.format')
 def test_validate_when_not_a_parameter_schema(m_format_validator,
                                               minimal_swagger_spec):
-    string_schema = {'name': 'foo', 'type': 'string', 'format': 'url'}
+    string_schema = {
+        'name': 'foo',
+        'type': 'string',
+        'format': 'url',
+    }
     args = (None, string_schema['format'], 'foo',
             string_schema)
     list(format_validator(minimal_swagger_spec, *args))
@@ -39,7 +56,11 @@ def test_validate_when_not_a_parameter_schema(m_format_validator,
 @patch('jsonschema._validators.format')
 def test_skip_when_nullable_property_schema_and_value_is_None(
         m_format_validator, minimal_swagger_spec):
-    prop_schema = {'x-nullable': True, 'type': 'string', 'format': 'url'}
+    prop_schema = {
+        'x-nullable': True,
+        'type': 'string',
+        'format': 'url',
+    }
     list(format_validator(
         minimal_swagger_spec,
         validator=None,
@@ -52,7 +73,46 @@ def test_skip_when_nullable_property_schema_and_value_is_None(
 @patch('jsonschema._validators.format')
 def test_validate_when_not_nullable_property_schema_and_value_is_None(
         m_format_validator, minimal_swagger_spec):
-    prop_schema = {'x-nullable': False, 'type': 'string', 'format': 'url'}
+    prop_schema = {
+        'x-nullable': False,
+        'type': 'string',
+        'format': 'url',
+    }
     args = (None, prop_schema['format'], None, prop_schema)
     list(format_validator(minimal_swagger_spec, *args))
     m_format_validator.assert_called_once_with(*args)
+
+
+@pytest.mark.parametrize(
+    'value, format_, x_nullable, expect_exception',
+    (
+        [{'prop': 'a813d449-21ff-4348-8262-c9c067151eb2'}, 'uuid', False, False],
+        [{'prop': None}, 'uuid', False, True],
+        [{'prop': None}, 'uuid', True, False],
+    )
+)
+def test_validate_object_with_different_format_configurations(
+        minimal_swagger_spec, value, format_, x_nullable, expect_exception):
+    minimal_swagger_spec.spec_dict['definitions']['obj'] = {
+        'properties': {
+            'prop': {
+                'type': 'string',
+                'format': format_,
+                'x-nullable': x_nullable
+            }
+        }
+    }
+    captured_exception = None
+    try:
+        validate_object(
+            swagger_spec=minimal_swagger_spec,
+            object_spec=minimal_swagger_spec.spec_dict['definitions']['obj'],
+            value=value,
+        )
+    except ValidationError as e:
+        captured_exception = e
+
+    if not expect_exception:
+        assert captured_exception is None
+    else:
+        assert captured_exception.message == '\'{0}\' is required'.format(value['prop'])
