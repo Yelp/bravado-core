@@ -2,8 +2,7 @@ Changelog
 =========
 X.X.X (XXXX-XX-XX)
 ------------------
-- The content will be used to build the Changelog for the new bravado-core release
-  (add before this line your modifications summary and PR reference)
+- Fix unmarshalling empty array types
 
 4.6.0 (2016-11-28)
 ------------------
