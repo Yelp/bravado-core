@@ -349,7 +349,10 @@ def unmarshal_collection_format(swagger_spec, param_spec, value):
         value_array = value if isinstance(value, list) else [value]
     else:
         sep = COLLECTION_FORMATS[collection_format]
-        value_array = value.split(sep)
+        if value == '':
+            value_array = []
+        else:
+            value_array = value.split(sep)
 
     items_spec = param_spec['items']
     items_type = deref(items_spec).get('type')
