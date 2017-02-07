@@ -115,4 +115,4 @@ def test_validate_object_with_different_format_configurations(
     if not expect_exception:
         assert captured_exception is None
     else:
-        assert captured_exception.message == '\'{0}\' is required'.format(value['prop'])
+        assert captured_exception.message == '{0} is not of type \'string\''.format(value['prop'])
