@@ -1,23 +1,22 @@
-
-- repo: git://github.com/pre-commit/pre-commit-hooks
-  sha: c8a1c91
-  hooks:
-    - id: autopep8-wrapper
-      args: ['-i', '--ignore=E309,E501']
-    - id: check-json
-    - id: check-yaml
-    - id: debug-statements
-    - id: end-of-file-fixer
-    - id: flake8
-      args: [--max-line-length=131]
-    - id: name-tests-test
-    - id: trailing-whitespace
-    - id: requirements-txt-fixer
-      files: 'requirements-dev.txt'
-
-# TODO: re-enable in bravado_core, disabled for now to avoid excessive merge
-# conflicts
-#- repo: git://github.com/FalconSocial/pre-commit-python-sorter
-#  sha: 1.0.1
-#  hooks:
-#    - id: python-import-sorter
+-   repo: git://github.com/pre-commit/pre-commit-hooks
+    sha: 46251c9523506b68419aefdf5ff6ff2fbc4506a4
+    hooks:
+    -   id: autopep8-wrapper
+        args:
+        - -i
+        - --ignore=E309,E501
+    -   id: check-json
+    -   id: check-yaml
+    -   id: debug-statements
+    -   id: end-of-file-fixer
+    -   id: flake8
+        args:
+        - --max-line-length=131
+    -   id: name-tests-test
+    -   id: trailing-whitespace
+    -   id: requirements-txt-fixer
+        files: requirements-dev.txt
+-   repo: git://github.com/asottile/reorder_python_imports
+    sha: 9aa4d08f9a28d3defc5e4db3c3b77d1a9980fd1a
+    hooks:
+    -   id: reorder-python-imports
