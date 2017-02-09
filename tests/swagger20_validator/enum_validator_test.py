@@ -1,7 +1,9 @@
+from jsonschema import ValidationError
 from mock import Mock, patch
-
+import pytest
 from bravado_core.spec import Spec
 from bravado_core.swagger20_validator import enum_validator
+from bravado_core.validate import validate_object
 
 
 def test_multiple_jsonschema_calls_if_enum_items_present_as_array():
@@ -49,3 +51,37 @@ def test_skip_validation_for_optional_enum_with_None_value(
     param_value = None
     list(enum_validator(swagger_spec, None, enums, param_value, param_schema))
     assert jsonschema_enum_validator.call_count == 0
+
+
+@pytest.mark.parametrize(
+    'value, enum_values, expect_exception',
+    (
+        [{'prop': 'VAL'}, ['VAL'], False],
+        [{'prop': None}, ['VAL'], False],
+        [{'prop': 'In-Valid Value'}, ['VAL'], True],
+    )
+)
+def test_validate_object_with_different_enum_configurations(minimal_swagger_spec, value, enum_values, expect_exception):
+    minimal_swagger_spec.spec_dict['definitions']['obj'] = {
+        'properties': {
+            'prop': {
+                'type': 'string',
+                'enum': enum_values,
+                'x-nullable': True
+            }
+        }
+    }
+    captured_exception = None
+    try:
+        validate_object(
+            swagger_spec=minimal_swagger_spec,
+            object_spec=minimal_swagger_spec.spec_dict['definitions']['obj'],
+            value=value,
+        )
+    except ValidationError as e:
+        captured_exception = e
+
+    if not expect_exception:
+        assert captured_exception is None
+    else:
+        assert captured_exception.message == '\'{0}\' is not one of {1}'.format(value['prop'], enum_values)
