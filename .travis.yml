@@ -1,25 +1,16 @@
 language: python
-
 matrix:
   include:
-  - python: "2.7"
-    env: TOX_ENV=py27
-  - python: "3.4"
-    env: TOX_ENV=py34
+  - env: TOXENV=py27
+  - env: TOXENV=py34
   - python: "3.5"
-    env: TOX_ENV=py35
+    env: TOXENV=py35
   - python: "3.6"
-    env: TOX_ENV=py36
-  - python: "2.7"
-    env: TOX_ENV=cover
-  - python: "2.7"
-    env: TOX_ENV=docs
-  - python: "2.7"
-    env: TOX_ENV=flake8
-install:
-- "pip install tox coveralls"
-script:
-- tox -e $TOX_ENV
-after_success:
-- coveralls
+    env: TOXENV=py36
+  - env: TOXENV=cover
+  - env: TOXENV=docs
+  - env: TOXENV=flake8
+install: pip install tox coveralls
+script: tox
+after_success: coveralls
 sudo: false
