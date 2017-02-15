@@ -1,11 +1,10 @@
 Changelog
 =========
-X.X.X (XXXX-XX-XX)
+
+4.6.1 (2017-02-15)
 ------------------
-- The content will be used to build the Changelog for the new bravado-core release
-  (add before this line your modifications summary and PR reference)
-- Fix unmarshalling empty array types
-- Removed support for Python 2.6
+- Fix unmarshalling empty array types - PR #148
+- Removed support for Python 2.6 - PR #147
 
 4.6.0 (2016-11-28)
 ------------------
