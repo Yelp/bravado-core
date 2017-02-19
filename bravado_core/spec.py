@@ -56,7 +56,10 @@ CONFIG_DEFAULTS = {
     # :class:`bravado_core.formatter.SwaggerFormat`. These formats are in
     # addition to the formats already supported by the Swagger 2.0
     # Specification.
-    'formats': []
+    'formats': [],
+
+    # Fill with None all the missing properties during object unmarshal-ing
+    'include_missing_properties': True,
 }
 
 
