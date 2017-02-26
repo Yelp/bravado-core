@@ -83,6 +83,10 @@ def enum_validator(swagger_spec, validator, enums, instance, schema):
     :param schema: swagger spec for the object
     :type schema: dict
     """
+
+    if is_prop_nullable(swagger_spec, schema) and instance is None:
+        return
+
     if schema.get('type') == 'array':
         for element in instance:
             for error in _validators.enum(validator, enums, element, schema):

@@ -33,6 +33,17 @@ def test_formats(empty_swagger_spec, array_spec):
             empty_swagger_spec, array_spec, param_value)
 
 
+@pytest.mark.parametrize('format_name,separator', COLLECTION_FORMATS.items())
+def test_formats_empty_list(empty_swagger_spec, array_spec, format_name, separator):
+    array_spec['collectionFormat'] = format_name
+    param_value = separator.join([])
+    assert [] == unmarshal_collection_format(
+        empty_swagger_spec,
+        array_spec,
+        param_value,
+    )
+
+
 def test_multi_no_op_because_handled_by_http_client_lib(empty_swagger_spec,
                                                         array_spec):
     array_spec['collectionFormat'] = 'multi'

@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 # Copyright (c) 2013, Digium, Inc.
 # Copyright (c) 2014-2015, Yelp, Inc.
-
 import os
-import sys
 
 from setuptools import setup
 
@@ -11,6 +9,7 @@ import bravado_core
 
 
 install_requires = [
+    "jsonschema[format]>=2.5.1",
     "python-dateutil",
     "pyyaml",
     "simplejson",
@@ -18,18 +17,6 @@ install_requires = [
     "swagger-spec-validator>=2.0.1",
     "pytz",
 ]
-
-
-# The [format] extras of jsonschema installs and imports some packages
-# (webcolors) that raise a syntax error in Python 2.6.
-if sys.version_info[:2] >= (2, 7):
-    install_requires.append("jsonschema[format]>=2.5.1")
-else:
-    install_requires.extend([
-        "jsonschema>=2.5.1",
-        "rfc3987",
-        "strict-rfc3339",
-    ])
 
 
 setup(
@@ -49,9 +36,10 @@ setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
         "License :: OSI Approved :: BSD License",
         "Operating System :: OS Independent",
-        "Programming Language :: Python :: 2.6",
         "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
     ],
     install_requires=install_requires,
 )

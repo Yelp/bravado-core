@@ -23,7 +23,9 @@ def address_spec():
                 'enum': [
                     'Street',
                     'Avenue',
-                    'Boulevard']
+                    'Boulevard',
+                ],
+                'default': 'Street',
             }
         }
     }
@@ -95,11 +97,19 @@ def address():
     }
 
 
-def test_with_properties(empty_swagger_spec, address_spec, address):
+@pytest.mark.parametrize(
+    'street_type, expected_street_type',
+    (
+        ('Avenue', 'Avenue'),
+        (None, 'Street'),  # make sure the default works
+    )
+)
+def test_with_properties(empty_swagger_spec, address_spec, address, street_type, expected_street_type):
+    address['street_type'] = street_type
     expected_address = {
         'number': 1600,
         'street_name': u'Ümlaut',
-        'street_type': 'Avenue'
+        'street_type': expected_street_type,
     }
     result = unmarshal_object(empty_swagger_spec, address_spec, address)
     assert expected_address == result

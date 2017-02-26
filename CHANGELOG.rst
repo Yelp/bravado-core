@@ -1,11 +1,17 @@
 Changelog
 =========
-X.X.X (XXXX-XX-XX)
+
+X.X.X (2017-XX-XX)
 ------------------
-- Add ``origin_file`` argument to ``Spec`` constructor to build file URIs
-  correctly on Windows.
+- Add "origin_file" argument to Spec constructor to build file URIs
+  correctly on Windows - PR 138
 - The content will be used to build the Changelog for the new bravado-core release
   (add before this line your modifications summary and PR reference)
+
+4.6.1 (2017-02-15)
+------------------
+- Fix unmarshalling empty array types - PR #148
+- Removed support for Python 2.6 - PR #147
 
 4.6.0 (2016-11-28)
 ------------------
