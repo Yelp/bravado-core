@@ -1,7 +1,9 @@
+# -*- coding: utf-8 -*-
 import pytest
 from jsonschema.validators import Draft4Validator
 from jsonschema.validators import RefResolver
-from mock import Mock, MagicMock
+from mock import MagicMock
+from mock import Mock
 
 from bravado_core.swagger20_validator import ref_validator
 

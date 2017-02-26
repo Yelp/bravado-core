@@ -1,4 +1,6 @@
-from bravado_core.operation import build_params, Operation
+# -*- coding: utf-8 -*-
+from bravado_core.operation import build_params
+from bravado_core.operation import Operation
 from bravado_core.spec import Spec
 
 

@@ -5,23 +5,28 @@ import json
 import logging
 import os.path
 import warnings
-import yaml
 
+import yaml
 from jsonschema import FormatChecker
 from jsonschema.compat import urlopen
 from jsonschema.validators import RefResolver
 from six import iteritems
 from six.moves.urllib import parse as urlparse
 from swagger_spec_validator import validator20
-from swagger_spec_validator.ref_validators import attach_scope, in_scope
+from swagger_spec_validator.ref_validators import attach_scope
+from swagger_spec_validator.ref_validators import in_scope
 
 from bravado_core import formatter
-from bravado_core.exception import SwaggerSchemaError, SwaggerValidationError
+from bravado_core.exception import SwaggerSchemaError
+from bravado_core.exception import SwaggerValidationError
 from bravado_core.formatter import return_true_wrapper
-from bravado_core.model import tag_models, collect_models
+from bravado_core.model import collect_models
+from bravado_core.model import tag_models
 from bravado_core.resource import build_resources
+from bravado_core.schema import is_dict_like
+from bravado_core.schema import is_list_like
+from bravado_core.schema import is_ref
 from bravado_core.security_definition import SecurityDefinition
-from bravado_core.schema import is_dict_like, is_list_like, is_ref
 
 
 log = logging.getLogger(__name__)

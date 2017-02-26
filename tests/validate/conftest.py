@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from bravado_core.exception import SwaggerValidationError
 from bravado_core.formatter import SwaggerFormat
 

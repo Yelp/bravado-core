@@ -1,9 +1,11 @@
-from mock import Mock
+# -*- coding: utf-8 -*-
 import pytest
+from mock import Mock
 
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.operation import Operation
-from bravado_core.param import Param, get_param_type_spec
+from bravado_core.param import get_param_type_spec
+from bravado_core.param import Param
 from bravado_core.spec import Spec
 
 

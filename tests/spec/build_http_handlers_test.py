@@ -1,9 +1,11 @@
+# -*- coding: utf-8 -*-
 import json
+from io import StringIO
+
 import mock
 import pytest
 import yaml
 
-from io import StringIO
 from bravado_core.spec import build_http_handlers
 
 

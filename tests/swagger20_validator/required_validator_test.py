@@ -1,6 +1,8 @@
-from mock import patch, Mock
+# -*- coding: utf-8 -*-
 import pytest
 from jsonschema.exceptions import ValidationError
+from mock import Mock
+from mock import patch
 
 from bravado_core.swagger20_validator import required_validator
 

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from mock import patch
 
 from bravado_core.param import cast_request_param

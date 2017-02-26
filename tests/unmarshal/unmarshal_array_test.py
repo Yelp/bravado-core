@@ -1,10 +1,11 @@
+# -*- coding: utf-8 -*-
 import copy
 
 import pytest
 
 from bravado_core.exception import SwaggerMappingError
-from bravado_core.unmarshal import unmarshal_array
 from bravado_core.spec import Spec
+from bravado_core.unmarshal import unmarshal_array
 
 
 @pytest.fixture

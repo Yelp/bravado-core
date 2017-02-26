@@ -1,7 +1,8 @@
+# -*- coding: utf-8 -*-
 import pytest
 
-from bravado_core.exception import SwaggerMappingError
 from bravado_core.docstring import formatted_type
+from bravado_core.exception import SwaggerMappingError
 
 
 def test_type_only():

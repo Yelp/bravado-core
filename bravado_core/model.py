@@ -1,5 +1,6 @@
-from functools import partial
+# -*- coding: utf-8 -*-
 import logging
+from functools import partial
 
 from six import iteritems
 

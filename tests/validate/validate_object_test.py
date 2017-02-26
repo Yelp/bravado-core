@@ -1,5 +1,6 @@
-from jsonschema.exceptions import ValidationError
+# -*- coding: utf-8 -*-
 import pytest
+from jsonschema.exceptions import ValidationError
 
 from bravado_core.validate import validate_object
 from tests.validate.conftest import email_address_format

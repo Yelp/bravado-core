@@ -1,6 +1,8 @@
+# -*- coding: utf-8 -*-
 import pytest
 
-from bravado_core.param import marshal_collection_format, COLLECTION_FORMATS
+from bravado_core.param import COLLECTION_FORMATS
+from bravado_core.param import marshal_collection_format
 from bravado_core.spec import Spec
 
 
