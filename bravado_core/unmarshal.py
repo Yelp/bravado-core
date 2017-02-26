@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import collections
+
 from six import iteritems
 
 from bravado_core import formatter
@@ -13,7 +15,8 @@ from bravado_core.schema import handle_null_value
 from bravado_core.schema import SWAGGER_PRIMITIVES
 
 
-def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
+def unmarshal_schema_object(swagger_spec, schema_object_spec, value,
+                            all_of_parent=False):
     """Unmarshal the value using the given schema object specification.
 
     Unmarshaling includes:
@@ -24,6 +27,7 @@ def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
     :type swagger_spec: :class:`bravado_core.spec.Spec`
     :type schema_object_spec: dict
     :type value: int, float, long, string, unicode, boolean, list, dict, etc
+    :type all_of_parent: boolean
 
     :return: unmarshaled value
     :rtype: int, float, long, string, unicode, boolean, list, dict, object (in
@@ -31,6 +35,12 @@ def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
     """
     deref = swagger_spec.deref
     schema_object_spec = deref(schema_object_spec)
+
+    all_of = deref(schema_object_spec.get('allOf'))
+    if all_of:
+        return [unmarshal_schema_object(swagger_spec, one_schema, value, True)
+                for one_schema in all_of]
+
     try:
         obj_type = schema_object_spec['type']
     except KeyError:
@@ -38,7 +48,9 @@ def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
             "The following schema object is missing a type field: {0}"
             .format(schema_object_spec.get('x-model', str(schema_object_spec))))
 
-    if obj_type in SWAGGER_PRIMITIVES:
+    if (obj_type in SWAGGER_PRIMITIVES or
+        (isinstance(obj_type, collections.Iterable) and
+         not isinstance(obj_type, str))):
         return unmarshal_primitive(swagger_spec, schema_object_spec, value)
 
     if obj_type == 'array':
@@ -52,7 +64,8 @@ def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
         return unmarshal_model(swagger_spec, schema_object_spec, value)
 
     if obj_type == 'object':
-        return unmarshal_object(swagger_spec, schema_object_spec, value)
+        return unmarshal_object(swagger_spec, schema_object_spec, value,
+                                all_of_parent)
 
     if obj_type == 'file':
         return value
@@ -103,12 +116,14 @@ def unmarshal_array(swagger_spec, array_spec, array_value):
     ]
 
 
-def unmarshal_object(swagger_spec, object_spec, object_value):
+def unmarshal_object(swagger_spec, object_spec, object_value,
+                     filter_undeclared=False):
     """Unmarshal a jsonschema type of 'object' into a python dict.
 
     :type swagger_spec: :class:`bravado_core.spec.Spec`
     :type object_spec: dict
     :type object_value: dict
+    :type filter_undeclared boolean
     :rtype: dict
     :raises: SwaggerMappingError
     """
@@ -123,9 +138,13 @@ def unmarshal_object(swagger_spec, object_spec, object_value):
 
     object_spec = deref(object_spec)
     required_fields = object_spec.get('required', [])
+    all_properties = collapsed_properties(deref(object_spec), swagger_spec)
 
     result = {}
     for k, v in iteritems(object_value):
+        if k not in all_properties and filter_undeclared:
+            continue
+
         prop_spec = get_spec_for_prop(
             swagger_spec, object_spec, object_value, k)
         if v is None and k not in required_fields:
@@ -140,8 +159,7 @@ def unmarshal_object(swagger_spec, object_spec, object_value):
             result[k] = v
 
     # re-introduce and None'ify any properties that weren't passed
-    properties = collapsed_properties(deref(object_spec), swagger_spec)
-    for prop_name, prop_spec in iteritems(properties):
+    for prop_name, prop_spec in iteritems(all_properties):
         if prop_name not in result:
             result[prop_name] = None
     return result

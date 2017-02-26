@@ -1,5 +1,6 @@
 from collections import defaultdict
 import logging
+import re
 
 from six import iteritems
 
@@ -71,7 +72,8 @@ def build_resources(swagger_spec):
 
     resources = {}
     for tag, ops in iteritems(tag_to_ops):
-        resources[tag] = Resource(tag, ops)
+        resource_identifier = re.sub('[^0-9a-zA-Z_]', '', tag)
+        resources[resource_identifier] = Resource(tag, ops)
     return resources
 
 

@@ -17,24 +17,33 @@ def validate_schema_object(swagger_spec, schema_object_spec, value):
     :raises SwaggerValidationError: when user-defined format validation fails.
     """
     deref = swagger_spec.deref
-    schema_object_spec = deref(schema_object_spec)
-    obj_type = deref(schema_object_spec.get('type'))
 
-    if obj_type in SWAGGER_PRIMITIVES:
-        validate_primitive(swagger_spec, schema_object_spec, value)
+    schemas = []
 
-    elif obj_type == 'array':
-        validate_array(swagger_spec, schema_object_spec, value)
-
-    elif obj_type == 'object':
-        validate_object(swagger_spec, schema_object_spec, value)
-
-    elif obj_type == 'file':
-        pass
-
+    all_of = deref(schema_object_spec.get('allOf'))
+    if all_of is not None:
+        schemas = [deref(sub_schema) for sub_schema in all_of]
     else:
-        raise SwaggerMappingError('Unknown type {0} for value {1}'.format(
-            obj_type, value))
+        schemas = [deref(schema_object_spec)]
+
+    for one_schema in schemas:
+        obj_type = deref(one_schema.get('type'))
+
+        if obj_type in SWAGGER_PRIMITIVES:
+            validate_primitive(swagger_spec, one_schema, value)
+
+        elif obj_type == 'array':
+            validate_array(swagger_spec, one_schema, value)
+
+        elif obj_type == 'object':
+            validate_object(swagger_spec, one_schema, value)
+
+        elif obj_type == 'file':
+            pass
+
+        else:
+            raise SwaggerMappingError('Unknown type {0} for value {1}'.format(
+                obj_type, value))
 
 
 def validate_primitive(swagger_spec, primitive_spec, value):
