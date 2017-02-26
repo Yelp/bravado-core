@@ -2,6 +2,7 @@
 from six import iteritems
 
 from bravado_core import formatter
+from bravado_core import schema
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.model import is_model, MODEL_MARKER
 from bravado_core.schema import collapsed_properties
@@ -128,7 +129,10 @@ def unmarshal_object(swagger_spec, object_spec, object_value):
         prop_spec = get_spec_for_prop(
             swagger_spec, object_spec, object_value, k)
         if v is None and k not in required_fields:
-            result[k] = None
+            if schema.has_default(swagger_spec, prop_spec):
+                result[k] = schema.get_default(swagger_spec, prop_spec)
+            else:
+                result[k] = None
         elif prop_spec:
             result[k] = unmarshal_schema_object(swagger_spec, prop_spec, v)
         else:
