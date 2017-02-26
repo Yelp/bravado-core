@@ -11,6 +11,7 @@ from bravado_core.schema import is_dict_like
 from bravado_core.schema import is_list_like
 from bravado_core.schema import handle_null_value
 from bravado_core.schema import SWAGGER_PRIMITIVES
+from bravado_core.schema import get_schema_object_type
 
 
 def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
@@ -31,11 +32,10 @@ def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
     """
     deref = swagger_spec.deref
     schema_object_spec = deref(schema_object_spec)
-    try:
-        obj_type = schema_object_spec['type']
-    except KeyError:
+    obj_type = get_schema_object_type(swagger_spec, schema_object_spec)
+    if obj_type is None:
         raise SwaggerMappingError(
-            "The following schema object is missing a type field: {0}"
+            "Could not determine the type of the following schema object: {0}"
             .format(schema_object_spec.get('x-model', str(schema_object_spec))))
 
     if obj_type in SWAGGER_PRIMITIVES:
@@ -174,6 +174,19 @@ def unmarshal_model(swagger_spec, model_spec, model_value):
             "Was {1} instead."
             .format(model_value, model_type, type(model_value)))
 
+    # Check if model is polymorphic
+    discriminator = model_spec.get('discriminator')
+    if discriminator is not None:
+        child_model_name = model_value.get(discriminator, None)
+        if child_model_name not in swagger_spec.definitions:
+            raise SwaggerMappingError(
+                'Unknown model {0} when trying to unmarshal {1}. '
+                'Value of {2}\'s discriminator {3} did not match any definitions.'
+                .format(child_model_name, model_value, model_name, discriminator)
+            )
+        model_type = swagger_spec.definitions.get(child_model_name)
+        model_spec = model_type._model_spec
+
     model_as_dict = unmarshal_object(swagger_spec, model_spec, model_value)
-    model_instance = model_type.create(model_as_dict)
+    model_instance = model_type._from_dict(model_as_dict)
     return model_instance

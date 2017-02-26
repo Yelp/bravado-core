@@ -1,9 +1,7 @@
-from functools import partial
 import logging
 
 from six import iteritems
 
-from bravado_core.docstring import docstring_property
 from bravado_core.schema import collapsed_properties
 from bravado_core.schema import SWAGGER_PRIMITIVES
 
@@ -68,7 +66,285 @@ def collect_models(container, key, path, models, swagger_spec):
             swagger_spec, model_name, model_spec)
 
 
-def create_model_type(swagger_spec, model_name, model_spec):
+class Model(object):
+    """Base class for Swagger models.
+
+    Attribute access:
+
+    Model property values can be accessed as attributes with the same name.
+    Because there are no restrictions in the Swagger spec on the names of
+    model properties, there is no way to avoid conflicts between those and
+    the names of attributes used in the Python implementation of the model
+    (methods, etc.). The solution here is to have all non-property attributes
+    making up the public API of this class prefixed by a single underscore
+    (this is done with the :func:`collections.namedtuple` type factory, which
+    also uses property values with arbitrary names). There may still be name
+    conflicts but only if the property name also begins with an undersecore,
+    which is uncommon. Truly private attributes are prefixed with double
+    underscores in the source code (and thus by "_Model__" after
+    `name-mangling`_).
+
+    Attribute access has been modified somewhat from the Python default.
+    Non-dynamic attributes like methods, etc. will always be returned over
+    property values when there is a name conflict. To access a property
+    explicitly use the ``model[prop_name]`` syntax as if it were a dictionary
+    (setting and deleting properties also works).
+
+    .. _name-mangling: https://docs.python.org/3.5/tutorial/classes.html#private-variables
+
+    .. attribute:: _swagger_spec
+
+        Class attribute that must be assigned on subclasses.
+        :class:`bravado_core.spec.Spec` the model was created from.
+
+    .. attribute:: _model_spec
+
+        Class attribute that must be assigned on subclasses. JSON-like dict
+        that describes the model.
+
+    .. attribute:: _properties
+
+        Class attribute that must be assigned on subclasses. Dict mapping
+        property names to their specs. See
+        :func:`bravado_core.schema.collapsed_properties`.
+    """
+
+    # Implementation details:
+    #
+    # Property value are stored in the __dict attribute. It would have also
+    # been possible to use the instance's __dict__ itself except that then
+    # __getattribute__ would have to have been overridden instead of
+    # __getattr__.
+
+    def __init__(self, **kwargs):
+        """Initialize from property values in keyword arguments.
+
+        :param \\**kwargs: Property values by name.
+        """
+        self.__init_from_dict(kwargs)
+
+    def __init_from_dict(self, dct):
+        """Initialize model from a dictionary of property values.
+
+        :param dict dct: Dictionary of property values by name. They need not
+            actually exist in :attr:`_properties`.
+        """
+
+        # Create the attribute value dictionary
+        # We need bypass the overloaded __setattr__ method
+        # Note the name mangling!
+        object.__setattr__(self, '_Model__dict', dict())
+
+        # Additional property names in dct
+        additional = set(dct).difference(self._properties)
+
+        if additional and not self._model_spec.get('additionalProperties', True):
+            raise AttributeError(
+                "Model {0} does not have attributes for: {1}"
+                .format(type(self), list(additional))
+            )
+
+        # Assign properties in model_spec, filling in None if missing from dct
+        for attr_name in self._properties:
+            self.__dict[attr_name] = dct.get(attr_name)
+
+        # we've got additionalProperties to set on the model
+        for attr_name in additional:
+            self.__dict[attr_name] = dct[attr_name]
+
+    def __contains__(self, obj):
+        """Has a property set (including additional)."""
+        return obj in self.__dict
+
+    def __iter__(self):
+        """Iterate over property names (including additional)."""
+        return iter(self.__dict)
+
+    def __getattr__(self, attr_name):
+        """Only search through properties if attribute not found normally.
+
+        :type attr_name: str
+        """
+        try:
+            return self[attr_name]
+        except KeyError:
+            raise AttributeError(
+                'type object {0!r} has no attribute {1!r}'
+                .format(type(self).__name__, attr_name)
+            )
+
+    def __setattr__(self, attr_name, val):
+        """Setting an attribute assigns a value to a property.
+
+        :type attr_name: str
+        """
+        self[attr_name] = val
+
+    def __delattr__(self, attr_name):
+        """Deleting an attribute deletes the property (see __delitem__).
+
+        :type attr_name: str
+        """
+        try:
+            del self[attr_name]
+        except KeyError:
+            raise AttributeError(attr_name)
+
+    def __getitem__(self, property_name):
+        """Get a property value by name.
+
+        :type attr_name: str
+        """
+        return self.__dict[property_name]
+
+    def __setitem__(self, property_name, val):
+        """Set a property value by name.
+
+        :type attr_name: str
+        """
+        self.__dict[property_name] = val
+
+    def __delitem__(self, property_name):
+        """Unset a property by name.
+
+        Additional properties will be deleted alltogether. Properties defined
+        in the spec will be set to ``None``.
+
+        :type attr_name: str
+        """
+        if property_name in self._properties:
+            self.__dict[property_name] = None
+        else:
+            del self.__dict[property_name]
+
+    def __eq__(self, other):
+        """Check for equality with another instance.
+
+        Two model instances are equal if they have the same type and the same
+        properties and values (including additional properties).
+        """
+        # Check same type as self
+        if type(self) is not type(other):
+            return False
+
+        # Ignore any '_raw' keys
+        def norm_dict(d):
+            return dict((k, d[k]) for k in d if k != '_raw')
+
+        return norm_dict(self.__dict) == norm_dict(other.__dict)
+
+    def __dir__(self):
+        """Return only property names (including additional)."""
+        return sorted(self.__dict.keys())
+
+    def __repr__(self):
+        s = [
+            "{0}={1!r}".format(attr_name, self[attr_name])
+            for attr_name in sorted(self._properties.keys())
+        ]
+        return "{0}({1})".format(self.__class__.__name__, ', '.join(s))
+
+    @property
+    def _additional_props(self):
+        """Names of properties in instance which are not defined in spec."""
+        return set(self.__dict).difference(self._properties)
+
+    def _as_dict(self, additional=False, recursive=False):
+        """Get property values as dictionary.
+
+        :param bool additional: Whether to include additional properties
+            set on the instance but not defined in the spec.
+        :param bool recursive: Whether to convert all property values which
+            are themselves models to dicts as well.
+
+        :rtype: dict
+        """
+        dct = dict()
+        for attr_name, attr_val in iteritems(self.__dict):
+            if attr_name not in self._properties and not additional:
+                continue
+
+            if recursive and isinstance(attr_val, Model):
+                attr_val = attr_val._as_dict(additional=additional,
+                                             recursive=True)
+
+            dct[attr_name] = attr_val
+
+        return dct
+
+    @classmethod
+    def _from_dict(cls, dct):
+        """Create a model instance from dictionary of property values.
+
+        The only advantage of this over ``__init__(**dct)`` is that using
+        the property name ``self`` will not result in an error.
+
+        :param dict dct: Property values by name.
+        :rtype: .Model
+        """
+        model = object.__new__(cls)
+        model.__init_from_dict(dct)
+        return model
+
+    def _marshal(self):
+        """Marshal into a json-like dict.
+
+        :rtype: dict
+        """
+        from bravado_core.marshal import marshal_model
+        return marshal_model(self._swagger_spec, self._model_spec, self)
+
+    @classmethod
+    def _unmarshal(cls, val):
+        """Unmarshal a dict into an instance of the model.
+
+        :type val: dict
+        :rtype: .Model
+        """
+        from bravado_core.unmarshal import unmarshal_model
+        return unmarshal_model(cls._swagger_spec, cls._model_spec, val)
+
+    @classmethod
+    def _isinstance(cls, obj):
+        """Check if an object is an instance of this model or a model inheriting
+        from it.
+
+        :param obj: Object to check.
+        :rtype: bool
+        """
+        if isinstance(obj, cls):
+            return True
+
+        if isinstance(obj, Model):
+            return cls.__name__ in type(obj)._inherits_from
+
+        return False
+
+
+class ModelDocstring(object):
+    """Descriptor for model classes that dynamically generates docstrings.
+
+    Docstrings are generated lazily the first time they are accessed, then
+    stored in the ``__docstring__`` attribute of the class. Subsequent
+    calls to :meth:`__get__` will return the stored value.
+
+    Note that this can't just be used as a descriptor on the :class:`.Model`
+    base class as all subclasses will automatically be given their own
+    __doc__ attribute when the class is defined/created (set to ``None`` if no
+    docstring present in the definition). This attribute is not writable and
+    so cannot be deleted or changed. The only way around this is to supply
+    an instance of this descriptor as the value for the ``__doc__`` attribute
+    when each subclass is created.
+    """
+    def __get__(self, obj, cls):
+        if not hasattr(cls, '__docstring__'):
+            cls.__docstring__ = create_model_docstring(cls._swagger_spec,
+                                                       cls._model_spec)
+
+        return cls.__docstring__
+
+
+def create_model_type(swagger_spec, model_name, model_spec, bases=(Model,)):
     """Create a dynamic class from the model data defined in the swagger
     spec.
 
@@ -79,126 +355,26 @@ def create_model_type(swagger_spec, model_name, model_spec):
     :type swagger_spec: :class:`bravado_core.spec.Spec`
     :param model_name: model name
     :param model_spec: json-like dict that describes a model.
-    :returns: dynamic type created with attributes, docstrings attached
+    :param tuple bases: Base classes for type. At least one should be
+        :class:`.Model` or a subclass of it.
+    :returns: dynamic type inheriting from ``bases``.
     :rtype: type
     """
-    from bravado_core.marshal import marshal_model
-    from bravado_core.unmarshal import unmarshal_model
-    doc = docstring_property(partial(
-        create_model_docstring, swagger_spec, model_spec))
 
-    def create(cls, kwargs):
-        self = cls.__new__(cls)
-        model_constructor(self, model_spec, swagger_spec, kwargs)
-        return self
+    inherits_from = []
+    if 'allOf' in model_spec:
+        for schema in model_spec['allOf']:
+            inherited_name = swagger_spec.deref(schema).get(MODEL_MARKER, None)
+            if inherited_name:
+                inherits_from.append(inherited_name)
 
-    methods = dict(
-        __doc__=doc,
-        __eq__=lambda self, other: compare(self, other),
-        __init__=lambda self, **kwargs: model_constructor(self, model_spec,
-                                                          swagger_spec,
-                                                          kwargs),
-        __repr__=lambda self: create_model_repr(self, model_spec,
-                                                swagger_spec),
-        __dir__=lambda self: model_dir(self, model_spec, swagger_spec),
-        create=classmethod(create),
-        marshal=lambda self: marshal_model(swagger_spec, model_spec, self),
-        unmarshal=staticmethod(lambda val: unmarshal_model(swagger_spec, model_spec, val)),
-    )
-    return type(str(model_name), (object,), methods)
-
-
-def model_dir(model, model_spec, swagger_spec):
-    """Responsible for returning the names of the valid attributes on this
-    model object.  This includes any properties defined in this model's spec,
-    any properties that happen to be defined in parent polymorphic models,
-    plus additional attibutes that exist as `additionalProperties`.
-
-    :param model: instance of a model
-    :param model_spec: spec the passed in model in dict form
-    :type swagger_spec: :class:`bravado_core.spec.Spec`
-    :returns: list of str
-    """
-    return (list(collapsed_properties(model_spec, swagger_spec).keys()) +
-            model._additional_props)
-
-
-def compare(first, second):
-    """Compares two model types for equivalence.
-
-    TODO: If a type composes another model type, .__dict__ recurse on those
-          and compare again on those dict values.
-
-    :param first: generated model type
-    :type first: type
-    :param second: generated model type
-    :type second: type
-    :returns: True if equivalent, False otherwise
-    """
-    if not hasattr(first, '__dict__') or not hasattr(second, '__dict__'):
-        return False
-
-    # Ignore any '_raw' keys
-    def norm_dict(d):
-        return dict((k, d[k]) for k in d if k != '_raw')
-
-    return norm_dict(first.__dict__) == norm_dict(second.__dict__)
-
-
-def model_constructor(model, model_spec, swagger_spec, constructor_kwargs):
-    """Constructor for the given model instance. Just assigns kwargs as attrs
-    on the model based on the 'properties' in the model specification.
-
-    :param model: Instance of a model type
-    :type model: type
-    :param model_spec: model specification
-    :type model_spec: dict
-    :type swagger_spec: :class:`bravado_core.spec.Spec`
-    :param constructor_kwargs: kwargs sent in to the constructor invocation
-    :type constructor_kwargs: dict
-    :raises: AttributeError on constructor_kwargs that don't exist in the
-        model specification's list of properties
-    """
-    arg_names = list(constructor_kwargs.keys())
-
-    properties = collapsed_properties(model_spec, swagger_spec)
-
-    for attr_name, attr_spec in iteritems(properties):
-        if attr_name in arg_names:
-            attr_value = constructor_kwargs[attr_name]
-            arg_names.remove(attr_name)
-        else:
-            attr_value = None
-        setattr(model, attr_name, attr_value)
-
-    if arg_names and not model_spec.get('additionalProperties', True):
-        raise AttributeError(
-            "Model {0} does not have attributes for: {1}"
-            .format(type(model), arg_names))
-
-    # we've got additionalProperties to set on the model
-    for arg_name in arg_names:
-        setattr(model, arg_name, constructor_kwargs[arg_name])
-
-    # stash so that dir(model) works
-    model._additional_props = arg_names
-
-
-def create_model_repr(model, model_spec, swagger_spec):
-    """Generates the repr string for the model.
-
-    :param model: Instance of a model
-    :param model_spec: model specification
-    :type model_spec: dict
-    :param swagger_spec: :class:`bravado_core.spec.Spec`
-    :returns: repr string for the model
-    """
-    properties = collapsed_properties(model_spec, swagger_spec)
-    s = [
-        "{0}={1!r}".format(attr_name, getattr(model, attr_name))
-        for attr_name in sorted(properties.keys())
-    ]
-    return "{0}({1})".format(model.__class__.__name__, ', '.join(s))
+    return type(str(model_name), bases, dict(
+        __doc__=ModelDocstring(),
+        _swagger_spec=swagger_spec,
+        _model_spec=model_spec,
+        _properties=collapsed_properties(model_spec, swagger_spec),
+        _inherits_from=inherits_from,
+    ))
 
 
 def is_model(swagger_spec, schema_object_spec):
