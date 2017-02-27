@@ -90,7 +90,13 @@ def create_model_type(swagger_spec, model_name, model_spec):
 
     def create(cls, kwargs):
         self = cls.__new__(cls)
-        model_constructor(self, model_spec, swagger_spec, kwargs)
+        model_constructor(
+            model=self,
+            model_spec=model_spec,
+            swagger_spec=swagger_spec,
+            constructor_kwargs=kwargs,
+            include_missing_properties=swagger_spec.config['include_missing_properties'],
+        )
         return self
 
     methods = dict(
@@ -146,7 +152,7 @@ def compare(first, second):
     return norm_dict(first.__dict__) == norm_dict(second.__dict__)
 
 
-def model_constructor(model, model_spec, swagger_spec, constructor_kwargs):
+def model_constructor(model, model_spec, swagger_spec, constructor_kwargs, include_missing_properties=True):
     """Constructor for the given model instance. Just assigns kwargs as attrs
     on the model based on the 'properties' in the model specification.
 
@@ -160,29 +166,28 @@ def model_constructor(model, model_spec, swagger_spec, constructor_kwargs):
     :raises: AttributeError on constructor_kwargs that don't exist in the
         model specification's list of properties
     """
-    arg_names = list(constructor_kwargs.keys())
+    model_attrs = set()
 
     properties = collapsed_properties(model_spec, swagger_spec)
 
     for attr_name, attr_spec in iteritems(properties):
-        if attr_name in arg_names:
-            attr_value = constructor_kwargs[attr_name]
-            arg_names.remove(attr_name)
-        else:
-            attr_value = None
-        setattr(model, attr_name, attr_value)
+        if include_missing_properties or attr_name in constructor_kwargs:
+            attr_value = constructor_kwargs.get(attr_name)
+            model_attrs.add(attr_name)
+            setattr(model, attr_name, attr_value)
 
-    if arg_names and not model_spec.get('additionalProperties', True):
+    missing_attrs = set(constructor_kwargs) - model_attrs
+    if missing_attrs and not model_spec.get('additionalProperties', True):
         raise AttributeError(
             "Model {0} does not have attributes for: {1}"
-            .format(type(model), arg_names))
+            .format(type(model), list(missing_attrs)))
 
     # we've got additionalProperties to set on the model
-    for arg_name in arg_names:
+    for arg_name in missing_attrs:
         setattr(model, arg_name, constructor_kwargs[arg_name])
 
     # stash so that dir(model) works
-    model._additional_props = arg_names
+    model._additional_props = list(missing_attrs)
 
 
 def create_model_repr(model, model_spec, swagger_spec):
