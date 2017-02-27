@@ -1,13 +1,15 @@
+# -*- coding: utf-8 -*-
 """
 Delegate as much validation as possible out to jsonschema. This module serves
 as the single point of entry for validations should we need to further
 customize the behavior.
 """
+from six import itervalues
 
-from bravado_core.exception import SwaggerMappingError, SwaggerSecurityValidationError
+from bravado_core.exception import SwaggerMappingError
+from bravado_core.exception import SwaggerSecurityValidationError
 from bravado_core.schema import SWAGGER_PRIMITIVES
 from bravado_core.swagger20_validator import get_validator_type
-from six import itervalues
 
 
 def validate_schema_object(swagger_spec, schema_object_spec, value):

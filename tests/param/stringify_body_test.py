@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import json
 
 from bravado_core.param import stringify_body

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 
 import simplejson as json
@@ -88,8 +89,8 @@ def test_yaml_files():
     my_dir = os.path.abspath(os.path.dirname(__file__))
 
     swagger_yaml_path = os.path.join(
-            my_dir,
-            '../../test-data/2.0/yaml/swagger.yml')
+        my_dir,
+        '../../test-data/2.0/yaml/swagger.yml')
 
     with open(swagger_yaml_path) as f:
         swagger_yaml_content = yaml.load(f)

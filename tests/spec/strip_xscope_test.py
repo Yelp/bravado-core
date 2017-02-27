@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from bravado_core.spec import strip_xscope
 
 
@@ -7,18 +8,18 @@ def test_empty():
 
 def test_contained_in_dict():
     fragment = {
-      'MON': {
-        '$ref': '#/definitions/DayHours',
-        'x-scope': [
-            'file:///happyhour/api_docs/swagger.json',
-            'file:///happyhour/api_docs/swagger.json#/definitions/WeekHours'
-        ]
-      }
+        'MON': {
+            '$ref': '#/definitions/DayHours',
+            'x-scope': [
+                'file:///happyhour/api_docs/swagger.json',
+                'file:///happyhour/api_docs/swagger.json#/definitions/WeekHours'
+            ]
+        }
     }
     expected = {
-      'MON': {
-        '$ref': '#/definitions/DayHours',
-      }
+        'MON': {
+            '$ref': '#/definitions/DayHours',
+        }
     }
     assert expected == strip_xscope(fragment)
     assert 'x-scope' in fragment['MON']
@@ -26,18 +27,18 @@ def test_contained_in_dict():
 
 def test_contained_in_list():
     fragment = [
-      {
-        '$ref': '#/definitions/DayHours',
-        'x-scope': [
-            'file:///happyhour/api_docs/swagger.json',
-            'file:///happyhour/api_docs/swagger.json#/definitions/WeekHours'
-        ]
-      }
+        {
+            '$ref': '#/definitions/DayHours',
+            'x-scope': [
+                'file:///happyhour/api_docs/swagger.json',
+                'file:///happyhour/api_docs/swagger.json#/definitions/WeekHours'
+            ]
+        }
     ]
     expected = [
-      {
-        '$ref': '#/definitions/DayHours',
-      }
+        {
+            '$ref': '#/definitions/DayHours',
+        }
     ]
     assert expected == strip_xscope(fragment)
     assert 'x-scope' in fragment[0]
@@ -45,13 +46,13 @@ def test_contained_in_list():
 
 def test_no_op():
     fragment = {
-      'MON': {
-        '$ref': '#/definitions/DayHours',
-      }
+        'MON': {
+            '$ref': '#/definitions/DayHours',
+        }
     }
     expected = {
-      'MON': {
-        '$ref': '#/definitions/DayHours',
-      }
+        'MON': {
+            '$ref': '#/definitions/DayHours',
+        }
     }
     assert expected == strip_xscope(fragment)

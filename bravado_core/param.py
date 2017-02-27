@@ -1,8 +1,9 @@
-from functools import partial
+# -*- coding: utf-8 -*-
 import logging
+from functools import partial
 
-import six
 import simplejson as json
+import six
 
 from bravado_core import schema
 from bravado_core.content_type import APP_JSON

@@ -1,8 +1,11 @@
-from mock import Mock, patch
+# -*- coding: utf-8 -*-
 import pytest
+from mock import Mock
+from mock import patch
 
 from bravado_core.operation import Operation
-from bravado_core.param import Param, unmarshal_param
+from bravado_core.param import Param
+from bravado_core.param import unmarshal_param
 from bravado_core.request import IncomingRequest
 from bravado_core.spec import Spec
 
@@ -150,7 +153,7 @@ def test_query_int_array(
         expected,
         empty_swagger_spec,
         int_array_param_spec,
-        ):
+):
     param = Param(empty_swagger_spec,
                   Mock(spec=Operation),
                   int_array_param_spec)

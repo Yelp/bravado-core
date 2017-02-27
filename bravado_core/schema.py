@@ -1,5 +1,6 @@
-from collections import Mapping
+# -*- coding: utf-8 -*-
 import copy
+from collections import Mapping
 
 from six import iteritems
 

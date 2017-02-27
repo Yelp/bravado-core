@@ -1,9 +1,10 @@
+# -*- coding: utf-8 -*-
 import base64
 import os
-import simplejson as json
-from six.moves.urllib import parse as urlparse
 
 import pytest
+import simplejson as json
+from six.moves.urllib import parse as urlparse
 
 import bravado_core.formatter
 from bravado_core.spec import Spec

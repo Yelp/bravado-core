@@ -1,8 +1,8 @@
+# -*- coding: utf-8 -*-
 import pytest
+from mock import Mock
 
 from bravado_core.model import model_constructor
-
-from mock import Mock
 from bravado_core.spec import Spec
 
 

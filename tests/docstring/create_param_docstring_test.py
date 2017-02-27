@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import pytest
 
 from bravado_core.docstring import create_param_docstring

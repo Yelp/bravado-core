@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from bravado_core.schema import has_format
 from bravado_core.spec import Spec
 

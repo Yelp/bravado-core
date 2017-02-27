@@ -1,4 +1,6 @@
+# -*- coding: utf-8 -*-
 import copy
+
 import pytest
 
 from bravado_core.exception import SwaggerMappingError

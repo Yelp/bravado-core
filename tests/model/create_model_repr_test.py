@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 import pytest
 import six
+from mock import Mock
 
 from bravado_core.model import create_model_repr
-
-from mock import Mock
 from bravado_core.spec import Spec
 
 

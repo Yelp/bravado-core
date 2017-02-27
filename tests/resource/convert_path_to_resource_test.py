@@ -1,6 +1,7 @@
+# -*- coding: utf-8 -*-
 import pytest
-from bravado_core.exception import SwaggerMappingError
 
+from bravado_core.exception import SwaggerMappingError
 from bravado_core.resource import convert_path_to_resource
 
 

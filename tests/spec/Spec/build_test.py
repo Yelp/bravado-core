@@ -1,8 +1,9 @@
-from mock import patch
+# -*- coding: utf-8 -*-
 import pytest
+from mock import patch
+from swagger_spec_validator.common import SwaggerValidationError
 
 from bravado_core.spec import Spec
-from swagger_spec_validator.common import SwaggerValidationError
 
 
 def assert_validate_call_count(expected_call_count, config, petstore_dict):

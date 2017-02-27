@@ -1,10 +1,12 @@
-from mock import Mock
+# -*- coding: utf-8 -*-
 import pytest
+from mock import Mock
 
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.operation import Operation
-from bravado_core.response import validate_response_body, OutgoingResponse, \
-    EMPTY_BODIES
+from bravado_core.response import EMPTY_BODIES
+from bravado_core.response import OutgoingResponse
+from bravado_core.response import validate_response_body
 
 
 def test_success_spec_empty_and_body_empty(minimal_swagger_spec):

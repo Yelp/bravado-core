@@ -1,8 +1,10 @@
-from mock import Mock, patch
-
+# -*- coding: utf-8 -*-
 import pytest
+from mock import Mock
+from mock import patch
 
-from bravado_core.response import IncomingResponse, unmarshal_response
+from bravado_core.response import IncomingResponse
+from bravado_core.response import unmarshal_response
 
 
 @pytest.fixture

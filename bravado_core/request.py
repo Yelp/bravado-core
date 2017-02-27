@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from six import iteritems
 
 from bravado_core.operation import log
