@@ -55,9 +55,12 @@ def composition_dict(composition_abspath):
         return json.loads(f.read())
 
 
-@pytest.fixture
-def composition_spec(composition_dict, composition_url):
-    return Spec.from_dict(composition_dict, origin_url=composition_url)
+@pytest.fixture(params=[
+    {'include_missing_properties': True},
+    {'include_missing_properties': False},
+])
+def composition_spec(request, composition_dict, composition_url):
+    return Spec.from_dict(composition_dict, origin_url=composition_url, config=request.param)
 
 
 @pytest.fixture

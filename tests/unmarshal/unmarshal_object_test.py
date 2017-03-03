@@ -44,8 +44,12 @@ def business_address_spec():
                 'properties': {
                     'name': {
                         'type': 'string'
-                    }
-                }
+                    },
+                    'floor': {
+                        'type': 'integer',
+                        'x-nullable': True,
+                    },
+                },
             }
         ]
     }
@@ -68,7 +72,7 @@ def location_spec():
 
 
 @pytest.fixture
-def business_address_swagger_spec(minimal_swagger_dict, address_spec, business_address_spec):
+def business_address_swagger_dict(minimal_swagger_dict, address_spec, business_address_spec):
     minimal_swagger_dict['definitions']['Address'] = address_spec
     minimal_swagger_dict['definitions']['BusinessAddress'] = business_address_spec
 
@@ -85,8 +89,15 @@ def business_address_swagger_spec(minimal_swagger_dict, address_spec, business_a
         }
     }
     minimal_swagger_dict['paths']['/foo'] = business_address_response
+    return minimal_swagger_dict
 
-    return Spec.from_dict(minimal_swagger_dict)
+
+@pytest.fixture(params=[
+    {'include_missing_properties': True},
+    {'include_missing_properties': False},
+])
+def business_address_swagger_spec(request, business_address_swagger_dict):
+    return Spec.from_dict(business_address_swagger_dict, config=request.param)
 
 
 @pytest.fixture
@@ -180,10 +191,12 @@ def test_with_model_composition(business_address_swagger_spec, address_spec, bus
     expected_business_address = {
         'company': 'n/a',
         'number': 1600,
-        'name': None,
         'street_name': 'Pennsylvania',
-        'street_type': 'Avenue'
+        'street_type': 'Avenue',
     }
+
+    if business_address_swagger_spec.config['include_missing_properties']:
+        expected_business_address.update(floor=None, name=None)
 
     business_address = unmarshal_object(business_address_swagger_spec, business_address_spec,
                                         business_address_dict)

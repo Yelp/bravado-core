@@ -140,11 +140,11 @@ def unmarshal_object(swagger_spec, object_spec, object_value):
             # Don't marshal when a spec is not available - just pass through
             result[k] = v
 
-    # re-introduce and None'ify any properties that weren't passed
     properties = collapsed_properties(deref(object_spec), swagger_spec)
     for prop_name, prop_spec in iteritems(properties):
-        if prop_name not in result:
+        if prop_name not in result and swagger_spec.config['include_missing_properties']:
             result[prop_name] = None
+
     return result
 
 

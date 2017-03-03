@@ -30,15 +30,23 @@ def pet_dict():
     }
 
 
-def test_definitions_with_ref(composition_spec):
+@pytest.mark.parametrize(
+    'releaseDate',
+    (
+        '1981',
+        None
+    )
+)
+def test_definitions_with_ref(composition_spec, releaseDate):
     PongClone = composition_spec.definitions['pongClone']
     pong_clone_spec = composition_spec.spec_dict['definitions']['pongClone']
     pong_clone_dict = {
         'pang': 'hello',
         'additionalFeature': 'new!',
         'gameSystem': 'Fatari',
-        'releaseDate': '1981'
     }
+    if releaseDate:
+        pong_clone_dict['releaseDate'] = releaseDate
 
     pong_clone = unmarshal_model(composition_spec, pong_clone_spec,
                                  pong_clone_dict)
@@ -47,7 +55,11 @@ def test_definitions_with_ref(composition_spec):
     assert 'hello' == pong_clone.pang
     assert 'new!' == pong_clone.additionalFeature
     assert 'Fatari' == pong_clone.gameSystem
-    assert '1981' == pong_clone.releaseDate
+    if releaseDate or composition_spec.config['include_missing_properties']:
+        assert hasattr(pong_clone, 'releaseDate') is True
+        assert releaseDate == pong_clone.releaseDate
+    else:
+        assert hasattr(pong_clone, 'releaseDate') is False
 
 
 def test_pet(petstore_dict, pet_dict):
