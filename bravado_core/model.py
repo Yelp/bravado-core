@@ -124,7 +124,7 @@ class Model(object):
         """
         self.__init_from_dict(kwargs)
 
-    def __init_from_dict(self, dct):
+    def __init_from_dict(self, dct, include_missing_properties=True):
         """Initialize model from a dictionary of property values.
 
         :param dict dct: Dictionary of property values by name. They need not
@@ -147,7 +147,8 @@ class Model(object):
 
         # Assign properties in model_spec, filling in None if missing from dct
         for attr_name in self._properties:
-            self.__dict[attr_name] = dct.get(attr_name)
+            if include_missing_properties or attr_name in dct:
+                self.__dict[attr_name] = dct.get(attr_name)
 
         # we've got additionalProperties to set on the model
         for attr_name in additional:
@@ -242,6 +243,7 @@ class Model(object):
         s = [
             "{0}={1!r}".format(attr_name, self[attr_name])
             for attr_name in sorted(self._properties.keys())
+            if attr_name in self
         ]
         return "{0}({1})".format(self.__class__.__name__, ', '.join(s))
 
@@ -284,7 +286,10 @@ class Model(object):
         :rtype: .Model
         """
         model = object.__new__(cls)
-        model.__init_from_dict(dct)
+        model.__init_from_dict(
+            dct=dct,
+            include_missing_properties=cls._swagger_spec.config['include_missing_properties'],
+        )
         return model
 
     def _marshal(self):
