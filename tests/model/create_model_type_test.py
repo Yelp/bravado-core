@@ -1,9 +1,10 @@
+# -*- coding: utf-8 -*-
 import mock
 
 from bravado_core.model import create_model_type
-from tests.model.conftest import pet_spec as pet_spec_fixture
 from tests.model.conftest import \
     definitions_spec as definitions_spec_fixture
+from tests.model.conftest import pet_spec as pet_spec_fixture
 
 
 def test_pet_model(empty_swagger_spec, pet_spec):

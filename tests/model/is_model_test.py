@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import pytest
 
 from bravado_core.model import is_model

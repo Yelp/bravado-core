@@ -1,5 +1,6 @@
-from jsonschema.exceptions import RefResolutionError
+# -*- coding: utf-8 -*-
 import pytest
+from jsonschema.exceptions import RefResolutionError
 
 from bravado_core.spec import Spec
 

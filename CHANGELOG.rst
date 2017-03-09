@@ -1,9 +1,17 @@
 Changelog
 =========
+
 X.X.X (XXXX-XX-XX)
 ------------------
+- Add include_missing_properties configuration - PR #152
+- Consider default when unmarshalling - PR #154
 - The content will be used to build the Changelog for the new bravado-core release
   (add before this line your modifications summary and PR reference)
+
+4.6.1 (2017-02-15)
+------------------
+- Fix unmarshalling empty array types - PR #148
+- Removed support for Python 2.6 - PR #147
 
 4.6.0 (2016-11-28)
 ------------------

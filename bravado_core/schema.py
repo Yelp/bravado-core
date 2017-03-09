@@ -1,5 +1,6 @@
-from collections import Mapping
+# -*- coding: utf-8 -*-
 import copy
+from collections import Mapping
 
 from six import iteritems
 
@@ -168,11 +169,15 @@ def handle_null_value(swagger_spec, schema_object_spec):
 
     :param swagger_spec: :class:`bravado_core.spec.Spec`
     :param schema_object_spec: dict
-    :return: None if the spec is nullable
-    :raises: SwaggerMappingError if the spec is not nullable
+    :return: The default if there is a default value, None if the spec is nullable
+    :raises: SwaggerMappingError if the spec is not nullable and no default exists
     """
+    if has_default(swagger_spec, schema_object_spec):
+        return get_default(swagger_spec, schema_object_spec)
+
     if is_prop_nullable(swagger_spec, schema_object_spec):
         return None
+
     raise SwaggerMappingError(
         'Spec {0} is a required value'.format(schema_object_spec))
 

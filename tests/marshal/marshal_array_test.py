@@ -1,8 +1,9 @@
+# -*- coding: utf-8 -*-
 import copy
 
 import pytest
-from bravado_core.exception import SwaggerMappingError
 
+from bravado_core.exception import SwaggerMappingError
 from bravado_core.marshal import marshal_array
 from bravado_core.spec import Spec
 

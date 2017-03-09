@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import logging
 
 from six import iteritems
@@ -336,6 +337,7 @@ class ModelDocstring(object):
     an instance of this descriptor as the value for the ``__doc__`` attribute
     when each subclass is created.
     """
+
     def __get__(self, obj, cls):
         if not hasattr(cls, '__docstring__'):
             cls.__docstring__ = create_model_docstring(cls._swagger_spec,

@@ -2,15 +2,17 @@
 from six import iteritems
 
 from bravado_core import formatter
+from bravado_core import schema
 from bravado_core.exception import SwaggerMappingError
-from bravado_core.model import is_model, MODEL_MARKER
+from bravado_core.model import is_model
+from bravado_core.model import MODEL_MARKER
 from bravado_core.schema import collapsed_properties
+from bravado_core.schema import get_schema_object_type
 from bravado_core.schema import get_spec_for_prop
+from bravado_core.schema import handle_null_value
 from bravado_core.schema import is_dict_like
 from bravado_core.schema import is_list_like
-from bravado_core.schema import handle_null_value
 from bravado_core.schema import SWAGGER_PRIMITIVES
-from bravado_core.schema import get_schema_object_type
 
 
 def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
@@ -128,18 +130,21 @@ def unmarshal_object(swagger_spec, object_spec, object_value):
         prop_spec = get_spec_for_prop(
             swagger_spec, object_spec, object_value, k)
         if v is None and k not in required_fields:
-            result[k] = None
+            if schema.has_default(swagger_spec, prop_spec):
+                result[k] = schema.get_default(swagger_spec, prop_spec)
+            else:
+                result[k] = None
         elif prop_spec:
             result[k] = unmarshal_schema_object(swagger_spec, prop_spec, v)
         else:
             # Don't marshal when a spec is not available - just pass through
             result[k] = v
 
-    # re-introduce and None'ify any properties that weren't passed
     properties = collapsed_properties(deref(object_spec), swagger_spec)
     for prop_name, prop_spec in iteritems(properties):
-        if prop_name not in result:
+        if prop_name not in result and swagger_spec.config['include_missing_properties']:
             result[prop_name] = None
+
     return result
 
 

@@ -1,7 +1,10 @@
-from mock import Mock, patch
+# -*- coding: utf-8 -*-
+from mock import Mock
+from mock import patch
 
 from bravado_core.operation import Operation
-from bravado_core.response import validate_response, OutgoingResponse
+from bravado_core.response import OutgoingResponse
+from bravado_core.response import validate_response
 from bravado_core.spec import Spec
 
 

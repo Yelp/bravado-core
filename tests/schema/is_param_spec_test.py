@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from bravado_core.schema import is_param_spec
 from bravado_core.spec import Spec
 

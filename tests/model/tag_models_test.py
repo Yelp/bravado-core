@@ -1,6 +1,8 @@
+# -*- coding: utf-8 -*-
 import pytest
 
-from bravado_core.model import tag_models, MODEL_MARKER
+from bravado_core.model import MODEL_MARKER
+from bravado_core.model import tag_models
 from bravado_core.spec import Spec
 
 

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from bravado_core.param import Param
 from bravado_core.resource import build_resources
 from bravado_core.spec import Spec
