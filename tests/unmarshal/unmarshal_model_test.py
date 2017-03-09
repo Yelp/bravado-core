@@ -192,3 +192,35 @@ def test_unmarshal_model_with_none_model_type(petstore_spec):
         unmarshal_model(petstore_spec, model_spec, {})
 
     assert 'Unknown model Foobar' in str(excinfo.value)
+
+
+def test_unmarshal_model_polymorphic_specs(polymorphic_spec):
+    list_of_pets_dict = {
+        'number_of_pets': 2,
+        'list': [
+            {
+                'name': 'a dog name',
+                'type': 'Dog',
+                'birth_date': '2017-03-09',
+            },
+            {
+                'name': 'a cat name',
+                'type': 'Cat',
+                'color': 'white',
+            },
+        ]
+    }
+    pet_list = unmarshal_model(
+        swagger_spec=polymorphic_spec,
+        model_spec=polymorphic_spec.spec_dict['definitions']['PetList'],
+        model_value=list_of_pets_dict,
+    )
+
+    assert isinstance(pet_list, polymorphic_spec.definitions['PetList'])
+
+    assert pet_list.number_of_pets == list_of_pets_dict['number_of_pets']
+    assert len(pet_list.list) == len(list_of_pets_dict['list'])
+
+    for list_item_model, list_item_dict in zip(pet_list.list, list_of_pets_dict['list']):
+        assert isinstance(list_item_model, polymorphic_spec.definitions[list_item_dict['type']])
+        assert list_item_model._marshal() == list_item_dict

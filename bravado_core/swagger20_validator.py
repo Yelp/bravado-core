@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import functools
+from copy import deepcopy
 
 from jsonschema import _validators
 from jsonschema import validators
@@ -9,6 +10,7 @@ from swagger_spec_validator.ref_validators import in_scope
 
 from bravado_core.schema import is_param_spec
 from bravado_core.schema import is_prop_nullable
+from bravado_core.schema import is_ref
 from bravado_core.schema import is_required
 
 """Draft4Validator is not completely compatible with Swagger 2.0 schema
@@ -104,6 +106,62 @@ def enum_validator(swagger_spec, validator, enums, instance, schema):
         yield error
 
 
+def discriminator_validator(swagger_spec, validator, discriminator_attribute, instance, schema):
+    """
+    Validates instance against the schema defined by the discriminator attribute.
+
+    [Swagger 2.0 Schema Object](http://swagger.io/specification/#schemaObject) allows discriminator field to be defined.
+    discriminator field defines the attribute that will be used to discriminate the object type.
+
+    NOTE: discriminator_validator assumes that discriminator_attribute is not None or empty
+
+    :param swagger_spec: needed for access to deref()
+    :type swagger_spec: :class:`bravado_core.spec.Spec`
+    :param validator: Validator class used to validate the object
+    :type validator: :class: `Swagger20Validator` or
+        :class: `jsonschema.validators.Draft4Validator`
+    :param discriminator_attribute: name of the discriminator attribute
+    :type discriminator_attribute: str
+    :param instance: object instance value
+    :type instance: dict
+    :param schema: swagger spec for the object
+    :type schema: dict
+    """
+
+    discriminator_value = instance[discriminator_attribute]
+    if discriminator_value not in swagger_spec.spec_dict['definitions']:
+        raise ValidationError(
+            message='\'{}\' is not a recognized schema'.format(discriminator_value)
+        )
+
+    if discriminator_value == schema['x-model']:
+        return
+
+    new_schema = deepcopy(swagger_spec.deref(swagger_spec.spec_dict['definitions'][discriminator_value]))
+    if 'allOf' not in new_schema:
+        raise ValidationError(
+            message='discriminated schema \'{}\' must inherit from \'{}\''.format(
+                discriminator_value, schema['x-model']
+            )
+        )
+
+    schemas_to_remove = [s for s in new_schema['allOf'] if is_ref(s) and swagger_spec.deref(s) == schema]
+    if not schemas_to_remove:
+        # Not checking against len(schemas_to_remove) > 1 because it should be prevented by swagger spec validation
+        raise ValidationError(
+            message='discriminated schema \'{}\' must inherit from \'{}\''.format(
+                discriminator_value, schema['x-model']
+            )
+        )
+
+    # Remove the current schema from the allOf list in order to avoid unbounded recursion
+    # (the current object is already validated against schema)
+    new_schema['allOf'].remove(schemas_to_remove[0])
+
+    from bravado_core.validate import validate_object  # Local import due to circular dependency
+    validate_object(swagger_spec=swagger_spec, object_spec=new_schema, value=instance)
+
+
 def ref_validator(validator, ref, instance, schema):
     """When validating a request or response that contain $refs, jsonschema's
      RefResolver only contains scope (RefResolver._scopes_stack) for the
@@ -155,4 +213,5 @@ def get_validator_type(swagger_spec):
             'required': functools.partial(required_validator, swagger_spec),
             'enum': functools.partial(enum_validator, swagger_spec),
             'type': functools.partial(type_validator, swagger_spec),
+            'discriminator': functools.partial(discriminator_validator, swagger_spec),
         })
