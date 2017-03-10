@@ -2,6 +2,8 @@ import pytest
 from jsonschema import ValidationError
 from mock import patch
 
+from bravado_core.exception import SwaggerValidationError
+from bravado_core.formatter import SwaggerFormat
 from bravado_core.swagger20_validator import format_validator
 from bravado_core.validate import validate_object
 
@@ -83,12 +85,27 @@ def test_validate_when_not_nullable_property_schema_and_value_is_None(
     m_format_validator.assert_called_once_with(*args)
 
 
+def validate_dummy(dummy_string):
+    if dummy_string != 'dummy':
+        raise SwaggerValidationError('dummy')
+
+
+DummyFormat = SwaggerFormat(
+    format="dummy",
+    to_wire=lambda x: x,
+    to_python=lambda x: x,
+    validate=validate_dummy,
+    description="dummy format",
+)
+
+
 @pytest.mark.parametrize(
     'value, format_, x_nullable, expect_exception',
     (
-        [{'prop': 'a813d449-21ff-4348-8262-c9c067151eb2'}, 'uuid', False, False],
-        [{'prop': None}, 'uuid', False, True],
-        [{'prop': None}, 'uuid', True, False],
+        [{'prop': 'dummy'}, 'dummy', False, False],
+        [{'prop': 'hello'}, 'dummy', False, True],
+        [{'prop': None}, 'dummy', False, True],
+        [{'prop': None}, 'dummy', True, False],
     )
 )
 def test_validate_object_with_different_format_configurations(
@@ -102,6 +119,7 @@ def test_validate_object_with_different_format_configurations(
             }
         }
     }
+    minimal_swagger_spec.register_format(DummyFormat)
     captured_exception = None
     try:
         validate_object(
@@ -115,4 +133,7 @@ def test_validate_object_with_different_format_configurations(
     if not expect_exception:
         assert captured_exception is None
     else:
-        assert captured_exception.message == '{0} is not of type \'string\''.format(value['prop'])
+        assert (
+            captured_exception.message == '{0} is not a \'dummy\''.format(repr(value['prop'])) or
+            captured_exception.message == '{0} is not of type \'string\''.format(repr(value['prop']))
+        )
