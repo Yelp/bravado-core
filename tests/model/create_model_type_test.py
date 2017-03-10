@@ -50,8 +50,8 @@ def test_marshal_and_unmarshal(petstore_spec):
     pet_name = 'Darwin'
     pet_photo_urls = []
     pet = Pet(id=pet_id, name=pet_name, photoUrls=pet_photo_urls)
-    marshalled_model = pet.marshal()
-    unmarshalled_marshalled_model = Pet.unmarshal(marshalled_model)
+    marshalled_model = pet._marshal()
+    unmarshalled_marshalled_model = Pet._unmarshal(marshalled_model)
 
     assert marshalled_model == {'id': pet_id, 'name': pet_name, 'photoUrls': pet_photo_urls}
     assert isinstance(unmarshalled_marshalled_model, Pet)

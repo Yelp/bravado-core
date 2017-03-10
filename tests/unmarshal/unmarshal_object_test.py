@@ -455,3 +455,29 @@ def test_non_required_none_value(empty_swagger_spec, property_type):
     value = {'x': None}
     result = unmarshal_object(empty_swagger_spec, content_spec, value)
     assert result == {'x': None}
+
+
+def test_unmarshal_object_polymorphic_specs(polymorphic_spec):
+    list_of_pets_dict = {
+        'number_of_pets': 2,
+        'list': [
+            {
+                'name': 'a dog name',
+                'type': 'Dog',
+                'birth_date': '2017-03-09',
+            },
+            {
+                'name': 'a cat name',
+                'type': 'Cat',
+                'color': 'white',
+            },
+        ]
+    }
+    polymorphic_spec.config['use_models'] = False
+    pet_list = unmarshal_object(
+        swagger_spec=polymorphic_spec,
+        object_spec=polymorphic_spec.spec_dict['definitions']['PetList'],
+        object_value=list_of_pets_dict,
+    )
+
+    assert list_of_pets_dict == pet_list

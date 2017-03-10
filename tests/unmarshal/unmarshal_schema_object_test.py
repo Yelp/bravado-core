@@ -8,6 +8,24 @@ from bravado_core.spec import Spec
 from bravado_core.unmarshal import unmarshal_schema_object
 
 
+def test_unmarshal_schema_object_allOf(composition_dict, composition_url):
+    composition_spec = Spec.from_dict(composition_dict, origin_url=composition_url)
+    pongClone_spec = composition_spec.spec_dict['definitions']['pongClone']
+    pongClone = composition_spec.definitions['pongClone']
+
+    result = unmarshal_schema_object(
+        composition_spec,
+        pongClone_spec,
+        {
+            'additionalFeature': 'Badges',
+            'gameSystem': 'NES',
+            'pang': 'value',
+            'releaseDate': 'October',
+        },
+    )
+    assert isinstance(result, pongClone)
+
+
 def test_use_models_true(petstore_dict):
     petstore_spec = Spec.from_dict(petstore_dict, config={'use_models': True})
     Category = petstore_spec.definitions['Category']

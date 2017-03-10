@@ -318,3 +318,95 @@ def test_allOf_complex_failure(composition_spec):
     with pytest.raises(ValidationError) as excinfo:
         validate_object(composition_spec, pongclone_spec, value)
     assert excinfo.value.message == "'gameSystem' is a required property"
+
+
+def test_validate_valid_polymorphic_object(polymorphic_spec):
+    list_of_pets_dict = {
+        'number_of_pets': 3,
+        'list': [
+            {
+                'name': 'a generic pet name',
+                'type': 'GenericPet',
+            },
+            {
+                'name': 'a dog name',
+                'type': 'Dog',
+                'birth_date': '2017-03-09',
+            },
+            {
+                'name': 'a cat name',
+                'type': 'Cat',
+                'color': 'white',
+            },
+        ]
+    }
+    validate_object(
+        swagger_spec=polymorphic_spec,
+        object_spec=polymorphic_spec.spec_dict['definitions']['PetList'],
+        value=list_of_pets_dict,
+    )
+
+
+@pytest.mark.parametrize(
+    'schema_dict, expected_validation_error',
+    (
+        [
+            {
+                'number_of_pets': 1,
+                'list': [
+                    {
+                        'name': 'a cat name',
+                        'type': 'Dog',
+                        'color': 'white',
+                    },
+                ]
+            },
+            '\'birth_date\' is a required property',
+        ],
+        [
+            {
+                'number_of_pets': 1,
+                'list': [
+                    {
+                        'name': 'any string',
+                        'type': 'a not defined type',
+                    },
+                ]
+            },
+            '\'a not defined type\' is not a recognized schema',
+        ],
+        [
+            {
+                'number_of_pets': 1,
+                'list': [
+                    {
+                        'name': 'a bird name',
+                        'type': 'Bird',
+                    },
+                ]
+            },
+            'discriminated schema \'Bird\' must inherit from \'GenericPet\'',
+        ],
+        [
+            {
+                'number_of_pets': 1,
+                'list': [
+                    {
+                        'name': 'a whale name',
+                        'type': 'Whale',
+                        'weight': 1000,
+                    },
+                ]
+            },
+            'discriminated schema \'Whale\' must inherit from \'GenericPet\'',
+        ],
+    )
+)
+def test_validate_invalid_polymorphic_object(polymorphic_spec, schema_dict, expected_validation_error):
+    with pytest.raises(ValidationError) as e:
+        validate_object(
+            swagger_spec=polymorphic_spec,
+            object_spec=polymorphic_spec.spec_dict['definitions']['PetList'],
+            value=schema_dict,
+        )
+    assert e.value.message == expected_validation_error

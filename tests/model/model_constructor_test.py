@@ -1,42 +1,11 @@
 # -*- coding: utf-8 -*-
 import pytest
-from mock import Mock
 
-from bravado_core.model import model_constructor
-from bravado_core.spec import Spec
+from bravado_core.schema import collapsed_properties
 
 
-@pytest.fixture
-def cat_kwargs():
-    return {
-        'id': 12,
-        'category': {
-            'id': 42,
-            'name': 'Feline',
-        },
-        'name': 'Oskar',
-        'photoUrls': ['example.com/img1', 'example.com/img2'],
-        'tags': [
-            {
-                'id': 1,
-                'name': 'cute'
-            }
-        ],
-        'neutered': True,
-    }
-
-
-@pytest.fixture
-def user_kwargs():
-    return {
-        'firstName': 'Darwin',
-        'userStatus': 9,
-        'id': 999,
-    }
-
-
-def test_simple(user_spec, user, user_kwargs):
-    model_constructor(user, user_spec, Mock(spec=Spec), user_kwargs)
+def test_simple(user_type, user_kwargs):
+    user = user_type(**user_kwargs)
     assert user.firstName == 'Darwin'
     assert user.userStatus == 9
     assert user.id == 999
@@ -45,8 +14,8 @@ def test_simple(user_spec, user, user_kwargs):
     assert user.password is None
 
 
-def test_empty_kwargs(user_spec, user):
-    model_constructor(user, user_spec, Mock(spec=Spec), {})
+def test_empty_kwargs(user_type):
+    user = user_type()
     assert user.firstName is None
     assert user.userStatus is None
     assert user.id is None
@@ -56,42 +25,44 @@ def test_empty_kwargs(user_spec, user):
 
 
 def test_additionalProperties_defaults_to_true_when_not_present(
-        user_spec, user, user_kwargs):
+        user_type, user_kwargs):
     # verify exra kwargs are attached to the model as attributes when
     # additionalProperties is not present
     user_kwargs['foo'] = 'bar'
-    model_constructor(user, user_spec, Mock(spec=Spec), user_kwargs)
+    user = user_type(**user_kwargs)
     assert user.foo == 'bar'
     assert 'foo' in dir(user)
 
 
-def test_additionalProperties_true(user_spec, user, user_kwargs):
+def test_additionalProperties_true(definitions_spec, user_type, user_kwargs):
     # verify exra kwargs are attached to the model as attributes when
     # additionalProperties is True
-    user_spec['additionalProperties'] = True
+    user_type._model_spec['additionalProperties'] = True
     user_kwargs['foo'] = 'bar'  # additional prop
-    model_constructor(user, user_spec, Mock(spec=Spec), user_kwargs)
+    user = user_type(**user_kwargs)
     assert user.foo == 'bar'
     assert 'foo' in dir(user)
+    assert set(user) == set(definitions_spec['User']['properties'].keys()).union({'foo'})
 
 
-def test_additionalProperties_false(user_spec, user, user_kwargs):
+def test_additionalProperties_false(user_type, user_kwargs):
     # verify exra kwargs are caught during model construction when
     # additionalProperties is False
-    user_spec['additionalProperties'] = False
+    user_type._model_spec['additionalProperties'] = False
     user_kwargs['foo'] = 'bar'  # additional prop
     with pytest.raises(AttributeError) as excinfo:
-        model_constructor(user, user_spec, Mock(spec=Spec), user_kwargs)
+        user_type(**user_kwargs)
     assert "does not have attributes for: ['foo']" in str(excinfo.value)
-    assert not hasattr(user, 'foo')
-    assert 'foo' not in dir(user)
 
 
-def test_allOf(cat, cat_spec, cat_swagger_spec, cat_kwargs):
-    model_constructor(cat, cat_spec, cat_swagger_spec, cat_kwargs)
+def test_allOf(cat_swagger_spec, cat_type, cat_kwargs):
+    cat = cat_type(**cat_kwargs)
     assert cat.id == 12
     assert cat.category == {'id': 42, 'name': 'Feline'}
     assert cat.name == 'Oskar'
     assert cat.photoUrls == ['example.com/img1', 'example.com/img2']
     assert cat.tags == [{'id': 1, 'name': 'cute'}]
     assert cat.neutered is True
+    assert set(cat) == set(collapsed_properties(
+        cat_swagger_spec.spec_dict['definitions']['Cat'], cat_swagger_spec
+    ).keys())

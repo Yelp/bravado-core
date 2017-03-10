@@ -77,6 +77,19 @@ def petstore_spec(petstore_dict):
 
 
 @pytest.fixture
+def polymorphic_dict():
+    my_dir = os.path.abspath(os.path.dirname(__file__))
+    fpath = os.path.join(my_dir, '../test-data/2.0/polymorphic_specs/swagger.json')
+    with open(fpath) as f:
+        return json.loads(f.read())
+
+
+@pytest.fixture
+def polymorphic_spec(polymorphic_dict):
+    return Spec.from_dict(polymorphic_dict)
+
+
+@pytest.fixture
 def security_dict():
     my_dir = os.path.abspath(os.path.dirname(__file__))
     fpath = os.path.join(my_dir, '../test-data/2.0/security/swagger.json')

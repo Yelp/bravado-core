@@ -23,6 +23,7 @@ def test_ref_true(minimal_swagger_dict):
             'in': 'path',
             'name': 'petId',
             'type': 'integer',
+            'required': True,
         }
     }
     param_spec = {'$ref': '#/parameters/PetId'}

@@ -1,0 +1,123 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "Small example of polymorphic Swaggr specs",
+    "version": "0.0.0",
+    "title": "Pets"
+  },
+  "basePath": "/",
+  "paths": {
+    "/pets": {
+      "get": {
+        "summary": "Get all the pets",
+        "operationId": "get_pets",
+        "responses": {
+          "200": {
+            "description": "Pet List"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "GenericPet": {
+      "type": "object",
+      "title": "GenericPet",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ],
+      "discriminator": "type"
+    },
+    "Dog": {
+      "type": "object",
+      "title": "Dog",
+      "allOf": [
+        {
+          "$ref": "#/definitions/GenericPet"
+        },
+        {
+          "properties": {
+            "birth_date": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          "required": [
+            "birth_date"
+          ]
+        }
+      ]
+    },
+    "Cat": {
+      "type": "object",
+      "title": "Cat",
+      "allOf": [
+        {
+          "$ref": "#/definitions/GenericPet"
+        },
+        {
+          "properties": {
+            "color": {
+              "type": "string",
+              "enum": [
+                "red",
+                "green",
+                "yellow",
+                "white",
+                "black"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "Bird": {
+      "type": "object",
+      "title": "Bird",
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "Whale": {
+      "type": "object",
+      "title": "Whale",
+      "allOf": [
+        {
+          "$ref": "#/definitions/Bird"
+        },
+        {
+          "properties": {
+            "weight": {
+              "type": "integer"
+            }
+          }
+        }
+      ]
+    },
+    "PetList": {
+      "type": "object",
+      "properties": {
+        "number_of_pets": {
+          "type": "integer"
+        },
+        "list": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GenericPet"
+          }
+        }
+      }
+    }
+  }
+}
