@@ -7,7 +7,6 @@ from bravado_core.exception import SwaggerMappingError
 from bravado_core.model import is_model
 from bravado_core.model import MODEL_MARKER
 from bravado_core.schema import collapsed_properties
-from bravado_core.schema import get_schema_object_type
 from bravado_core.schema import get_spec_for_prop
 from bravado_core.schema import handle_null_value
 from bravado_core.schema import is_dict_like
@@ -33,10 +32,14 @@ def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
     """
     deref = swagger_spec.deref
     schema_object_spec = deref(schema_object_spec)
-    obj_type = get_schema_object_type(swagger_spec, schema_object_spec)
-    if obj_type is None:
+
+    obj_type = schema_object_spec.get('type')
+    if not obj_type and 'allOf' in schema_object_spec:
+        obj_type = 'object'
+
+    if not obj_type:
         raise SwaggerMappingError(
-            "Could not determine the type of the following schema object: {0}"
+            "The following schema object is missing a type field: {0}"
             .format(schema_object_spec.get('x-model', str(schema_object_spec))))
 
     if obj_type in SWAGGER_PRIMITIVES:
