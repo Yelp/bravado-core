@@ -4,6 +4,7 @@ import logging
 from six import iteritems
 
 from bravado_core.schema import collapsed_properties
+from bravado_core.schema import is_list_like
 from bravado_core.schema import SWAGGER_PRIMITIVES
 
 
@@ -252,24 +253,37 @@ class Model(object):
         """Names of properties in instance which are not defined in spec."""
         return set(self.__dict).difference(self._properties)
 
-    def _as_dict(self, additional=False, recursive=False):
+    def _as_dict(self, additional_properties=True, recursive=True):
         """Get property values as dictionary.
 
-        :param bool additional: Whether to include additional properties
+        :param bool additional_properties: Whether to include additional properties
             set on the instance but not defined in the spec.
         :param bool recursive: Whether to convert all property values which
             are themselves models to dicts as well.
 
         :rtype: dict
         """
+
         dct = dict()
         for attr_name, attr_val in iteritems(self.__dict):
-            if attr_name not in self._properties and not additional:
+            if attr_name not in self._properties and not additional_properties:
                 continue
 
-            if recursive and isinstance(attr_val, Model):
-                attr_val = attr_val._as_dict(additional=additional,
-                                             recursive=True)
+            if recursive:
+                is_list = is_list_like(attr_val)
+
+                attribute = attr_val if is_list else [attr_val]
+
+                new_attr_val = []
+                for attr in attribute:
+                    if isinstance(attr, Model):
+                        attr = attr._as_dict(
+                            additional_properties=additional_properties,
+                            recursive=recursive,
+                        )
+                    new_attr_val.append(attr)
+
+                attr_val = new_attr_val if is_list else new_attr_val[0]
 
             dct[attr_name] = attr_val
 

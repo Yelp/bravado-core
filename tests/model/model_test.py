@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import pytest
 
+from bravado_core.model import Model
 from bravado_core.schema import collapsed_properties
 from bravado_core.unmarshal import unmarshal_model
 
@@ -27,16 +28,17 @@ def test_model_properties_iteration_allOf(cat_swagger_spec, cat_type, cat_kwargs
 def test_model_delete_property(definitions_spec, user_type, user_kwargs):
     user = user_type(**user_kwargs)
 
-    assert 'id' in set(user)
+    assert 'id' in user
     del user.id
-    assert 'id' in set(user)
+    assert 'id' in user
+    # deleting a property defined in the spec should set the value to None
+    assert user.id is None
 
-    assert any(
+    assert all(
         user[property] == user_kwargs.get(property)
-        for property in definitions_spec['User']['properties'].keys()
+        for property in definitions_spec['User']['properties']
         if property != 'id'
     )
-    assert user['id'] is None
 
 
 def test_model_delete_not_existing_property(user_type, user_kwargs):
@@ -52,21 +54,60 @@ def test_model_delete_additional_property(definitions_spec, user_type, user_kwar
     user_type._model_spec['additionalProperties'] = True
     user = user_type(foo='bar', **user_kwargs)
 
-    assert 'foo' in set(user)
+    assert 'foo' in user
     assert user._additional_props == {'foo'}
     del user.foo
-    assert 'foo' not in set(user)
+    # deleting a property not defined in the spec should remove it from the available properties
+    assert 'foo' not in user
     assert user._additional_props == set()
+    assert hasattr(user, 'foo') is False
 
-    assert any(
+    assert all(
         user[property] == user_kwargs.get(property)
-        for property in definitions_spec['User']['properties'].keys()
+        for property in definitions_spec['User']['properties']
     )
 
 
 def test_model_as_dict(definitions_spec, user_type, user_kwargs):
     user = user_type(**user_kwargs)
     assert {k: user_kwargs.get(k) for k in definitions_spec['User']['properties'].keys()} == user._as_dict()
+
+
+@pytest.mark.parametrize(
+    'recursive',
+    [
+        True,
+        False,
+    ]
+)
+def test_marsshal_as_dict_recursive(polymorphic_spec, recursive):
+    list_of_pets_dict = {
+        'number_of_pets': 2,
+        'list': [
+            {
+                'name': 'a dog name',
+                'type': 'Dog',
+                'birth_date': '2017-03-09',
+            },
+            {
+                'name': 'a cat name',
+                'type': 'Cat',
+                'color': 'white',
+            },
+        ]
+    }
+    pet_list = unmarshal_model(
+        swagger_spec=polymorphic_spec,
+        model_spec=polymorphic_spec.spec_dict['definitions']['PetList'],
+        model_value=list_of_pets_dict,
+    )
+
+    dictionary = pet_list._as_dict(recursive=recursive)
+    assert all(
+        # if recursive is True the pet from the dictionary should not be a Model
+        isinstance(pet, Model) is not recursive
+        for pet in dictionary['list']
+    )
 
 
 @pytest.mark.parametrize(
@@ -82,7 +123,7 @@ def test_model_as_dict_additional_property(definitions_spec, user_type, user_kwa
     expected_dict = {k: user_kwargs.get(k) for k in definitions_spec['User']['properties'].keys()}
     if export_additional_properties:
         expected_dict['foo'] = 'bar'
-    assert expected_dict == user._as_dict(additional=export_additional_properties)
+    assert expected_dict == user._as_dict(additional_properties=export_additional_properties)
 
 
 @pytest.mark.parametrize(
