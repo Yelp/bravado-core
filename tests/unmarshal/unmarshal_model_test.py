@@ -1,8 +1,9 @@
+# -*- coding: utf-8 -*-
 import pytest
-from bravado_core.exception import SwaggerMappingError
 
-from bravado_core.unmarshal import unmarshal_model
+from bravado_core.exception import SwaggerMappingError
 from bravado_core.spec import Spec
+from bravado_core.unmarshal import unmarshal_model
 
 
 @pytest.fixture
@@ -29,15 +30,23 @@ def pet_dict():
     }
 
 
-def test_definitions_with_ref(composition_spec):
+@pytest.mark.parametrize(
+    'releaseDate',
+    (
+        '1981',
+        None
+    )
+)
+def test_definitions_with_ref(composition_spec, releaseDate):
     PongClone = composition_spec.definitions['pongClone']
     pong_clone_spec = composition_spec.spec_dict['definitions']['pongClone']
     pong_clone_dict = {
         'pang': 'hello',
         'additionalFeature': 'new!',
         'gameSystem': 'Fatari',
-        'releaseDate': '1981'
     }
+    if releaseDate:
+        pong_clone_dict['releaseDate'] = releaseDate
 
     pong_clone = unmarshal_model(composition_spec, pong_clone_spec,
                                  pong_clone_dict)
@@ -46,7 +55,11 @@ def test_definitions_with_ref(composition_spec):
     assert 'hello' == pong_clone.pang
     assert 'new!' == pong_clone.additionalFeature
     assert 'Fatari' == pong_clone.gameSystem
-    assert '1981' == pong_clone.releaseDate
+    if releaseDate or composition_spec.config['include_missing_properties']:
+        assert hasattr(pong_clone, 'releaseDate') is True
+        assert releaseDate == pong_clone.releaseDate
+    else:
+        assert hasattr(pong_clone, 'releaseDate') is False
 
 
 def test_pet(petstore_dict, pet_dict):
@@ -179,3 +192,35 @@ def test_unmarshal_model_with_none_model_type(petstore_spec):
         unmarshal_model(petstore_spec, model_spec, {})
 
     assert 'Unknown model Foobar' in str(excinfo.value)
+
+
+def test_unmarshal_model_polymorphic_specs(polymorphic_spec):
+    list_of_pets_dict = {
+        'number_of_pets': 2,
+        'list': [
+            {
+                'name': 'a dog name',
+                'type': 'Dog',
+                'birth_date': '2017-03-09',
+            },
+            {
+                'name': 'a cat name',
+                'type': 'Cat',
+                'color': 'white',
+            },
+        ]
+    }
+    pet_list = unmarshal_model(
+        swagger_spec=polymorphic_spec,
+        model_spec=polymorphic_spec.spec_dict['definitions']['PetList'],
+        model_value=list_of_pets_dict,
+    )
+
+    assert isinstance(pet_list, polymorphic_spec.definitions['PetList'])
+
+    assert pet_list.number_of_pets == list_of_pets_dict['number_of_pets']
+    assert len(pet_list.list) == len(list_of_pets_dict['list'])
+
+    for list_item_model, list_item_dict in zip(pet_list.list, list_of_pets_dict['list']):
+        assert isinstance(list_item_model, polymorphic_spec.definitions[list_item_dict['type']])
+        assert list_item_model._marshal() == list_item_dict

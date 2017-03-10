@@ -1,9 +1,10 @@
+# -*- coding: utf-8 -*-
 import base64
 import os
-import simplejson as json
-from six.moves.urllib import parse as urlparse
 
 import pytest
+import simplejson as json
+from six.moves.urllib import parse as urlparse
 
 import bravado_core.formatter
 from bravado_core.spec import Spec
@@ -54,9 +55,12 @@ def composition_dict(composition_abspath):
         return json.loads(f.read())
 
 
-@pytest.fixture
-def composition_spec(composition_dict, composition_url):
-    return Spec.from_dict(composition_dict, origin_url=composition_url)
+@pytest.fixture(params=[
+    {'include_missing_properties': True},
+    {'include_missing_properties': False},
+])
+def composition_spec(request, composition_dict, composition_url):
+    return Spec.from_dict(composition_dict, origin_url=composition_url, config=request.param)
 
 
 @pytest.fixture
@@ -70,6 +74,19 @@ def petstore_dict():
 @pytest.fixture
 def petstore_spec(petstore_dict):
     return Spec.from_dict(petstore_dict)
+
+
+@pytest.fixture
+def polymorphic_dict():
+    my_dir = os.path.abspath(os.path.dirname(__file__))
+    fpath = os.path.join(my_dir, '../test-data/2.0/polymorphic_specs/swagger.json')
+    with open(fpath) as f:
+        return json.loads(f.read())
+
+
+@pytest.fixture
+def polymorphic_spec(polymorphic_dict):
+    return Spec.from_dict(polymorphic_dict)
 
 
 @pytest.fixture

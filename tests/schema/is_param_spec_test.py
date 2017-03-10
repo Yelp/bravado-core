@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from bravado_core.schema import is_param_spec
 from bravado_core.spec import Spec
 
@@ -22,6 +23,7 @@ def test_ref_true(minimal_swagger_dict):
             'in': 'path',
             'name': 'petId',
             'type': 'integer',
+            'required': True,
         }
     }
     param_spec = {'$ref': '#/parameters/PetId'}

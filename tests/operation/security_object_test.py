@@ -1,9 +1,12 @@
-from mock import Mock
+# -*- coding: utf-8 -*-
 import pytest
+from mock import Mock
 from six import iteritems
 
-from bravado_core.exception import SwaggerSchemaError, SwaggerSecurityValidationError
-from bravado_core.request import IncomingRequest, unmarshal_request
+from bravado_core.exception import SwaggerSchemaError
+from bravado_core.exception import SwaggerSecurityValidationError
+from bravado_core.request import IncomingRequest
+from bravado_core.request import unmarshal_request
 from bravado_core.resource import build_resources
 from bravado_core.spec import Spec
 

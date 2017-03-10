@@ -1,8 +1,9 @@
+# -*- coding: utf-8 -*-
 import pytest
 
 from bravado_core.exception import SwaggerMappingError
-from bravado_core.param import unmarshal_collection_format
 from bravado_core.param import COLLECTION_FORMATS
+from bravado_core.param import unmarshal_collection_format
 from bravado_core.spec import Spec
 
 
@@ -31,6 +32,17 @@ def test_formats(empty_swagger_spec, array_spec):
         param_value = sep.join(['1', '2', '3'])
         assert [1, 2, 3] == unmarshal_collection_format(
             empty_swagger_spec, array_spec, param_value)
+
+
+@pytest.mark.parametrize('format_name,separator', COLLECTION_FORMATS.items())
+def test_formats_empty_list(empty_swagger_spec, array_spec, format_name, separator):
+    array_spec['collectionFormat'] = format_name
+    param_value = separator.join([])
+    assert [] == unmarshal_collection_format(
+        empty_swagger_spec,
+        array_spec,
+        param_value,
+    )
 
 
 def test_multi_no_op_because_handled_by_http_client_lib(empty_swagger_spec,

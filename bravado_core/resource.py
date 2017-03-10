@@ -1,5 +1,6 @@
-from collections import defaultdict
+# -*- coding: utf-8 -*-
 import logging
+from collections import defaultdict
 
 from six import iteritems
 
@@ -83,6 +84,7 @@ class Resource(object):
     :param ops: operations associated with this resource (by tag)
     :type ops: dict where (key, value) = (op_name, Operation)
     """
+
     def __init__(self, name, ops):
         log.debug(u"Building resource '%s'" % name)
         self.name = name

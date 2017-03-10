@@ -1,13 +1,16 @@
+# -*- coding: utf-8 -*-
 from six import iteritems
 
-from bravado_core import formatter, schema
+from bravado_core import formatter
+from bravado_core import schema
 from bravado_core.exception import SwaggerMappingError
-from bravado_core.model import is_model, MODEL_MARKER
+from bravado_core.model import is_model
+from bravado_core.model import MODEL_MARKER
+from bravado_core.schema import get_spec_for_prop
+from bravado_core.schema import handle_null_value
 from bravado_core.schema import is_dict_like
 from bravado_core.schema import is_list_like
-from bravado_core.schema import handle_null_value
 from bravado_core.schema import SWAGGER_PRIMITIVES
-from bravado_core.schema import get_spec_for_prop
 
 
 def marshal_schema_object(swagger_spec, schema_object_spec, value):
@@ -167,16 +170,13 @@ def marshal_model(swagger_spec, model_spec, model_value):
     if model_value is None:
         return handle_null_value(swagger_spec, model_spec)
 
-    if not isinstance(model_value, model_type):
+    if not model_type._isinstance(model_value):
         raise SwaggerMappingError(
             'Expected model of type {0} for {1}:{2}'
             .format(model_name, type(model_value), model_value))
 
     # just convert the model to a dict and feed into `marshal_object` because
     # models are essentially 'type':'object' when marshaled
-    attr_names = dir(model_value)
-    object_value = dict(
-        (attr_name, getattr(model_value, attr_name))
-        for attr_name in attr_names)
+    object_value = model_value._as_dict()
 
     return marshal_object(swagger_spec, model_spec, object_value)

@@ -19,7 +19,7 @@ def test_string(minimal_swagger_spec):
         minimal_swagger_spec, string_spec, u'Ümlaut')
 
 
-def test_booean(minimal_swagger_spec):
+def test_boolean(minimal_swagger_spec):
     boolean_spec = {'type': 'boolean'}
     result = unmarshal_primitive(minimal_swagger_spec, boolean_spec, True)
     assert isinstance(result, bool)
@@ -65,6 +65,15 @@ def test_required_failure(minimal_swagger_spec):
     with pytest.raises(SwaggerMappingError) as excinfo:
         unmarshal_primitive(minimal_swagger_spec, integer_spec, None)
     assert 'is a required value' in str(excinfo.value)
+
+
+def test_default(minimal_swagger_spec):
+    integer_spec = {
+        'type': 'integer',
+        'default': 42,
+    }
+
+    assert 42 == unmarshal_primitive(minimal_swagger_spec, integer_spec, None)
 
 
 def test_ref(minimal_swagger_dict):

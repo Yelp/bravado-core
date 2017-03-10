@@ -1,11 +1,13 @@
-from datetime import datetime, date
+# -*- coding: utf-8 -*-
+from datetime import date
+from datetime import datetime
 
-from mock import patch
 import six
+from mock import patch
+from pytz import timezone
 
 from bravado_core.formatter import to_wire
 from bravado_core.spec import Spec
-from pytz import timezone
 
 
 def test_none(minimal_swagger_spec):

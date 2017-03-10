@@ -1,9 +1,10 @@
+# -*- coding: utf-8 -*-
 import mock
 
 from bravado_core.model import create_model_type
-from tests.model.conftest import pet_spec as pet_spec_fixture
 from tests.model.conftest import \
     definitions_spec as definitions_spec_fixture
+from tests.model.conftest import pet_spec as pet_spec_fixture
 
 
 def test_pet_model(empty_swagger_spec, pet_spec):
@@ -49,8 +50,8 @@ def test_marshal_and_unmarshal(petstore_spec):
     pet_name = 'Darwin'
     pet_photo_urls = []
     pet = Pet(id=pet_id, name=pet_name, photoUrls=pet_photo_urls)
-    marshalled_model = pet.marshal()
-    unmarshalled_marshalled_model = Pet.unmarshal(marshalled_model)
+    marshalled_model = pet._marshal()
+    unmarshalled_marshalled_model = Pet._unmarshal(marshalled_model)
 
     assert marshalled_model == {'id': pet_id, 'name': pet_name, 'photoUrls': pet_photo_urls}
     assert isinstance(unmarshalled_marshalled_model, Pet)

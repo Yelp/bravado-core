@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import logging
 
 from six import iteritems
@@ -6,15 +7,6 @@ from bravado_core.exception import SwaggerMappingError
 
 
 log = logging.getLogger(__name__)
-
-
-class docstring_property(object):
-
-    def __init__(self, func):
-        self.func = func
-
-    def __get__(self, _cls, _owner):
-        return self.func()
 
 
 def operation_docstring_wrapper(operation):

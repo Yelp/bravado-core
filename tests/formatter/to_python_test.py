@@ -1,7 +1,9 @@
-from datetime import date, datetime
+# -*- coding: utf-8 -*-
+from datetime import date
+from datetime import datetime
 
-from mock import patch
 import six
+from mock import patch
 
 from bravado_core.formatter import to_python
 from bravado_core.spec import Spec

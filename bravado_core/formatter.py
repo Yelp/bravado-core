@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Support for the 'format' key in the swagger spec as outlined in
 https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#dataTypeFormat
@@ -5,11 +6,11 @@ https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#dataType
 import functools
 from collections import namedtuple
 
-import six
 import dateutil.parser
+import pytz
+import six
 
 from bravado_core import schema
-import pytz
 
 if six.PY3:
     long = int

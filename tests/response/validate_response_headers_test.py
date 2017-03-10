@@ -1,9 +1,11 @@
+# -*- coding: utf-8 -*-
+import pytest
 from jsonschema.exceptions import ValidationError
 from mock import Mock
-import pytest
-from bravado_core.operation import Operation
 
-from bravado_core.response import validate_response_headers, OutgoingResponse
+from bravado_core.operation import Operation
+from bravado_core.response import OutgoingResponse
+from bravado_core.response import validate_response_headers
 
 
 @pytest.fixture

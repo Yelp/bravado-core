@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 import copy
+
 import pytest
 
 from bravado_core.exception import SwaggerMappingError
-from bravado_core.unmarshal import unmarshal_object
 from bravado_core.spec import Spec
+from bravado_core.unmarshal import unmarshal_object
 
 
 @pytest.fixture
@@ -23,7 +24,9 @@ def address_spec():
                 'enum': [
                     'Street',
                     'Avenue',
-                    'Boulevard']
+                    'Boulevard',
+                ],
+                'default': 'Street',
             }
         }
     }
@@ -41,8 +44,12 @@ def business_address_spec():
                 'properties': {
                     'name': {
                         'type': 'string'
-                    }
-                }
+                    },
+                    'floor': {
+                        'type': 'integer',
+                        'x-nullable': True,
+                    },
+                },
             }
         ]
     }
@@ -65,7 +72,7 @@ def location_spec():
 
 
 @pytest.fixture
-def business_address_swagger_spec(minimal_swagger_dict, address_spec, business_address_spec):
+def business_address_swagger_dict(minimal_swagger_dict, address_spec, business_address_spec):
     minimal_swagger_dict['definitions']['Address'] = address_spec
     minimal_swagger_dict['definitions']['BusinessAddress'] = business_address_spec
 
@@ -82,8 +89,15 @@ def business_address_swagger_spec(minimal_swagger_dict, address_spec, business_a
         }
     }
     minimal_swagger_dict['paths']['/foo'] = business_address_response
+    return minimal_swagger_dict
 
-    return Spec.from_dict(minimal_swagger_dict)
+
+@pytest.fixture(params=[
+    {'include_missing_properties': True},
+    {'include_missing_properties': False},
+])
+def business_address_swagger_spec(request, business_address_swagger_dict):
+    return Spec.from_dict(business_address_swagger_dict, config=request.param)
 
 
 @pytest.fixture
@@ -95,11 +109,19 @@ def address():
     }
 
 
-def test_with_properties(empty_swagger_spec, address_spec, address):
+@pytest.mark.parametrize(
+    'street_type, expected_street_type',
+    (
+        ('Avenue', 'Avenue'),
+        (None, 'Street'),  # make sure the default works
+    )
+)
+def test_with_properties(empty_swagger_spec, address_spec, address, street_type, expected_street_type):
+    address['street_type'] = street_type
     expected_address = {
         'number': 1600,
         'street_name': u'Ümlaut',
-        'street_type': 'Avenue'
+        'street_type': expected_street_type,
     }
     result = unmarshal_object(empty_swagger_spec, address_spec, address)
     assert expected_address == result
@@ -169,10 +191,12 @@ def test_with_model_composition(business_address_swagger_spec, address_spec, bus
     expected_business_address = {
         'company': 'n/a',
         'number': 1600,
-        'name': None,
         'street_name': 'Pennsylvania',
-        'street_type': 'Avenue'
+        'street_type': 'Avenue',
     }
+
+    if business_address_swagger_spec.config['include_missing_properties']:
+        expected_business_address.update(floor=None, name=None)
 
     business_address = unmarshal_object(business_address_swagger_spec, business_address_spec,
                                         business_address_dict)
@@ -431,3 +455,29 @@ def test_non_required_none_value(empty_swagger_spec, property_type):
     value = {'x': None}
     result = unmarshal_object(empty_swagger_spec, content_spec, value)
     assert result == {'x': None}
+
+
+def test_unmarshal_object_polymorphic_specs(polymorphic_spec):
+    list_of_pets_dict = {
+        'number_of_pets': 2,
+        'list': [
+            {
+                'name': 'a dog name',
+                'type': 'Dog',
+                'birth_date': '2017-03-09',
+            },
+            {
+                'name': 'a cat name',
+                'type': 'Cat',
+                'color': 'white',
+            },
+        ]
+    }
+    polymorphic_spec.config['use_models'] = False
+    pet_list = unmarshal_object(
+        swagger_spec=polymorphic_spec,
+        object_spec=polymorphic_spec.spec_dict['definitions']['PetList'],
+        object_value=list_of_pets_dict,
+    )
+
+    assert list_of_pets_dict == pet_list

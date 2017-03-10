@@ -14,7 +14,7 @@ docs:
 install:
 	pip install .
 
-test:
+test: install-hooks
 	tox
 
 tests: test

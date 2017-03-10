@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import pytest
 
 from bravado_core.schema import collapsed_properties

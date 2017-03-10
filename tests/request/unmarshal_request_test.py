@@ -1,8 +1,10 @@
-from mock import Mock
+# -*- coding: utf-8 -*-
 import pytest
+from mock import Mock
 
-from bravado_core.request import IncomingRequest, unmarshal_request
 from bravado_core.exception import SwaggerMappingError
+from bravado_core.request import IncomingRequest
+from bravado_core.request import unmarshal_request
 
 
 def test_request_with_path_parameter(petstore_spec):

@@ -1,8 +1,10 @@
+# -*- coding: utf-8 -*-
 import functools
 
 from mock import Mock
 
-from bravado_core.spec import post_process_spec, Spec
+from bravado_core.spec import post_process_spec
+from bravado_core.spec import Spec
 
 
 def test_empty():
