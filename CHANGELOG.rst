@@ -5,6 +5,7 @@ X.X.X (XXXX-XX-XX)
 ------------------
 - Add include_missing_properties configuration - PR #152
 - Consider default when unmarshalling - PR #154
+- Add discriminator support - PR #128, #159. Thanks Michael Jared Lumpe for your contribution
 - The content will be used to build the Changelog for the new bravado-core release
   (add before this line your modifications summary and PR reference)
 
