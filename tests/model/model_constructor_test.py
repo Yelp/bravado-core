@@ -1,34 +1,7 @@
 # -*- coding: utf-8 -*-
 import pytest
 
-
-@pytest.fixture
-def cat_kwargs():
-    return {
-        'id': 12,
-        'category': {
-            'id': 42,
-            'name': 'Feline',
-        },
-        'name': 'Oskar',
-        'photoUrls': ['example.com/img1', 'example.com/img2'],
-        'tags': [
-            {
-                'id': 1,
-                'name': 'cute'
-            }
-        ],
-        'neutered': True,
-    }
-
-
-@pytest.fixture
-def user_kwargs():
-    return {
-        'firstName': 'Darwin',
-        'userStatus': 9,
-        'id': 999,
-    }
+from bravado_core.schema import collapsed_properties
 
 
 def test_simple(user_type, user_kwargs):
@@ -61,7 +34,7 @@ def test_additionalProperties_defaults_to_true_when_not_present(
     assert 'foo' in dir(user)
 
 
-def test_additionalProperties_true(user_type, user_kwargs):
+def test_additionalProperties_true(definitions_spec, user_type, user_kwargs):
     # verify exra kwargs are attached to the model as attributes when
     # additionalProperties is True
     user_type._model_spec['additionalProperties'] = True
@@ -69,6 +42,7 @@ def test_additionalProperties_true(user_type, user_kwargs):
     user = user_type(**user_kwargs)
     assert user.foo == 'bar'
     assert 'foo' in dir(user)
+    assert set(user) == set(definitions_spec['User']['properties'].keys()).union({'foo'})
 
 
 def test_additionalProperties_false(user_type, user_kwargs):
@@ -81,7 +55,7 @@ def test_additionalProperties_false(user_type, user_kwargs):
     assert "does not have attributes for: ['foo']" in str(excinfo.value)
 
 
-def test_allOf(cat_type, cat_kwargs):
+def test_allOf(cat_swagger_spec, cat_type, cat_kwargs):
     cat = cat_type(**cat_kwargs)
     assert cat.id == 12
     assert cat.category == {'id': 42, 'name': 'Feline'}
@@ -89,3 +63,6 @@ def test_allOf(cat_type, cat_kwargs):
     assert cat.photoUrls == ['example.com/img1', 'example.com/img2']
     assert cat.tags == [{'id': 1, 'name': 'cute'}]
     assert cat.neutered is True
+    assert set(cat) == set(collapsed_properties(
+        cat_swagger_spec.spec_dict['definitions']['Cat'], cat_swagger_spec
+    ).keys())

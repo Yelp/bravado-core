@@ -170,3 +170,32 @@ def cat_type(cat_swagger_spec, cat_spec):
 @pytest.fixture
 def cat(cat_type):
     return cat_type()
+
+
+@pytest.fixture
+def cat_kwargs():
+    return {
+        'id': 12,
+        'category': {
+            'id': 42,
+            'name': 'Feline',
+        },
+        'name': 'Oskar',
+        'photoUrls': ['example.com/img1', 'example.com/img2'],
+        'tags': [
+            {
+                'id': 1,
+                'name': 'cute'
+            }
+        ],
+        'neutered': True,
+    }
+
+
+@pytest.fixture
+def user_kwargs():
+    return {
+        'firstName': 'Darwin',
+        'userStatus': 9,
+        'id': 999,
+    }
