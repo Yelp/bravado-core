@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import pytest
 from jsonschema import ValidationError
 from mock import patch
