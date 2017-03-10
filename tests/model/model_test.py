@@ -80,7 +80,7 @@ def test_model_as_dict(definitions_spec, user_type, user_kwargs):
         False,
     ]
 )
-def test_marsshal_as_dict_recursive(polymorphic_spec, recursive):
+def test_marshal_as_dict_recursive(polymorphic_spec, recursive):
     list_of_pets_dict = {
         'number_of_pets': 2,
         'list': [
