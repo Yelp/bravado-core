@@ -3,6 +3,7 @@ Changelog
 
 X.X.X (XXXX-XX-XX)
 ------------------
+- Added support for nullable fields in the format validator - PR #143
 - Add include_missing_properties configuration - PR #152
 - Consider default when unmarshalling - PR #154
 - Add discriminator support - PR #128, #159. Thanks Michael Jared Lumpe for your contribution
