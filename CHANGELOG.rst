@@ -1,14 +1,16 @@
 Changelog
 =========
 
-X.X.X (XXXX-XX-XX)
+- The content will be used to build the Changelog for the new bravado-core release
+  (add before this line your modifications summary and PR reference)
+
+4.7.0 (2017-03-21)
 ------------------
 - Added support for nullable fields in the format validator - PR #143. Thanks Adam Ever-Hadani
 - Add include_missing_properties configuration - PR #152
 - Consider default when unmarshalling - PR #154
 - Add discriminator support - PR #128, #159. Thanks Michael Jared Lumpe for your contribution
-- The content will be used to build the Changelog for the new bravado-core release
-  (add before this line your modifications summary and PR reference)
+- Make sure pre-commit hooks are installed and run when running tests - PR #155, #158
 
 4.6.1 (2017-02-15)
 ------------------
