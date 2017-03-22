@@ -76,7 +76,7 @@ def get_spec_for_prop(swagger_spec, object_spec, object_value, prop_name):
     :param prop_name: name of the property to retrieve the spec for
 
     :return: spec for the given property or None if no spec found
-    :rtype: dict
+    :rtype: dict or None
     """
     deref = swagger_spec.deref
 
