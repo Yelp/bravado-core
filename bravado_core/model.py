@@ -309,7 +309,7 @@ class Model(object):
 
     def marshal(self):
         warn(
-            "Private model object methods are now prefixed with single underscore - use _marshal() instead.",
+            "Model object methods are now prefixed with single underscore - use _marshal() instead.",
             DeprecationWarning,
         )
         return self._marshal()
@@ -325,7 +325,7 @@ class Model(object):
     @classmethod
     def unmarshal(cls, val):
         warn(
-            "Private model object methods are now prefixed with single underscore - use _unmarshal() instead.",
+            "Model object methods are now prefixed with single underscore - use _unmarshal() instead.",
             DeprecationWarning,
         )
         return cls._unmarshal(val)
@@ -343,7 +343,7 @@ class Model(object):
     @classmethod
     def isinstance(cls, obj):
         warn(
-            "Private model object methods are now prefixed with single underscore - use _isinstance() instead.",
+            "Model object methods are now prefixed with single underscore - use _isinstance() instead.",
             DeprecationWarning,
         )
         return cls._isinstance(obj)
