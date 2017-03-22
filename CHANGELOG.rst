@@ -6,7 +6,7 @@ Changelog
 
 4.7.1 (2017-03-22)
 ------------------
-- Fix backward-incompatible Model API change which renames all model methods to have a single underscore infront of them. A deprecation warning has been added.
+- Fix backward-incompatible Model API change which renames all model methods to have a single underscore infront of them. A deprecation warning has been added - Issue #160, PR #161. Thanks Adam Ever-Hadani for the contribution!
 
 4.7.0 (2017-03-21)
 ------------------
