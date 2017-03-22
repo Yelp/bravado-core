@@ -4,6 +4,10 @@ Changelog
 - The content will be used to build the Changelog for the new bravado-core release
   (add before this line your modifications summary and PR reference)
 
+4.7.1 (2017-03-22)
+------------------
+- Fix backward-incompatible Model API change which renames all model methods to have a single underscore infront of them. A deprecation warning has been added.
+
 4.7.0 (2017-03-21)
 ------------------
 - Added support for nullable fields in the format validator - PR #143. Thanks Adam Ever-Hadani
