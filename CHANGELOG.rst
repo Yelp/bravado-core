@@ -4,6 +4,10 @@ Changelog
 - The content will be used to build the Changelog for the new bravado-core release
   (add before this line your modifications summary and PR reference)
 
+4.7.2 (2017-03-23)
+------------------
+- Fix unmarshalling of null values for properties with no spec - Issue #163, PR #165.
+
 4.7.1 (2017-03-22)
 ------------------
 - Fix backward-incompatible Model API change which renames all model methods to have a single underscore infront of them. A deprecation warning has been added - Issue #160, PR #161. Thanks Adam Ever-Hadani for the contribution!
