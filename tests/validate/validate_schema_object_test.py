@@ -9,3 +9,14 @@ def test_unknown_type(minimal_swagger_spec):
     with pytest.raises(SwaggerMappingError) as excinfo:
         validate_schema_object(minimal_swagger_spec, {'type': 'unknown'}, 'foo')
     assert 'Unknown type' in str(excinfo.value)
+
+
+def test_allOf_with_ref(composition_spec):
+    pongclone_spec = composition_spec.spec_dict['definitions']['pongClone']
+    value = {
+        'additionalFeature': 'Badges',
+        'gameSystem': 'NES',
+        'pang': 'value',
+        'releaseDate': 'October',
+    }
+    validate_schema_object(composition_spec, pongclone_spec, value)

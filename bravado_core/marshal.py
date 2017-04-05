@@ -5,6 +5,7 @@ from bravado_core import formatter
 from bravado_core import schema
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.model import is_model
+from bravado_core.model import is_object
 from bravado_core.model import MODEL_MARKER
 from bravado_core.schema import get_spec_for_prop
 from bravado_core.schema import handle_null_value
@@ -30,7 +31,7 @@ def marshal_schema_object(swagger_spec, schema_object_spec, value):
     """
     deref = swagger_spec.deref
     schema_object_spec = deref(schema_object_spec)
-    obj_type = schema_object_spec['type']
+    obj_type = schema_object_spec.get('type')
 
     if obj_type in SWAGGER_PRIMITIVES:
         return marshal_primitive(swagger_spec, schema_object_spec, value)
@@ -49,7 +50,7 @@ def marshal_schema_object(swagger_spec, schema_object_spec, value):
         # key for identification.
         return marshal_model(swagger_spec, schema_object_spec, value)
 
-    if obj_type == 'object':
+    if is_object(swagger_spec, schema_object_spec):
         return marshal_object(swagger_spec, schema_object_spec, value)
 
     if obj_type == 'file':

@@ -8,6 +8,7 @@ from six import itervalues
 
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.exception import SwaggerSecurityValidationError
+from bravado_core.model import is_object
 from bravado_core.schema import SWAGGER_PRIMITIVES
 from bravado_core.swagger20_validator import get_validator_type
 
@@ -28,7 +29,7 @@ def validate_schema_object(swagger_spec, schema_object_spec, value):
     elif obj_type == 'array':
         validate_array(swagger_spec, schema_object_spec, value)
 
-    elif obj_type == 'object':
+    elif is_object(swagger_spec, schema_object_spec):
         validate_object(swagger_spec, schema_object_spec, value)
 
     elif obj_type == 'file':
