@@ -127,6 +127,17 @@ def test_with_properties(empty_swagger_spec, address_spec, address, street_type,
     assert expected_address == result
 
 
+def test_missing_with_default(empty_swagger_spec, address_spec, address):
+    del address['street_type']
+    expected_address = {
+        'number': 1600,
+        'street_name': u'Ümlaut',
+        'street_type': 'Street',
+    }
+    result = unmarshal_object(empty_swagger_spec, address_spec, address)
+    assert expected_address == result
+
+
 def test_with_array(empty_swagger_spec, address_spec):
     tags_spec = {
         'type': 'array',
