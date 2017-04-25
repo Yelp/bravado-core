@@ -66,3 +66,15 @@ def test_ref(minimal_swagger_dict):
     minimal_swagger_dict['refs'] = {'Foo': foo_spec}
     swagger_spec = Spec(minimal_swagger_dict)
     assert 'foo' == marshal_schema_object(swagger_spec, ref_spec, 'foo')
+
+
+def test_allOf_with_ref(composition_spec):
+    pongclone_spec = composition_spec.spec_dict['definitions']['pongClone']
+    value = {
+        'additionalFeature': 'Badges',
+        'gameSystem': 'NES',
+        'pang': 'value',
+        'releaseDate': 'October',
+    }
+    expected = copy.deepcopy(value)
+    assert expected == marshal_schema_object(composition_spec, pongclone_spec, value)
