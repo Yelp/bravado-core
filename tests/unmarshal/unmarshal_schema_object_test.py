@@ -6,10 +6,11 @@ import pytest
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.spec import Spec
 from bravado_core.unmarshal import unmarshal_schema_object
+from tests.conftest import get_url
 
 
-def test_unmarshal_schema_object_allOf(composition_dict, composition_url):
-    composition_spec = Spec.from_dict(composition_dict, origin_url=composition_url)
+def test_unmarshal_schema_object_allOf(composition_dict, composition_abspath):
+    composition_spec = Spec.from_dict(composition_dict, origin_url=get_url(composition_abspath))
     pongClone_spec = composition_spec.spec_dict['definitions']['pongClone']
     pongClone = composition_spec.definitions['pongClone']
 

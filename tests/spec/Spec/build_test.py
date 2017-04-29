@@ -4,6 +4,7 @@ from mock import patch
 from swagger_spec_validator.common import SwaggerValidationError
 
 from bravado_core.spec import Spec
+from tests.validate.conftest import email_address_format
 
 
 def assert_validate_call_count(expected_call_count, config, petstore_dict):
@@ -15,12 +16,18 @@ def assert_validate_call_count(expected_call_count, config, petstore_dict):
 
 def test_validate_swagger_spec(petstore_dict):
     assert_validate_call_count(
-        1, {'validate_swagger_spec': True}, petstore_dict)
+        expected_call_count=1,
+        config={'validate_swagger_spec': True},
+        petstore_dict=petstore_dict,
+    )
 
 
 def test_dont_validate_swagger_spec(petstore_dict):
     assert_validate_call_count(
-        0, {'validate_swagger_spec': False}, petstore_dict)
+        expected_call_count=0,
+        config={'validate_swagger_spec': False},
+        petstore_dict=petstore_dict,
+    )
 
 
 def test_validate_swagger_spec_failure(petstore_dict):
@@ -30,3 +37,11 @@ def test_validate_swagger_spec_failure(petstore_dict):
     with pytest.raises(SwaggerValidationError) as excinfo:
         spec.build()
     assert "'swagger' is a required property" in str(excinfo.value)
+
+
+def test_build_with_custom_format(petstore_dict):
+    assert_validate_call_count(
+        expected_call_count=1,
+        config={'formats': [email_address_format]},
+        petstore_dict=petstore_dict,
+    )
