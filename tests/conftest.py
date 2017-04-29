@@ -4,6 +4,7 @@ import os
 
 import pytest
 import simplejson as json
+import yaml
 from six.moves.urllib import parse as urlparse
 
 import bravado_core.formatter
@@ -18,6 +19,11 @@ def empty_swagger_spec():
 def _read_json(json_path):
     with open(json_path) as f:
         return json.loads(f.read())
+
+
+def _read_yaml(json_path):
+    with open(json_path) as f:
+        return yaml.safe_load(f)
 
 
 def get_url(absolute_path):
@@ -63,6 +69,31 @@ def composition_dict(composition_abspath):
 ])
 def composition_spec(request, composition_dict, composition_abspath):
     return Spec.from_dict(composition_dict, origin_url=get_url(composition_abspath), config=request.param)
+
+
+@pytest.fixture
+def multi_file_recursive_abspath(my_dir):
+    return os.path.join(my_dir, '../test-data/2.0/multi-file-recursive/swagger.json')
+
+
+@pytest.fixture
+def multi_file_recursive_dict(multi_file_recursive_abspath):
+    return _read_yaml(multi_file_recursive_abspath)
+
+
+@pytest.fixture
+def multi_file_recursive_spec(multi_file_recursive_dict, multi_file_recursive_abspath):
+    return Spec.from_dict(multi_file_recursive_dict, origin_url=get_url(multi_file_recursive_abspath))
+
+
+@pytest.fixture
+def flattened_multi_file_recursive_abspath(my_dir):
+    return os.path.join(my_dir, '../test-data/flattened-multi-file-recursive-spec.json')
+
+
+@pytest.fixture
+def flattened_multi_file_recursive_dict(flattened_multi_file_recursive_abspath):
+    return _read_json(flattened_multi_file_recursive_abspath)
 
 
 @pytest.fixture

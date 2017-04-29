@@ -11,7 +11,8 @@ from jsonschema import FormatChecker
 from jsonschema.compat import urlopen
 from jsonschema.validators import RefResolver
 from six import iteritems
-from six.moves.urllib import parse as urlparse
+from six.moves.urllib.parse import urlparse
+from six.moves.urllib.parse import urlunparse
 from swagger_spec_validator import validator20
 from swagger_spec_validator.ref_validators import attach_scope
 from swagger_spec_validator.ref_validators import in_scope
@@ -27,7 +28,7 @@ from bravado_core.schema import is_dict_like
 from bravado_core.schema import is_list_like
 from bravado_core.schema import is_ref
 from bravado_core.security_definition import SecurityDefinition
-
+from bravado_core.spec_flattening import flattened_spec
 
 log = logging.getLogger(__name__)
 
@@ -84,6 +85,10 @@ class Spec(object):
         # Cached copy of spec_dict with x-scope metadata removed.
         # See @property client_spec_dict().
         self._client_spec_dict = None
+
+        # Cached copy of dereferenced spec_dict with x-scope metadata removed.
+        # See @property dereferenced_spec().
+        self._flattened_spec = None
 
         # (key, value) = (simple format def name, Model type)
         # (key, value) = (#/ format def ref, Model type)
@@ -278,6 +283,37 @@ class Spec(object):
 
         return self._security_definitions
 
+    @property
+    def flattened_spec(self):
+        """
+        Representation of the current swagger specs that could be written to a single file.
+        NOTE: The representation strips out all the definitions that are not referenced
+        :return:
+        """
+
+        if self._flattened_spec is None:
+            # self.resources is None if the specs are not built
+            if self.resources is None or not self.config['validate_swagger_spec']:
+                raise RuntimeError('Swagger Specs have to be built and validated before flattening.')
+
+            if self.origin_url is None:
+                warnings.warn(
+                    message='It is recommended to set origin_url to your spec before flattering it. '
+                            'Doing so internal paths will be hidden, reducing the amount of exposed information.',
+                    category=Warning,
+                )
+
+            self._flattened_spec = strip_xscope(
+                spec_dict=flattened_spec(
+                    spec_dict=self.spec_dict,
+                    spec_resolver=self.resolver,
+                    spec_url=self.origin_url,
+                    http_handlers=build_http_handlers(self.http_client),
+                ),
+            )
+
+        return self._flattened_spec
+
 
 def is_yaml(url, content_type=None):
     yaml_content_types = set([
@@ -372,7 +408,7 @@ def build_api_serving_url(spec_dict, origin_url=None, preferred_scheme=None):
     :raises: SwaggerSchemaError
     """
     origin_url = origin_url or 'http://localhost/'
-    origin = urlparse.urlparse(origin_url)
+    origin = urlparse(origin_url)
 
     def pick_a_scheme(schemes):
         if not schemes:
@@ -398,7 +434,7 @@ def build_api_serving_url(spec_dict, origin_url=None, preferred_scheme=None):
     netloc = spec_dict.get('host', origin.netloc)
     path = spec_dict.get('basePath', origin.path)
     scheme = pick_a_scheme(spec_dict.get('schemes'))
-    return urlparse.urlunparse((scheme, netloc, path, None, None, None))
+    return urlunparse((scheme, netloc, path, None, None, None))
 
 
 def post_process_spec(swagger_spec, on_container_callbacks):
