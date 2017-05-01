@@ -2,6 +2,7 @@ Changelog
 =========
 
 - The content will be used to build the Changelog for the new bravado-core release
+- Fix handling of API calls that return non-JSON content (specifically text content).
   (add before this line your modifications summary and PR reference)
 
 4.7.3 (2017-05-05)

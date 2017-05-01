@@ -101,16 +101,19 @@ def unmarshal_response(response, op):
     if not has_content(response_spec):
         return None
 
+    content_type = response.headers.get('content-type', '').lower()
+
+    if content_type.startswith(APP_JSON):
+        content_spec = deref(response_spec['schema'])
+        content_value = response.json()
+
+        if op.swagger_spec.config['validate_responses']:
+            validate_schema_object(op.swagger_spec, content_spec, content_value)
+
+        return unmarshal_schema_object(
+            op.swagger_spec, content_spec, content_value)
     # TODO: Non-json response contents
-    content_spec = deref(response_spec['schema'])
-    content_value = response.json()
-
-    if op.swagger_spec.config['validate_responses']:
-        validate_schema_object(op.swagger_spec, content_spec, content_value)
-
-    return unmarshal_schema_object(
-        op.swagger_spec, content_spec, content_value)
-
+    return response.text
 
 def get_response_spec(status_code, op):
     """Given the http status_code of an operation invocation's response, figure
