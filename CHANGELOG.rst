@@ -4,6 +4,11 @@ Changelog
 - The content will be used to build the Changelog for the new bravado-core release
   (add before this line your modifications summary and PR reference)
 
+4.7.3 (2017-05-05)
+------------------
+- Fix support for object composition (allOf) for data passed in the request body - PR #167. Thanks Zi Li for your contribution!
+- Return the default value for an optional field missing in the response - PR #171.
+
 4.7.2 (2017-03-23)
 ------------------
 - Fix unmarshalling of null values for properties with no spec - Issue #163, PR #165.
