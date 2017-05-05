@@ -147,6 +147,8 @@ def unmarshal_object(swagger_spec, object_spec, object_value):
     for prop_name, prop_spec in iteritems(properties):
         if prop_name not in result and swagger_spec.config['include_missing_properties']:
             result[prop_name] = None
+            if schema.has_default(swagger_spec, prop_spec):
+                result[prop_name] = schema.get_default(swagger_spec, prop_spec)
 
     return result
 
