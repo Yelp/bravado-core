@@ -2,7 +2,7 @@
 import pytest
 from mock import Mock
 from mock import patch
-
+from bravado_core.content_type import APP_JSON
 from bravado_core.response import IncomingResponse
 from bravado_core.response import unmarshal_response
 
@@ -34,6 +34,7 @@ def test_json_content(empty_swagger_spec, response_spec):
     response = Mock(
         spec=IncomingResponse,
         status_code=200,
+        headers={'content-type', APP_JSON},
         json=Mock(return_value='Monday'))
 
     with patch('bravado_core.response.get_response_spec') as m:
@@ -41,12 +42,24 @@ def test_json_content(empty_swagger_spec, response_spec):
         op = Mock(swagger_spec=empty_swagger_spec)
         assert 'Monday' == unmarshal_response(response, op)
 
+def test_text_content(empty_swagger_spec, response_spec):
+    response = Mock(
+        spec=IncomingResponse,
+        status_code=200,
+        headers={'content-type', 'text/plain'},
+        jtext='Monday')
+
+    with patch('bravado_core.response.get_response_spec') as m:
+        m.return_value = response_spec
+        op = Mock(swagger_spec=empty_swagger_spec)
+        assert 'Monday' == unmarshal_response(response, op)
 
 def test_skips_validation(empty_swagger_spec, response_spec):
     empty_swagger_spec.config['validate_responses'] = False
     response = Mock(
         spec=IncomingResponse,
         status_code=200,
+        headers={'content-type', APP_JSON},
         json=Mock(return_value='Monday'))
 
     with patch('bravado_core.response.validate_schema_object') as val_schem:
@@ -62,6 +75,7 @@ def test_performs_validation(empty_swagger_spec, response_spec):
     response = Mock(
         spec=IncomingResponse,
         status_code=200,
+        headers={'content-type', APP_JSON},
         json=Mock(return_value='Monday'))
 
     with patch('bravado_core.response.validate_schema_object') as val_schem:
