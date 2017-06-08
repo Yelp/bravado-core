@@ -100,7 +100,7 @@ def get_spec_for_prop(swagger_spec, object_spec, object_value, prop_name):
     if isinstance(additional_props, bool):
         # no spec for additional properties to conform to - this is basically
         # a way to send pretty much anything across the wire as is.
-        return None
+        return dict()
 
     additional_props = deref(additional_props)
     if is_dict_like(additional_props):
