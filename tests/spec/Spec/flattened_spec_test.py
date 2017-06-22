@@ -169,5 +169,4 @@ def test_flattened_spec_provide_valid_specs(
         spec_url='',
         http_handlers={},
     )
-    # TODO: fix test failure on py27
     assert flattened_spec == flattened_multi_file_recursive_dict

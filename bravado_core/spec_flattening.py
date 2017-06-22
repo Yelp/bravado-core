@@ -128,18 +128,25 @@ _TYPE_SCHEMA, _TYPE_PATH_ITEM, _TYPE_PARAMETER = range(3)
 def _determine_object_type(object_dict):
     """
     Use best guess to determine the object type based on the object keys.
-    NOTE: it assumes that the base swagger specs are validated and perform type
-    detection for three types of object (only one that could be referenced in the specs):
-     - Swagger2dot0ObjectType.PARAMETER: object contains {'in', 'name'} keys
-     - Swagger2dot0ObjectType.PATH_ITEM: object contains at least one of
-        {'get', 'put', 'post', 'delete', 'options', 'head', 'patch'} keys and eventually 'parameters'
-     - Swagger2dot0ObjectType.SCHEMA: everything else
+
+    NOTE: it assumes that the base swagger specs are validated and perform type detection for
+    the three types of object that could be references in the specs: parameter, path item and schema.
+
+    :return: determined type of ``object_dict``. The return values are:
+        - ``_TYPE_SCHEMA`` for schema objects
+        - ``_TYPE_PATH_ITEM`` for path item objects
+        - ``_TYPE_PARAMETER`` for parameter objects)
+
+    :rtype: int
     """
     if 'in' in object_dict and 'name' in object_dict:
+        # A parameter object is the only object type that could contain 'in' and 'name' at the same time
         return _TYPE_PARAMETER
     else:
         http_operations = {'get', 'put', 'post', 'delete', 'options', 'head', 'patch'}
-        object_keys = set(object_dict.keys())
+        # A path item object MUST have defined at least one http operation and could optionally have 'parameter'
+        # attribute. NOTE: patterned fields (``^x-``) are acceptable in path item objects
+        object_keys = {key for key in iterkeys(object_dict) if not key.startswith('x-')}
         if object_keys.intersection(http_operations):
             remaining_keys = object_keys.difference(http_operations)
             if not remaining_keys or remaining_keys == {'parameters'}:
@@ -152,12 +159,33 @@ def flattened_spec(
     spec_dict, spec_resolver=None, spec_url=None, http_handlers=None, marshal_uri_function=_marshal_uri,
 ):
     """
-    TODO: documentation
-    NOTE: it assumes that specs are already validated
-    :param spec:
+    Flatten Swagger Specs description into an unique and JSON serializable document.
+    The flattening injects in place the referenced [path item objects](http://swagger.io/specification/#pathItemObject)
+    while it injects in '#/parameters' the [parameter objects](http://swagger.io/specification/#parameterObject) and
+    injects in '#/definitions' the [schema objects])http://swagger.io/specification/#schemaObject).
+
+    Note: the object names in '#/definitions' and '#/parameters' are evaluated by ``marshal_uri_function``, the default
+    method takes care of creating unique names for all the used references. Since name clashing are still possible take
+    care that a warning could be filed. If it happen please report to us the specific warning text and the specs that
+    generated it. We can work to improve it and in the mean time you can "plug" a custom marshalling function.
+
+    Warning: Be aware that the flattening process strips out all the un-used schema and parameter objects.
+
+    :param spec_dict: Swagger Spec dictionary representation. Note: the method assumes that the specs are valid specs.
+    :type spec_dict: dict
+    :param spec_resolver: Swagger Spec resolver for fetching external references
+    :type spec_resolver: RefResolver
+    :param spec_url: Base url of your Swagger Specs. It is used to hide internal paths during uri marshaling.
+    :type spec_url: str
+    :param http_handlers: custom handlers for retrieving external specs.
+        The expected format is {protocol: read_protocol}, with read_protocol similar to  read_protocol=lambda uri: ...
+        An example could be provided by ``bravado_core.spec.build_http_handlers``
+    :type http_handlers: dict
     :param marshal_uri_function: function used to marshal uris in string suitable to be keys in Swagger Specs.
-        The function signature MUST be the same as ``_marshal_uri``
-    :return:
+    :type marshal_uri_function: Callable with the same signature of ``_marshal_uri``
+
+    :return: Flattened representation of the Swagger Specs
+    :rtype: dict
     """
 
     # Create internal copy of spec_dict to avoid external dict pollution
@@ -263,6 +291,3 @@ def flattened_spec(
             }})
 
     return resolved_spec
-
-
-# TODO: should we include definitions that are not used? should we show a warning?
