@@ -1,0 +1,48 @@
+{
+    "definitions": {
+        "ping": {
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "pong": {
+                    "$ref": "swagger.json#/definitions/pong"
+                }
+            },
+            "required": [
+                "message"
+            ],
+            "type": "object",
+            "x-model": "ping"
+        }
+    },
+    "parameters": {
+        "UserAgent": {
+            "description": "HTTP Header [User Agent](https://tools.ietf.org/html/rfc1945#section-10.15)",
+            "in": "header",
+            "minLength": 1,
+            "name": "User-Agent",
+            "required": true,
+            "type": "string"
+        }
+    },
+    "paths": {
+        "endpoint_defined_on_other_file": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "A valid response"
+                    }
+                }
+            },
+            "parameters": [
+                {
+                    "$ref": "swagger.json#/parameters/AcceptLanguage"
+                },
+                {
+                    "$ref": "aux.json#/parameters/UserAgent"
+                }
+            ]
+        }
+    }
+}

@@ -1,0 +1,55 @@
+{
+    "definitions": {
+        "not_used": {
+            "type": "object",
+            "x-model": "not_used"
+        },
+        "pong": {
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "ping": {
+                    "$ref": "aux.json#/definitions/ping"
+                }
+            },
+            "required": [
+                "message"
+            ],
+            "type": "object",
+            "x-model": "pong"
+        }
+    },
+    "info": {
+        "title": "Recursive response Spec",
+        "version": "1.0.0"
+    },
+    "parameters": {
+        "AcceptLanguage": {
+            "description": "HTTP Header [Accept Language](https://tools.ietf.org/html/rfc1945#appendix-D.2.4)",
+            "in": "header",
+            "minLength": 1,
+            "name": "Accept-Language",
+            "required": false,
+            "type": "string"
+        }
+    },
+    "paths": {
+        "/endpoint_defined_on_other_file": {
+            "$ref": "aux.json#/paths/endpoint_defined_on_other_file"
+        },
+        "/recursive/response": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "A recursive response",
+                        "schema": {
+                            "$ref": "aux.json#/definitions/ping"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "swagger": "2.0"
+}

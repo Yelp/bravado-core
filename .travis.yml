@@ -8,7 +8,7 @@ matrix:
     env: TOXENV=py36
   - env: TOXENV=cover
   - env: TOXENV=docs
-  - env: TOXENV=flake8
+  - env: TOXENV=pre-commit
 install: pip install tox coveralls
 script: tox
 after_success: if [ "$TOXENV" == "cover" ]; then coveralls; fi

@@ -56,3 +56,7 @@ def test_no_op():
         }
     }
     assert expected == strip_xscope(fragment)
+
+
+def test_petstore_spec(petstore_spec):
+    assert petstore_spec.client_spec_dict == strip_xscope(petstore_spec.spec_dict)

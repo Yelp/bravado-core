@@ -4,6 +4,7 @@ import os
 
 import pytest
 import simplejson as json
+import yaml
 from six.moves.urllib import parse as urlparse
 
 import bravado_core.formatter
@@ -15,22 +16,36 @@ def empty_swagger_spec():
     return Spec(spec_dict={})
 
 
+def _read_json(json_path):
+    with open(json_path) as f:
+        return json.loads(f.read())
+
+
+def _read_yaml(json_path):
+    with open(json_path) as f:
+        return yaml.safe_load(f)
+
+
+def get_url(absolute_path):
+    return urlparse.urljoin('file:', absolute_path)
+
+
 @pytest.fixture
-def minimal_swagger_dict():
+def my_dir():
+    return os.path.abspath(os.path.dirname(__file__))
+
+
+@pytest.fixture
+def minimal_swagger_abspath(my_dir):
+    return os.path.join(my_dir, '../test-data/2.0/minimal_swagger/swagger.json')
+
+
+@pytest.fixture
+def minimal_swagger_dict(minimal_swagger_abspath):
     """Return minimal dict that respresents a swagger spec - useful as a base
     template.
     """
-    return {
-        'swagger': '2.0',
-        'info': {
-            'title': 'Test',
-            'version': '1.0',
-        },
-        'paths': {
-        },
-        'definitions': {
-        },
-    }
+    return _read_json(minimal_swagger_abspath)
 
 
 @pytest.fixture
@@ -39,36 +54,56 @@ def minimal_swagger_spec(minimal_swagger_dict):
 
 
 @pytest.fixture
-def composition_abspath():
-    my_dir = os.path.abspath(os.path.dirname(__file__))
+def composition_abspath(my_dir):
     return os.path.join(my_dir, '../test-data/2.0/composition/swagger.json')
 
 
 @pytest.fixture
-def composition_url(composition_abspath):
-    return urlparse.urljoin('file:', composition_abspath)
-
-
-@pytest.fixture
 def composition_dict(composition_abspath):
-    with open(composition_abspath) as f:
-        return json.loads(f.read())
+    return _read_json(composition_abspath)
 
 
 @pytest.fixture(params=[
     {'include_missing_properties': True},
     {'include_missing_properties': False},
 ])
-def composition_spec(request, composition_dict, composition_url):
-    return Spec.from_dict(composition_dict, origin_url=composition_url, config=request.param)
+def composition_spec(request, composition_dict, composition_abspath):
+    return Spec.from_dict(composition_dict, origin_url=get_url(composition_abspath), config=request.param)
 
 
 @pytest.fixture
-def petstore_dict():
-    my_dir = os.path.abspath(os.path.dirname(__file__))
-    fpath = os.path.join(my_dir, '../test-data/2.0/petstore/swagger.json')
-    with open(fpath) as f:
-        return json.loads(f.read())
+def multi_file_recursive_abspath(my_dir):
+    return os.path.join(my_dir, '../test-data/2.0/multi-file-recursive/swagger.json')
+
+
+@pytest.fixture
+def multi_file_recursive_dict(multi_file_recursive_abspath):
+    return _read_yaml(multi_file_recursive_abspath)
+
+
+@pytest.fixture
+def multi_file_recursive_spec(multi_file_recursive_dict, multi_file_recursive_abspath):
+    return Spec.from_dict(multi_file_recursive_dict, origin_url=get_url(multi_file_recursive_abspath))
+
+
+@pytest.fixture
+def flattened_multi_file_recursive_abspath(my_dir):
+    return os.path.join(my_dir, '../test-data/flattened-multi-file-recursive-spec.json')
+
+
+@pytest.fixture
+def flattened_multi_file_recursive_dict(flattened_multi_file_recursive_abspath):
+    return _read_json(flattened_multi_file_recursive_abspath)
+
+
+@pytest.fixture
+def petstore_abspath(my_dir):
+    return os.path.join(my_dir, '../test-data/2.0/petstore/swagger.json')
+
+
+@pytest.fixture
+def petstore_dict(petstore_abspath):
+    return _read_json(petstore_abspath)
 
 
 @pytest.fixture
@@ -77,11 +112,13 @@ def petstore_spec(petstore_dict):
 
 
 @pytest.fixture
-def polymorphic_dict():
-    my_dir = os.path.abspath(os.path.dirname(__file__))
-    fpath = os.path.join(my_dir, '../test-data/2.0/polymorphic_specs/swagger.json')
-    with open(fpath) as f:
-        return json.loads(f.read())
+def polymorphic_abspath(my_dir):
+    return os.path.join(my_dir, '../test-data/2.0/polymorphic_specs/swagger.json')
+
+
+@pytest.fixture
+def polymorphic_dict(polymorphic_abspath):
+    return _read_json(polymorphic_abspath)
 
 
 @pytest.fixture
@@ -90,11 +127,13 @@ def polymorphic_spec(polymorphic_dict):
 
 
 @pytest.fixture
-def security_dict():
-    my_dir = os.path.abspath(os.path.dirname(__file__))
-    fpath = os.path.join(my_dir, '../test-data/2.0/security/swagger.json')
-    with open(fpath) as f:
-        return json.loads(f.read())
+def security_abspath(my_dir):
+    return os.path.join(my_dir, '../test-data/2.0/security/swagger.json')
+
+
+@pytest.fixture
+def security_dict(security_abspath):
+    return _read_json(security_abspath)
 
 
 @pytest.fixture
@@ -113,7 +152,8 @@ def base64_format():
         to_wire=base64.b64encode,
         to_python=base64.b64decode,
         validate=base64.b64decode,
-        description='Base64')
+        description='Base64',
+    )
 
 
 @pytest.fixture(scope='function')
