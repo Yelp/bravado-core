@@ -1,10 +1,11 @@
 Changelog
 =========
 
-- The content will be used to build the Changelog for the new bravado-core release
-- Fix handling of API calls that return non-JSON content (specifically text content).
-  (add before this line your modifications summary and PR reference)
-- Add support for Swagger spec flattening
+4.8.0 (2017-07-15)
+------------------
+- Add support for Swagger spec flattening - PR #177.
+- Fix handling of API calls that return non-JSON content (specifically text content) - PR #175. Thanks mostrows2 for your contribution!
+- Fix error message text when trying to unmarshal an invalid model - PR #179.
 
 4.7.3 (2017-05-05)
 ------------------
