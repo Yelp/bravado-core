@@ -177,7 +177,7 @@ def unmarshal_model(swagger_spec, model_spec, model_value):
     if not is_dict_like(model_value):
         raise SwaggerMappingError(
             "Expected type to be dict for value {0} to unmarshal to a {1}."
-            "Was {1} instead."
+            "Was {2} instead."
             .format(model_value, model_type, type(model_value)))
 
     # Check if model is polymorphic
