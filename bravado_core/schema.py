@@ -47,7 +47,10 @@ def is_prop_nullable(swagger_spec, schema_object_spec):
 
 
 def is_ref(spec):
-    return is_dict_like(spec) and '$ref' in spec
+    try:
+        return '$ref' in spec and is_dict_like(spec)
+    except TypeError:
+        return False
 
 
 def is_dict_like(spec):
