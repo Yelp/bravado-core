@@ -82,6 +82,21 @@
                     }
                 }
             }
+        },
+        "/recursive/responses": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "A list of recursive response",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                            		"$ref": "#/definitions/lfile:aux.json|..definitions..ping"
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "swagger": "2.0"
