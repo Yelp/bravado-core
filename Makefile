@@ -1,4 +1,4 @@
-.PHONY: all install test tests clean docs
+.PHONY: all install test tests clean docs benchmark
 
 all: test
 
@@ -15,10 +15,12 @@ install:
 	pip install .
 
 test: install-hooks
-	tox
+	tox -- tests --ignore tests/profiling
 
 tests: test
 
+benchmark: install-hooks
+	tox -e benchmark
 
 .PHONY: install-hooks
 install-hooks:
