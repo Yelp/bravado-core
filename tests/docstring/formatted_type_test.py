@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-import pytest
-
 from bravado_core.docstring import formatted_type
-from bravado_core.exception import SwaggerMappingError
 
 
 def test_type_only():
@@ -35,9 +32,3 @@ def test_ref():
         '$ref': '#/definitions/Foo',
     }
     assert '#/definitions/Foo' == formatted_type(schema_obj)
-
-
-def test_missing_type_raises_error():
-    with pytest.raises(SwaggerMappingError) as excinfo:
-        formatted_type({'TyP3': 'string'})
-    assert 'No proper type' in str(excinfo.value)

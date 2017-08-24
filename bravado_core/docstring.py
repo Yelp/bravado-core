@@ -3,8 +3,6 @@ import logging
 
 from six import iteritems
 
-from bravado_core.exception import SwaggerMappingError
-
 
 log = logging.getLogger(__name__)
 
@@ -178,5 +176,5 @@ def formatted_type(spec):
         return ref
     elif obj_type:
         return obj_type
-    raise SwaggerMappingError(
-        "No proper type could be found from {0}".format(spec))
+    else:
+        return 'object'
