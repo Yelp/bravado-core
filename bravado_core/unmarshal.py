@@ -37,11 +37,6 @@ def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
     if not obj_type or 'allOf' in schema_object_spec:
         obj_type = 'object'
 
-    if not obj_type:
-        raise SwaggerMappingError(
-            "The following schema object is missing a type field: {0}"
-            .format(schema_object_spec.get('x-model', str(schema_object_spec))))
-
     if obj_type in SWAGGER_PRIMITIVES:
         return unmarshal_primitive(swagger_spec, schema_object_spec, value)
 

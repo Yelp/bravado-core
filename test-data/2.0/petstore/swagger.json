@@ -956,6 +956,7 @@
       }
     },
     "Pet": {
+      "x-foo-bar": "blah",
       "required": [
         "name",
         "photoUrls"
