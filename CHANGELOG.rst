@@ -1,6 +1,10 @@
 Changelog
 =========
 
+4.8.1 (2017-08-24)
+------------------
+- Make unmarshalling objects roughly 30% faster - PR #182.
+
 4.8.0 (2017-07-15)
 ------------------
 - Add support for Swagger spec flattening - PR #177.
