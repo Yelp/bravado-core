@@ -57,8 +57,39 @@ def test_bad_object_spec(petstore_dict):
     category_spec = copy.deepcopy(
         petstore_spec.spec_dict['definitions']['Category']
     )
-    # Type is a required field for objects.
+
+    # without a type, default to object, which needs to be dict-like
     category_spec['properties']['id'].pop('type')
+
+    with pytest.raises(SwaggerMappingError):
+        unmarshal_schema_object(
+            petstore_spec,
+            category_spec,
+            {'id': 200, 'name': 'short-hair'})
+
+
+def test_default_object_type(petstore_dict):
+    petstore_spec = Spec.from_dict(petstore_dict, config={'use_models': False})
+    category_spec = copy.deepcopy(
+        petstore_spec.spec_dict['definitions']['Category']
+    )
+
+    # without a type, default to object, which needs to be dict-like
+    category_spec['properties']['id'].pop('type')
+
+    unmarshal_schema_object(
+        petstore_spec,
+        category_spec,
+        {'id': {'foo': 'bar'}, 'name': 'short-hair'})
+
+
+def test_bad_object_type(petstore_dict):
+    petstore_spec = Spec.from_dict(petstore_dict, config={'use_models': False})
+    category_spec = copy.deepcopy(
+        petstore_spec.spec_dict['definitions']['Category']
+    )
+    # Type is a required field for objects.
+    category_spec['properties']['id']['type'] = 'notAType'
 
     with pytest.raises(SwaggerMappingError):
         unmarshal_schema_object(
