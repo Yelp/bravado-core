@@ -956,7 +956,6 @@
       }
     },
     "Pet": {
-      "type": "object",
       "required": [
         "name",
         "photoUrls"

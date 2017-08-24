@@ -34,7 +34,7 @@ def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
     schema_object_spec = deref(schema_object_spec)
 
     obj_type = schema_object_spec.get('type')
-    if not obj_type and 'allOf' in schema_object_spec:
+    if not obj_type or 'allOf' in schema_object_spec:
         obj_type = 'object'
 
     if not obj_type:
