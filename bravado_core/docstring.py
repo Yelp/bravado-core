@@ -162,9 +162,6 @@ def formatted_type(spec):
     :param spec: object spec in dict form
     :rtype: str
     """
-    # TODO: If the type is not specified, isn't it assumed to be 'object'? Find
-    #       docs where this is stated. #/definitions/{def_name}/ don't have
-    #       a 'type' but it always seems to be assumed as 'object'
     obj_type = spec.get('type')
     obj_format = spec.get('format')
     ref = spec.get('$ref')
@@ -176,5 +173,5 @@ def formatted_type(spec):
         return ref
     elif obj_type:
         return obj_type
-    else:
+    else:  # If no type is specified, it is defaulted to an object
         return 'object'

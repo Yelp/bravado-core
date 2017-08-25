@@ -32,3 +32,10 @@ def test_ref():
         '$ref': '#/definitions/Foo',
     }
     assert '#/definitions/Foo' == formatted_type(schema_obj)
+
+
+def test_default():
+    schema_obj = {
+        'x-blah-blah-nothing': 'blargh',
+    }
+    assert 'object' == formatted_type(schema_obj)
