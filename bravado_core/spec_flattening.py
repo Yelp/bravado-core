@@ -8,6 +8,7 @@ from collections import defaultdict
 from jsonschema import RefResolver
 from six import iteritems
 from six import iterkeys
+from six import itervalues
 from six.moves.urllib.parse import urlparse
 from six.moves.urllib.parse import urlunparse
 from six.moves.urllib_parse import ParseResult
@@ -122,7 +123,12 @@ def _warn_if_uri_clash_on_same_marshaled_representation(uri_schema_mappings, mar
                 )
 
 
-_TYPE_SCHEMA, _TYPE_PATH_ITEM, _TYPE_PARAMETER = range(3)
+_TYPE_SCHEMA, _TYPE_PATH_ITEM, _TYPE_PARAMETER, _TYPE_RESPONSE = range(4)
+_TYPE_PROPERTY_HOLDER_MAPPING = {
+    _TYPE_PARAMETER: 'parameters',
+    _TYPE_RESPONSE: 'responses',
+    _TYPE_SCHEMA: 'definitions',
+}
 
 
 def _determine_object_type(object_dict):
@@ -130,12 +136,13 @@ def _determine_object_type(object_dict):
     Use best guess to determine the object type based on the object keys.
 
     NOTE: it assumes that the base swagger specs are validated and perform type detection for
-    the three types of object that could be references in the specs: parameter, path item and schema.
+    the four types of object that could be references in the specs: parameter, path item, response and schema.
 
     :return: determined type of ``object_dict``. The return values are:
         - ``_TYPE_SCHEMA`` for schema objects
         - ``_TYPE_PATH_ITEM`` for path item objects
-        - ``_TYPE_PARAMETER`` for parameter objects)
+        - ``_TYPE_PARAMETER`` for parameter objects
+        - ``_TYPE_RESPONSE`` for parameter response objects
 
     :rtype: int
     """
@@ -152,7 +159,24 @@ def _determine_object_type(object_dict):
             if not remaining_keys or remaining_keys == {'parameters'}:
                 return _TYPE_PATH_ITEM
         else:
-            return _TYPE_SCHEMA
+            # A response object has:
+            #  - mandatory description field
+            #  - optional schema, headers and examples field
+            #  - no other fields are allowed
+            response_allowed_keys = {'description', 'schema', 'headers', 'examples'}
+
+            # If description field is specified and there are no other fields other the allowed response fields
+            if 'description' in object_keys and not object_keys - response_allowed_keys:
+                return _TYPE_RESPONSE
+            else:
+                # A schema object has:
+                #  - no mandatory parameters
+                #  - long list of optional parameters (ie. description, type, items, properties, discriminator, etc.)
+                #  - no other fields are allowed
+                # NOTE: In case the method is miss determining the type of a schema object, confusing it with a
+                #       response type it will be enough to add, to the object, one key that is not defined
+                #       in ``response_allowed_keys``.  (ie. "additionalProperties": True  (implicitly defined be specs)
+                return _TYPE_SCHEMA
 
 
 def flattened_spec(
@@ -209,8 +233,8 @@ def flattened_spec(
         )
 
     known_mappings = {
-        'definitions': {},
-        'parameters': {},
+        key: {}
+        for key in itervalues(_TYPE_PROPERTY_HOLDER_MAPPING)
     }
 
     # Define marshal_uri method to be used by descend
@@ -235,10 +259,7 @@ def flattened_spec(
                         value=copy.deepcopy(deref_value),
                     )
                 else:
-                    if object_type is _TYPE_PARAMETER:
-                        mapping_key = 'parameters'
-                    else:
-                        mapping_key = 'definitions'
+                    mapping_key = _TYPE_PROPERTY_HOLDER_MAPPING.get(object_type, 'definitions')
 
                     uri = urlparse(uri)
                     if uri not in known_mappings.get(mapping_key, {}):

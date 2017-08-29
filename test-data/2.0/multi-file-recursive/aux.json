@@ -44,5 +44,10 @@
                 }
             ]
         }
+    },
+    "responses": {
+        "ok_response": {
+            "description": "A HTTP/200 response retrieved with $ref"
+        }
     }
 }

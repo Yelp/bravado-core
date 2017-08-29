@@ -64,6 +64,15 @@
                     }
                 }
             }
+        },
+        "/referenced_response": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "$ref": "aux.json#/responses/ok_response"
+                    }
+                }
+            }
         }
     },
     "swagger": "2.0"
