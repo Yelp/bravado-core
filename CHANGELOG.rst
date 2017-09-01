@@ -1,6 +1,8 @@
 Changelog
 =========
 
+- Fix marshalling of null values for properties with x-nullable set to True - Issue #185, PR #186
+
 4.8.1 (2017-08-24)
 ------------------
 - Make unmarshalling objects roughly 30% faster - PR #182.
