@@ -109,10 +109,9 @@ def test_marshal_url(target, expected_marshaled_uri):
     'build_spec_object', [True, False]
 )
 @mock.patch('bravado_core.spec.build_api_serving_url')
-@mock.patch('bravado_core.spec.build_http_handlers')
 @mock.patch('bravado_core.spec.flattened_spec')
-def test_flattened_spec_warning_if_no_origin_urla(
-    mock_flattened_dict, mock_build_http_handlers, mock_build_api_serving_url, petstore_spec, build_spec_object,
+def test_flattened_spec_raises_if_specs_are_not_built_and_validated(
+    mock_flattened_dict, mock_build_api_serving_url, petstore_spec, build_spec_object,
 ):
     petstore_spec = Spec(mock_flattened_dict, config=dict(CONFIG_DEFAULTS, validate_swagger_spec=not build_spec_object))
     if build_spec_object:
@@ -126,17 +125,17 @@ def test_flattened_spec_warning_if_no_origin_urla(
 @pytest.mark.parametrize(
     'has_origin_url', [True, False]
 )
-@mock.patch('bravado_core.spec.warnings')
+@mock.patch('bravado_core.spec_flattening.warnings')
 @mock.patch('bravado_core.spec.build_http_handlers')
-@mock.patch('bravado_core.spec.flattened_spec')
+@mock.patch('bravado_core.spec.flattened_spec', wraps=spec.flattened_spec)
 def test_flattened_spec_warning_if_no_origin_url(
-    mock_flattened_spec, mock_build_http_handlers, mock_warnings, petstore_spec, has_origin_url,
+    wrap_flattened_spec, mock_build_http_handlers, mock_warnings, petstore_spec, has_origin_url,
 ):
     if not has_origin_url:
         petstore_spec.origin_url = None
 
     petstore_spec.flattened_spec
-    mock_flattened_spec.assert_called_once_with(
+    wrap_flattened_spec.assert_called_once_with(
         spec_dict=petstore_spec.spec_dict,
         spec_resolver=petstore_spec.resolver,
         spec_url=petstore_spec.origin_url,
@@ -144,7 +143,9 @@ def test_flattened_spec_warning_if_no_origin_url(
         spec_definitions=petstore_spec.definitions,
     )
 
-    if not has_origin_url:
+    if has_origin_url:
+        assert not mock_warnings.warn.called
+    else:
         mock_warnings.warn.assert_called_once_with(
             message='It is recommended to set origin_url to your spec before flattering it. '
                     'Doing so internal paths will be hidden, reducing the amount of exposed information.',
