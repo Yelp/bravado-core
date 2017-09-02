@@ -107,8 +107,8 @@ def petstore_dict(petstore_abspath):
 
 
 @pytest.fixture
-def petstore_spec(petstore_dict):
-    return Spec.from_dict(petstore_dict)
+def petstore_spec(petstore_dict, petstore_abspath):
+    return Spec.from_dict(petstore_dict, origin_url=get_url(petstore_abspath))
 
 
 @pytest.fixture

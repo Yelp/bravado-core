@@ -1,5 +1,9 @@
 {
   "definitions": {
+    "lfile:aux.json|..definitions..not_used_remote_reference": {
+      "type": "object",
+      "x-model": "not_used_remote_reference"
+    },
     "lfile:aux.json|..definitions..ping": {
       "properties": {
         "message": {
@@ -14,6 +18,15 @@
       ],
       "type": "object",
       "x-model": "ping"
+    },
+    "lfile:swagger.json|..definitions..not_used": {
+      "properties": {
+        "not_used_remote_reference": {
+          "$ref": "#/definitions/lfile:aux.json|..definitions..not_used_remote_reference"
+        }
+      },
+      "type": "object",
+      "x-model": "not_used"
     },
     "lfile:swagger.json|..definitions..pong": {
       "properties": {

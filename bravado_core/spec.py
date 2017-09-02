@@ -309,6 +309,7 @@ class Spec(object):
                     spec_resolver=self.resolver,
                     spec_url=self.origin_url,
                     http_handlers=build_http_handlers(self.http_client),
+                    spec_definitions=self.definitions,
                 ),
             )
 

@@ -9,6 +9,7 @@ from jsonschema import RefResolver
 from six import iteritems
 from six import iterkeys
 from six import itervalues
+from six.moves.urllib.parse import urljoin
 from six.moves.urllib.parse import urlparse
 from six.moves.urllib.parse import urlunparse
 from six.moves.urllib_parse import ParseResult
@@ -180,20 +181,25 @@ def _determine_object_type(object_dict):
 
 
 def flattened_spec(
-    spec_dict, spec_resolver=None, spec_url=None, http_handlers=None, marshal_uri_function=_marshal_uri,
+    spec_dict, spec_resolver=None, spec_url=None, http_handlers=None,
+    marshal_uri_function=_marshal_uri, spec_definitions=None,
 ):
     """
     Flatten Swagger Specs description into an unique and JSON serializable document.
-    The flattening injects in place the referenced [path item objects](http://swagger.io/specification/#pathItemObject)
-    while it injects in '#/parameters' the [parameter objects](http://swagger.io/specification/#parameterObject) and
-    injects in '#/definitions' the [schema objects])http://swagger.io/specification/#schemaObject).
+    The flattening injects in place the referenced [path item objects](https://swagger.io/specification/#pathItemObject)
+    while it injects in '#/parameters' the [parameter objects](https://swagger.io/specification/#parameterObject),
+    in '#/definitions' the [schema objects](https://swagger.io/specification/#schemaObject) and in
+    '#/responses' the [response objects](https://swagger.io/specification/#responseObject).
 
-    Note: the object names in '#/definitions' and '#/parameters' are evaluated by ``marshal_uri_function``, the default
-    method takes care of creating unique names for all the used references. Since name clashing are still possible take
-    care that a warning could be filed. If it happen please report to us the specific warning text and the specs that
-    generated it. We can work to improve it and in the mean time you can "plug" a custom marshalling function.
+    Note: the object names in '#/definitions', '#/parameters' and '#/responses' are evaluated by
+    ``marshal_uri_function``, the default method takes care of creating unique names for all the used references.
+    Since name clashing are still possible take care that a warning could be filed.
+    If it happen please report to us the specific warning text and the specs that generated it.
+    We can work to improve it and in the mean time you can "plug" a custom marshalling function.
 
-    Warning: Be aware that the flattening process strips out all the un-used schema and parameter objects.
+    Note: https://swagger.io/specification/ has been update to track the latest version of the Swagger/OpenAPI specs.
+    Please refer to https://github.com/OAI/OpenAPI-Specification/blob/3.0.0/versions/2.0.md#responseObject for the
+    most recent Swagger 2.0 specifications.
 
     :param spec_dict: Swagger Spec dictionary representation. Note: the method assumes that the specs are valid specs.
     :type spec_dict: dict
@@ -207,6 +213,8 @@ def flattened_spec(
     :type http_handlers: dict
     :param marshal_uri_function: function used to marshal uris in string suitable to be keys in Swagger Specs.
     :type marshal_uri_function: Callable with the same signature of ``_marshal_uri``
+    :param spec_definitions: known swagger definitions (hint: definitions attribute of bravado_core.spec.Spec instance)
+    :type dict: bravado_core.spec.Spec
 
     :return: Flattened representation of the Swagger Specs
     :rtype: dict
@@ -230,6 +238,12 @@ def flattened_spec(
             base_uri=spec_url,
             referrer=spec_dict,
             handlers=http_handlers or {},
+        )
+
+    if spec_definitions is None:
+        warnings.warn(
+            message='Un-referenced models cannot be un-flattened if spec_definitions is not present',
+            category=Warning,
         )
 
     known_mappings = {
@@ -284,6 +298,17 @@ def flattened_spec(
             return value
 
     resolved_spec = descend(value=spec_dict)
+
+    if spec_definitions is not None:
+        flatten_models = {
+            definition['x-model']
+            for definition in itervalues(known_mappings['definitions'])
+        }
+        for model_name, model_type in iteritems(spec_definitions):
+            if model_name in flatten_models:
+                continue
+            model_url = urlparse(urljoin(spec_url, '#/definitions/{}'.format(model_name)))
+            known_mappings['definitions'][model_url] = descend(value=model_type._model_spec)
 
     for mapping_key, mappings in iteritems(known_mappings):
         _warn_if_uri_clash_on_same_marshaled_representation(

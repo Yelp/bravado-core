@@ -7,6 +7,7 @@ import pytest
 from six.moves.urllib.parse import urlparse
 from swagger_spec_validator import validator20
 
+from bravado_core import spec
 from bravado_core.spec import CONFIG_DEFAULTS
 from bravado_core.spec import Spec
 from bravado_core.spec_flattening import _marshal_uri
@@ -140,12 +141,43 @@ def test_flattened_spec_warning_if_no_origin_url(
         spec_resolver=petstore_spec.resolver,
         spec_url=petstore_spec.origin_url,
         http_handlers=mock_build_http_handlers.return_value,
+        spec_definitions=petstore_spec.definitions,
     )
 
     if not has_origin_url:
         mock_warnings.warn.assert_called_once_with(
             message='It is recommended to set origin_url to your spec before flattering it. '
                     'Doing so internal paths will be hidden, reducing the amount of exposed information.',
+            category=Warning,
+        )
+
+
+@pytest.mark.parametrize(
+    'has_spec_definitions', [True, False]
+)
+@mock.patch('bravado_core.spec_flattening.warnings')
+@mock.patch('bravado_core.spec.build_http_handlers')
+@mock.patch('bravado_core.spec.flattened_spec', wraps=spec.flattened_spec)
+def test_flattened_spec_warning_if_no_definitions(
+    wrap_flattened_spec, mock_build_http_handlers, mock_warnings, petstore_spec, has_spec_definitions,
+):
+    if not has_spec_definitions:
+        petstore_spec.definitions = None
+
+    petstore_spec.flattened_spec
+    wrap_flattened_spec.assert_called_once_with(
+        spec_dict=petstore_spec.spec_dict,
+        spec_resolver=petstore_spec.resolver,
+        spec_url=petstore_spec.origin_url,
+        http_handlers=mock_build_http_handlers.return_value,
+        spec_definitions=petstore_spec.definitions,
+    )
+
+    if has_spec_definitions:
+        assert not mock_warnings.warn.called
+    else:
+        mock_warnings.warn.assert_called_once_with(
+            message='Un-referenced models cannot be un-flattened if spec_definitions is not present',
             category=Warning,
         )
 

@@ -2,6 +2,11 @@
     "definitions": {
         "not_used": {
             "type": "object",
+            "properties": {
+                "not_used_remote_reference": {
+                    "$ref": "aux.json#/definitions/not_used_remote_reference"
+                }
+            },
             "x-model": "not_used"
         },
         "pong": {
