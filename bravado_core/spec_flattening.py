@@ -246,7 +246,7 @@ def flattened_spec(
     # Avoid object attribute extraction during descend
     resolve = spec_resolver.resolve
 
-    def descend(json_path, value):
+    def descend(value):
         if is_ref(value):
             uri, deref_value = resolve(value['$ref'])
 
@@ -254,10 +254,7 @@ def flattened_spec(
             with in_scope(spec_resolver, {'x-scope': [uri]}):
                 object_type = _determine_object_type(object_dict=deref_value)
                 if object_type is _TYPE_PATH_ITEM:
-                    return descend(
-                        json_path=json_path,
-                        value=copy.deepcopy(deref_value),
-                    )
+                    return descend(value=deref_value)
                 else:
                     mapping_key = _TYPE_PROPERTY_HOLDER_MAPPING.get(object_type, 'definitions')
 
@@ -267,38 +264,26 @@ def flattened_spec(
                         # during the recursive traverse of the data model (``descend``)
                         known_mappings[mapping_key][uri] = None
 
-                        known_mappings[mapping_key][uri] = descend(
-                            json_path=json_path,
-                            value=copy.deepcopy(deref_value),
-                        )
+                        known_mappings[mapping_key][uri] = descend(value=deref_value)
 
                     return {'$ref': '#/{}/{}'.format(mapping_key, marshal_uri(uri))}
 
         elif is_dict_like(value):
             return {
-                key: descend(
-                    json_path=json_path + [key],
-                    value=subval,
-                )
+                key: descend(value=subval)
                 for key, subval in iteritems(value)
             }
 
         elif is_list_like(value):
             return [
-                descend(
-                    json_path=json_path + [index],
-                    value=subval,
-                )
+                descend(value=subval)
                 for index, subval in enumerate(value)
             ]
 
         else:
             return value
 
-    resolved_spec = descend(
-        json_path=[],
-        value=spec_dict,
-    )
+    resolved_spec = descend(value=spec_dict)
 
     for mapping_key, mappings in iteritems(known_mappings):
         _warn_if_uri_clash_on_same_marshaled_representation(
