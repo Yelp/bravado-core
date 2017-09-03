@@ -11,13 +11,14 @@ import pytz
 import six
 
 from bravado_core import schema
+from bravado_core.exception import SwaggerMappingError
 
 if six.PY3:
     long = int
 
 
 def NO_OP(x):
-    return None
+    return x
 
 
 def to_wire(swagger_spec, primitive_spec, value):
@@ -29,12 +30,23 @@ def to_wire(swagger_spec, primitive_spec, value):
     :param value: primitive to convert to wire representation
     :type value: int, long, float, boolean, string, unicode, object, etc
     :rtype: int, long, float, boolean, string, unicode, etc
+    :raises: SwaggerMappingError when format.to_wire raises an exception
     """
     if value is None or not schema.has_format(swagger_spec, primitive_spec):
         return value
     format_name = schema.get_format(swagger_spec, primitive_spec)
     formatter = swagger_spec.get_format(format_name)
-    return formatter.to_wire(value) if formatter else value
+
+    try:
+        return formatter.to_wire(value) if formatter else value
+    except Exception as e:
+        raise SwaggerMappingError(
+            'Error while marshalling value={} to type={}{}.'.format(
+                value, primitive_spec['type'],
+                '/{}'.format(primitive_spec['format']) if 'format' in primitive_spec else '',
+            ),
+            e,
+        )
 
 
 def to_python(swagger_spec, primitive_spec, value):
