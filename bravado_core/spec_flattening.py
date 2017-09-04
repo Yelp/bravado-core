@@ -174,7 +174,7 @@ def _determine_object_type(object_dict):
                 #  - no mandatory parameters
                 #  - long list of optional parameters (ie. description, type, items, properties, discriminator, etc.)
                 #  - no other fields are allowed
-                # NOTE: In case the method is miss determining the type of a schema object, confusing it with a
+                # NOTE: In case the method is mis-determining the type of a schema object, confusing it with a
                 #       response type it will be enough to add, to the object, one key that is not defined
                 #       in ``response_allowed_keys``.  (ie. "additionalProperties": True  (implicitly defined be specs)
                 return _TYPE_SCHEMA
