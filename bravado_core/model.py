@@ -82,7 +82,7 @@ class Model(object):
     making up the public API of this class prefixed by a single underscore
     (this is done with the :func:`collections.namedtuple` type factory, which
     also uses property values with arbitrary names). There may still be name
-    conflicts but only if the property name also begins with an undersecore,
+    conflicts but only if the property name also begins with an underscore,
     which is uncommon. Truly private attributes are prefixed with double
     underscores in the source code (and thus by "_Model__" after
     `name-mangling`_).
@@ -289,6 +289,9 @@ class Model(object):
             dct[attr_name] = attr_val
 
         return dct
+
+    # provide the same interface as a namedtuple
+    _asdict = _as_dict
 
     @classmethod
     def _from_dict(cls, dct):

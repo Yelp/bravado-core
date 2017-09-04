@@ -70,7 +70,9 @@ def test_model_delete_additional_property(definitions_spec, user_type, user_kwar
 
 def test_model_as_dict(definitions_spec, user_type, user_kwargs):
     user = user_type(**user_kwargs)
-    assert {k: user_kwargs.get(k) for k in definitions_spec['User']['properties'].keys()} == user._as_dict()
+    user_dict = user._as_dict()
+    assert {k: user_kwargs.get(k) for k in definitions_spec['User']['properties'].keys()} == user_dict
+    assert user._asdict() == user_dict
 
 
 @pytest.mark.parametrize(
