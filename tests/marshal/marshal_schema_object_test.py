@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import copy
+import datetime
 from collections import defaultdict
 
 import pytest
@@ -66,6 +67,33 @@ def test_ref(minimal_swagger_dict):
     minimal_swagger_dict['refs'] = {'Foo': foo_spec}
     swagger_spec = Spec(minimal_swagger_dict)
     assert 'foo' == marshal_schema_object(swagger_spec, ref_spec, 'foo')
+
+
+def test_marshal_raises_SwaggerMappingError_if_SwaggerFormat_fails_during_to_wire(minimal_swagger_dict):
+    minimal_swagger_dict['definitions']['test'] = {
+        'properties': {
+            'date': {
+                'type': 'string',
+                'format': 'date',
+            },
+        },
+        'required': [
+            'date',
+        ],
+        'type': 'object'
+    }
+    swagger_spec = Spec(minimal_swagger_dict)
+    date_str = datetime.date.today().isoformat()
+    with pytest.raises(SwaggerMappingError) as excinfo:
+        marshal_schema_object(
+            swagger_spec=swagger_spec,
+            schema_object_spec=minimal_swagger_dict['definitions']['test'],
+            value={'date': date_str},
+        )
+    message, wrapped_exception = excinfo.value.args
+    assert message == 'Error while marshalling value={} to type=string/date.'.format(date_str)
+    assert type(wrapped_exception) is AttributeError
+    assert wrapped_exception.args == ('\'str\' object has no attribute \'isoformat\'', )
 
 
 def test_allOf_with_ref(composition_spec):
