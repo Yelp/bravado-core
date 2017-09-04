@@ -1,7 +1,10 @@
 Changelog
 =========
 
-- Fix marshalling of null values for properties with x-nullable set to True - Issue #185, PR #186
+4.8.2 (2017-09-04)
+------------------
+- Fix marshalling of ``null`` values for properties with ``x-nullable`` set to ``true`` - Issue #185, PR #186. Thanks Jan Baraniewski for the contribution!
+- Add ``_asdict()`` method to each model, similar to what namedtuples have - PR #188.
 
 4.8.1 (2017-08-24)
 ------------------
