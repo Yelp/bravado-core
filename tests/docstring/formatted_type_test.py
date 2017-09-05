@@ -38,4 +38,4 @@ def test_default():
     schema_obj = {
         'x-blah-blah-nothing': 'blargh',
     }
-    assert 'object' == formatted_type(schema_obj)
+    assert 'notype' == formatted_type(schema_obj)

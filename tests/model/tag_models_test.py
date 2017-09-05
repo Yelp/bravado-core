@@ -31,7 +31,6 @@ def test_tags_model(minimal_swagger_dict, pet_model_spec):
 
 
 def test_type_missing(minimal_swagger_dict, pet_model_spec):
-    """We default to object when type is missing"""
     del pet_model_spec['type']
     minimal_swagger_dict['definitions']['Pet'] = pet_model_spec
     swagger_spec = Spec(minimal_swagger_dict)
@@ -41,7 +40,7 @@ def test_type_missing(minimal_swagger_dict, pet_model_spec):
         ['definitions', 'Pet'],
         visited_models={},
         swagger_spec=swagger_spec)
-    assert MODEL_MARKER in pet_model_spec
+    assert MODEL_MARKER not in pet_model_spec
 
 
 def test_model_not_object(minimal_swagger_dict):

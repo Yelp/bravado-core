@@ -173,5 +173,5 @@ def formatted_type(spec):
         return ref
     elif obj_type:
         return obj_type
-    else:  # If no type is specified, it is defaulted to an object
-        return 'object'
+    else:  # not obj_type
+        return 'notype'
