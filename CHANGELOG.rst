@@ -3,7 +3,7 @@ Changelog
 
 4.8.3 (2017-09-05)
 ------------------
-- Improve spec flattening: recognize response objects - PR #184.
+- Improve spec flattening: recognize response objects and expose un-referenced models - PR #184.
 - Fix a bug when marshalling properties with no spec that have the value ``None`` - PR #189.
 
 4.8.2 (2017-09-04)
