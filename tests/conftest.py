@@ -88,7 +88,7 @@ def multi_file_recursive_spec(multi_file_recursive_dict, multi_file_recursive_ab
 
 @pytest.fixture
 def flattened_multi_file_recursive_abspath(my_dir):
-    return os.path.join(my_dir, '../test-data/flattened-multi-file-recursive-spec.json')
+    return os.path.join(my_dir, '../test-data/2.0/multi-file-recursive/flattened-multi-file-recursive-spec.json')
 
 
 @pytest.fixture
@@ -107,8 +107,8 @@ def petstore_dict(petstore_abspath):
 
 
 @pytest.fixture
-def petstore_spec(petstore_dict):
-    return Spec.from_dict(petstore_dict)
+def petstore_spec(petstore_dict, petstore_abspath):
+    return Spec.from_dict(petstore_dict, origin_url=get_url(petstore_abspath))
 
 
 @pytest.fixture

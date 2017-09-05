@@ -8,6 +8,8 @@ from collections import defaultdict
 from jsonschema import RefResolver
 from six import iteritems
 from six import iterkeys
+from six import itervalues
+from six.moves.urllib.parse import urljoin
 from six.moves.urllib.parse import urlparse
 from six.moves.urllib.parse import urlunparse
 from six.moves.urllib_parse import ParseResult
@@ -122,7 +124,12 @@ def _warn_if_uri_clash_on_same_marshaled_representation(uri_schema_mappings, mar
                 )
 
 
-_TYPE_SCHEMA, _TYPE_PATH_ITEM, _TYPE_PARAMETER = range(3)
+_TYPE_SCHEMA, _TYPE_PATH_ITEM, _TYPE_PARAMETER, _TYPE_RESPONSE = range(4)
+_TYPE_PROPERTY_HOLDER_MAPPING = {
+    _TYPE_PARAMETER: 'parameters',
+    _TYPE_RESPONSE: 'responses',
+    _TYPE_SCHEMA: 'definitions',
+}
 
 
 def _determine_object_type(object_dict):
@@ -130,12 +137,13 @@ def _determine_object_type(object_dict):
     Use best guess to determine the object type based on the object keys.
 
     NOTE: it assumes that the base swagger specs are validated and perform type detection for
-    the three types of object that could be references in the specs: parameter, path item and schema.
+    the four types of object that could be references in the specs: parameter, path item, response and schema.
 
     :return: determined type of ``object_dict``. The return values are:
         - ``_TYPE_SCHEMA`` for schema objects
         - ``_TYPE_PATH_ITEM`` for path item objects
-        - ``_TYPE_PARAMETER`` for parameter objects)
+        - ``_TYPE_PARAMETER`` for parameter objects
+        - ``_TYPE_RESPONSE`` for parameter response objects
 
     :rtype: int
     """
@@ -152,24 +160,46 @@ def _determine_object_type(object_dict):
             if not remaining_keys or remaining_keys == {'parameters'}:
                 return _TYPE_PATH_ITEM
         else:
-            return _TYPE_SCHEMA
+            # A response object has:
+            #  - mandatory description field
+            #  - optional schema, headers and examples field
+            #  - no other fields are allowed
+            response_allowed_keys = {'description', 'schema', 'headers', 'examples'}
+
+            # If description field is specified and there are no other fields other the allowed response fields
+            if 'description' in object_keys and not object_keys - response_allowed_keys:
+                return _TYPE_RESPONSE
+            else:
+                # A schema object has:
+                #  - no mandatory parameters
+                #  - long list of optional parameters (ie. description, type, items, properties, discriminator, etc.)
+                #  - no other fields are allowed
+                # NOTE: In case the method is mis-determining the type of a schema object, confusing it with a
+                #       response type it will be enough to add, to the object, one key that is not defined
+                #       in ``response_allowed_keys``.  (ie. ``additionalProperties: {}``, implicitly defined be specs)
+                return _TYPE_SCHEMA
 
 
 def flattened_spec(
-    spec_dict, spec_resolver=None, spec_url=None, http_handlers=None, marshal_uri_function=_marshal_uri,
+    spec_dict, spec_resolver=None, spec_url=None, http_handlers=None,
+    marshal_uri_function=_marshal_uri, spec_definitions=None,
 ):
     """
     Flatten Swagger Specs description into an unique and JSON serializable document.
-    The flattening injects in place the referenced [path item objects](http://swagger.io/specification/#pathItemObject)
-    while it injects in '#/parameters' the [parameter objects](http://swagger.io/specification/#parameterObject) and
-    injects in '#/definitions' the [schema objects])http://swagger.io/specification/#schemaObject).
+    The flattening injects in place the referenced [path item objects](https://swagger.io/specification/#pathItemObject)
+    while it injects in '#/parameters' the [parameter objects](https://swagger.io/specification/#parameterObject),
+    in '#/definitions' the [schema objects](https://swagger.io/specification/#schemaObject) and in
+    '#/responses' the [response objects](https://swagger.io/specification/#responseObject).
 
-    Note: the object names in '#/definitions' and '#/parameters' are evaluated by ``marshal_uri_function``, the default
-    method takes care of creating unique names for all the used references. Since name clashing are still possible take
-    care that a warning could be filed. If it happen please report to us the specific warning text and the specs that
-    generated it. We can work to improve it and in the mean time you can "plug" a custom marshalling function.
+    Note: the object names in '#/definitions', '#/parameters' and '#/responses' are evaluated by
+    ``marshal_uri_function``, the default method takes care of creating unique names for all the used references.
+    Since name clashing are still possible take care that a warning could be filed.
+    If it happen please report to us the specific warning text and the specs that generated it.
+    We can work to improve it and in the mean time you can "plug" a custom marshalling function.
 
-    Warning: Be aware that the flattening process strips out all the un-used schema and parameter objects.
+    Note: https://swagger.io/specification/ has been update to track the latest version of the Swagger/OpenAPI specs.
+    Please refer to https://github.com/OAI/OpenAPI-Specification/blob/3.0.0/versions/2.0.md#responseObject for the
+    most recent Swagger 2.0 specifications.
 
     :param spec_dict: Swagger Spec dictionary representation. Note: the method assumes that the specs are valid specs.
     :type spec_dict: dict
@@ -183,6 +213,8 @@ def flattened_spec(
     :type http_handlers: dict
     :param marshal_uri_function: function used to marshal uris in string suitable to be keys in Swagger Specs.
     :type marshal_uri_function: Callable with the same signature of ``_marshal_uri``
+    :param spec_definitions: known swagger definitions (hint: definitions attribute of bravado_core.spec.Spec instance)
+    :type dict: bravado_core.spec.Spec
 
     :return: Flattened representation of the Swagger Specs
     :rtype: dict
@@ -208,9 +240,15 @@ def flattened_spec(
             handlers=http_handlers or {},
         )
 
+    if spec_definitions is None:
+        warnings.warn(
+            message='Un-referenced models cannot be un-flattened if spec_definitions is not present',
+            category=Warning,
+        )
+
     known_mappings = {
-        'definitions': {},
-        'parameters': {},
+        key: {}
+        for key in itervalues(_TYPE_PROPERTY_HOLDER_MAPPING)
     }
 
     # Define marshal_uri method to be used by descend
@@ -222,7 +260,7 @@ def flattened_spec(
     # Avoid object attribute extraction during descend
     resolve = spec_resolver.resolve
 
-    def descend(json_path, value):
+    def descend(value):
         if is_ref(value):
             uri, deref_value = resolve(value['$ref'])
 
@@ -230,15 +268,9 @@ def flattened_spec(
             with in_scope(spec_resolver, {'x-scope': [uri]}):
                 object_type = _determine_object_type(object_dict=deref_value)
                 if object_type is _TYPE_PATH_ITEM:
-                    return descend(
-                        json_path=json_path,
-                        value=copy.deepcopy(deref_value),
-                    )
+                    return descend(value=deref_value)
                 else:
-                    if object_type is _TYPE_PARAMETER:
-                        mapping_key = 'parameters'
-                    else:
-                        mapping_key = 'definitions'
+                    mapping_key = _TYPE_PROPERTY_HOLDER_MAPPING.get(object_type, 'definitions')
 
                     uri = urlparse(uri)
                     if uri not in known_mappings.get(mapping_key, {}):
@@ -246,38 +278,37 @@ def flattened_spec(
                         # during the recursive traverse of the data model (``descend``)
                         known_mappings[mapping_key][uri] = None
 
-                        known_mappings[mapping_key][uri] = descend(
-                            json_path=json_path,
-                            value=copy.deepcopy(deref_value),
-                        )
+                        known_mappings[mapping_key][uri] = descend(value=deref_value)
 
                     return {'$ref': '#/{}/{}'.format(mapping_key, marshal_uri(uri))}
 
         elif is_dict_like(value):
             return {
-                key: descend(
-                    json_path=json_path + [key],
-                    value=subval,
-                )
+                key: descend(value=subval)
                 for key, subval in iteritems(value)
             }
 
         elif is_list_like(value):
             return [
-                descend(
-                    json_path=json_path + [index],
-                    value=subval,
-                )
+                descend(value=subval)
                 for index, subval in enumerate(value)
             ]
 
         else:
             return value
 
-    resolved_spec = descend(
-        json_path=[],
-        value=spec_dict,
-    )
+    resolved_spec = descend(value=spec_dict)
+
+    if spec_definitions is not None:
+        flatten_models = {
+            definition['x-model']
+            for definition in itervalues(known_mappings['definitions'])
+        }
+        for model_name, model_type in iteritems(spec_definitions):
+            if model_name in flatten_models:
+                continue
+            model_url = urlparse(urljoin(spec_url, '#/definitions/{}'.format(model_name)))
+            known_mappings['definitions'][model_url] = descend(value=model_type._model_spec)
 
     for mapping_key, mappings in iteritems(known_mappings):
         _warn_if_uri_clash_on_same_marshaled_representation(

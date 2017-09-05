@@ -296,19 +296,13 @@ class Spec(object):
             if self.resources is None or not self.config['validate_swagger_spec']:
                 raise RuntimeError('Swagger Specs have to be built and validated before flattening.')
 
-            if self.origin_url is None:
-                warnings.warn(
-                    message='It is recommended to set origin_url to your spec before flattering it. '
-                            'Doing so internal paths will be hidden, reducing the amount of exposed information.',
-                    category=Warning,
-                )
-
             self._flattened_spec = strip_xscope(
                 spec_dict=flattened_spec(
                     spec_dict=self.spec_dict,
                     spec_resolver=self.resolver,
                     spec_url=self.origin_url,
                     http_handlers=build_http_handlers(self.http_client),
+                    spec_definitions=self.definitions,
                 ),
             )
 
