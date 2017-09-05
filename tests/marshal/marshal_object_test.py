@@ -193,6 +193,8 @@ def test_pass_through_additionalProperties_with_no_spec(
 def test_pass_through_property_with_no_spec(
         empty_swagger_spec, address_spec, address):
     del address_spec['properties']['street_name']['type']
+    # add a field with a None value and no spec
+    address['none_field'] = None
     result = marshal_object(empty_swagger_spec, address_spec, address)
     assert address == result
 

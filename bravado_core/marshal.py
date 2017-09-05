@@ -142,15 +142,16 @@ def marshal_object(swagger_spec, object_spec, object_value):
         prop_spec = get_spec_for_prop(
             swagger_spec, object_spec, object_value, k)
 
+        if not prop_spec:
+            # Don't marshal when a spec is not available - just pass through
+            result[k] = v
+            continue
+
         if v is None and k not in required_fields:
             if not is_prop_nullable(swagger_spec, prop_spec):
                 continue
 
-        if prop_spec:
-            result[k] = marshal_schema_object(swagger_spec, prop_spec, v)
-        else:
-            # Don't marshal when a spec is not available - just pass through
-            result[k] = v
+        result[k] = marshal_schema_object(swagger_spec, prop_spec, v)
 
     return result
 
