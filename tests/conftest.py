@@ -141,6 +141,34 @@ def security_spec(security_dict):
     return Spec.from_dict(security_dict)
 
 
+@pytest.fixture
+def multi_file_with_no_xmodel_abspath(my_dir):
+    return os.path.join(my_dir, '../test-data/2.0/multi-file-specs-with-no-x-model/swagger.json')
+
+
+@pytest.fixture
+def multi_file_with_no_xmodel_dict(multi_file_with_no_xmodel_abspath):
+    return _read_json(multi_file_with_no_xmodel_abspath)
+
+
+@pytest.fixture
+def multi_file_with_no_xmodel_spec(multi_file_with_no_xmodel_dict, multi_file_with_no_xmodel_abspath):
+    return Spec.from_dict(multi_file_with_no_xmodel_dict, origin_url=get_url(multi_file_with_no_xmodel_abspath))
+
+
+@pytest.fixture
+def flattened_multi_file_with_no_xmodel_abspath(my_dir):
+    return os.path.join(
+        my_dir,
+        '../test-data/2.0/multi-file-specs-with-no-x-model/flattened-multi-file-with-no-xmodel.json',
+    )
+
+
+@pytest.fixture
+def flattened_multi_file_with_no_xmodel_dict(flattened_multi_file_with_no_xmodel_abspath):
+    return _read_json(flattened_multi_file_with_no_xmodel_abspath)
+
+
 def del_base64():
     del bravado_core.formatter.DEFAULT_FORMATS['base64']
 
