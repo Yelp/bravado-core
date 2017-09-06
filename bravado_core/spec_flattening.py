@@ -15,6 +15,7 @@ from six.moves.urllib.parse import urlunparse
 from six.moves.urllib_parse import ParseResult
 from swagger_spec_validator.ref_validators import in_scope
 
+from bravado_core.model import MODEL_MARKER
 from bravado_core.schema import is_dict_like
 from bravado_core.schema import is_list_like
 from bravado_core.schema import is_ref
@@ -300,10 +301,27 @@ def flattened_spec(
     resolved_spec = descend(value=spec_dict)
 
     if spec_definitions is not None:
+        from bravado_core.spec import Spec  # local import due to circular dependency
+        # Creating the bravado_core.spec.Spec object will trigger models discovery and tagging.
+        # The process will add x-model key to ``known_mappings['definitions']`` items
+        Spec.from_dict(
+            # Minimalistic swagger spec like object
+            # it's not a valid spec due to lack of info and paths, but it's good enough to trigger model discovery
+            spec_dict={
+                'definitions': {
+                    marshal_uri(uri): value
+                    for uri, value in iteritems(known_mappings['definitions'])
+                }
+            },
+            config={'validate_swagger_spec': False},  # Not validate specs, which are known to not be valid
+        )
+
         flatten_models = {
-            definition['x-model']
+            # schema objects might not have a "type" set so they won't be tagged as models
+            definition.get(MODEL_MARKER)
             for definition in itervalues(known_mappings['definitions'])
         }
+
         for model_name, model_type in iteritems(spec_definitions):
             if model_name in flatten_models:
                 continue

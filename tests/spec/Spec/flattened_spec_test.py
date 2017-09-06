@@ -203,3 +203,14 @@ def test_flattened_spec_provide_valid_specs(
         http_handlers={},
     )
     assert flattened_spec == flattened_multi_file_recursive_dict
+
+
+def test_flattened_specs_with_no_xmodel_tags(multi_file_with_no_xmodel_spec, flattened_multi_file_with_no_xmodel_dict):
+    flattened_spec = multi_file_with_no_xmodel_spec.flattened_spec
+    validator20.validate_spec(
+        # Deep copy needed because validate_spec adds x-scope information
+        spec_dict=copy.deepcopy(flattened_spec),
+        spec_url='',
+        http_handlers={},
+    )
+    assert flattened_spec == flattened_multi_file_with_no_xmodel_dict
