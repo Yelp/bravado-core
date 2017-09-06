@@ -23,6 +23,9 @@ def validate_schema_object(swagger_spec, schema_object_spec, value):
     schema_object_spec = deref(schema_object_spec)
     obj_type = deref(schema_object_spec.get('type'))
 
+    if not obj_type:
+        pass
+
     if obj_type in SWAGGER_PRIMITIVES:
         validate_primitive(swagger_spec, schema_object_spec, value)
 

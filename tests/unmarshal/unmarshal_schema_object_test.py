@@ -52,13 +52,38 @@ def test_use_models_false(petstore_dict):
     assert isinstance(result, dict)
 
 
-def test_bad_object_spec(petstore_dict):
+def test_missing_object_spec(petstore_dict):
     petstore_spec = Spec.from_dict(petstore_dict, config={'use_models': False})
     category_spec = copy.deepcopy(
         petstore_spec.spec_dict['definitions']['Category']
     )
-    # Type is a required field for objects.
+    # without a type, do no validation
     category_spec['properties']['id'].pop('type')
+
+    # so id can be a string...
+    result = unmarshal_schema_object(
+        petstore_spec,
+        category_spec,
+        {'id': 'blahblah', 'name': 'short-hair'})
+
+    assert result == {'id': 'blahblah', 'name': 'short-hair'}
+
+    # ...or anything else
+    result = unmarshal_schema_object(
+        petstore_spec,
+        category_spec,
+        {'id': {'foo': 'bar'}, 'name': 'short-hair'})
+
+    assert result == {'id': {'foo': 'bar'}, 'name': 'short-hair'}
+
+
+def test_invalid_type(petstore_dict):
+    petstore_spec = Spec.from_dict(petstore_dict, config={'use_models': False})
+    category_spec = copy.deepcopy(
+        petstore_spec.spec_dict['definitions']['Category']
+    )
+
+    category_spec['properties']['id']['type'] = 'notAValidType'
 
     with pytest.raises(SwaggerMappingError):
         unmarshal_schema_object(
