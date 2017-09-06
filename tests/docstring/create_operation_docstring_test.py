@@ -78,6 +78,22 @@ def test_no_description(op_spec, empty_swagger_spec):
     assert expected == create_operation_docstring(op)
 
 
+def test_notype(op_spec, empty_swagger_spec):
+    del op_spec['responses']['200']['schema']['type']
+    expected = \
+        "[GET] Finds Pets by status\n\n" \
+        "Multiple status values can be provided with comma " \
+        "seperated strings\n\n" \
+        ":param status: the status, yo! (Default: available) (optional)\n" \
+        ":type status: array\n" \
+        ":returns: 200: successful operation\n" \
+        ":rtype: notype\n" \
+        ":returns: 400: Invalid status value\n"
+
+    op = Operation(empty_swagger_spec, '/pet', 'get', op_spec)
+    assert expected == create_operation_docstring(op)
+
+
 def test_unicode(op_spec, empty_swagger_spec):
     # Only test freeform fields (those most likely to contain unicode)
     op_spec['summary'] = u'Ümlaut1'
