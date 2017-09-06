@@ -438,7 +438,7 @@ def is_model(swagger_spec, schema_object_spec):
 def is_object(swagger_spec, object_spec):
     """
     A schema definition is of type object if its type is object or if it uses
-    model composition (i.e. it has an allOf property)
+    model composition (i.e. it has an allOf property).
     :param swagger_spec: :class:`bravado_core.spec.Spec`
     :param schema_object_spec: specification for a swagger object
     :type schema_object_spec: dict

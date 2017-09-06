@@ -57,7 +57,6 @@ def test_missing_object_spec(petstore_dict):
     category_spec = copy.deepcopy(
         petstore_spec.spec_dict['definitions']['Category']
     )
-
     # without a type, do no validation
     category_spec['properties']['id'].pop('type')
 
@@ -67,13 +66,13 @@ def test_missing_object_spec(petstore_dict):
         {'id': 'blahblah'})
 
 
-def test_bad_object_type(petstore_dict):
+def test_invalid_type(petstore_dict):
     petstore_spec = Spec.from_dict(petstore_dict, config={'use_models': False})
     category_spec = copy.deepcopy(
         petstore_spec.spec_dict['definitions']['Category']
     )
-    # Type is a required field for objects.
-    category_spec['properties']['id']['type'] = 'notAType'
+
+    category_spec['properties']['id']['type'] = 'notAValidType'
 
     with pytest.raises(SwaggerMappingError):
         unmarshal_schema_object(
