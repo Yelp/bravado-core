@@ -7,7 +7,18 @@
   "paths": {},
   "definitions": {
     "not_used": {
-      "type": "object"
+      "properties": {
+        "any": {
+          "$ref": "#/definitions/not_used_referenced"
+        }
+      }
+    },
+    "not_used_referenced": {
+      "properties": {
+        "key": {
+          "type": "object"
+        }
+      }
     },
     "object": {
       "properties": {

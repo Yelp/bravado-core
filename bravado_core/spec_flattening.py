@@ -317,9 +317,11 @@ def flattened_spec(
         )
 
         flatten_models = {
-            definition[MODEL_MARKER]
+            # Needed because schema objects could not contain "type" property and so they won't be tagged as models
+            definition.get(MODEL_MARKER)
             for definition in itervalues(known_mappings['definitions'])
         }
+
         for model_name, model_type in iteritems(spec_definitions):
             if model_name in flatten_models:
                 continue
