@@ -68,13 +68,13 @@ def test_missing_object_spec(petstore_dict):
 
     assert result == {'id': 'blahblah', 'name': 'short-hair'}
 
-    # ...or an int (or anything else)
+    # ...or anything else
     result = unmarshal_schema_object(
         petstore_spec,
         category_spec,
-        {'id': 12345, 'name': 'short-hair'})
+        {'id': {'foo': 'bar'}, 'name': 'short-hair'})
 
-    assert result == {'id': 12345, 'name': 'short-hair'}
+    assert result == {'id': {'foo': 'bar'}, 'name': 'short-hair'}
 
 
 def test_invalid_type(petstore_dict):
