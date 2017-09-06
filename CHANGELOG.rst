@@ -1,6 +1,10 @@
 Changelog
 =========
 
+4.8.4 (2017-09-06)
+------------------
+- Make sure all models are properly tagged when flattening the spec - PR #191.
+
 4.8.3 (2017-09-05)
 ------------------
 - Improve spec flattening: recognize response objects and expose un-referenced models - PR #184.
