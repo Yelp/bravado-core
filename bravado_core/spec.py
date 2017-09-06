@@ -61,6 +61,11 @@ CONFIG_DEFAULTS = {
 
     # Fill with None all the missing properties during object unmarshal-ing
     'include_missing_properties': True,
+
+    # What to do when a type is missing
+    # If True, set the type to object and validate
+    # If False, do no validation
+    'default_type_to_object': False,
 }
 
 

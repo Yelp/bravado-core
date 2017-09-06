@@ -77,6 +77,33 @@ def test_missing_object_spec(petstore_dict):
     assert result == {'id': {'foo': 'bar'}, 'name': 'short-hair'}
 
 
+def test_missing_object_spec_defaulting_on(petstore_dict):
+    """When default_type_to_object config option is set to True,
+    then missing types default to object
+    """
+    petstore_spec = Spec.from_dict(petstore_dict, config={'use_models': False, 'default_type_to_object': True})
+    category_spec = copy.deepcopy(
+        petstore_spec.spec_dict['definitions']['Category']
+    )
+
+    # now a missing type will default to object type
+    category_spec['properties']['id'].pop('type')
+
+    result = unmarshal_schema_object(
+        petstore_spec,
+        category_spec,
+        {'id': {'foo': 'bar'}, 'name': 'short-hair'})
+
+    assert result == {'id': {'foo': 'bar'}, 'name': 'short-hair'}
+
+    # so a different type will fail
+    with pytest.raises(SwaggerMappingError):
+        result = unmarshal_schema_object(
+            petstore_spec,
+            category_spec,
+            {'id': 'blahblah', 'name': 'short-hair'})
+
+
 def test_invalid_type(petstore_dict):
     petstore_spec = Spec.from_dict(petstore_dict, config={'use_models': False})
     category_spec = copy.deepcopy(

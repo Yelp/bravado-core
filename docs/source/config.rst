@@ -38,4 +38,9 @@ Config key                    Type            Default   Description
 ----------------------------- --------------- --------- ----------------------------------------------------
 *include_missing_properties*   boolean         True     | Create properties with the value ``None`` if they
                                                         | were not submitted during object unmarshalling
+----------------------------- --------------- --------- ----------------------------------------------------
+*default_type_to_object*      boolean         False     | When set to ``True``, missing types will default
+                                                        | to ``object`` and be validated as such.
+                                                        | When set to ``False``, missing types will not be
+                                                        | validated at all.
 ============================= =============== ========= ====================================================

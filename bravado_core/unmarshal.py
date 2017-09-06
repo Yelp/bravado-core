@@ -39,7 +39,10 @@ def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
         obj_type = 'object'
 
     if not obj_type:
-        return value
+        if swagger_spec.config['default_type_to_object']:
+            obj_type = 'object'
+        else:
+            return value
 
     if obj_type in SWAGGER_PRIMITIVES:
         return unmarshal_primitive(swagger_spec, schema_object_spec, value)
