@@ -60,10 +60,21 @@ def test_missing_object_spec(petstore_dict):
     # without a type, do no validation
     category_spec['properties']['id'].pop('type')
 
-    unmarshal_schema_object(
+    # so id can be a string...
+    result = unmarshal_schema_object(
         petstore_spec,
         category_spec,
-        {'id': 'blahblah'})
+        {'id': 'blahblah', 'name': 'short-hair'})
+
+    assert result == {'id': 'blahblah', 'name': 'short-hair'}
+
+    # ...or an int (or anything else)
+    result = unmarshal_schema_object(
+        petstore_spec,
+        category_spec,
+        {'id': 12345, 'name': 'short-hair'})
+
+    assert result == {'id': 12345, 'name': 'short-hair'}
 
 
 def test_invalid_type(petstore_dict):
