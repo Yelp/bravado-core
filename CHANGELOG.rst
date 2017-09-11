@@ -1,6 +1,10 @@
 Changelog
 =========
 
+4.9.0 (2017-09-11)
+------------------
+- ``type`` is no longer required. By default, validation will not be performed if ``type`` is omitted. This is configurable with ``default_type_to_object`` - Issue #166, #192, PR #183, #193
+
 4.8.4 (2017-09-06)
 ------------------
 - Make sure all models are properly tagged when flattening the spec - PR #191.
