@@ -448,7 +448,8 @@ def is_object(swagger_spec, object_spec):
     :return: True if the spec describes an object, False otherwise.
     """
     deref = swagger_spec.deref
-    return deref(object_spec.get('type')) == 'object' or 'allOf' in object_spec
+    default_type = 'object' if swagger_spec.config['default_type_to_object'] else None
+    return deref(object_spec.get('type', default_type)) == 'object' or 'allOf' in object_spec
 
 
 def create_model_docstring(swagger_spec, model_spec):

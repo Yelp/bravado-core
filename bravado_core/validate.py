@@ -21,7 +21,8 @@ def validate_schema_object(swagger_spec, schema_object_spec, value):
     """
     deref = swagger_spec.deref
     schema_object_spec = deref(schema_object_spec)
-    obj_type = deref(schema_object_spec.get('type'))
+    default_type = 'object' if swagger_spec.config['default_type_to_object'] else None
+    obj_type = deref(schema_object_spec.get('type', default_type))
 
     if not obj_type:
         pass

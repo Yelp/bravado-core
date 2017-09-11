@@ -174,4 +174,5 @@ def formatted_type(spec):
     elif obj_type:
         return obj_type
     else:  # not obj_type
+        # if 'default_type_to_object' config is True, then this is defaulted to object type
         return 'notype'
