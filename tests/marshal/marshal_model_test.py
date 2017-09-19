@@ -106,3 +106,20 @@ def test_marshal_non_nullable_model(petstore_spec):
     with pytest.raises(SwaggerMappingError) as excinfo:
         marshal_model(petstore_spec, pet_spec, None)
     assert 'is a required value' in str(excinfo.value)
+
+
+def test_marshal_model_with_with_different_specs(petstore_dict, petstore_spec):
+    pet_spec = petstore_spec.spec_dict['definitions']['Pet']
+    new_petstore_spec = Spec.from_dict(petstore_dict)
+    model = new_petstore_spec.definitions['Pet'](
+        id=1,
+        name='Fido',
+        status=None,
+        photoUrls=['wagtail.png', 'bark.png'],
+        category=None,
+        tags=None
+    )
+
+    assert marshal_model(petstore_spec, pet_spec, model) == {
+        'id': 1, 'name': 'Fido', 'photoUrls': ['wagtail.png', 'bark.png'],
+    }
