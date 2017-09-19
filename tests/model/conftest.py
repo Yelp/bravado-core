@@ -152,6 +152,11 @@ def pet_spec(definitions_spec):
 
 
 @pytest.fixture
+def pet_type(cat_swagger_spec, pet_spec):
+    return create_model_type(cat_swagger_spec, 'Pet', pet_spec)
+
+
+@pytest.fixture
 def cat_spec(definitions_spec):
     return definitions_spec['Cat']
 

@@ -75,6 +75,16 @@ def test_model_as_dict(definitions_spec, user_type, user_kwargs):
     assert user._asdict() == user_dict
 
 
+def test_model_is_instance_same_class(user_type, user_kwargs):
+    user = user_type(**user_kwargs)
+    assert user_type._isinstance(user)
+
+
+def test_model_is_instance_inherits_from(pet_type, cat_type, cat_kwargs):
+    cat = cat_type(**cat_kwargs)
+    assert pet_type._isinstance(cat)
+
+
 @pytest.mark.parametrize(
     'recursive',
     [
