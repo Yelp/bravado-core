@@ -1,6 +1,10 @@
 Changelog
 =========
 
+4.9.1 (2017-09-19)
+------------------
+- Properly marshal a model even if it's not created from the same ``Spec`` instance - PR #194.
+
 4.9.0 (2017-09-11)
 ------------------
 - ``type`` is no longer required. By default, validation will not be performed if ``type`` is omitted. This is configurable with ``default_type_to_object`` - Issue #166, #192, PR #183, #193
