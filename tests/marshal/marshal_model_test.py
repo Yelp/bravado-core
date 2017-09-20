@@ -123,3 +123,16 @@ def test_marshal_model_with_with_different_specs(petstore_dict, petstore_spec):
     assert marshal_model(petstore_spec, pet_spec, model) == {
         'id': 1, 'name': 'Fido', 'photoUrls': ['wagtail.png', 'bark.png'],
     }
+
+
+def test_marshal_model_raises_exception_if_different_model(petstore_spec):
+    pet_spec = petstore_spec.spec_dict['definitions']['Pet']
+    order_spec = petstore_spec.definitions['Order']
+    model = order_spec()
+
+    with pytest.raises(SwaggerMappingError) as excinfo:
+        marshal_model(petstore_spec, pet_spec, model)
+
+    assert str(excinfo.value) == 'Expected model of type {0} for {1}:{2}'.format(
+        'Pet', 'Order', model,
+    )

@@ -174,11 +174,12 @@ def marshal_model(swagger_spec, model_spec, model_value):
 
     if model_value is None:
         return handle_null_value(swagger_spec, model_spec)
-
-    if not hasattr(model_value, '_as_dict'):
+    model_type._isinstance(model_value)
+    if not isinstance(model_value, model_type):
+        # if not model_type._isinstance(model_value):
         raise SwaggerMappingError(
             'Expected model of type {0} for {1}:{2}'
-            .format(model_name, type(model_value), model_value))
+            .format(model_name, model_value.__class__.__name__, model_value))
 
     # just convert the model to a dict and feed into `marshal_object` because
     # models are essentially 'type':'object' when marshaled
