@@ -20,3 +20,7 @@ def test_allOf_with_ref(composition_spec):
         'releaseDate': 'October',
     }
     validate_schema_object(composition_spec, pongclone_spec, value)
+
+
+def test_no_validation_when_no_type(minimal_swagger_spec):
+    validate_schema_object(minimal_swagger_spec, {}, None)
