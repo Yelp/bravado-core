@@ -138,9 +138,20 @@ def test_optional_query_array_with_default(
         empty_swagger_spec, array_param_spec):
     array_param_spec['required'] = False
     array_param_spec['default'] = ['bird', 'fish']
+    array_param_spec.pop('collectionFormat')
     param = Param(empty_swagger_spec, Mock(spec=Operation), array_param_spec)
     request = Mock(spec=IncomingRequest, query={})
     assert ['bird', 'fish'] == unmarshal_param(param, request)
+
+
+def test_optional_query_array_with_default_empty(
+        empty_swagger_spec, array_param_spec):
+    array_param_spec['required'] = False
+    array_param_spec['default'] = []
+    array_param_spec.pop('collectionFormat')
+    param = Param(empty_swagger_spec, Mock(spec=Operation), array_param_spec)
+    request = Mock(spec=IncomingRequest, query={})
+    assert [] == unmarshal_param(param, request)
 
 
 @pytest.mark.parametrize("test_input,expected", [
