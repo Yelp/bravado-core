@@ -82,7 +82,7 @@ class ModelMeta(abc.ABCMeta):
             return False
 
         if not hasattr(self, '_model_spec'):
-            # This is a generic Model
+            # This is the base Model class
             return True
 
         if not hasattr(instance, '_model_spec'):

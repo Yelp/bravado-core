@@ -133,6 +133,6 @@ def test_marshal_model_raises_exception_if_different_model(petstore_spec):
     with pytest.raises(SwaggerMappingError) as excinfo:
         marshal_model(petstore_spec, pet_spec, model)
 
-    assert str(excinfo.value) == 'Expected model of type {0} for {1}:{2}'.format(
+    assert str(excinfo.value) == 'Expected model of type {0} but got {1} for value {2}'.format(
         'Pet', 'Order', model,
     )
