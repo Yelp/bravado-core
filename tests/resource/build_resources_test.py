@@ -80,3 +80,18 @@ def test_refs(minimal_swagger_dict, paths_spec):
     resources = build_resources(swagger_spec)
     assert len(resources) == 1
     assert 'pet' in resources
+
+
+def test_resource_with_a_tag_with_spaces(paths_spec_with_tags_with_spaces):
+    spec_dict = {'paths': paths_spec_with_tags_with_spaces}
+    resources = build_resources(Spec(spec_dict))
+    print(resources.keys())
+    assert 8 == len(resources)
+    assert resources['Some_Tag'].findPetsByStatus
+    assert resources['Tag_with_lots_of_words'].findPetsByStatus
+    assert resources['Tag_with_double_space'].findPetsByStatus
+    assert resources['Leading_space'].findPetsByStatus
+    assert resources['Trailing_space'].findPetsByStatus
+    assert resources['pet'].findPetsByStatus  # this was the tag that was only a space
+    assert resources['_0_starts_with_a_number'].findPetsByStatus
+    assert resources['_012_starts_with_a_number'].findPetsByStatus
