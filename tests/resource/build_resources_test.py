@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import pytest
+
 from bravado_core.param import Param
 from bravado_core.resource import build_resources
 from bravado_core.spec import Spec
@@ -67,16 +69,13 @@ def test_resource_with_vendor_extension(paths_spec):
     assert resources['pet'].findPetsByStatus
 
 
-def test_refs(minimal_swagger_dict, paths_spec):
-    minimal_swagger_dict['real_paths'] = paths_spec
-    minimal_swagger_dict['real_op'] = paths_spec['/pet/findByStatus']['get']
-    minimal_swagger_dict['real_tags'] = \
-        paths_spec['/pet/findByStatus']['get']['tags']
-
-    paths_spec['/pet/findByStatus']['get']['tags'] = {'$ref': '#/real_tags'}
-    paths_spec['/pet/findByStatus']['get'] = {'$ref': '#/real_op'}
-    minimal_swagger_dict['paths'] = {'$ref': '#/real_paths'}
-    swagger_spec = Spec(minimal_swagger_dict)
+@pytest.mark.parametrize(
+    'internally_dereference_refs', [True, False],
+)
+def test_refs(minimal_swagger_dict, paths_spec, pet_spec, internally_dereference_refs):
+    minimal_swagger_dict['paths'] = paths_spec
+    minimal_swagger_dict['definitions'] = {'Pet': pet_spec}
+    swagger_spec = Spec(minimal_swagger_dict, config={'internally_dereference_refs': internally_dereference_refs})
     resources = build_resources(swagger_spec)
     assert len(resources) == 1
     assert 'pet' in resources

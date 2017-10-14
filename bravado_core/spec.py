@@ -7,10 +7,12 @@ import os.path
 import warnings
 
 import yaml
+from jsonref import JsonRef
 from jsonschema import FormatChecker
 from jsonschema.compat import urlopen
 from jsonschema.validators import RefResolver
 from six import iteritems
+from six.moves import range
 from six.moves.urllib.parse import urlparse
 from six.moves.urllib.parse import urlunparse
 from swagger_spec_validator import validator20
@@ -30,6 +32,7 @@ from bravado_core.schema import is_ref
 from bravado_core.security_definition import SecurityDefinition
 from bravado_core.spec_flattening import flattened_spec
 from bravado_core.util import cached_property
+from bravado_core.util import memoize_by_id
 
 log = logging.getLogger(__name__)
 
@@ -67,6 +70,10 @@ CONFIG_DEFAULTS = {
     # If True, set the type to object and validate
     # If False, do no validation
     'default_type_to_object': False,
+
+    # WARNING: Experimental feature!
+    # Completely dereference $refs to maximize marshaling and unmarshaling performances.
+    'internally_dereference_refs': False,
 }
 
 
@@ -172,6 +179,12 @@ class Spec(object):
             )
 
     def build(self):
+        if self.config['internally_dereference_refs']:
+            warnings.warn(
+                message='internally_dereference_refs is an experimental feature',
+                category=Warning,
+            )
+
         self._validate_spec()
         post_process_spec(
             self,
@@ -195,6 +208,13 @@ class Spec(object):
         self.api_url = build_api_serving_url(self.spec_dict, self.origin_url)
         self.resources = build_resources(self)
 
+    @cached_property
+    def _internal_spec_dict(self):
+        if self.config['internally_dereference_refs']:
+            return self.deref_flattened_spec
+        else:
+            return self.spec_dict
+
     def deref(self, ref_dict):
         """Dereference ref_dict (if it is indeed a ref) and return what the
         ref points to.
@@ -203,7 +223,9 @@ class Spec(object):
         :return: dereferenced value of ref_dict
         :rtype: scalar, list, dict
         """
-        if ref_dict is None or not is_ref(ref_dict):
+        # If internally_dereference_refs is enabled we do NOT need to resolve references anymore
+        # it's useless to evaluate is_ref every time
+        if self.config['internally_dereference_refs'] or ref_dict is None or not is_ref(ref_dict):
             return ref_dict
 
         # Restore attached resolution scope before resolving since the
@@ -300,6 +322,30 @@ class Spec(object):
                 spec_definitions=self.definitions,
             ),
         )
+
+    @cached_property
+    def deref_flattened_spec(self):
+        @memoize_by_id
+        def descend(obj):
+            # This method is needed because JsonRef could produce performance penalties in accessing
+            # the proxied attributes
+            if isinstance(obj, JsonRef):
+                # Extract the proxied value
+                # http://jsonref.readthedocs.io/en/latest/#jsonref.JsonRef.__subject__
+                return descend(obj.__subject__)
+            elif is_dict_like(obj):
+                return {
+                    key: descend(value)
+                    for key, value in iteritems(obj)
+                }
+            elif is_list_like(obj):
+                return [
+                    descend(value)
+                    for value in obj
+                ]
+            else:
+                return obj
+        return descend(JsonRef.replace_refs(self.flattened_spec))
 
 
 def is_yaml(url, content_type=None):

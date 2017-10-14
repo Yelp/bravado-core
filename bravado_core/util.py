@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+import inspect
+from functools import wraps
+
+from six import iteritems
 
 
 class cached_property(object):
@@ -19,3 +23,21 @@ class cached_property(object):
             return self
         value = obj.__dict__[self.func.__name__] = self.func(obj)
         return value
+
+
+def memoize_by_id(func):
+    cache = func.cache = {}
+    _CACHE_MISS = object()
+
+    def make_key(*args, **kwargs):
+        return tuple((key, id(value)) for key, value in sorted(iteritems(inspect.getcallargs(func, *args, **kwargs))))
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        cache_key = make_key(*args, **kwargs)
+        cached_value = cache.get(cache_key, _CACHE_MISS)
+        if cached_value is _CACHE_MISS:
+            cached_value = func(*args, **kwargs)
+            cache[cache_key] = cached_value
+        return cached_value
+    return wrapper

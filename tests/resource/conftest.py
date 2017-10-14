@@ -3,6 +3,22 @@ import pytest
 
 
 @pytest.fixture
+def pet_spec():
+    # The '#/definitions' dict from spec
+    return {
+        'properties': {
+            'name': {
+                'type': 'string'
+            },
+        },
+        'required': [
+            'name'
+        ],
+        'type': 'object',
+    }
+
+
+@pytest.fixture
 def paths_spec():
     # The '#/paths' dict from a spec
     return {
