@@ -11,3 +11,4 @@ build
 *.tox
 .idea/
 *.iml
+.benchmarks/
