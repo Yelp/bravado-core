@@ -19,6 +19,25 @@
       "type": "object",
       "x-model": "ping"
     },
+    "lfile:swagger.json|..definitions..model_with_allOf_recursive": {
+      "allOf": [
+        {
+          "properties": {
+            "pong": {
+              "$ref": "#/definitions/lfile:swagger.json|..definitions..pong"
+            }
+          }
+        },
+        {
+          "properties": {
+            "ping": {
+              "$ref": "#/definitions/lfile:aux.json|..definitions..ping"
+            }
+          }
+        }
+      ],
+      "x-model": "model_with_allOf_recursive"
+    },
     "lfile:swagger.json|..definitions..not_used": {
       "properties": {
         "not_used_remote_reference": {

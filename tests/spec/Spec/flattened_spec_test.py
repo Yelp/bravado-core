@@ -105,21 +105,15 @@ def test_marshal_url(target, expected_marshaled_uri):
     assert marshaled_uri == expected_marshaled_uri
 
 
-@pytest.mark.parametrize(
-    'build_spec_object', [True, False]
-)
 @mock.patch('bravado_core.spec.build_api_serving_url')
 @mock.patch('bravado_core.spec.flattened_spec')
-def test_flattened_spec_raises_if_specs_are_not_built_and_validated(
-    mock_flattened_dict, mock_build_api_serving_url, petstore_spec, build_spec_object,
+def test_flattened_spec_raises_if_configured_to_not_validate_swagger_specs(
+    mock_flattened_dict, mock_build_api_serving_url, petstore_spec,
 ):
-    petstore_spec = Spec(mock_flattened_dict, config=dict(CONFIG_DEFAULTS, validate_swagger_spec=not build_spec_object))
-    if build_spec_object:
-        petstore_spec.build()
-
+    petstore_spec = Spec(mock_flattened_dict, config=dict(CONFIG_DEFAULTS, validate_swagger_spec=False))
     with pytest.raises(RuntimeError) as excinfo:
         petstore_spec.flattened_spec
-    assert 'Swagger Specs have to be built and validated before flattening.' == str(excinfo.value)
+    assert 'Swagger Specs have to be validated before flattening.' == str(excinfo.value)
 
 
 @pytest.mark.parametrize(

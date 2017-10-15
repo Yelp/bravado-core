@@ -1,5 +1,24 @@
 {
     "definitions": {
+        "model_with_allOf_recursive": {
+            "allOf": [
+                {
+                    "properties": {
+                        "pong": {
+                            "$ref": "#/definitions/pong"
+                        }
+                    }
+                },
+                {
+                    "properties": {
+                        "ping": {
+                            "$ref": "aux.json#/definitions/ping"
+                        }
+                    }
+                }
+            ],
+            "x-model": "model_with_allOf_recursive"
+        },
         "not_used": {
             "type": "object",
             "properties": {

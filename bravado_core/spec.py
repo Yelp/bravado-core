@@ -163,7 +163,7 @@ class Spec(object):
         spec.build()
         return spec
 
-    def build(self):
+    def _validate_spec(self):
         if self.config['validate_swagger_spec']:
             self.resolver = validator20.validate_spec(
                 spec_dict=self.spec_dict,
@@ -171,6 +171,8 @@ class Spec(object):
                 http_handlers=build_http_handlers(self.http_client),
             )
 
+    def build(self):
+        self._validate_spec()
         post_process_spec(
             self,
             on_container_callbacks=[
@@ -282,9 +284,12 @@ class Spec(object):
         :return:
         """
 
-        # self.resources is None if the specs are not built
-        if self.resources is None or not self.config['validate_swagger_spec']:
-            raise RuntimeError('Swagger Specs have to be built and validated before flattening.')
+        if not self.config['validate_swagger_spec']:
+            raise RuntimeError('Swagger Specs have to be validated before flattening.')
+
+        # If resources are defined it means that Spec has been built and so swagger specs have been validated
+        if self.resources is None:
+            self._validate_spec()
 
         return strip_xscope(
             spec_dict=flattened_spec(
