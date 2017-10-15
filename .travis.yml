@@ -21,8 +21,5 @@ after_success: |
   if [ "$TOXENV" == "cover" ]; then coveralls; fi; \
   if [ "$TOXENV" == "benchmark" ]; then \
     echo $(ls .benchmarks/*/0001_benchmark.json) $(cat .benchmarks/*/0001_benchmark.json | nc termbin.com 9999); \
-    for svg in .benchmarks/*.svg; do \
-      echo $svg $(cat $svg | nc termbin.com 9999); \
-    done; \
   fi
 sudo: false
