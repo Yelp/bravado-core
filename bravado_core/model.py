@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
+import abc
 import logging
 from warnings import warn
 
+import six
 from six import iteritems
 
 from bravado_core.schema import collapsed_properties
@@ -69,6 +71,30 @@ def collect_models(container, key, path, models, swagger_spec):
             swagger_spec, model_name, model_spec)
 
 
+class ModelMeta(abc.ABCMeta):
+    def __instancecheck__(self, instance):
+        """
+        An object is instance of a specific model class if:
+        - model class and instance share the same model Swagger Specs
+        - instance inherits from model class (in case of multiple inheritance, ie. allOff)
+        """
+        if not isinstance(type(instance), type(self)):
+            return False
+
+        if not hasattr(self, '_model_spec'):
+            # This is the base Model class
+            return True
+
+        if not hasattr(instance, '_model_spec'):
+            return False
+
+        if self._model_spec == instance._model_spec:
+            return True
+
+        return self.__name__ in type(instance)._inherits_from
+
+
+@six.add_metaclass(ModelMeta)
 class Model(object):
     """Base class for Swagger models.
 
@@ -353,19 +379,11 @@ class Model(object):
 
     @classmethod
     def _isinstance(cls, obj):
-        """Check if an object is an instance of this model or a model inheriting
-        from it.
-
-        :param obj: Object to check.
-        :rtype: bool
-        """
-        if isinstance(obj, cls):
-            return True
-
-        if isinstance(obj, Model):
-            return cls.__name__ in type(obj)._inherits_from
-
-        return False
+        warn(
+            "_isinstance is deprecated. Please use isinstance(obj, cls) instead..",
+            DeprecationWarning,
+        )
+        return isinstance(obj, cls)
 
 
 class ModelDocstring(object):

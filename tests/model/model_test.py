@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import pytest
 
+from bravado_core.model import create_model_type
 from bravado_core.model import Model
 from bravado_core.schema import collapsed_properties
 from bravado_core.unmarshal import unmarshal_model
@@ -78,11 +79,16 @@ def test_model_as_dict(definitions_spec, user_type, user_kwargs):
 def test_model_is_instance_same_class(user_type, user_kwargs):
     user = user_type(**user_kwargs)
     assert user_type._isinstance(user)
+    assert isinstance(user, user_type)
 
 
-def test_model_is_instance_inherits_from(pet_type, cat_type, cat_kwargs):
+def test_model_is_instance_inherits_from(cat_swagger_spec, pet_type, pet_spec, cat_type, cat_kwargs):
     cat = cat_type(**cat_kwargs)
+    new_pet_type = create_model_type(cat_swagger_spec, 'Pet', pet_spec)
     assert pet_type._isinstance(cat)
+    assert isinstance(cat, cat_type)
+    assert isinstance(cat, pet_type)
+    assert isinstance(cat, new_pet_type)
 
 
 @pytest.mark.parametrize(
