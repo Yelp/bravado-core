@@ -3,13 +3,20 @@ import uuid
 
 import pytest
 
-from bravado_core.operation import Operation
+from bravado_core.spec import Spec
 
 
-@pytest.fixture(params=[100, 1000, 5000])
-def small_pets(request, scope="module"):
+@pytest.fixture(
+    params=[100, 1000, 5000],
+)
+def number_of_objects(request):
+    return request.param
+
+
+@pytest.fixture
+def small_pets(number_of_objects):
     pets = []
-    for i in range(request.param):
+    for i in range(number_of_objects):
         pets.append({
             'name': str(uuid.uuid4()),
             'photoUrls': [str(uuid.uuid4())]
@@ -17,10 +24,10 @@ def small_pets(request, scope="module"):
     return pets
 
 
-@pytest.fixture(params=[100, 1000, 5000])
-def large_pets(request, scope="module"):
+@pytest.fixture
+def large_pets(number_of_objects):
     pets = []
-    for i in range(request.param):
+    for i in range(number_of_objects):
         pets.append({
             'id': i + 1,
             'name': str(uuid.uuid4()),
@@ -44,9 +51,20 @@ def large_pets(request, scope="module"):
     return pets
 
 
-@pytest.fixture(params=[True, False])
-def petstore_op(request, petstore_spec):
-    spec_dict = petstore_spec.spec_dict['paths']['/pet/findByTags']['get']
-    op = Operation(petstore_spec, '/pet/findByStatus', 'get', spec_dict)
+@pytest.fixture
+def perf_petstore_spec(request, petstore_spec):
+    return Spec.from_dict(
+        spec_dict=petstore_spec.spec_dict,
+        origin_url=petstore_spec.origin_url,
+        config=dict(petstore_spec.config),
+    )
+
+
+@pytest.fixture(
+    params=[True, False],
+    ids=['validate', 'not_validate'],
+)
+def petstore_op(request, perf_petstore_spec):
+    op = perf_petstore_spec.resources['pet'].findPetsByStatus
     op.swagger_spec.config['validate_responses'] = request.param
     return op

@@ -27,6 +27,6 @@ install-hooks:
 	tox -e pre-commit -- install -f --install-hooks
 
 clean:
-	@rm -rf .tox build dist docs/build *.egg-info
+	@rm -rf .benchmarks .tox build dist docs/build *.egg-info
 	find . -name '*.pyc' -delete
 	find . -name '__pycache__' -delete

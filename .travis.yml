@@ -9,7 +9,17 @@ matrix:
   - env: TOXENV=cover
   - env: TOXENV=docs
   - env: TOXENV=pre-commit
+  - python: "3.6"
+    env: TOXENV=benchmark
+  allow_failures:
+  - env: TOXENV=benchmark
+  fast_finish: true
+
 install: pip install tox coveralls
 script: tox
-after_success: if [ "$TOXENV" == "cover" ]; then coveralls; fi
+after_success: |
+  if [ "$TOXENV" == "cover" ]; then coveralls; fi; \
+  if [ "$TOXENV" == "benchmark" ]; then \
+    echo $(ls .benchmarks/*/0001_benchmark.json) $(cat .benchmarks/*/0001_benchmark.json | nc termbin.com 9999); \
+  fi
 sudo: false
