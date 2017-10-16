@@ -72,8 +72,8 @@ CONFIG_DEFAULTS = {
     # If False, do no validation
     'default_type_to_object': False,
 
-    # WARNING: Experimental feature!
     # Completely dereference $refs to maximize marshaling and unmarshaling performances.
+    # NOTE: this depends on validate_swagger_spec
     'internally_dereference_refs': False,
 }
 
@@ -120,6 +120,39 @@ class Spec(object):
             referrer=self.spec_dict,
             handlers=build_http_handlers(http_client),
         )
+
+        self._validate_config()
+
+    def _validate_config(self):
+        """
+        Validates the correctness of the configurations injected and makes sure that:
+        - no extra config keys are available on the config dictionary
+        - dependent configs are checked
+
+        :return: True if the initial configs are valid, False otherwise
+        :rtype: bool
+        """
+        are_config_changed = False
+
+        extraneous_keys = set(iterkeys(self.config)) - set(iterkeys(CONFIG_DEFAULTS))
+        if extraneous_keys:
+            are_config_changed = True
+            for key in extraneous_keys:
+                warnings.warn(
+                    message='config {} is been removed because is not a recognized config key'.format(key),
+                    category=Warning,
+                )
+                del self.config[key]
+
+        if self.config['internally_dereference_refs'] and not self.config['validate_swagger_spec']:
+            are_config_changed = True
+            self.config['internally_dereference_refs'] = False
+            warnings.warn(
+                message='config disabled internally_dereference_refs because validate_swagger_spec has to be enabled',
+                category=Warning,
+            )
+
+        return not are_config_changed
 
     @cached_property
     def client_spec_dict(self):
@@ -180,12 +213,6 @@ class Spec(object):
             )
 
     def build(self):
-        if self.config['internally_dereference_refs']:
-            warnings.warn(
-                message='internally_dereference_refs is an experimental feature',
-                category=Warning,
-            )
-
         self._validate_spec()
         post_process_spec(
             self,
