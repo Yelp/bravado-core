@@ -345,7 +345,7 @@ def unmarshal_collection_format(swagger_spec, param_spec, value):
             return None
         return schema.handle_null_value(swagger_spec, param_spec)
 
-    if isinstance(value, list):
+    if schema.is_list_like(value):
         value_array = value
     elif collection_format == 'multi':
         # http client lib should have already unmarshaled the value
