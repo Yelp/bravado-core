@@ -4,7 +4,8 @@ from bravado_core.util import cached_property
 
 def test_cached_property():
     class Class(object):
-        calls = 0
+        def __init__(self):
+            self.calls = 0
 
         @cached_property
         def property_1(self):

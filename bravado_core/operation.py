@@ -11,21 +11,38 @@ log = logging.getLogger(__name__)
 
 
 def _sanitize_operation_id(operation_id, http_method, path_name):
-    if operation_id is None:
-        # build based on the http method and request path
-        operation_id = http_method + '_' + path_name
+    def _replace_patterns(op_id):
+        for regex, replacement in (
+                ('[^A-Za-z0-9_]', '_'),  # valid chars for method names
+                ('_+', '_'),  # collapse consecutive _'s
+                ('^_|_$', '')):  # trim leading/trailing _'s
+            op_id = re.compile(regex).sub(replacement, op_id)
+        return op_id
 
-    for regex, replacement in (
-            ('[^A-Za-z0-9_]', '_'),  # valid chars for method names
-            ('_+', '_'),  # collapse consecutive _'s
-            ('^_|_$', '')):  # trim leading/trailing _'s
-        operation_id = re.compile(regex).sub(replacement, operation_id)
+    sanitized_operation_id = _replace_patterns(operation_id or '')
 
     # Handle crazy corner cases where someone explictily sets operation
     # id a value that gets sanitized down to an empty string
-    if len(operation_id) == 0:
-        operation_id = _sanitize_operation_id(None, http_method, path_name)
-    return operation_id
+    if len(sanitized_operation_id) == 0:
+        # build based on the http method and request path
+        sanitized_operation_id = _replace_patterns(http_method + '_' + path_name)
+
+    # Handle super crazy corner case where even ``http_method + '_' + path_name``
+    # gets sanitized down to an empty string
+    if len(sanitized_operation_id) == 0:
+        # This case is theoretically possible only in case http_method and path_name are
+        # sanitized down to empty string. According to the specs valid values of
+        # http_method will not allow this case.
+        raise ValueError(
+            '_sanitize_operation_id produced an empty operation id starting from '
+            'operation_id={operation_id}, http_method={http_method} and path_name={path_name}'.format(
+                operation_id=operation_id,
+                http_method=http_method,
+                path_name=path_name,
+            ),
+        )
+
+    return sanitized_operation_id
 
 
 class Operation(object):
