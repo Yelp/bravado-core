@@ -12,6 +12,7 @@ from jsonschema import FormatChecker
 from jsonschema.compat import urlopen
 from jsonschema.validators import RefResolver
 from six import iteritems
+from six import iterkeys
 from six.moves import range
 from six.moves.urllib.parse import urlparse
 from six.moves.urllib.parse import urlunparse
@@ -325,27 +326,29 @@ class Spec(object):
 
     @cached_property
     def deref_flattened_spec(self):
+        deref_spec_dict = JsonRef.replace_refs(self.flattened_spec)
+
         @memoize_by_id
         def descend(obj):
+            # Inline modification of obj
             # This method is needed because JsonRef could produce performance penalties in accessing
             # the proxied attributes
             if isinstance(obj, JsonRef):
                 # Extract the proxied value
                 # http://jsonref.readthedocs.io/en/latest/#jsonref.JsonRef.__subject__
-                return descend(obj.__subject__)
-            elif is_dict_like(obj):
-                return {
-                    key: descend(value)
-                    for key, value in iteritems(obj)
-                }
+                return obj.__subject__
+            if is_dict_like(obj):
+                for key in list(iterkeys(obj)):
+                    obj[key] = descend(obj[key])
             elif is_list_like(obj):
-                return [
-                    descend(value)
-                    for value in obj
-                ]
-            else:
-                return obj
-        return descend(JsonRef.replace_refs(self.flattened_spec))
+                # obj is list like object provided from flattened_spec specs.
+                # This guarantees that it cannot be a tuple instance and
+                # inline object modification are allowed
+                for index in range(len(obj)):
+                    obj[index] = descend(obj[index])
+            return obj
+
+        return descend(deref_spec_dict)
 
 
 def is_yaml(url, content_type=None):
