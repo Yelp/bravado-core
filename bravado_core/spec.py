@@ -5,6 +5,7 @@ import json
 import logging
 import os.path
 import warnings
+from contextlib import closing
 
 import yaml
 from jsonref import JsonRef
@@ -422,11 +423,11 @@ def build_http_handlers(http_client):
             return response.json()
 
     def read_file(uri):
-        fp = urlopen(uri)
-        if is_yaml(uri):
-            return yaml.load(fp)
-        else:
-            return json.loads(fp.read().decode("utf-8"))
+        with closing(urlopen(uri)) as fp:
+            if is_yaml(uri):
+                return yaml.load(fp)
+            else:
+                return json.loads(fp.read().decode("utf-8"))
 
     return {
         'http': download,
