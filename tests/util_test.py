@@ -55,12 +55,11 @@ def test_memoize_by_id_decorator():
     assert decorated_function.cache == {
         (('a', id(1)), ('b', id(None))): id(1) + id(None),
         (('a', id(2)), ('b', id(3))): id(2) + id(3),
-        (('a', id(2)), ('b', id(3))): id(2) + id(3),
     }
     assert calls == [[1, None], [2, 3]]
 
-    for key in list(decorated_function.cache):
-        del decorated_function.cache[key]
+    decorated_function.cache.clear()
+
     assert decorated_function(1) == id(1) + id(None)
     assert decorated_function.cache == {
         (('a', id(1)), ('b', id(None))): id(1) + id(None)

@@ -148,7 +148,7 @@ class Spec(object):
             are_config_changed = True
             self.config['internally_dereference_refs'] = False
             warnings.warn(
-                message='config disabled internally_dereference_refs because validate_swagger_spec has to be enabled',
+                message='internally_dereference_refs config disabled because validate_swagger_spec has to be enabled',
                 category=Warning,
             )
 
@@ -374,6 +374,9 @@ class Spec(object):
                 for index in range(len(obj)):
                     obj[index] = descend(obj[index])
             return obj
+
+        # Make sure that all memory allocated for cache could be released
+        descend.cache.clear()
 
         return descend(deref_spec_dict)
 

@@ -29,7 +29,7 @@ def test_validate_config_succeed(minimal_swagger_dict, minimal_swagger_abspath, 
         ),
         (
             {'validate_swagger_spec': False, 'internally_dereference_refs': True},
-            'config disabled internally_dereference_refs because validate_swagger_spec has to be enabled',
+            'internally_dereference_refs config disabled because validate_swagger_spec has to be enabled',
         ),
     ]
 )

@@ -14,7 +14,7 @@ def _get_model(spec_dict, model_name):
 
 
 def _equivalent(spec, obj1, obj2):
-    if bool(is_dict_like(obj1)) != bool(is_dict_like(obj2)) or bool(is_list_like(obj1)) != bool(is_list_like(obj2)):
+    if is_dict_like(obj1) != is_dict_like(obj2) or is_list_like(obj1) != is_list_like(obj2):
         return False
 
     if is_dict_like(obj1):
@@ -57,7 +57,6 @@ def test_deref_flattened_spec_not_recursive_specs(petstore_spec):
 def test_deref_flattened_spec_recursive_specs(multi_file_recursive_spec):
     deref_spec_dict = multi_file_recursive_spec.deref_flattened_spec
 
-    # NOTE:
     ping = _get_model(deref_spec_dict, 'ping')
     assert id(ping) == id(ping['properties']['pong']['properties']['ping'])
     assert id(ping['properties']['pong']) == id(ping['properties']['pong']['properties']['ping']['properties']['pong'])
