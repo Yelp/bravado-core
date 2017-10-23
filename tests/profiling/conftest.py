@@ -51,12 +51,15 @@ def large_pets(number_of_objects):
     return pets
 
 
-@pytest.fixture
+@pytest.fixture(
+    params=[True, False],
+    ids=['full-deref', 'with-refs'],
+)
 def perf_petstore_spec(request, petstore_spec):
     return Spec.from_dict(
         spec_dict=petstore_spec.spec_dict,
         origin_url=petstore_spec.origin_url,
-        config=dict(petstore_spec.config),
+        config=dict(petstore_spec.config, internally_dereference_refs=request.param),
     )
 
 

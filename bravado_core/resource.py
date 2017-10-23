@@ -48,7 +48,7 @@ def build_resources(swagger_spec):
     # key = tag_name   value = { operation_id : Operation }
     tag_to_ops = defaultdict(dict)
     deref = swagger_spec.deref
-    spec_dict = deref(swagger_spec.spec_dict)
+    spec_dict = deref(swagger_spec._internal_spec_dict)
     paths_spec = deref(spec_dict.get('paths', {}))
     for path_name, path_spec in iteritems(paths_spec):
         path_spec = deref(path_spec)

@@ -75,14 +75,14 @@ class Operation(object):
         deref = self.swagger_spec.deref
         result = deref(self.op_spec.get('consumes'))
         if result is None:
-            result = deref(self.swagger_spec.spec_dict.get('consumes', []))
+            result = deref(self.swagger_spec._internal_spec_dict.get('consumes', []))
         return result
 
     @cached_property
     def security_specs(self):
         deref = self.swagger_spec.deref
         op_spec = deref(self.op_spec)
-        spec_dict = deref(self.swagger_spec.spec_dict)
+        spec_dict = deref(self.swagger_spec._internal_spec_dict)
         if 'security' in op_spec:
             return deref(op_spec['security'])
         else:
@@ -119,7 +119,7 @@ class Operation(object):
         deref = self.swagger_spec.deref
         result = deref(self.op_spec.get('produces'))
         if result is None:
-            return deref(self.swagger_spec.spec_dict.get('produces', []))
+            return deref(self.swagger_spec._internal_spec_dict.get('produces', []))
         return result
 
     @classmethod
@@ -167,7 +167,7 @@ def build_params(op):
     deref = swagger_spec.deref
     op_spec = deref(op.op_spec)
     op_params_spec = deref(op_spec.get('parameters', []))
-    spec_dict = deref(swagger_spec.spec_dict)
+    spec_dict = deref(swagger_spec._internal_spec_dict)
     paths_spec = deref(spec_dict.get('paths', {}))
     path_spec = deref(paths_spec.get(op.path_name))
     path_params_spec = deref(path_spec.get('parameters', []))

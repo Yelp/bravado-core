@@ -5,12 +5,16 @@ import json
 import logging
 import os.path
 import warnings
+from contextlib import closing
 
 import yaml
+from jsonref import JsonRef
 from jsonschema import FormatChecker
 from jsonschema.compat import urlopen
 from jsonschema.validators import RefResolver
 from six import iteritems
+from six import iterkeys
+from six.moves import range
 from six.moves.urllib.parse import urlparse
 from six.moves.urllib.parse import urlunparse
 from swagger_spec_validator import validator20
@@ -30,6 +34,7 @@ from bravado_core.schema import is_ref
 from bravado_core.security_definition import SecurityDefinition
 from bravado_core.spec_flattening import flattened_spec
 from bravado_core.util import cached_property
+from bravado_core.util import memoize_by_id
 
 log = logging.getLogger(__name__)
 
@@ -67,6 +72,10 @@ CONFIG_DEFAULTS = {
     # If True, set the type to object and validate
     # If False, do no validation
     'default_type_to_object': False,
+
+    # Completely dereference $refs to maximize marshaling and unmarshaling performances.
+    # NOTE: this depends on validate_swagger_spec
+    'internally_dereference_refs': False,
 }
 
 
@@ -112,6 +121,39 @@ class Spec(object):
             referrer=self.spec_dict,
             handlers=build_http_handlers(http_client),
         )
+
+        self._validate_config()
+
+    def _validate_config(self):
+        """
+        Validates the correctness of the configurations injected and makes sure that:
+        - no extra config keys are available on the config dictionary
+        - dependent configs are checked
+
+        :return: True if the initial configs are valid, False otherwise
+        :rtype: bool
+        """
+        are_config_changed = False
+
+        extraneous_keys = set(iterkeys(self.config)) - set(iterkeys(CONFIG_DEFAULTS))
+        if extraneous_keys:
+            are_config_changed = True
+            for key in extraneous_keys:
+                warnings.warn(
+                    message='config {} is been removed because is not a recognized config key'.format(key),
+                    category=Warning,
+                )
+                del self.config[key]
+
+        if self.config['internally_dereference_refs'] and not self.config['validate_swagger_spec']:
+            are_config_changed = True
+            self.config['internally_dereference_refs'] = False
+            warnings.warn(
+                message='internally_dereference_refs config disabled because validate_swagger_spec has to be enabled',
+                category=Warning,
+            )
+
+        return not are_config_changed
 
     @cached_property
     def client_spec_dict(self):
@@ -163,7 +205,7 @@ class Spec(object):
         spec.build()
         return spec
 
-    def build(self):
+    def _validate_spec(self):
         if self.config['validate_swagger_spec']:
             self.resolver = validator20.validate_spec(
                 spec_dict=self.spec_dict,
@@ -171,6 +213,8 @@ class Spec(object):
                 http_handlers=build_http_handlers(self.http_client),
             )
 
+    def build(self):
+        self._validate_spec()
         post_process_spec(
             self,
             on_container_callbacks=[
@@ -193,6 +237,13 @@ class Spec(object):
         self.api_url = build_api_serving_url(self.spec_dict, self.origin_url)
         self.resources = build_resources(self)
 
+    @cached_property
+    def _internal_spec_dict(self):
+        if self.config['internally_dereference_refs']:
+            return self.deref_flattened_spec
+        else:
+            return self.spec_dict
+
     def deref(self, ref_dict):
         """Dereference ref_dict (if it is indeed a ref) and return what the
         ref points to.
@@ -201,7 +252,9 @@ class Spec(object):
         :return: dereferenced value of ref_dict
         :rtype: scalar, list, dict
         """
-        if ref_dict is None or not is_ref(ref_dict):
+        # If internally_dereference_refs is enabled we do NOT need to resolve references anymore
+        # it's useless to evaluate is_ref every time
+        if self.config['internally_dereference_refs'] or ref_dict is None or not is_ref(ref_dict):
             return ref_dict
 
         # Restore attached resolution scope before resolving since the
@@ -282,9 +335,12 @@ class Spec(object):
         :return:
         """
 
-        # self.resources is None if the specs are not built
-        if self.resources is None or not self.config['validate_swagger_spec']:
-            raise RuntimeError('Swagger Specs have to be built and validated before flattening.')
+        if not self.config['validate_swagger_spec']:
+            raise RuntimeError('Swagger Specs have to be validated before flattening.')
+
+        # If resources are defined it means that Spec has been built and so swagger specs have been validated
+        if self.resources is None:
+            self._validate_spec()
 
         return strip_xscope(
             spec_dict=flattened_spec(
@@ -295,6 +351,35 @@ class Spec(object):
                 spec_definitions=self.definitions,
             ),
         )
+
+    @cached_property
+    def deref_flattened_spec(self):
+        deref_spec_dict = JsonRef.replace_refs(self.flattened_spec)
+
+        @memoize_by_id
+        def descend(obj):
+            # Inline modification of obj
+            # This method is needed because JsonRef could produce performance penalties in accessing
+            # the proxied attributes
+            if isinstance(obj, JsonRef):
+                # Extract the proxied value
+                # http://jsonref.readthedocs.io/en/latest/#jsonref.JsonRef.__subject__
+                return obj.__subject__
+            if is_dict_like(obj):
+                for key in list(iterkeys(obj)):
+                    obj[key] = descend(obj[key])
+            elif is_list_like(obj):
+                # obj is list like object provided from flattened_spec specs.
+                # This guarantees that it cannot be a tuple instance and
+                # inline object modification are allowed
+                for index in range(len(obj)):
+                    obj[index] = descend(obj[index])
+            return obj
+
+        # Make sure that all memory allocated for cache could be released
+        descend.cache.clear()
+
+        return descend(deref_spec_dict)
 
 
 def is_yaml(url, content_type=None):
@@ -338,11 +423,11 @@ def build_http_handlers(http_client):
             return response.json()
 
     def read_file(uri):
-        fp = urlopen(uri)
-        if is_yaml(uri):
-            return yaml.load(fp)
-        else:
-            return json.loads(fp.read().decode("utf-8"))
+        with closing(urlopen(uri)) as fp:
+            if is_yaml(uri):
+                return yaml.load(fp)
+            else:
+                return json.loads(fp.read().decode("utf-8"))
 
     return {
         'http': download,
