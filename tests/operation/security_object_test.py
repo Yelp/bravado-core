@@ -113,7 +113,7 @@ def test_wrong_request_with_apiKey_security(petstore_spec):
     [
         ('example1', 'get_example1', (('apiKey1',), ('apiKey2',))),
         ('example2', 'get_example2', (('apiKey3',),)),
-        ('example3', 'get_example3', (('apiKey1', 'apiKey2',), ('apiKey2',))),
+        ('example3', 'get_example3', (('apiKey1', 'apiKey2',), ('apiKey3',))),
         ('example4', 'get_example4', (('oauth2',),)),
         ('example5', 'get_example5', ()),
     ]
@@ -146,20 +146,31 @@ def test_security_parameter_cannot_override_path_or_operation_parameter(
 @pytest.mark.parametrize(
     'resource, operation, query, headers, expect_to_raise',
     [
-        ('example1', 'get_example1', {}, {'sec1': 'sec1', 'sec2': 'sec2'}, True),
+        ('example1', 'get_example1', {}, {'apiKey1': 'sec1'}, False),
+        # Raise because multiple securities are set at the same time
+        ('example1', 'get_example1', {}, {'apiKey1': 'sec1', 'apiKey2': 'sec2'}, True),
+
+        ('example2', 'get_example2', {'apiKey3': 'sec3'}, {}, False),
+        # Raise because no security is defined
         ('example2', 'get_example2', {}, {}, True),
-        ('example2', 'get_example2', {}, {'sec3': 'sec3'}, True),
-        ('example2', 'get_example2', {'sec3': 'sec3'}, {}, False),
-        ('example3', 'get_example3', {}, {'sec1': 'sec1', 'sec2': 'sec2'}, False),
+        # Raise because security is set in headers instead of query
+        ('example2', 'get_example2', {}, {'apiKey3': 'sec3'}, True),
+
+        ('example3', 'get_example3', {}, {'apiKey1': 'sec1', 'apiKey2': 'sec2'}, False),
+        ('example3', 'get_example3', {'apiKey3': 'sec3'}, {}, False),
+        # Raises because get_example3 expects (apiKey1, apiKey2) or apiKey3
+        ('example3', 'get_example3', {}, {'apiKey1': 'sec1'}, True),
+        # Raises because get_example3 expects (apiKey1, apiKey2) or apiKey3
+        ('example3', 'get_example3', {'apiKey3': 'sec3'}, {'apiKey1': 'sec1', 'apiKey2': 'sec2'}, True),
     ]
 )
 def test_only_one_security_definition_in_use_at_time(
-        security_spec,
-        resource,
-        operation,
-        query,
-        headers,
-        expect_to_raise,
+    security_spec,
+    resource,
+    operation,
+    query,
+    headers,
+    expect_to_raise,
 ):
     request = Mock(
         spec=IncomingRequest,
@@ -168,9 +179,10 @@ def test_only_one_security_definition_in_use_at_time(
     )
 
     op = security_spec.resources[resource].operations[operation]
+    raised_exception = None
     try:
-        with pytest.raises(SwaggerSecurityValidationError):
-            unmarshal_request(request, op)
-    except:
-        if expect_to_raise:
-            raise
+        unmarshal_request(request, op)
+    except SwaggerSecurityValidationError as e:
+        raised_exception = e
+
+    assert bool(raised_exception is not None) is expect_to_raise

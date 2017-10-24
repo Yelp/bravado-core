@@ -12,7 +12,7 @@ from bravado_core.validate import validate_security_object
         ('example1', 'get_example1', {'apiKey2': 'key'}),
         ('example2', 'get_example2', {'apiKey3': 'key'}),
         ('example3', 'get_example3', {'apiKey1': 'key', 'apiKey2': 'key'}),
-        ('example3', 'get_example3', {'apiKey2': 'key'}),
+        ('example3', 'get_example3', {'apiKey3': 'key'}),
         ('example4', 'get_example4', {}),
         ('example5', 'get_example5', {}),
     ]
@@ -27,7 +27,7 @@ def test_validate_correct_security_objects(security_spec, resource, operation, r
     [
         ('example1', 'get_example1', {}),
         ('example1', 'get_example1', {'apiKey1': 'key', 'apiKey2': 'key'}),
-        ('example3', 'get_example3', {'apiKey1': 'key', 'apiKey3': 'key'}),
+        ('example3', 'get_example3', {'apiKey1': 'key', 'apiKey4': 'key'}),
     ]
 )
 def test_validate_incorrect_security_objects(security_spec, resource, operation, request_data):

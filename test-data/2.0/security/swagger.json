@@ -20,6 +20,11 @@
       "name": "apiKey3",
       "in": "query"
     },
+    "apiKey4": {
+      "type": "apiKey",
+      "name": "apiKey4",
+      "in": "query"
+    },
     "oauth2": {
       "type": "oauth2",
       "authorizationUrl": "http://domain/oauth/dialog",
@@ -66,14 +71,14 @@
     },
     "/example3": {
       "get": {
-        "description": "Endpoint requires (apiKey1,apiKey2) or (apiKey2) header parameters",
+        "description": "Endpoint requires (apiKey1,apiKey2) or (apiKey3) header parameters",
         "security": [
           {
             "apiKey1": [],
             "apiKey2": []
           },
           {
-            "apiKey2": []
+            "apiKey3": []
           }
         ],
         "responses": {
