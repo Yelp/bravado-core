@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 import copy
+import datetime
+import json
 
 import pytest
+import pytz
 from mock import Mock
 from mock import patch
 
@@ -156,6 +159,46 @@ def test_body(empty_swagger_spec, param_spec):
     }
     marshal_param(param, 34, request)
     assert '34' == request['data']
+    assert APP_JSON == request['headers']['Content-Type']
+
+
+def test_body_date(empty_swagger_spec, param_spec):
+    now = datetime.date.today()
+    now_str = now.isoformat()
+    param_spec['in'] = 'body'
+    param_spec['schema'] = {
+        'type': 'string',
+        'format': 'date'
+    }
+    del param_spec['type']
+    del param_spec['format']
+    param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
+    request = {
+        'headers': {
+        }
+    }
+    marshal_param(param, now, request)
+    assert json.dumps(now_str) == request['data']
+    assert APP_JSON == request['headers']['Content-Type']
+
+
+def test_body_datetime(empty_swagger_spec, param_spec):
+    now = datetime.datetime.utcnow()
+    now_str = pytz.utc.localize(now).isoformat()
+    param_spec['in'] = 'body'
+    param_spec['schema'] = {
+        'type': 'string',
+        'format': 'date-time'
+    }
+    del param_spec['type']
+    del param_spec['format']
+    param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
+    request = {
+        'headers': {
+        }
+    }
+    marshal_param(param, now, request)
+    assert json.dumps(now_str) == request['data']
     assert APP_JSON == request['headers']['Content-Type']
 
 
