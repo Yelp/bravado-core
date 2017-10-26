@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import datetime
 import logging
 from functools import partial
 
@@ -23,12 +24,17 @@ COLLECTION_FORMATS = {
 }
 
 
+def default_handler(x):
+    if isinstance(x, datetime.datetime) or isinstance(x, datetime.date):
+        return x.isoformat()
+
+
 def stringify_body(value):
     """Json dump the value to string if not already in string
     """
     if not value or isinstance(value, six.string_types):
         return value
-    return json.dumps(value)
+    return json.dumps(value, default=default_handler)
 
 
 class Param(object):
@@ -141,7 +147,7 @@ def marshal_param(param, value, request):
             request.setdefault('data', {})[param.name] = value
     elif location == 'body':
         request['headers']['Content-Type'] = APP_JSON
-        request['data'] = json.dumps(value)
+        request['data'] = json.dumps(value, default=default_handler)
     else:
         raise SwaggerMappingError(
             "Don't know how to marshal_param with location {0}".
