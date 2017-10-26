@@ -2,7 +2,6 @@
 import datetime
 import json
 
-
 from bravado_core.param import stringify_body
 
 
