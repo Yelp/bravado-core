@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 import copy
 import datetime
-import json
 
 import pytest
-import pytz
 from mock import Mock
 from mock import patch
 
@@ -162,13 +160,13 @@ def test_body(empty_swagger_spec, param_spec):
     assert APP_JSON == request['headers']['Content-Type']
 
 
-def test_body_date(empty_swagger_spec, param_spec):
+def test_body_nested_date(empty_swagger_spec, param_spec):
     now = datetime.date.today()
-    now_str = now.isoformat()
+    now_param = {'updated_at': now}
+    now_str = '{"updated_at": "' + now.isoformat() + '"}'
     param_spec['in'] = 'body'
     param_spec['schema'] = {
-        'type': 'string',
-        'format': 'date'
+        'type': 'object'
     }
     del param_spec['type']
     del param_spec['format']
@@ -177,18 +175,18 @@ def test_body_date(empty_swagger_spec, param_spec):
         'headers': {
         }
     }
-    marshal_param(param, now, request)
-    assert json.dumps(now_str) == request['data']
+    marshal_param(param, now_param, request)
+    assert now_str == request['data']
     assert APP_JSON == request['headers']['Content-Type']
 
 
-def test_body_datetime(empty_swagger_spec, param_spec):
+def test_body_nested_datetime(empty_swagger_spec, param_spec):
     now = datetime.datetime.utcnow()
-    now_str = pytz.utc.localize(now).isoformat()
+    now_param = {"updated_at": now}
+    now_str = '{"updated_at": "' + now.isoformat() + '"}'
     param_spec['in'] = 'body'
     param_spec['schema'] = {
-        'type': 'string',
-        'format': 'date-time'
+        'type': 'object'
     }
     del param_spec['type']
     del param_spec['format']
@@ -197,8 +195,8 @@ def test_body_datetime(empty_swagger_spec, param_spec):
         'headers': {
         }
     }
-    marshal_param(param, now, request)
-    assert json.dumps(now_str) == request['data']
+    marshal_param(param, now_param, request)
+    assert now_str == request['data']
     assert APP_JSON == request['headers']['Content-Type']
 
 
