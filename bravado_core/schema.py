@@ -67,7 +67,11 @@ def is_dict_like(spec):
     :param spec: swagger object specification in dict form
     :rtype: boolean
     """
-    return isinstance(spec, Mapping)
+    # Calling isinstance(spec, Mapping) is relatively slow. As this function
+    # gets usually called with a dict type argument we optimize for that case
+    # by executing a much cheaper isinstance(spec, dict) check before the more
+    # expensive isinstance(spec, Mapping) check.
+    return isinstance(spec, (dict, Mapping))
 
 
 def is_list_like(spec):
