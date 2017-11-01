@@ -258,11 +258,6 @@ class Spec(object):
         # resolver doesn't have a traversal history (accumulated scope_stack)
         # when asked to resolve.
         with in_scope(self.resolver, ref_dict):
-            log.debug('Resolving {0} with scope {1}: {2}'.format(
-                ref_dict['$ref'],
-                len(self.resolver._scopes_stack),
-                self.resolver._scopes_stack))
-
             _, target = self.resolver.resolve(ref_dict['$ref'])
             return target
 
