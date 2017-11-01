@@ -152,6 +152,11 @@ class Spec(object):
                 category=Warning,
             )
 
+        if self.config['internally_dereference_refs']:
+            # If internally_dereference_refs is enabled we do NOT need to resolve references anymore
+            # it's useless to evaluate is_ref every time
+            self.deref = lambda ref_dict: ref_dict
+
         return not are_config_changed
 
     @cached_property
