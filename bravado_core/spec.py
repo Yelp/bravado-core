@@ -124,6 +124,13 @@ class Spec(object):
 
         self._validate_config()
 
+        if self.config['internally_dereference_refs']:
+            # If internally_dereference_refs is enabled we do NOT need to resolve references anymore
+            # it's useless to evaluate is_ref every time
+            self.deref = lambda ref_dict: ref_dict
+        else:
+            self.deref = self._deref
+
     def _validate_config(self):
         """
         Validates the correctness of the configurations injected and makes sure that:
@@ -151,11 +158,6 @@ class Spec(object):
                 message='internally_dereference_refs config disabled because validate_swagger_spec has to be enabled',
                 category=Warning,
             )
-
-        if self.config['internally_dereference_refs']:
-            # If internally_dereference_refs is enabled we do NOT need to resolve references anymore
-            # it's useless to evaluate is_ref every time
-            self.deref = lambda ref_dict: ref_dict
 
         return not are_config_changed
 
@@ -266,10 +268,14 @@ class Spec(object):
             _, target = self.resolver.resolve(ref_dict['$ref'])
             return target
 
-    def deref(self, ref_dict):
+    def _deref(self, ref_dict):
         # If internally_dereference_refs is enabled we do NOT need to resolve references anymore
         # it's useless to evaluate is_ref every time
         return ref_dict if self.config['internally_dereference_refs'] else self._force_deref(ref_dict)
+    
+    def deref(self, ref_dict):
+        # This method is actually set in __init__
+        pass
 
     def get_op_for_request(self, http_method, path_pattern):
         """Return the Swagger operation for the passed in request http method
