@@ -4,6 +4,7 @@ Delegate as much validation as possible out to jsonschema. This module serves
 as the single point of entry for validations should we need to further
 customize the behavior.
 """
+import jsonschema
 from six import itervalues
 
 from bravado_core.exception import SwaggerMappingError
@@ -27,21 +28,27 @@ def validate_schema_object(swagger_spec, schema_object_spec, value):
     if not obj_type:
         return
 
-    if obj_type in SWAGGER_PRIMITIVES:
-        validate_primitive(swagger_spec, schema_object_spec, value)
+    try:
+        if obj_type in SWAGGER_PRIMITIVES:
+            validate_primitive(swagger_spec, schema_object_spec, value)
 
-    elif obj_type == 'array':
-        validate_array(swagger_spec, schema_object_spec, value)
+        elif obj_type == 'array':
+            validate_array(swagger_spec, schema_object_spec, value)
 
-    elif is_object(swagger_spec, schema_object_spec):
-        validate_object(swagger_spec, schema_object_spec, value)
+        elif is_object(swagger_spec, schema_object_spec):
+            validate_object(swagger_spec, schema_object_spec, value)
 
-    elif obj_type == 'file':
-        pass
+        elif obj_type == 'file':
+            pass
 
-    else:
-        raise SwaggerMappingError('Unknown type {0} for value {1}'.format(
-            obj_type, value))
+        else:
+            raise SwaggerMappingError('Unknown type {0} for value {1}'.format(
+                obj_type, value))
+    except jsonschema.ValidationError as e:
+        if e.schema.get('x-sensitive', False):
+            e.message = '*** ' + e.message[len(str(e.instance)):]
+            e.instance = '***'
+        raise
 
 
 def validate_primitive(swagger_spec, primitive_spec, value):
