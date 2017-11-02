@@ -129,6 +129,19 @@ def test_user_defined_format_failure(minimal_swagger_spec,
         str(excinfo.value)
 
 
+def test_user_defined_format_sensitive_failure(
+    minimal_swagger_spec, email_address_object_spec,
+):
+    object_properties = email_address_object_spec['properties']
+    object_properties['email_address']['x-sensitive'] = True
+    request_body = {'email_address': 'i_am_not_a_valid_email_address'}
+    minimal_swagger_spec.register_format(email_address_format)
+    with pytest.raises(ValidationError) as excinfo:
+        validate_object(minimal_swagger_spec, email_address_object_spec,
+                        request_body)
+    assert "'i_am_not_a_valid_email_address'" not in str(excinfo.value)
+
+
 def test_builtin_format_still_works_when_user_defined_format_used(
         minimal_swagger_spec):
     ipaddress_spec = {
