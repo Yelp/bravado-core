@@ -13,7 +13,13 @@
         "operationId": "get_pets",
         "responses": {
           "200": {
-            "description": "Pet List"
+            "description": "Pet List",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GenericPet"
+              }
+            }
           }
         }
       }

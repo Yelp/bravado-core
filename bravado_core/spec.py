@@ -570,6 +570,13 @@ def post_process_spec(swagger_spec, on_container_callbacks):
                 descend(fragment[index], path + [str(index)], visited_refs)
 
     descend(swagger_spec.spec_dict)
+    if swagger_spec.config['internally_dereference_refs']:
+        # While building models we need to rebuild them by using fully dereference specs in order
+        # to get proper validation of polymorphic objects
+        # NOTE: It cannot be a replacement of ``descend(swagger_spec.spec_dict)`` because
+        # swagger_specs.deref_flattened_spec needs already built models in order to add not used
+        # models in the discovered models/definitions
+        descend(swagger_spec.deref_flattened_spec)
 
 
 def strip_xscope(spec_dict):

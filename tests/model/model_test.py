@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
 import pytest
+from mock import Mock
 
+from bravado_core.content_type import APP_JSON
 from bravado_core.model import create_model_type
 from bravado_core.model import Model
+from bravado_core.response import IncomingResponse
+from bravado_core.response import unmarshal_response
 from bravado_core.schema import collapsed_properties
+from bravado_core.spec import Spec
 from bravado_core.unmarshal import unmarshal_model
 
 
@@ -176,3 +181,35 @@ def test_model_isinstance(polymorphic_spec, instance_dict, object_type, possible
         isinstance(model, polymorphic_spec.definitions[possible_object_type])
         for possible_object_type in possible_object_types
     )
+
+
+@pytest.mark.parametrize('internally_dereference_refs', [True, False])
+@pytest.mark.parametrize('use_models', [True, False])
+@pytest.mark.parametrize('validate_responses', [True, False])
+def test_ensure_polymorphic_objects_are_correctly_build_in_case_of_fully_dereferenced_specs(
+    polymorphic_dict, validate_responses, use_models, internally_dereference_refs,
+):
+    raw_response = [{'name': 'name', 'type': 'Dog', 'birth_date': '2017-11-02'}]
+
+    spec = Spec.from_dict(
+        spec_dict=polymorphic_dict,
+        config={
+            'validate_responses': validate_responses,
+            'use_models': use_models,
+            'internally_dereference_refs': internally_dereference_refs,
+        },
+        origin_url='',
+    )
+
+    response = Mock(
+        spec=IncomingResponse,
+        status_code=200,
+        headers={'content-type': APP_JSON},
+        json=Mock(return_value=raw_response),
+    )
+
+    unmarshaled_response = unmarshal_response(response, spec.resources['pets'].get_pets)
+    if use_models:
+        assert repr(unmarshaled_response) == "[Dog(birth_date=datetime.date(2017, 11, 2), name='name', type='Dog')]"
+    else:
+        assert unmarshaled_response == raw_response
