@@ -10,7 +10,6 @@ from swagger_spec_validator.ref_validators import in_scope
 
 from bravado_core.schema import is_param_spec
 from bravado_core.schema import is_prop_nullable
-from bravado_core.schema import is_ref
 from bravado_core.schema import is_required
 
 """Draft4Validator is not completely compatible with Swagger 2.0 schema
@@ -146,7 +145,7 @@ def discriminator_validator(swagger_spec, validator, discriminator_attribute, in
     """
 
     discriminator_value = instance[discriminator_attribute]
-    if discriminator_value not in swagger_spec.spec_dict['definitions']:
+    if discriminator_value not in swagger_spec.definitions:
         raise ValidationError(
             message='\'{}\' is not a recognized schema'.format(discriminator_value)
         )
@@ -154,7 +153,7 @@ def discriminator_validator(swagger_spec, validator, discriminator_attribute, in
     if discriminator_value == schema['x-model']:
         return
 
-    new_schema = deepcopy(swagger_spec.deref(swagger_spec.spec_dict['definitions'][discriminator_value]))
+    new_schema = deepcopy(swagger_spec.definitions[discriminator_value]._model_spec)
     if 'allOf' not in new_schema:
         raise ValidationError(
             message='discriminated schema \'{}\' must inherit from \'{}\''.format(
@@ -162,7 +161,7 @@ def discriminator_validator(swagger_spec, validator, discriminator_attribute, in
             )
         )
 
-    schemas_to_remove = [s for s in new_schema['allOf'] if is_ref(s) and swagger_spec.deref(s) == schema]
+    schemas_to_remove = [s for s in new_schema['allOf'] if swagger_spec.deref(s) == schema]
     if not schemas_to_remove:
         # Not checking against len(schemas_to_remove) > 1 because it should be prevented by swagger spec validation
         raise ValidationError(
