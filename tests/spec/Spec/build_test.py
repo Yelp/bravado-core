@@ -54,9 +54,9 @@ def test_build_with_custom_format(petstore_dict):
         False,
     ]
 )
-def assert_build_with_internally_dereference_refs_false(petstore_dict, internally_dereference_refs):
+def test_build_with_internally_dereference_refs(petstore_dict, internally_dereference_refs):
     spec = Spec(
         petstore_dict,
-        config={'internally_dereference_refs': False}
+        config={'internally_dereference_refs': internally_dereference_refs}
     )
     assert (spec.deref == spec._deref) == (not internally_dereference_refs)

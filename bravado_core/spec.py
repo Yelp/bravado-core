@@ -272,7 +272,7 @@ class Spec(object):
         # If internally_dereference_refs is enabled we do NOT need to resolve references anymore
         # it's useless to evaluate is_ref every time
         return ref_dict if self.config['internally_dereference_refs'] else self._force_deref(ref_dict)
-    
+
     def deref(self, ref_dict):
         # This method is actually set in __init__
         pass
