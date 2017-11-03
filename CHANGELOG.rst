@@ -1,6 +1,14 @@
 Changelog
 =========
 
+4.10.0 (2017-11-03)
+-------------------
+- New config `internally_dereference_refs` that can significantly speed up unmarshalling. Currently disabled by default - PR #204.
+- Added support for new extension ``x-sensitive`` to scrub sensitive values from validation errors. Please check the `documentation <http://bravado-core.readthedocs.io/en/latest/models.html#sensitive-data>`_ for further details - PR #213.
+- Fixed an issue that would cause validation errors if ``obj_type`` was ``None`` - PR #196.
+- Fixed handling of defaults for array parameters - PR #199.
+- Performance improvements - PR #207.
+
 4.9.1 (2017-09-19)
 ------------------
 - Properly marshal a model even if it's not created from the same ``Spec`` instance - PR #194.
