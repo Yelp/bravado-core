@@ -54,8 +54,10 @@ def test_msgpack_content(empty_swagger_spec, response_spec):
         headers={'content-type': APP_MSGPACK},
         raw_bytes=umsgpack.packb(message))
 
-    with patch('bravado_core.response.get_response_spec') as m:
-        m.return_value = response_spec
+    with patch(
+        'bravado_core.response.get_response_spec',
+        return_value=response_spec,
+    ):
         op = Mock(swagger_spec=empty_swagger_spec)
         assert message == unmarshal_response(response, op)
 
