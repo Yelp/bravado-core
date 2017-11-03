@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import pytest
+import umsgpack
 from mock import Mock
 
+from bravado_core.content_type import APP_MSGPACK
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.operation import Operation
 from bravado_core.response import EMPTY_BODIES
@@ -47,6 +49,34 @@ def test_success_json_response(minimal_swagger_spec):
                 'last_name': 'niwrad'
             }
         )
+    )
+    validate_response_body(op, response_spec, response)
+
+
+def test_success_msgpack_response(minimal_swagger_spec):
+    response_spec = {
+        'description': 'Address',
+        'schema': {
+            'type': 'object',
+            'properties': {
+                'first_name': {
+                    'type': 'string',
+                },
+                'last_name': {
+                    'type': 'string',
+                }
+            }
+        }
+    }
+    op = Operation(minimal_swagger_spec, '/foo', 'get',
+                   op_spec={'produces': [APP_MSGPACK]})
+    response = Mock(
+        spec=OutgoingResponse,
+        content_type=APP_MSGPACK,
+        raw_bytes=umsgpack.packb({
+            'first_name': 'darwin',
+            'last_name': 'niwrad'
+        }),
     )
     validate_response_body(op, response_spec, response)
 

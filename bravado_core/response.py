@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
+import umsgpack
 from six import iteritems
 
 from bravado_core.content_type import APP_JSON
+from bravado_core.content_type import APP_MSGPACK
 from bravado_core.exception import MatchingResponseNotFound
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.unmarshal import unmarshal_schema_object
@@ -21,6 +23,7 @@ class IncomingResponse(object):
         'status_code',  # int - http status code
         'text',         # string - raw text of the body
         'headers',      # dict of http headers
+        'raw_bytes',    # the bytes of the body
     ]
 
     def __getattr__(self, name):
@@ -61,6 +64,7 @@ class OutgoingResponse(object):
         'content_type',  # str
         'text',          # str of body
         'headers',       # dict of headers
+        'raw_bytes',     # raw bytes of the response
     ]
 
     def __getattr__(self, name):
@@ -103,15 +107,18 @@ def unmarshal_response(response, op):
 
     content_type = response.headers.get('content-type', '').lower()
 
-    if content_type.startswith(APP_JSON):
+    if content_type.startswith(APP_JSON) or content_type.startswith(APP_MSGPACK):
         content_spec = deref(response_spec['schema'])
-        content_value = response.json()
-
+        if content_type.startswith(APP_JSON):
+            content_value = response.json()
+        else:
+            content_value = umsgpack.unpackb(response.raw_bytes)
         if op.swagger_spec.config['validate_responses']:
             validate_schema_object(op.swagger_spec, content_spec, content_value)
 
         return unmarshal_schema_object(
             op.swagger_spec, content_spec, content_value)
+
     # TODO: Non-json response contents
     return response.text
 
@@ -192,8 +199,11 @@ def validate_response_body(op, response_spec, response):
             "specification's content-types '{1}"
             .format(response.content_type, op.produces))
 
-    if response.content_type == APP_JSON:
-        response_value = response.json()
+    if response.content_type == APP_JSON or response.content_type == APP_MSGPACK:
+        if response.content_type == APP_JSON:
+            response_value = response.json()
+        else:
+            response_value = umsgpack.unpackb(response.raw_bytes)
         validate_schema_object(
             op.swagger_spec, response_body_spec, response_value)
     elif response.content_type.startswith("text/"):
