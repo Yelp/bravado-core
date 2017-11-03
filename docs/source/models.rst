@@ -102,6 +102,30 @@ APIs. In that case, declare your model properties as ``x-nullable``:
 `considered <https://github.com/OAI/OpenAPI-Specification/pull/741>`_ for the next major
 version of Swagger.
 
+Sensitive Data
+-----------------------------------
+Typically, if bravado-core encounters an error validaing a request or a
+response, the value will be included in the exception message. If you have
+sensitive data, this can be problematic. To prevent a sensitive value from
+appearing in the exception details, declare the field as ``x-sensitive``:
+
+.. code-block:: json
+
+    {
+        "Pet": {
+            "type": "object",
+            "properties": {
+                "breed": {
+                    "type": "string",
+                    "x-sensitive": true
+                }
+            }
+        }
+    }
+
+``x-sensitive`` is an extension to the Swagger 2.0 spec. The ``x-sensitive``
+extension can be applied to arrays and primitives as well as objects.
+
 Model Discovery
 ---------------
 Keep in mind that bravado-core has to do some extra legwork to figure out which

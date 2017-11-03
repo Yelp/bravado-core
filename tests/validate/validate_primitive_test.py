@@ -26,6 +26,14 @@ def boolean_spec():
     return {'type': 'boolean'}
 
 
+@pytest.fixture
+def sensitive_string_spec():
+    return {
+        'type': 'string',
+        'x-sensitive': True,
+    }
+
+
 def test_integer_success(minimal_swagger_spec, integer_spec):
     validate_primitive(minimal_swagger_spec, integer_spec, 10)
     validate_primitive(minimal_swagger_spec, integer_spec, -10)
@@ -143,6 +151,13 @@ def test_string_failure(minimal_swagger_spec, string_spec):
     with pytest.raises(ValidationError) as excinfo:
         validate_primitive(minimal_swagger_spec, string_spec, 999)
     assert "is not of type 'string'" in str(excinfo.value)
+
+
+def test_sensitive_string(minimal_swagger_spec, sensitive_string_spec):
+    with pytest.raises(ValidationError) as excinfo:
+        validate_primitive(minimal_swagger_spec, sensitive_string_spec, 999)
+    assert "is not of type 'string'" in str(excinfo.value)
+    assert '999' not in str(excinfo.value)
 
 
 def test_string_minLength_success(minimal_swagger_spec, string_spec):

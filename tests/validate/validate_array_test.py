@@ -28,6 +28,15 @@ def test_minItems_failure(minimal_swagger_spec, int_array_spec):
     assert 'is too short' in str(excinfo)
 
 
+def test_sensitive_minItems_failure(minimal_swagger_spec, int_array_spec):
+    int_array_spec['minItems'] = 2
+    int_array_spec['x-sensitive'] = True
+    with pytest.raises(ValidationError) as excinfo:
+        validate_array(minimal_swagger_spec, int_array_spec, [1])
+    assert 'is too short' in str(excinfo)
+    assert '[1]' not in str(excinfo)
+
+
 def test_maxItems_success(minimal_swagger_spec, int_array_spec):
     int_array_spec['maxItems'] = 2
     validate_array(minimal_swagger_spec, int_array_spec, [1])

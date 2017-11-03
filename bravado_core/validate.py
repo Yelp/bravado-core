@@ -4,13 +4,35 @@ Delegate as much validation as possible out to jsonschema. This module serves
 as the single point of entry for validations should we need to further
 customize the behavior.
 """
+import sys
+from functools import wraps
+
+import jsonschema
 from six import itervalues
+from six import reraise
 
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.exception import SwaggerSecurityValidationError
 from bravado_core.model import is_object
 from bravado_core.schema import SWAGGER_PRIMITIVES
 from bravado_core.swagger20_validator import get_validator_type
+
+
+def scrub_sensitive_value(func):
+    @wraps(func)
+    def scrubbed(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except jsonschema.ValidationError as e:
+            if (
+                isinstance(e.schema, dict) and
+                e.schema.get('x-sensitive', False)
+            ):
+                e.message = '*** ' + e.message[len(str(e.instance)):]
+                e.instance = '***'
+            reraise(*sys.exc_info())
+
+    return scrubbed
 
 
 def validate_schema_object(swagger_spec, schema_object_spec, value):
@@ -44,6 +66,7 @@ def validate_schema_object(swagger_spec, schema_object_spec, value):
             obj_type, value))
 
 
+@scrub_sensitive_value
 def validate_primitive(swagger_spec, primitive_spec, value):
     """
     :type swagger_spec: :class:`bravado_core.spec.Spec`
@@ -56,6 +79,7 @@ def validate_primitive(swagger_spec, primitive_spec, value):
         resolver=swagger_spec.resolver).validate(value)
 
 
+@scrub_sensitive_value
 def validate_array(swagger_spec, array_spec, value):
     """
     :type swagger_spec: :class:`bravado_core.spec.Spec`
@@ -68,6 +92,7 @@ def validate_array(swagger_spec, array_spec, value):
         resolver=swagger_spec.resolver).validate(value)
 
 
+@scrub_sensitive_value
 def validate_object(swagger_spec, object_spec, value):
     """
     :type swagger_spec: :class:`bravado_core.spec.Spec`
