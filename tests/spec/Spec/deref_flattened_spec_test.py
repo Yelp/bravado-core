@@ -24,14 +24,14 @@ def _equivalent(spec, obj1, obj2):
         for key in iterkeys(obj1):
             if key not in obj2:
                 return False
-            return _equivalent(spec, spec.deref(obj1[key]), spec.deref(obj2[key]))
+            return _equivalent(spec, spec._force_deref(obj1[key]), spec._force_deref(obj2[key]))
 
     elif is_list_like(obj1):
         if len(obj1) != len(obj2):
             return False
 
         for key in range(len(obj1)):
-            return _equivalent(spec, spec.deref(obj1[key]), spec.deref(obj2[key]))
+            return _equivalent(spec, spec._force_deref(obj1[key]), spec._force_deref(obj2[key]))
     else:
         return obj1 == obj2
 
