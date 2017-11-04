@@ -140,10 +140,9 @@ class Spec(object):
             are_config_changed = True
             for key in extraneous_keys:
                 warnings.warn(
-                    message='config {} is been removed because is not a recognized config key'.format(key),
+                    message='config {} is not a recognized config key'.format(key),
                     category=Warning,
                 )
-                del self.config[key]
 
         if self.config['internally_dereference_refs'] and not self.config['validate_swagger_spec']:
             are_config_changed = True

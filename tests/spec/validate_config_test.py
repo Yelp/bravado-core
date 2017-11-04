@@ -21,22 +21,25 @@ def test_validate_config_succeed(minimal_swagger_dict, minimal_swagger_abspath, 
 
 
 @pytest.mark.parametrize(
-    'config, expected_warnings_call',
+    'config, expected_different_config, expected_warnings_call',
     [
         (
             {'this_is_an_extra_key': True},
-            'config this_is_an_extra_key is been removed because is not a recognized config key',
+            False,
+            'config this_is_an_extra_key is not a recognized config key',
         ),
         (
             {'validate_swagger_spec': False, 'internally_dereference_refs': True},
+            True,
             'internally_dereference_refs config disabled because validate_swagger_spec has to be enabled',
         ),
     ]
 )
 @mock.patch('bravado_core.spec.warnings')
 def test_validate_config_fail(
-    mock_warnings, minimal_swagger_dict, minimal_swagger_abspath, config, expected_warnings_call,
+    mock_warnings, minimal_swagger_dict, minimal_swagger_abspath,
+    config, expected_different_config, expected_warnings_call,
 ):
     spec = Spec.from_dict(minimal_swagger_dict, origin_url=get_url(minimal_swagger_abspath), config=config)
-    assert spec.config != dict(CONFIG_DEFAULTS, **config)
+    assert (spec.config != dict(CONFIG_DEFAULTS, **config)) is expected_different_config
     mock_warnings.warn.assert_called_once_with(message=expected_warnings_call, category=Warning)
