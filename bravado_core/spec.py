@@ -140,10 +140,9 @@ class Spec(object):
             are_config_changed = True
             for key in extraneous_keys:
                 warnings.warn(
-                    message='config {} is been removed because is not a recognized config key'.format(key),
+                    message='config {} is not a recognized config key'.format(key),
                     category=Warning,
                 )
-                del self.config[key]
 
         if self.config['internally_dereference_refs'] and not self.config['validate_swagger_spec']:
             are_config_changed = True
@@ -244,7 +243,7 @@ class Spec(object):
         else:
             return self.spec_dict
 
-    def deref(self, ref_dict):
+    def _force_deref(self, ref_dict):
         """Dereference ref_dict (if it is indeed a ref) and return what the
         ref points to.
 
@@ -252,9 +251,7 @@ class Spec(object):
         :return: dereferenced value of ref_dict
         :rtype: scalar, list, dict
         """
-        # If internally_dereference_refs is enabled we do NOT need to resolve references anymore
-        # it's useless to evaluate is_ref every time
-        if self.config['internally_dereference_refs'] or ref_dict is None or not is_ref(ref_dict):
+        if ref_dict is None or not is_ref(ref_dict):
             return ref_dict
 
         # Restore attached resolution scope before resolving since the
@@ -268,6 +265,11 @@ class Spec(object):
 
             _, target = self.resolver.resolve(ref_dict['$ref'])
             return target
+
+    def deref(self, ref_dict):
+        # If internally_dereference_refs is enabled we do NOT need to resolve references anymore
+        # it's useless to evaluate is_ref every time
+        return ref_dict if self.config['internally_dereference_refs'] else self._force_deref(ref_dict)
 
     def get_op_for_request(self, http_method, path_pattern):
         """Return the Swagger operation for the passed in request http method

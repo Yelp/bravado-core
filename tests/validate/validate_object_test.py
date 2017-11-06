@@ -254,7 +254,7 @@ def test_nullable_required_no_value(empty_swagger_spec, nullable):
 
     with pytest.raises(ValidationError) as excinfo:
         validate_object(empty_swagger_spec, content_spec, value)
-    assert excinfo.value.message == "'x' is a required property"
+    assert "'x' is a required property" in str(excinfo.value.message)
 
 
 @pytest.mark.parametrize('nullable', [True, False])
@@ -330,7 +330,7 @@ def test_allOf_complex_failure(composition_spec):
 
     with pytest.raises(ValidationError) as excinfo:
         validate_object(composition_spec, pongclone_spec, value)
-    assert excinfo.value.message == "'gameSystem' is a required property"
+    assert "'gameSystem' is a required property" in str(excinfo.value.message)
 
 
 def test_validate_valid_polymorphic_object(polymorphic_spec):
@@ -422,4 +422,4 @@ def test_validate_invalid_polymorphic_object(polymorphic_spec, schema_dict, expe
             object_spec=polymorphic_spec.spec_dict['definitions']['PetList'],
             value=schema_dict,
         )
-    assert e.value.message == expected_validation_error
+    assert expected_validation_error in str(e.value.message)
