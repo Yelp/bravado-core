@@ -1,6 +1,10 @@
 Changelog
 =========
 
+4.10.1 (2017-11-06)
+-------------------
+- Don't remove unrecognized configs; fixes compatibility with bravado - PR #218.
+
 4.10.0 (2017-11-03)
 -------------------
 - New config `internally_dereference_refs` that can significantly speed up unmarshalling. Currently disabled by default - PR #204.
