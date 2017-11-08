@@ -124,6 +124,13 @@ class Spec(object):
 
         self._validate_config()
 
+        if self.config['internally_dereference_refs']:
+            # If internally_dereference_refs is enabled we do NOT need to resolve references anymore
+            # it's useless to evaluate is_ref every time
+            self.deref = lambda ref_dict: ref_dict
+        else:
+            self.deref = self._force_deref
+
     def _validate_config(self):
         """
         Validates the correctness of the configurations injected and makes sure that:
@@ -258,18 +265,12 @@ class Spec(object):
         # resolver doesn't have a traversal history (accumulated scope_stack)
         # when asked to resolve.
         with in_scope(self.resolver, ref_dict):
-            log.debug('Resolving {0} with scope {1}: {2}'.format(
-                ref_dict['$ref'],
-                len(self.resolver._scopes_stack),
-                self.resolver._scopes_stack))
-
             _, target = self.resolver.resolve(ref_dict['$ref'])
             return target
 
     def deref(self, ref_dict):
-        # If internally_dereference_refs is enabled we do NOT need to resolve references anymore
-        # it's useless to evaluate is_ref every time
-        return ref_dict if self.config['internally_dereference_refs'] else self._force_deref(ref_dict)
+        # This method is actually set in __init__
+        pass
 
     def get_op_for_request(self, http_method, path_pattern):
         """Return the Swagger operation for the passed in request http method

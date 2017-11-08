@@ -50,7 +50,7 @@ def test_deref_flattened_spec_not_recursive_specs(petstore_spec):
     assert pet_spec['properties']['category'] != deref_pet_spec['properties']['category']
 
     # dereferencing category the two parameter specs are equivalent
-    assert petstore_spec.deref(pet_spec['properties']['category']) == deref_pet_spec['properties']['category']
+    assert petstore_spec._force_deref(pet_spec['properties']['category']) == deref_pet_spec['properties']['category']
 
     assert _equivalent(petstore_spec, pet_spec, deref_pet_spec)
     assert _equivalent(petstore_spec, petstore_spec.spec_dict, petstore_spec.deref_flattened_spec)

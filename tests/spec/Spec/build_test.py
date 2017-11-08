@@ -45,3 +45,18 @@ def test_build_with_custom_format(petstore_dict):
         config={'formats': [email_address_format]},
         petstore_dict=petstore_dict,
     )
+
+
+@pytest.mark.parametrize(
+    'internally_dereference_refs',
+    [
+        True,
+        False,
+    ]
+)
+def test_build_with_internally_dereference_refs(petstore_dict, internally_dereference_refs):
+    spec = Spec(
+        petstore_dict,
+        config={'internally_dereference_refs': internally_dereference_refs}
+    )
+    assert (spec.deref == spec._force_deref) == (not internally_dereference_refs)
