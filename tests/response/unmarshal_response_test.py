@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 import pytest
+import umsgpack
 from mock import Mock
 from mock import patch
 
 from bravado_core.content_type import APP_JSON
+from bravado_core.content_type import APP_MSGPACK
 from bravado_core.response import IncomingResponse
 from bravado_core.response import unmarshal_response
 
@@ -42,6 +44,22 @@ def test_json_content(empty_swagger_spec, response_spec):
         m.return_value = response_spec
         op = Mock(swagger_spec=empty_swagger_spec)
         assert 'Monday' == unmarshal_response(response, op)
+
+
+def test_msgpack_content(empty_swagger_spec, response_spec):
+    message = 'Monday'
+    response = Mock(
+        spec=IncomingResponse,
+        status_code=200,
+        headers={'content-type': APP_MSGPACK},
+        raw_bytes=umsgpack.packb(message))
+
+    with patch(
+        'bravado_core.response.get_response_spec',
+        return_value=response_spec,
+    ):
+        op = Mock(swagger_spec=empty_swagger_spec)
+        assert message == unmarshal_response(response, op)
 
 
 def test_text_content(empty_swagger_spec, response_spec):

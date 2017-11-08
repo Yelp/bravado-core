@@ -12,6 +12,7 @@ def test_required_attr_returned():
             self.status_code = 404
             self.reason = 'Object not found'
             self.text = 'Error - not found'
+            self.raw_bytes = b'Error - not found'
             self.headers = {}
 
     r = CompliantIncomingResponse()
