@@ -129,7 +129,7 @@ class Spec(object):
             # it's useless to evaluate is_ref every time
             self.deref = lambda ref_dict: ref_dict
         else:
-            self.deref = self._deref
+            self.deref = self._force_deref
 
     def _validate_config(self):
         """
@@ -267,11 +267,6 @@ class Spec(object):
         with in_scope(self.resolver, ref_dict):
             _, target = self.resolver.resolve(ref_dict['$ref'])
             return target
-
-    def _deref(self, ref_dict):
-        # If internally_dereference_refs is enabled we do NOT need to resolve references anymore
-        # it's useless to evaluate is_ref every time
-        return ref_dict if self.config['internally_dereference_refs'] else self._force_deref(ref_dict)
 
     def deref(self, ref_dict):
         # This method is actually set in __init__
