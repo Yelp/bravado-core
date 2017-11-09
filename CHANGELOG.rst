@@ -1,6 +1,11 @@
 Changelog
 =========
 
+4.11.0 (2017-11-09)
+-------------------
+- Add support for msgpack in responses (i.e. when unmarshalling) - Issue #214, PR #216.
+- Improve performance by removing debug logging when dereferencing - PR #208.
+
 4.10.1 (2017-11-06)
 -------------------
 - Don't remove unrecognized configs; fixes compatibility with bravado - PR #218.
