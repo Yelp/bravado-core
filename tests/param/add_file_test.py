@@ -25,6 +25,24 @@ def test_single_file(empty_swagger_spec):
     assert expected_request == request
 
 
+def test_single_named_file(empty_swagger_spec):
+    request = {}
+    file_name = "iamfile.name"
+    file_contents = "I am the contents of a file"
+    op = Mock(spec=Operation, consumes=['multipart/form-data'])
+    param_spec = {
+        'type': 'file',
+        'in': 'formData',
+        'name': 'photo'
+    }
+    param = Param(empty_swagger_spec, op, param_spec)
+    add_file(param, (file_name, file_contents), request)
+    expected_request = {
+        'files': [('photo', (file_name, 'I am the contents of a file'))]
+    }
+    assert expected_request == request
+
+
 def test_multiple_files(empty_swagger_spec):
     request = {}
     file1_contents = "I am the contents of a file1"
