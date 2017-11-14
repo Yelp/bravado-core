@@ -284,7 +284,12 @@ def add_file(param, value, request):
                     param.op.consumes
             ))
 
-    file_tuple = (param.name, (param.name, value))
+    if isinstance(value, tuple):
+        filename, val = value
+    else:
+        filename, val = param.name, value
+
+    file_tuple = (param.name, (filename, val))
     request['files'].append(file_tuple)
 
 
