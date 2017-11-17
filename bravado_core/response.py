@@ -115,6 +115,8 @@ def unmarshal_response(response, op):
             content_value = umsgpack.loads(response.raw_bytes)
         if op.swagger_spec.config['validate_responses']:
             validate_schema_object(op.swagger_spec, content_spec, content_value)
+        if op.swagger_spec.config['return_raw_response']:
+            return content_value
 
         return unmarshal_schema_object(
             op.swagger_spec, content_spec, content_value)

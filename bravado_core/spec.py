@@ -76,6 +76,9 @@ CONFIG_DEFAULTS = {
     # Completely dereference $refs to maximize marshaling and unmarshaling performances.
     # NOTE: this depends on validate_swagger_spec
     'internally_dereference_refs': False,
+
+    # Skip call to unmarshal_schema_object and return raw decoded response.
+    'return_raw_response': False,
 }
 
 

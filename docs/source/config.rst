@@ -43,4 +43,9 @@ Config key                    Type            Default   Description
                                                         | to ``object`` and be validated as such.
                                                         | When set to ``False``, missing types will not be
                                                         | validated at all.
+----------------------------- --------------- --------- ----------------------------------------------------
+*return_raw_response*         boolean         False     | When set to ``True``, the raw decoded response
+                                                        | will be returned.
+                                                        | When set to ``False``, the response will be
+                                                        | unmarshalled according to the schema.
 ============================= =============== ========= ====================================================
