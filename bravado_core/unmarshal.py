@@ -129,11 +129,12 @@ def unmarshal_object(swagger_spec, object_spec, object_value):
 
     object_spec = deref(object_spec)
     required_fields = object_spec.get('required', [])
+    properties = collapsed_properties(object_spec, swagger_spec)
 
     result = {}
     for k, v in iteritems(object_value):
         prop_spec = get_spec_for_prop(
-            swagger_spec, object_spec, object_value, k)
+            swagger_spec, object_spec, object_value, k, properties)
         if v is None and k not in required_fields and prop_spec:
             if schema.has_default(swagger_spec, prop_spec):
                 result[k] = schema.get_default(swagger_spec, prop_spec)
@@ -145,7 +146,6 @@ def unmarshal_object(swagger_spec, object_spec, object_value):
             # Don't marshal when a spec is not available - just pass through
             result[k] = v
 
-    properties = collapsed_properties(deref(object_spec), swagger_spec)
     for prop_name, prop_spec in iteritems(properties):
         if prop_name not in result and swagger_spec.config['include_missing_properties']:
             result[prop_name] = None

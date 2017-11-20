@@ -82,7 +82,7 @@ def is_list_like(spec):
     return isinstance(spec, (list, tuple))
 
 
-def get_spec_for_prop(swagger_spec, object_spec, object_value, prop_name):
+def get_spec_for_prop(swagger_spec, object_spec, object_value, prop_name, properties=None):
     """Given a jsonschema object spec and value, retrieve the spec for the
      given property taking 'additionalProperties' into consideration.
 
@@ -90,13 +90,15 @@ def get_spec_for_prop(swagger_spec, object_spec, object_value, prop_name):
     :param object_value: jsonschema object containing the given property. Only
         used in error message.
     :param prop_name: name of the property to retrieve the spec for
+    :param properties: collapsed properties of the object
 
     :return: spec for the given property or None if no spec found
     :rtype: dict or None
     """
     deref = swagger_spec.deref
 
-    properties = collapsed_properties(deref(object_spec), swagger_spec)
+    if properties is None:
+        properties = collapsed_properties(deref(object_spec), swagger_spec)
     prop_spec = properties.get(prop_name)
 
     if prop_spec is not None:

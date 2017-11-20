@@ -7,6 +7,7 @@ from bravado_core.exception import SwaggerMappingError
 from bravado_core.model import is_model
 from bravado_core.model import is_object
 from bravado_core.model import MODEL_MARKER
+from bravado_core.schema import collapsed_properties
 from bravado_core.schema import get_spec_for_prop
 from bravado_core.schema import handle_null_value
 from bravado_core.schema import is_dict_like
@@ -135,12 +136,13 @@ def marshal_object(swagger_spec, object_spec, object_value):
 
     object_spec = deref(object_spec)
     required_fields = object_spec.get('required', [])
+    properties = collapsed_properties(object_spec, swagger_spec)
 
     result = {}
     for k, v in iteritems(object_value):
 
         prop_spec = get_spec_for_prop(
-            swagger_spec, object_spec, object_value, k)
+            swagger_spec, object_spec, object_value, k, properties)
 
         if not prop_spec:
             # Don't marshal when a spec is not available - just pass through
