@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
+import msgpack
 import pytest
-import umsgpack
 from mock import Mock
 from mock import patch
 
@@ -52,7 +52,7 @@ def test_msgpack_content(empty_swagger_spec, response_spec):
         spec=IncomingResponse,
         status_code=200,
         headers={'content-type': APP_MSGPACK},
-        raw_bytes=umsgpack.packb(message))
+        raw_bytes=msgpack.packb(message))
 
     with patch(
         'bravado_core.response.get_response_spec',

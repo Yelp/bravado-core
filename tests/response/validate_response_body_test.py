@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
+import msgpack
 import pytest
-import umsgpack
 from mock import Mock
 
 from bravado_core.content_type import APP_MSGPACK
@@ -73,7 +73,7 @@ def test_success_msgpack_response(minimal_swagger_spec):
     response = Mock(
         spec=OutgoingResponse,
         content_type=APP_MSGPACK,
-        raw_bytes=umsgpack.packb({
+        raw_bytes=msgpack.packb({
             'first_name': 'darwin',
             'last_name': 'niwrad'
         }),
