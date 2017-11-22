@@ -1,5 +1,6 @@
 Changelog
 =========
+- Use msgpack-python instead of u-msgpack-python for performance improvements - Issue #227, PR #228.
 
 4.11.0 (2017-11-09)
 -------------------
