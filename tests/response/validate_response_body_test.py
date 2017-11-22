@@ -73,7 +73,7 @@ def test_success_msgpack_response(minimal_swagger_spec):
     response = Mock(
         spec=OutgoingResponse,
         content_type=APP_MSGPACK,
-        raw_bytes=msgpack.packb({
+        raw_bytes=msgpack.dumps({
             'first_name': 'darwin',
             'last_name': 'niwrad'
         }),
