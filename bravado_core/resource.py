@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
+import re
 from collections import defaultdict
 
 from six import iteritems
@@ -50,6 +51,17 @@ def build_resources(swagger_spec):
     deref = swagger_spec.deref
     spec_dict = deref(swagger_spec._internal_spec_dict)
     paths_spec = deref(spec_dict.get('paths', {}))
+
+    def sanitize(tag):
+        for regex, replacement in (
+                ('[^A-Za-z0-9_]', '_'),  # valid chars for method names
+                ('_+', '_'),             # collapse consecutive _'s
+                ('^_|_$', ''),           # trim leading/trailing _'s
+                ('^([0-9])', r'_\1')):          # no leading digits
+            tag = re.compile(regex).sub(replacement, tag)
+
+        return tag
+
     for path_name, path_spec in iteritems(paths_spec):
         path_spec = deref(path_spec)
         for http_method, op_spec in iteritems(path_spec):
@@ -68,7 +80,13 @@ def build_resources(swagger_spec):
                 tags.append(convert_path_to_resource(path_name))
 
             for tag in tags:
-                tag_to_ops[deref(tag)][op.operation_id] = op
+                sanitized_tag = sanitize(deref(tag))
+                if not sanitized_tag:
+                    # Edge case where users have explicitly chosen a tag name
+                    # which is empty after sanitization
+                    sanitized_tag = convert_path_to_resource(path_name)
+
+                tag_to_ops[sanitized_tag][op.operation_id] = op
 
     resources = {}
     for tag, ops in iteritems(tag_to_ops):

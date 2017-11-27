@@ -70,3 +70,24 @@ def paths_spec():
 @pytest.fixture
 def find_by_status_path_spec(paths_spec):
     return paths_spec['/pet/findByStatus']
+
+
+@pytest.fixture
+def paths_spec_with_tags_with_spaces():
+    return {
+        "/pet/findByStatus": {
+            "get": {
+                "tags": [
+                    "Some Tag",
+                    "Tag with lots of words",
+                    "Tag with        double space",
+                    " ",  # Tag with only a space
+                    " Leading space",
+                    "Trailing space ",
+                    "0 starts with a number",
+                    "012 starts with a number",
+                ],
+                "operationId": "findPetsByStatus",
+            }
+        },
+    }

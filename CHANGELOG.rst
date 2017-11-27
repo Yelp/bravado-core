@@ -19,6 +19,8 @@ Changelog
 - Fixed handling of defaults for array parameters - PR #199.
 - Performance improvements - PR #207.
 
+- Sanitise resource names to ensure they are valid Python identifiers
+
 4.9.1 (2017-09-19)
 ------------------
 - Properly marshal a model even if it's not created from the same ``Spec`` instance - PR #194.
