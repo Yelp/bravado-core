@@ -2,6 +2,7 @@
 import zlib
 
 import msgpack
+import simplejson as json
 from six import iteritems
 
 from bravado_core.content_encoding import DEFLATE
@@ -203,13 +204,15 @@ def validate_response_body(op, response_spec, response):
             .format(response.content_type, op.produces))
 
     if response.content_type == APP_JSON or response.content_type == APP_MSGPACK:
+        raw_bytes = response.raw_bytes
+        # Decompresses if applicable
+        content_encoding = response.headers.get('content-encoding', '').lower()
+        if content_encoding == DEFLATE:
+            raw_bytes = zlib.decompress(raw_bytes)
+        # Parse bytes
         if response.content_type == APP_JSON:
-            response_value = response.json()
+            response_value = json.loads(raw_bytes)
         else:
-            content_encoding = response.headers.get('content-encoding', '').lower()
-            raw_bytes = response.raw_bytes
-            if content_encoding == DEFLATE:
-                raw_bytes = zlib.decompress(raw_bytes)
             response_value = msgpack.loads(raw_bytes, encoding='utf-8')
         validate_schema_object(
             op.swagger_spec, response_body_spec, response_value)

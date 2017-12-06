@@ -3,6 +3,7 @@ import zlib
 
 import msgpack
 import pytest
+import simplejson as json
 from mock import Mock
 
 from bravado_core.content_encoding import DEFLATE
@@ -45,13 +46,44 @@ def test_success_json_response(minimal_swagger_spec):
     response = Mock(
         spec=OutgoingResponse,
         content_type='application/json',
-        json=Mock(
-            spec=dict,
-            return_value={
-                'first_name': 'darwin',
-                'last_name': 'niwrad'
+        headers={},
+        raw_bytes=json.dumps({
+            'first_name': 'darwin',
+            'last_name': 'niwrad',
+        }).encode('utf-8'),
+    )
+    validate_response_body(op, response_spec, response)
+
+
+def test_success_json_compressed_response(minimal_swagger_spec):
+    response_spec = {
+        'description': 'Address',
+        'schema': {
+            'type': 'object',
+            'properties': {
+                'first_name': {
+                    'type': 'string',
+                },
+                'last_name': {
+                    'type': 'string',
+                }
             }
-        )
+        }
+    }
+    op = Operation(minimal_swagger_spec, '/foo', 'get',
+                   op_spec={'produces': ['application/json']})
+    response = Mock(
+        spec=OutgoingResponse,
+        content_type='application/json',
+        headers={
+            'content-encoding': DEFLATE,
+        },
+        raw_bytes=zlib.compress(
+            json.dumps({
+                'first_name': 'darwin',
+                'last_name': 'niwrad',
+            }).encode('utf-8')
+        ),
     )
     validate_response_body(op, response_spec, response)
 
