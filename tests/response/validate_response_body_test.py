@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
+import zlib
+
 import msgpack
 import pytest
 from mock import Mock
 
+from bravado_core.content_encoding import DEFLATE
 from bravado_core.content_type import APP_MSGPACK
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.operation import Operation
@@ -73,10 +76,47 @@ def test_success_msgpack_response(minimal_swagger_spec):
     response = Mock(
         spec=OutgoingResponse,
         content_type=APP_MSGPACK,
+        headers={
+            'content-type': APP_MSGPACK,
+        },
         raw_bytes=msgpack.dumps({
             'first_name': 'darwin',
             'last_name': 'niwrad'
         }),
+    )
+    validate_response_body(op, response_spec, response)
+
+
+def test_success_msgpack_compressed_response(minimal_swagger_spec):
+    response_spec = {
+        'description': 'Address',
+        'schema': {
+            'type': 'object',
+            'properties': {
+                'first_name': {
+                    'type': 'string',
+                },
+                'last_name': {
+                    'type': 'string',
+                }
+            }
+        }
+    }
+    op = Operation(minimal_swagger_spec, '/foo', 'get',
+                   op_spec={'produces': [APP_MSGPACK]})
+    response = Mock(
+        spec=OutgoingResponse,
+        content_type=APP_MSGPACK,
+        headers={
+            'content-type': APP_MSGPACK,
+            'content-encoding': DEFLATE,
+        },
+        raw_bytes=zlib.compress(
+            msgpack.dumps({
+                'first_name': 'darwin',
+                'last_name': 'niwrad'
+            })
+        ),
     )
     validate_response_body(op, response_spec, response)
 

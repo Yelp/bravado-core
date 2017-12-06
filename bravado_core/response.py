@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
+import zlib
+
 import msgpack
 from six import iteritems
 
+from bravado_core.content_encoding import DEFLATE
 from bravado_core.content_type import APP_JSON
 from bravado_core.content_type import APP_MSGPACK
 from bravado_core.exception import MatchingResponseNotFound
@@ -203,7 +206,11 @@ def validate_response_body(op, response_spec, response):
         if response.content_type == APP_JSON:
             response_value = response.json()
         else:
-            response_value = msgpack.loads(response.raw_bytes, encoding='utf-8')
+            content_encoding = response.headers.get('content-encoding', '').lower()
+            raw_bytes = response.raw_bytes
+            if content_encoding == DEFLATE:
+                raw_bytes = zlib.decompress(raw_bytes)
+            response_value = msgpack.loads(raw_bytes, encoding='utf-8')
         validate_schema_object(
             op.swagger_spec, response_body_spec, response_value)
     elif response.content_type.startswith("text/"):
