@@ -1,5 +1,9 @@
 Changelog
 =========
+
+4.11.1 (2017-12-18)
+-------------------
+- Speed up marshalling and unmarshalling of objects - PR #226.
 - Use msgpack-python instead of u-msgpack-python for performance improvements - Issue #227, PR #228.
 
 4.11.0 (2017-11-09)
