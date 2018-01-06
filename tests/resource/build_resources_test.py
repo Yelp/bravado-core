@@ -75,7 +75,11 @@ def test_resource_with_vendor_extension(paths_spec):
 def test_refs(minimal_swagger_dict, paths_spec, pet_spec, internally_dereference_refs):
     minimal_swagger_dict['paths'] = paths_spec
     minimal_swagger_dict['definitions'] = {'Pet': pet_spec}
-    swagger_spec = Spec(minimal_swagger_dict, config={'internally_dereference_refs': internally_dereference_refs})
+    swagger_spec = Spec(
+        spec_dict=minimal_swagger_dict,
+        origin_url='',
+        config={'internally_dereference_refs': internally_dereference_refs},
+    )
     resources = build_resources(swagger_spec)
     assert len(resources) == 1
     assert 'pet' in resources
