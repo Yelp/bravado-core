@@ -413,7 +413,7 @@ def build_http_handlers(http_client):
     :returns: dict like {'http': callable, 'https': callable)
     """
     def download(uri):
-        log.debug('Downloading {0}'.format(uri))
+        log.debug('Downloading %s', uri)
         request_params = {
             'method': 'GET',
             'url': uri,
@@ -553,7 +553,7 @@ def post_process_spec(swagger_spec, on_container_callbacks):
             # by its name alone. Its scope (attached above) is part of the
             # equivalence comparison.
             if ref_dict in visited_refs:
-                log.debug('Already visited %s' % ref)
+                log.debug('Already visited %s', ref)
                 return
 
             visited_refs.append(ref_dict)

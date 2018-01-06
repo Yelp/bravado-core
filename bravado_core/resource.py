@@ -86,7 +86,7 @@ class Resource(object):
     """
 
     def __init__(self, name, ops):
-        log.debug(u"Building resource '%s'" % name)
+        log.debug(u"Building resource '%s'", name)
         self.name = name
         self.operations = ops
 
