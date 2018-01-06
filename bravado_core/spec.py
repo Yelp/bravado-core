@@ -379,10 +379,11 @@ class Spec(object):
                     obj[index] = descend(obj[index])
             return obj
 
-        # Make sure that all memory allocated for cache could be released
-        descend.cache.clear()
-
-        return descend(deref_spec_dict)
+        try:
+            return descend(deref_spec_dict)
+        finally:
+            # Make sure that all memory allocated for cache could be released
+            descend.cache.clear()
 
 
 def is_yaml(url, content_type=None):
