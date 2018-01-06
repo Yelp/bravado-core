@@ -36,6 +36,7 @@ from bravado_core.spec_flattening import flattened_spec
 from bravado_core.util import cached_property
 from bravado_core.util import memoize_by_id
 
+
 log = logging.getLogger(__name__)
 
 
@@ -382,7 +383,7 @@ class Spec(object):
         try:
             return descend(deref_spec_dict)
         finally:
-            # Make sure that all memory allocated for cache could be released
+            # Make sure that all memory allocated, for caching, could be released
             descend.cache.clear()
 
 
@@ -536,6 +537,35 @@ def post_process_spec(swagger_spec, on_container_callbacks):
 
     resolver = swagger_spec.resolver
 
+    def skip_already_visited_fragments(func):
+        func.cache = cache = set()
+
+        @functools.wraps(func)
+        def wrapper(fragment, *args, **kwargs):
+            is_reference = is_ref(fragment)
+            if is_reference:
+                ref = fragment['$ref']
+                attach_scope(fragment, resolver)
+                with resolver.resolving(ref) as target:
+                    if id(target) in cache:
+                        log.debug('Already visited %s', ref)
+                        return
+
+                    func(target, *args, **kwargs)
+                    return
+
+            # fragment is guaranteed not to be a ref from this point onwards
+            fragment_id = id(fragment)
+
+            if fragment_id in cache:
+                log.debug('Already visited id %d', fragment_id)
+                return
+
+            cache.add(id(fragment))
+            func(fragment, *args, **kwargs)
+        return wrapper
+
+    @skip_already_visited_fragments
     def descend(fragment, path=None, visited_refs=None):
         """
         :param fragment: node in spec_dict
@@ -545,24 +575,6 @@ def post_process_spec(swagger_spec, on_container_callbacks):
         path = path or []
         visited_refs = visited_refs or []
 
-        if is_ref(fragment):
-            ref_dict = fragment
-            ref = fragment['$ref']
-            attach_scope(ref_dict, resolver)
-
-            # Don't recurse down already visited refs. A ref is not unique
-            # by its name alone. Its scope (attached above) is part of the
-            # equivalence comparison.
-            if ref_dict in visited_refs:
-                log.debug('Already visited %s', ref)
-                return
-
-            visited_refs.append(ref_dict)
-            with resolver.resolving(ref) as target:
-                descend(target, path, visited_refs)
-                return
-
-        # fragment is guaranteed not to be a ref from this point onwards
         if is_dict_like(fragment):
             for key, value in iteritems(fragment):
                 fire_callbacks(fragment, key, path + [key])
@@ -573,14 +585,22 @@ def post_process_spec(swagger_spec, on_container_callbacks):
                 fire_callbacks(fragment, index, path + [str(index)])
                 descend(fragment[index], path + [str(index)], visited_refs)
 
-    descend(swagger_spec.spec_dict)
+    try:
+        descend(swagger_spec.spec_dict)
+    finally:
+        descend.cache.clear()
+
     if swagger_spec.config['internally_dereference_refs']:
         # While building models we need to rebuild them by using fully dereference specs in order
         # to get proper validation of polymorphic objects
         # NOTE: It cannot be a replacement of ``descend(swagger_spec.spec_dict)`` because
         # swagger_specs.deref_flattened_spec needs already built models in order to add not used
         # models in the discovered models/definitions
-        descend(swagger_spec.deref_flattened_spec)
+        try:
+            descend(swagger_spec.deref_flattened_spec)
+        finally:
+            # Make sure that all memory allocated, for caching, could be released
+            descend.cache.clear()
 
 
 def strip_xscope(spec_dict):
