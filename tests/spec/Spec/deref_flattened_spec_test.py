@@ -2,10 +2,12 @@
 import pytest
 from six import iterkeys
 from six import itervalues
+from six.moves.urllib_parse import urljoin
 
 from bravado_core.model import MODEL_MARKER
 from bravado_core.schema import is_dict_like
 from bravado_core.schema import is_list_like
+from bravado_core.spec import Spec
 
 
 def _get_model(spec_dict, model_name):
@@ -66,3 +68,16 @@ def test_deref_flattened_spec_recursive_specs(multi_file_recursive_spec):
     pong = _get_model(deref_spec_dict, 'pong')
     assert id(pong) == id(pong['properties']['ping']['properties']['pong'])
     assert id(pong['properties']['ping']) == id(pong['properties']['ping']['properties']['pong']['properties']['ping'])
+
+
+def test_build_spec_object_with_recursive_specs_and_fully_dereference(
+    multi_file_recursive_dict, multi_file_recursive_abspath,
+):
+    # Test pass if spec object is built
+    assert Spec.from_dict(
+        spec_dict=multi_file_recursive_dict,
+        origin_url=urljoin('file:', multi_file_recursive_abspath),
+        config={
+            'internally_dereference_refs': True,
+        }
+    ).api_url.startswith('file:')

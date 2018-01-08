@@ -70,7 +70,7 @@ def create_operation_docstring(op):
         :rtype: list
     """
     # TODO: remove once lazy docstrings implemented
-    log.debug('creating op docstring for %s' % op.operation_id)
+    log.debug('creating op docstring for %s', op.operation_id)
     s = ''
     op_spec = op.op_spec
     is_deprecated = op_spec.get('deprecated', False)

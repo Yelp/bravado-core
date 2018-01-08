@@ -42,7 +42,7 @@ def tag_models(container, key, path, visited_models, swagger_spec):
     if deref(model_spec.get(MODEL_MARKER)) is not None:
         return
 
-    log.debug('Found model: {0}'.format(model_name))
+    log.debug('Found model: %s', model_name)
     if model_name in visited_models:
         raise ValueError(
             'Duplicate "{0}" model found at path {1}. '

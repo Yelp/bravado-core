@@ -69,5 +69,5 @@ def unmarshal_request(request, op):
     if op.swagger_spec.config['validate_requests']:
         validate_security_object(op, request_data)
 
-    log.debug("Swagger request_data: {0}".format(request_data))
+    log.debug('Swagger request_data: %s', request_data)
     return request_data
