@@ -5,6 +5,7 @@ import pytest
 
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.marshal import marshal_model
+from bravado_core.model import Model
 from bravado_core.spec import Spec
 
 
@@ -85,7 +86,7 @@ def test_value_is_not_dict_like_raises_error(petstore_dict):
     pet_spec = petstore_spec.spec_dict['definitions']['Pet']
     with pytest.raises(SwaggerMappingError) as excinfo:
         marshal_model(petstore_spec, pet_spec, 'i am not a dict')
-    assert 'Expected model of type' in str(excinfo.value)
+    assert 'Expected {0.__module__}.{0.__name__} object but got '.format(Model) in str(excinfo.value)
 
 
 def test_marshal_model_with_none_model_type(petstore_spec):
@@ -123,16 +124,3 @@ def test_marshal_model_with_with_different_specs(petstore_dict, petstore_spec):
     assert marshal_model(petstore_spec, pet_spec, model) == {
         'id': 1, 'name': 'Fido', 'photoUrls': ['wagtail.png', 'bark.png'],
     }
-
-
-def test_marshal_model_raises_exception_if_different_model(petstore_spec):
-    pet_spec = petstore_spec.spec_dict['definitions']['Pet']
-    order_spec = petstore_spec.definitions['Order']
-    model = order_spec()
-
-    with pytest.raises(SwaggerMappingError) as excinfo:
-        marshal_model(petstore_spec, pet_spec, model)
-
-    assert str(excinfo.value) == 'Expected model of type {0} but got {1} for value {2}'.format(
-        'Pet', 'Order', model,
-    )
