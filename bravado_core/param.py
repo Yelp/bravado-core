@@ -4,6 +4,7 @@ from functools import partial
 
 import simplejson as json
 import six
+from six.moves.urllib.parse import quote_plus
 
 from bravado_core import schema
 from bravado_core.content_type import APP_JSON
@@ -126,9 +127,13 @@ def marshal_param(param, value, request):
     if param_type == 'array' and location != 'body':
         value = marshal_collection_format(swagger_spec, param_spec, value)
 
+    if (location == 'path' or location == 'query') and (param_type == 'string' or param_type == 'array'):
+        # Percent encode params used in the url, so an invalid url isn't created.
+        # The http_client will take care of utf8 encoding the other params.
+        value = quote_plus(value.encode('utf8'), safe=',')
+
     if location == 'path':
         token = u'{%s}' % param.name
-        # Don't do any escaping/encoding - http_client will take care of it
         request['url'] = request['url'].replace(token, six.text_type(value))
     elif location == 'query':
         request['params'][param.name] = value
