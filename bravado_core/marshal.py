@@ -6,6 +6,7 @@ from bravado_core import schema
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.model import is_model
 from bravado_core.model import is_object
+from bravado_core.model import Model
 from bravado_core.model import MODEL_MARKER
 from bravado_core.schema import collapsed_properties
 from bravado_core.schema import get_spec_for_prop
@@ -177,10 +178,10 @@ def marshal_model(swagger_spec, model_spec, model_value):
     if model_value is None:
         return handle_null_value(swagger_spec, model_spec)
 
-    if not isinstance(model_value, model_type):
+    if not isinstance(model_value, Model):
         raise SwaggerMappingError(
-            'Expected model of type {0} but got {1} for value {2}'.format(
-                model_name, model_value.__class__.__name__, model_value,
+            'Expected {0.__module__}.{0.__name__} object but got {1.__module__}.{1.__name__}'.format(
+                Model, type(model_value),
             ),
         )
 
