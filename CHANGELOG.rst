@@ -1,6 +1,10 @@
 Changelog
 =========
 
+4.11.4 (2018-01-16)
+-------------------
+- Percent encode params that will be put into the url
+
 4.11.3 (2018-01-16)
 -------------------
 - Remove strict isinstance check when marshalling models - PR #236.
