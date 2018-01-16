@@ -1,6 +1,10 @@
 Changelog
 =========
 
+4.11.3 (2018-01-16)
+-------------------
+- Remove strict isinstance check when marshalling models - PR #236.
+
 4.11.2 (2018-01-08)
 -------------------
 - Ensure ``internally_dereference_refs`` works with recursive specs - PR #234.
