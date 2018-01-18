@@ -97,25 +97,22 @@ def test_path_integer(empty_swagger_spec, param_spec):
     assert '/pet/34' == request['url']
 
 
-def test_path_string(empty_swagger_spec, param_spec):
+@pytest.mark.parametrize(
+    'string_param, expected_path',
+    [
+        ('34', '/pet/34'),
+        (u'Ümlaut', '/pet/%C3%9Cmlaut'),
+        ('/\%?=', '/pet/%2F%5C%25%3F%3D'),
+    ]
+)
+def test_path_string(empty_swagger_spec, param_spec, string_param, expected_path):
     param_spec['in'] = 'path'
     param_spec['type'] = 'string'
     del param_spec['format']
     param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
     request = {'url': '/pet/{petId}'}
-    marshal_param(param, '34', request)
-    assert '/pet/34' == request['url']
-
-
-def test_path_unicode_string(empty_swagger_spec, param_spec):
-    param_spec['in'] = 'path'
-    param_spec['type'] = 'string'
-    del param_spec['format']
-    param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
-    request = {'url': '/pet/{petId}'}
-    marshal_param(param, u'Ümlaut', request)
-    # verify no escaping/encoding takes place on URL
-    assert u'/pet/Ümlaut' == request['url']
+    marshal_param(param, string_param, request)
+    assert expected_path == request['url']
 
 
 def test_header_string(empty_swagger_spec, param_spec):
