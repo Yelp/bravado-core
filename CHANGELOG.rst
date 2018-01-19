@@ -1,6 +1,10 @@
 Changelog
 =========
 
+4.11.4 (2018-01-19)
+-------------------
+- Properly quote request parameters sent as part of the URL path - PR #237, #238.
+
 4.11.3 (2018-01-16)
 -------------------
 - Remove strict isinstance check when marshalling models - PR #236.
