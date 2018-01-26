@@ -314,9 +314,10 @@ class Spec(object):
         :param name: Name of the format to retrieve
         :rtype: :class:`bravado_core.formatters.SwaggerFormat`
         """
-        if name in formatter.DEFAULT_FORMATS:
-            return formatter.DEFAULT_FORMATS[name]
         format = self.user_defined_formats.get(name)
+        if format is None:
+            format = formatter.DEFAULT_FORMATS.get(name)
+
         if format is None:
             warnings.warn(
                 message='{0} format is not registered with bravado-core!'.format(name),
