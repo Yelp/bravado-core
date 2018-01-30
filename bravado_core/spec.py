@@ -423,14 +423,14 @@ def build_http_handlers(http_client):
         response = http_client.request(request_params).result()
         content_type = response.headers.get('content-type', '').lower()
         if is_yaml(uri, content_type):
-            return yaml.load(response.content)
+            return yaml.safe_load(response.content)
         else:
             return response.json()
 
     def read_file(uri):
         with closing(urlopen(uri)) as fp:
             if is_yaml(uri):
-                return yaml.load(fp)
+                return yaml.safe_load(fp)
             else:
                 return json.loads(fp.read().decode("utf-8"))
 
