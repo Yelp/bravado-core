@@ -117,15 +117,13 @@ def test_override(minimal_swagger_dict):
 
     byteformat = SwaggerFormat(
         format='byte',
-        to_wire=lambda x: x if isinstance(x, str) else str(x),
-        to_python=lambda x: x if type(x) is Byte else Byte(x),
-        validate=lambda x: True if isinstance(x, str) else False,
+        to_wire=lambda x: str(x),
+        to_python=lambda x: Byte(x),
+        validate=lambda x: isinstance(x, str),
         description=None
     )
 
-    number_spec = {
-        'type': 'string', 'format': 'byte'
-    }
+    number_spec = {'type': 'string', 'format': 'byte'}
 
     swagger_spec = Spec.from_dict(minimal_swagger_dict, config={'formats': [byteformat]})
     result = to_python(swagger_spec, number_spec, '8bits')
