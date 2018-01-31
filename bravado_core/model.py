@@ -268,9 +268,10 @@ class Model(object):
         return sorted(self.__dict.keys())
 
     def __repr__(self):
+        """Return properties (including additional)."""
         s = [
             "{0}={1!r}".format(attr_name, self[attr_name])
-            for attr_name in sorted(self._properties.keys())
+            for attr_name in sorted(self.__dict.keys())
             if attr_name in self
         ]
         return "{0}({1})".format(self.__class__.__name__, ', '.join(s))
