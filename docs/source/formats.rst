@@ -174,13 +174,12 @@ Overriding built-in formats is also possible with a user-defined format
 By default format 'double' is internally converted to a float in python.  This runs
 the risk of being imprecise due to the way floats are handled.  If you would
 like to instead use the decimal.Decimal() type for more precision, you can override
-this built-in format.
-
- `Floating Point Precision <https://docs.python.org/tutorial/floatingpoint.html>`_.
+this built-in format.  See Also: `Floating Point Precision <https://docs.python.org/tutorial/floatingpoint.html>`_.
 
 You'd define the type:
 
 .. code-block:: python
+
     from decimal import Decimal
     import re
 
@@ -201,6 +200,7 @@ You'd define the type:
 Then in your config block you include this format:
 
 .. code-block:: python
+
     config = {
         'formats': [mydouble],
 	...
@@ -209,10 +209,12 @@ Then in your config block you include this format:
     # Create a bravado_core.spec.Spec
     swagger_spec = Spec.from_dict(spec_dict, config=config)
 
-.. topic::
-     Important Note: The above works when the openapi schema is written as
-    ``string(double)`` e.g. the spec passes the value as string on the wire and
-    format is double.  If the spec said it was a number(double), it is likely that
-    json will first convert the number from the wire to a float and then pass that
-    into Decimal() with unguaranteed precision.  The calls to json would need
-    ``use_decimals=True`` for that to work.
+Note about using precise Decimal format in Spec
+-----------------------------------------------
+
+The above works when the openapi schema is written as ``string(double)``
+e.g. the spec passes the value as string on the wire and format is double.  If
+the spec said it was a number(double), it is likely that json will first
+convert the number from the wire to a float and then pass that into Decimal()
+with unguaranteed precision.  The calls to json would need
+``use_decimals=True`` for that to work.
