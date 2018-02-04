@@ -19,6 +19,16 @@ def test_resource_with_a_single_operation_associated_by_tag(paths_spec):
     assert resources['pet'].findPetsByStatus
 
 
+def test_resource_with_sanitized_tag(paths_spec):
+    paths_spec['/pet/findByStatus']['get']['tags'][0] = 'Pets & Animals'
+    spec_dict = {'paths': paths_spec}
+    resources = build_resources(Spec(spec_dict))
+    assert 1 == len(resources)
+    assert 'Pets & Animals' in resources
+    assert 'Pets_Animals' in resources
+    assert resources['Pets_Animals'] is resources['Pets & Animals']
+
+
 def test_resource_with_a_single_operation_associated_by_path_name(paths_spec):
     # rename path so we know resource name will not be 'pet'
     paths_spec['/foo/findByStatus'] = paths_spec['/pet/findByStatus']
@@ -31,6 +41,22 @@ def test_resource_with_a_single_operation_associated_by_path_name(paths_spec):
     resources = build_resources(Spec(spec_dict))
     assert 1 == len(resources)
     assert resources['foo'].findPetsByStatus
+
+
+def test_resource__associated_by_sanitized_path_name(paths_spec):
+    # rename path so we know resource name will not be 'pet'
+    paths_spec['/foo-bar/findByStatus'] = paths_spec['/pet/findByStatus']
+    del paths_spec['/pet/findByStatus']
+
+    # remove tags on operation so path name is used to assoc with a resource
+    del paths_spec['/foo/findByStatus']['get']['tags']
+
+    spec_dict = {'paths': paths_spec}
+    resources = build_resources(Spec(spec_dict))
+    assert 1 == len(resources)
+    assert 'foo-bar' in resources
+    assert 'foo_bar' in resources
+    assert resources['foo_bar'] is resources['foo-bar']
 
 
 def test_many_resources_with_the_same_operation_cuz_multiple_tags(paths_spec):
