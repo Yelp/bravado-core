@@ -45,4 +45,7 @@ setup(
         "Programming Language :: Python :: 3.6",
     ],
     install_requires=install_requires,
+    extras_require={
+        ':python_version<"3.4"': ['enum34'],
+    },
 )

@@ -3,7 +3,9 @@ import pytest
 
 from bravado_core.util import AliasKeyDict
 from bravado_core.util import cached_property
+from bravado_core.util import determine_object_type
 from bravado_core.util import memoize_by_id
+from bravado_core.util import ObjectType
 from bravado_core.util import sanitize_name
 
 
@@ -112,3 +114,16 @@ def test_AliasKeyDict_del():
     assert len(alias_dict) == 0
     assert 'baz' not in alias_dict
     assert 'foo' not in alias_dict
+
+
+@pytest.mark.parametrize(
+    'object_dict, expected_object_type',
+    (
+        [{'in': 'body', 'name': 'body', 'required': True, 'schema': {'type': 'object'}}, ObjectType.PARAMETER],
+        [{'get': {'responses': {'200': {'description': 'response description'}}}}, ObjectType.PATH_ITEM],
+        [{'description': 'response description', 'schema': {'type': 'object'}}, ObjectType.RESPONSE],
+        [{'description': 'response description', 'parameters': {'param': {'type': 'object'}}}, ObjectType.SCHEMA],
+    )
+)
+def test_determine_object_type(object_dict, expected_object_type):
+    assert determine_object_type(object_dict) == expected_object_type

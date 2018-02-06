@@ -19,7 +19,8 @@ from bravado_core.model import MODEL_MARKER
 from bravado_core.schema import is_dict_like
 from bravado_core.schema import is_list_like
 from bravado_core.schema import is_ref
-
+from bravado_core.util import determine_object_type
+from bravado_core.util import ObjectType
 
 MARSHAL_REPLACEMENT_PATTERNS = {
     '/': '..',  # / is converted to .. (ie. api_docs/swager.json -> api_docs..swagger.json)
@@ -125,62 +126,6 @@ def _warn_if_uri_clash_on_same_marshaled_representation(uri_schema_mappings, mar
                 )
 
 
-_TYPE_SCHEMA, _TYPE_PATH_ITEM, _TYPE_PARAMETER, _TYPE_RESPONSE = range(4)
-_TYPE_PROPERTY_HOLDER_MAPPING = {
-    _TYPE_PARAMETER: 'parameters',
-    _TYPE_RESPONSE: 'responses',
-    _TYPE_SCHEMA: 'definitions',
-}
-
-
-def _determine_object_type(object_dict):
-    """
-    Use best guess to determine the object type based on the object keys.
-
-    NOTE: it assumes that the base swagger specs are validated and perform type detection for
-    the four types of object that could be references in the specs: parameter, path item, response and schema.
-
-    :return: determined type of ``object_dict``. The return values are:
-        - ``_TYPE_SCHEMA`` for schema objects
-        - ``_TYPE_PATH_ITEM`` for path item objects
-        - ``_TYPE_PARAMETER`` for parameter objects
-        - ``_TYPE_RESPONSE`` for parameter response objects
-
-    :rtype: int
-    """
-    if 'in' in object_dict and 'name' in object_dict:
-        # A parameter object is the only object type that could contain 'in' and 'name' at the same time
-        return _TYPE_PARAMETER
-    else:
-        http_operations = {'get', 'put', 'post', 'delete', 'options', 'head', 'patch'}
-        # A path item object MUST have defined at least one http operation and could optionally have 'parameter'
-        # attribute. NOTE: patterned fields (``^x-``) are acceptable in path item objects
-        object_keys = {key for key in iterkeys(object_dict) if not key.startswith('x-')}
-        if object_keys.intersection(http_operations):
-            remaining_keys = object_keys.difference(http_operations)
-            if not remaining_keys or remaining_keys == {'parameters'}:
-                return _TYPE_PATH_ITEM
-        else:
-            # A response object has:
-            #  - mandatory description field
-            #  - optional schema, headers and examples field
-            #  - no other fields are allowed
-            response_allowed_keys = {'description', 'schema', 'headers', 'examples'}
-
-            # If description field is specified and there are no other fields other the allowed response fields
-            if 'description' in object_keys and not object_keys - response_allowed_keys:
-                return _TYPE_RESPONSE
-            else:
-                # A schema object has:
-                #  - no mandatory parameters
-                #  - long list of optional parameters (ie. description, type, items, properties, discriminator, etc.)
-                #  - no other fields are allowed
-                # NOTE: In case the method is mis-determining the type of a schema object, confusing it with a
-                #       response type it will be enough to add, to the object, one key that is not defined
-                #       in ``response_allowed_keys``.  (ie. ``additionalProperties: {}``, implicitly defined be specs)
-                return _TYPE_SCHEMA
-
-
 def flattened_spec(
     spec_dict, spec_resolver=None, spec_url=None, http_handlers=None,
     marshal_uri_function=_marshal_uri, spec_definitions=None,
@@ -248,8 +193,9 @@ def flattened_spec(
         )
 
     known_mappings = {
-        key: {}
-        for key in itervalues(_TYPE_PROPERTY_HOLDER_MAPPING)
+        object_type.get_root_holder(): {}
+        for object_type in ObjectType
+        if object_type.get_root_holder()
     }
 
     # Define marshal_uri method to be used by descend
@@ -267,11 +213,11 @@ def flattened_spec(
 
             # Update spec_resolver scope to be able to dereference relative specs from a not root file
             with in_scope(spec_resolver, {'x-scope': [uri]}):
-                object_type = _determine_object_type(object_dict=deref_value)
-                if object_type is _TYPE_PATH_ITEM:
+                object_type = determine_object_type(object_dict=deref_value)
+                if object_type.get_root_holder() is None:
                     return descend(value=deref_value)
                 else:
-                    mapping_key = _TYPE_PROPERTY_HOLDER_MAPPING.get(object_type, 'definitions')
+                    mapping_key = object_type.get_root_holder() or 'definitions'
 
                     uri = urlparse(uri)
                     if uri not in known_mappings.get(mapping_key, {}):
