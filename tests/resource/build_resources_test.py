@@ -49,7 +49,7 @@ def test_resource__associated_by_sanitized_path_name(paths_spec):
     del paths_spec['/pet/findByStatus']
 
     # remove tags on operation so path name is used to assoc with a resource
-    del paths_spec['/foo/findByStatus']['get']['tags']
+    del paths_spec['/foo-bar/findByStatus']['get']['tags']
 
     spec_dict = {'paths': paths_spec}
     resources = build_resources(Spec(spec_dict))

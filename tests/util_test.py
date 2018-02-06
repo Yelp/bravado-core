@@ -85,7 +85,7 @@ def test_AliasKeyDict():
     alias_dict = AliasKeyDict({'a': 'b', 'c': 'd'})
     alias_dict.add_alias('alias_a', 'a')
     assert len(alias_dict) == 2
-    assert set(alias_dict.items()) == set(('a', 'b'), ('c', 'd'))
+    assert set(alias_dict.items()) == set([('a', 'b'), ('c', 'd')])
     assert 'alias_a' in alias_dict
     assert alias_dict['alias_a'] is alias_dict['a']
     assert alias_dict.get('alias_a') is alias_dict.get('a')
@@ -98,7 +98,7 @@ def test_AliasKeyDict():
 
 
 def test_AliasKeyDict_copy():
-    alias_dict = AliasKeyDict(('foo', 'bar'))
+    alias_dict = AliasKeyDict([('foo', 'bar')])
     alias_dict.add_alias('baz', 'bar')
     dict_copy = alias_dict.copy()
     assert set(dict_copy.items()) == set(alias_dict.items())
