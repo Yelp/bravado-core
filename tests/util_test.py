@@ -99,7 +99,16 @@ def test_AliasKeyDict():
 
 def test_AliasKeyDict_copy():
     alias_dict = AliasKeyDict([('foo', 'bar')])
-    alias_dict.add_alias('baz', 'bar')
+    alias_dict.add_alias('baz', 'foo')
     dict_copy = alias_dict.copy()
     assert set(dict_copy.items()) == set(alias_dict.items())
     assert dict_copy.alias_to_key == alias_dict.alias_to_key
+
+
+def test_AliasKeyDict_del():
+    alias_dict = AliasKeyDict([('foo', 'bar')])
+    alias_dict.add_alias('baz', 'foo')
+    del alias_dict['baz']
+    assert len(alias_dict) == 0
+    assert 'baz' not in alias_dict
+    assert 'foo' not in alias_dict
