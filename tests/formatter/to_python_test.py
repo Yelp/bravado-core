@@ -5,6 +5,7 @@ from datetime import datetime
 import six
 from mock import patch
 
+from bravado_core.formatter import SwaggerFormat
 from bravado_core.formatter import to_python
 from bravado_core.spec import Spec
 
@@ -101,3 +102,32 @@ def test_ref(minimal_swagger_dict):
     result = to_python(swagger_spec, int_ref_spec, 999)
     assert 999 == result
     assert isinstance(result, int)
+
+
+def test_override(minimal_swagger_dict):
+    class Byte(object):
+        def __init__(self, x):
+            self.x = x
+
+        def __str__(self):
+            return str(self.x)
+
+        def __repr__(self):
+            return '%s(%r)' % (self.__class__, self.x)
+
+    byteformat = SwaggerFormat(
+        format='byte',
+        to_wire=lambda x: str(x),
+        to_python=lambda x: Byte(x),
+        validate=lambda x: isinstance(x, str),
+        description=None
+    )
+
+    number_spec = {'type': 'string', 'format': 'byte'}
+
+    swagger_spec = Spec.from_dict(minimal_swagger_dict, config={'formats': [byteformat]})
+    result = to_python(swagger_spec, number_spec, '8bits')
+
+    assert '8bits' == str(result)
+    assert repr(Byte('8bits')) == repr(result)
+    assert type(result) is Byte

@@ -114,7 +114,7 @@ def marshal_param(param, value, request):
     location = param.location
 
     # Rely on unmarshalling behavior on the other side of the pipe to use
-    # the default value if one is availabe.
+    # the default value if one is available.
     if value is None and not schema.is_required(swagger_spec, param_spec):
         return
 
