@@ -194,3 +194,33 @@ def test_path_param_and_op_param_refs(minimal_swagger_dict):
     assert len(params) == 2
     assert 'pet_id' in params
     assert 'sort_key' in params
+
+
+def test_sanitized_param(minimal_swagger_dict):
+    op_spec = {
+        'operationId': 'get_pet_by_id',
+        # op params would go here
+        'responses': {
+            '200': {
+            }
+        }
+    }
+    path_spec = {
+        'get': op_spec,
+        'parameters': [
+            {
+                'name': 'pet-id',
+                'in': 'headers',
+                'required': 'true',
+                'type': 'integer',
+            }
+        ],
+    }
+    minimal_swagger_dict['paths']['/pets'] = path_spec
+    swagger_spec = Spec(minimal_swagger_dict)
+    op = Operation(swagger_spec, '/pets', 'get', op_spec)
+    params = build_params(op)
+    assert len(params) == 1
+    assert [p for p in params] == ['pet_id']
+    assert 'pet-id' in params
+    assert params['pet_id'] is params['pet-id']

@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
+import pytest
+
+from bravado_core.util import AliasKeyDict
 from bravado_core.util import cached_property
 from bravado_core.util import memoize_by_id
+from bravado_core.util import sanitize_name
 
 
 def test_cached_property():
@@ -65,3 +69,46 @@ def test_memoize_by_id_decorator():
         (('a', id(1)), ('b', id(None))): id(1) + id(None)
     }
     assert calls == [[1, None], [2, 3], [1, None]]
+
+
+@pytest.mark.parametrize(('input', 'expected'), [
+    ('pet.getBy Id', 'pet_getBy_Id'),      # simple case
+    ('_getPetById_', 'getPetById'),        # leading/trailing underscore
+    ('get__Pet_By__Id', 'get_Pet_By_Id'),  # double underscores
+    ('^&#@!$foo%+++:;"<>?/', 'foo'),       # bunch of illegal chars
+])
+def test_sanitize_name(input, expected):
+    assert sanitize_name(input) == expected
+
+
+def test_AliasKeyDict():
+    alias_dict = AliasKeyDict({'a': 'b', 'c': 'd'})
+    alias_dict.add_alias('alias_a', 'a')
+    assert len(alias_dict) == 2
+    assert set(alias_dict.items()) == set([('a', 'b'), ('c', 'd')])
+    assert 'alias_a' in alias_dict
+    assert alias_dict['alias_a'] is alias_dict['a']
+    assert alias_dict.get('alias_a') is alias_dict.get('a')
+    assert alias_dict.get('f', 'not there') == 'not there'
+
+    assert alias_dict.pop('alias_a') == 'b'
+    assert len(alias_dict) == 1
+    assert 'a' not in alias_dict
+    assert 'alias_a' not in alias_dict
+
+
+def test_AliasKeyDict_copy():
+    alias_dict = AliasKeyDict([('foo', 'bar')])
+    alias_dict.add_alias('baz', 'foo')
+    dict_copy = alias_dict.copy()
+    assert set(dict_copy.items()) == set(alias_dict.items())
+    assert dict_copy.alias_to_key == alias_dict.alias_to_key
+
+
+def test_AliasKeyDict_del():
+    alias_dict = AliasKeyDict([('foo', 'bar')])
+    alias_dict.add_alias('baz', 'foo')
+    del alias_dict['baz']
+    assert len(alias_dict) == 0
+    assert 'baz' not in alias_dict
+    assert 'foo' not in alias_dict

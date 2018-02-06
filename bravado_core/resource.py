@@ -6,6 +6,8 @@ from six import iteritems
 
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.operation import Operation
+from bravado_core.util import AliasKeyDict
+from bravado_core.util import sanitize_name
 
 log = logging.getLogger(__name__)
 
@@ -70,9 +72,11 @@ def build_resources(swagger_spec):
             for tag in tags:
                 tag_to_ops[deref(tag)][op.operation_id] = op
 
-    resources = {}
+    resources = AliasKeyDict()
     for tag, ops in iteritems(tag_to_ops):
-        resources[tag] = Resource(tag, ops)
+        sanitized_tag = sanitize_name(tag)
+        resources[sanitized_tag] = Resource(sanitized_tag, ops)
+        resources.add_alias(tag, sanitized_tag)
     return resources
 
 
