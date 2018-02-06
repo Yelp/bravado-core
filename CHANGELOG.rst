@@ -1,6 +1,13 @@
 Changelog
 =========
 
+4.12.0 (2018-02-06)
+-------------------
+- Sanitize resource and parameter names so that they're valid Python identifiers. It uses the same logic as for operationIds - invalid characters are replaced with underscores,
+  multiple consecutive underscores are merged into one, and leading / trailing underscores are removed. Using the unsanitized names will still work - Issue #200, PR #243.
+- Allow overriding built-in default formats - Issue #235, PR #240. Thanks Brian J. Dowling for your contribution!
+- Include additionalProperties in a models' __repr__ - PR #242. Thanks again Brian J. Dowling!
+
 4.11.5 (2018-01-30)
 -------------------
 - Use yaml.safe_load for parsing specs - PR #241.
