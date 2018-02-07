@@ -60,3 +60,16 @@ def test_build_with_internally_dereference_refs(petstore_dict, internally_derefe
         config={'internally_dereference_refs': internally_dereference_refs}
     )
     assert (spec.deref == spec._force_deref) == (not internally_dereference_refs)
+
+
+def test_not_object_x_models_are_not_generating_models(minimal_swagger_dict):
+    minimal_swagger_dict['definitions']['Pets'] = {
+        'type': 'array',
+        'items': {
+            'type': 'string'
+        },
+        'x-model': 'Pets'
+    }
+    swagger_spec = Spec(minimal_swagger_dict)
+    swagger_spec.build()
+    assert not swagger_spec.definitions

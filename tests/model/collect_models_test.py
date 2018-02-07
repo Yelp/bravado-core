@@ -30,3 +30,23 @@ def test_simple(minimal_swagger_dict, pet_model_spec):
         models=models,
         swagger_spec=swagger_spec)
     assert 'Pet' in models
+
+
+def test_not_model(minimal_swagger_dict, pet_model_spec):
+    minimal_swagger_dict['definitions']['Pet'] = pet_model_spec
+    minimal_swagger_dict['definitions']['Pets'] = {
+        'type': 'array',
+        'items': {
+            '$ref': '#/definitions/Pet'
+        },
+        'x-model': 'Pets'
+    }
+    swagger_spec = Spec(minimal_swagger_dict)
+    models = {}
+    collect_models(
+        minimal_swagger_dict['definitions']['Pet'],
+        MODEL_MARKER,
+        ['definitions', 'Pet', 'x-model'],
+        models=models,
+        swagger_spec=swagger_spec)
+    assert 'Pets' not in models
