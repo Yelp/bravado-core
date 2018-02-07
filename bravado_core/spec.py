@@ -125,13 +125,6 @@ class Spec(object):
 
         self._validate_config()
 
-        if self.config['internally_dereference_refs']:
-            # If internally_dereference_refs is enabled we do NOT need to resolve references anymore
-            # it's useless to evaluate is_ref every time
-            self.deref = lambda ref_dict: ref_dict
-        else:
-            self.deref = self._force_deref
-
     def _validate_config(self):
         """
         Validates the correctness of the configurations injected and makes sure that:
@@ -222,21 +215,40 @@ class Spec(object):
 
     def build(self):
         self._validate_spec()
-        post_process_spec(
-            self,
-            on_container_callbacks=[
-                functools.partial(
-                    tag_models,
-                    visited_models={},
-                    swagger_spec=self,
-                ),
-                functools.partial(
-                    collect_models,
-                    models=self.definitions,
-                    swagger_spec=self,
-                ),
-            ],
-        )
+
+        def run_post_processing(swagger_spec):
+            post_process_spec(
+                swagger_spec,
+                on_container_callbacks=[
+                    functools.partial(
+                        tag_models,
+                        visited_models={},
+                        swagger_spec=self,
+                    ),
+                    functools.partial(
+                        collect_models,
+                        models=swagger_spec.definitions,
+                        swagger_spec=self,
+                    ),
+                ],
+            )
+
+        # This run is needed in order to get all the available models discovered
+        # deref_flattened_spec depends on flattened_spec which assumes that model
+        # discovery is performed
+        run_post_processing(self)
+
+        if self.config['internally_dereference_refs']:
+            deref_flattened_spec = self.deref_flattened_spec
+            tmp_spec = Spec(deref_flattened_spec, self.origin_url, self.http_client, self.config)
+
+            # Rebuild definitions using dereferences specs as base
+            # this ensures that the generated models have no references
+            run_post_processing(tmp_spec)
+            self.definitions = tmp_spec.definitions
+
+            # Avoid to evaluate is_ref every time, no references are possible at this time
+            self.deref = lambda ref_dict: ref_dict
 
         for format in self.config['formats']:
             self.register_format(format)
@@ -269,9 +281,8 @@ class Spec(object):
             _, target = self.resolver.resolve(ref_dict['$ref'])
             return target
 
-    def deref(self, ref_dict):
-        # This method is actually set in __init__
-        pass
+    # NOTE: deref gets overridden, if internally_dereference_refs is enabled, after calling build
+    deref = _force_deref
 
     def get_op_for_request(self, http_method, path_pattern):
         """Return the Swagger operation for the passed in request http method
@@ -590,18 +601,6 @@ def post_process_spec(swagger_spec, on_container_callbacks):
         descend(swagger_spec.spec_dict)
     finally:
         descend.cache.clear()
-
-    if swagger_spec.config['internally_dereference_refs']:
-        # While building models we need to rebuild them by using fully dereference specs in order
-        # to get proper validation of polymorphic objects
-        # NOTE: It cannot be a replacement of ``descend(swagger_spec.spec_dict)`` because
-        # swagger_specs.deref_flattened_spec needs already built models in order to add not used
-        # models in the discovered models/definitions
-        try:
-            descend(swagger_spec.deref_flattened_spec)
-        finally:
-            # Make sure that all memory allocated, for caching, could be released
-            descend.cache.clear()
 
 
 def strip_xscope(spec_dict):

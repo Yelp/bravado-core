@@ -8,6 +8,7 @@ from bravado_core.model import Model
 from bravado_core.response import IncomingResponse
 from bravado_core.response import unmarshal_response
 from bravado_core.schema import collapsed_properties
+from bravado_core.schema import is_ref
 from bravado_core.spec import Spec
 from bravado_core.unmarshal import unmarshal_model
 
@@ -213,3 +214,37 @@ def test_ensure_polymorphic_objects_are_correctly_build_in_case_of_fully_derefer
         assert repr(unmarshaled_response) == "[Dog(birth_date=datetime.date(2017, 11, 2), name='name', type='Dog')]"
     else:
         assert unmarshaled_response == raw_response
+
+
+def test_ensure_model_spec_contains_reference_if_fully_dereference_is_not_enabled(polymorphic_dict):
+    spec = Spec.from_dict(
+        spec_dict=polymorphic_dict,
+        config={'internally_dereference_refs': False},
+        origin_url='',
+    )
+
+    # Ensure that Dog model has reference to GenericPet
+    assert any(
+        is_ref(all_of_item) and all_of_item['$ref'] == '#/definitions/GenericPet'
+        for all_of_item in spec.definitions['Dog']._model_spec['allOf']
+    )
+
+
+def test_ensure_model_spec_does_not_contain_references_if_fully_dereference_is_enabled(polymorphic_dict):
+    spec = Spec.from_dict(
+        spec_dict=polymorphic_dict,
+        config={'internally_dereference_refs': True},
+        origin_url='',
+    )
+
+    # Ensure that no reference are present
+    assert all(
+        not is_ref(all_of_item)
+        for all_of_item in spec.definitions['Dog']._model_spec['allOf']
+    )
+
+    # Ensure that GenericPet is part of the allOf items of Dog
+    assert any(
+        all_of_item == spec.definitions['GenericPet']._model_spec
+        for all_of_item in spec.definitions['Dog']._model_spec['allOf']
+    )
