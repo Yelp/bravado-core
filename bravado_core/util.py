@@ -3,7 +3,11 @@ import inspect
 import re
 from functools import wraps
 
+from enum import Enum
 from six import iteritems
+from six import iterkeys
+
+from bravado_core.schema import is_dict_like
 
 
 SANITIZE_RULES = [
@@ -102,3 +106,67 @@ class AliasKeyDict(dict):
         copied_dict = type(self)(self)
         copied_dict.alias_to_key = self.alias_to_key.copy()
         return copied_dict
+
+
+class ObjectType(Enum):
+    """
+    Container of object types.
+    NOTE: the value of the enum is not supposed to be used outside of this library
+    """
+    UNKNOWN = None
+    SCHEMA = 'definitions'
+    PARAMETER = 'parameters'
+    RESPONSE = 'responses'
+    PATH_ITEM = None
+
+    def get_root_holder(self):
+        return self.value
+
+
+def determine_object_type(object_dict):
+    """
+    Use best guess to determine the object type based on the object keys.
+
+    NOTE: it assumes that the base swagger specs are validated and perform type detection for
+    the four types of object that could be references in the specs: parameter, path item, response and schema.
+
+    :type object_dict: dict
+
+    :return: determined type of ``object_dict``. The return values is an ObjectType:
+    :rtype: ObjectType
+    """
+
+    if not is_dict_like(object_dict):
+        return ObjectType.UNKNOWN
+
+    if 'in' in object_dict and 'name' in object_dict:
+        # A parameter object is the only object type that could contain 'in' and 'name' at the same time
+        return ObjectType.PARAMETER
+    else:
+        http_operations = {'get', 'put', 'post', 'delete', 'options', 'head', 'patch'}
+        # A path item object MUST have defined at least one http operation and could optionally have 'parameter'
+        # attribute. NOTE: patterned fields (``^x-``) are acceptable in path item objects
+        object_keys = {key for key in iterkeys(object_dict) if not key.startswith('x-')}
+        if object_keys.intersection(http_operations):
+            remaining_keys = object_keys.difference(http_operations)
+            if not remaining_keys or remaining_keys == {'parameters'}:
+                return ObjectType.PATH_ITEM
+        else:
+            # A response object has:
+            #  - mandatory description field
+            #  - optional schema, headers and examples field
+            #  - no other fields are allowed
+            response_allowed_keys = {'description', 'schema', 'headers', 'examples'}
+
+            # If description field is specified and there are no other fields other the allowed response fields
+            if 'description' in object_keys and not bool(object_keys - response_allowed_keys):
+                return ObjectType.RESPONSE
+            else:
+                # A schema object has:
+                #  - no mandatory parameters
+                #  - long list of optional parameters (ie. description, type, items, properties, discriminator, etc.)
+                #  - no other fields are allowed
+                # NOTE: In case the method is mis-determining the type of a schema object, confusing it with a
+                #       response type it will be enough to add, to the object, one key that is not defined
+                #       in ``response_allowed_keys``.  (ie. ``additionalProperties: {}``, implicitly defined be specs)
+                return ObjectType.SCHEMA
