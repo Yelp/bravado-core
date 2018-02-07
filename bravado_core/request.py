@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from six import iteritems
+from six import itervalues
 
 from bravado_core.operation import log
 from bravado_core.param import unmarshal_param
@@ -62,9 +62,9 @@ def unmarshal_request(request, op):
     :returns: dict where (key, value) = (param_name, param_value)
     """
     request_data = {}
-    for param_name, param in iteritems(op.params):
+    for param in itervalues(op.params):
         param_value = unmarshal_param(param, request)
-        request_data[param_name] = param_value
+        request_data[param.name] = param_value
 
     if op.swagger_spec.config['validate_requests']:
         validate_security_object(op, request_data)

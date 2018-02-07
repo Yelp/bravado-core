@@ -271,7 +271,7 @@
         },
         "security": [
           {
-            "api_key": []
+            "api-key": []
           }
         ]
       },
@@ -340,7 +340,7 @@
         ],
         "parameters": [
           {
-            "name": "api_key",
+            "name": "api-key",
             "in": "header",
             "required": false,
             "type": "string"
@@ -451,7 +451,7 @@
         },
         "security": [
           {
-            "api_key": []
+            "api-key": []
           }
         ]
       }
@@ -846,9 +846,9 @@
         "read:pets": "read your pets"
       }
     },
-    "api_key": {
+    "api-key": {
       "type": "apiKey",
-      "name": "api_key",
+      "name": "api-key",
       "in": "header"
     }
   },

@@ -11,13 +11,13 @@ def test_request_with_path_parameter(petstore_spec):
     request = Mock(
         spec=IncomingRequest,
         path={'petId': '1234'},
-        headers={'api_key': 'key1'},
+        headers={'api-key': 'key1'},
     )
     # /pet/{pet_id} fits the bill
     op = petstore_spec.resources['pet'].operations['getPetById']
     request_data = unmarshal_request(request, op)
     assert request_data['petId'] == 1234
-    assert request_data['api_key'] == 'key1'
+    assert request_data['api-key'] == 'key1'
 
 
 def test_request_with_no_parameters(petstore_spec):

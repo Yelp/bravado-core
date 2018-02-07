@@ -91,7 +91,7 @@ def test_correct_request_with_apiKey_security(petstore_spec):
     request = Mock(
         spec=IncomingRequest,
         path={'petId': '1234'},
-        headers={'api_key': 'key1'},
+        headers={'api-key': 'key1'},
     )
     op = petstore_spec.resources['pet'].operations['getPetById']
     unmarshal_request(request, op)
