@@ -1,6 +1,11 @@
 Changelog
 =========
 
+4.12.1 (2018-02-07)
+-------------------
+- Make sure unsanitized param names are used when unmarshalling a request - PR #245.
+- Expose the determine_object_type method as part of our API - PR #244.
+
 4.12.0 (2018-02-06)
 -------------------
 - Sanitize resource and parameter names so that they're valid Python identifiers. It uses the same logic as for operationIds - invalid characters are replaced with underscores,
