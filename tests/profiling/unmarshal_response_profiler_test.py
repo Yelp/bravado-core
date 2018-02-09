@@ -23,11 +23,11 @@ class FakeJsonResponse(IncomingResponse):
         return self.text
 
 
-def test_small_objects(petstore_op, benchmark, small_pets):
+def test_small_objects(benchmark, petstore_op, small_pets):
     resp = FakeJsonResponse(small_pets)
     benchmark(unmarshal_response, resp, petstore_op)
 
 
-def test_large_objects(petstore_op, benchmark, large_pets):
+def test_large_objects(benchmark, petstore_op, large_pets):
     resp = FakeJsonResponse(large_pets)
     benchmark(unmarshal_response, resp, petstore_op)
