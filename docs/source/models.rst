@@ -131,7 +131,7 @@ Model Discovery
 Keep in mind that bravado-core has to do some extra legwork to figure out which
 parts of your spec represent Swagger models and which parts don't to make this
 feature work automagically. With a single-file Swagger spec, this is pretty
-straight forward - everything under ``#/definitions`` is a model. However, with
+straight forward - almost everything under ``#/definitions`` is a model. However, with
 more complicated specs that span multiple files and use external refs, it
 becomes a bit more involved. For this reason, the discovery process for
 models is best effort with a fallback to explicit annotations as follows:
@@ -202,9 +202,12 @@ models is best effort with a fallback to explicit annotations as follows:
        {
            "models": {
                "Pet": {
-                    "x-model": "Pet"
+                   "x-model": "Pet"
                    ...
                }
            }
        }
 
+.. note::
+
+    Models will be generated only for object types (``"type": "object"``).
