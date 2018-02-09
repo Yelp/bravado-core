@@ -597,7 +597,7 @@ def post_process_spec(swagger_spec, on_container_callbacks):
         visited_refs = visited_refs or []
 
         if is_dict_like(fragment):
-            for key, value in iteritems(fragment):
+            for key, value in sorted(iteritems(fragment)):
                 fire_callbacks(fragment, key, path + [key])
                 descend(fragment[key], path + [key], visited_refs)
 
