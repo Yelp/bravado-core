@@ -64,7 +64,7 @@ def collect_models(container, key, path, models, swagger_spec):
     :type swagger_spec: :class:`bravado_core.spec.Spec`
     """
     deref = swagger_spec.deref
-    if key == MODEL_MARKER:
+    if key == MODEL_MARKER and is_object(swagger_spec, container):
         model_spec = container
         model_name = deref(model_spec.get(MODEL_MARKER))
         models[model_name] = create_model_type(
