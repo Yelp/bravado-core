@@ -7,8 +7,11 @@ import six
 from six import iteritems
 
 from bravado_core.schema import collapsed_properties
+from bravado_core.schema import is_dict_like
 from bravado_core.schema import is_list_like
 from bravado_core.schema import SWAGGER_PRIMITIVES
+from bravado_core.util import determine_object_type
+from bravado_core.util import ObjectType
 
 
 log = logging.getLogger(__name__)
@@ -16,6 +19,42 @@ log = logging.getLogger(__name__)
 # Models in #/definitions are tagged with this key so that they can be
 # differentiated from 'object' types.
 MODEL_MARKER = 'x-model'
+
+
+def _get_model_name(model_dict):
+    """Determine model name from model dictionary representation and Swagger Path"""
+    model_name = model_dict.get(MODEL_MARKER)
+    if not model_name:
+        model_name = model_dict.get('title')
+    return model_name
+
+
+def _register_visited_model(path, model_spec, model_name, visited_models, is_blessed):
+    """
+    Registers a model that has been tagged by a callback method.
+
+    :param path: list of path segments to the key
+    :type path: list
+    :param model_spec: swagger specification of the model
+    :type model_spec: dict
+    :param model_name: name of the model to register
+    :type model_name: str
+    :param visited_models: models that have already been identified
+    :type visited_models: dict (k,v) == (model_name, path)
+    :param is_blessed: flag that determines if the model name has been obtained by blessing
+    :type is_blessed: bool
+    """
+    log.debug('Found model: %s (is_blessed %s)', model_name, is_blessed)
+    if model_name in visited_models:
+        raise ValueError(
+            'Duplicate "{0}" model found at path {1}. '
+            'Original "{0}" model at path {2}'.format(
+                model_name, path, visited_models[model_name],
+            ),
+        )
+
+    model_spec[MODEL_MARKER] = model_name
+    visited_models[model_name] = path
 
 
 def tag_models(container, key, path, visited_models, swagger_spec):
@@ -45,7 +84,6 @@ def tag_models(container, key, path, visited_models, swagger_spec):
     if len(path) < 2 or path[-2] != 'definitions':
         return
     deref = swagger_spec.deref
-    model_name = key
     model_spec = deref(container.get(key))
 
     if not is_object(swagger_spec, model_spec):
@@ -54,12 +92,50 @@ def tag_models(container, key, path, visited_models, swagger_spec):
     if deref(model_spec.get(MODEL_MARKER)) is not None:
         return
 
-    log.debug('Found model: %s', model_name)
-    if model_name in visited_models:
-        raise ValueError(
-            'Duplicate "{0}" model found at path {1}. '
-            'Original "{0}" model at path {2}'
-            .format(model_name, path, visited_models[model_name]))
+    model_name = _get_model_name(model_spec) or key
+    _register_visited_model(path, model_spec, model_name, visited_models, is_blessed=False)
+
+
+def bless_models(container, key, path, visited_models, swagger_spec):
+    """
+    Callback used during the swagger spec ingestion process to add
+    ``x-model`` attribute to models which does not define it.
+
+    The callbacks is in charge of adding MODEL_MARKER in case a model
+    (identifies as an object of type SCHEMA) has enough information for
+    determining a model name (ie. has ``title`` attribute defined)
+
+    INFO: Implementation detail.
+    Respect ``collect_models`` this callback gets executed on the model_spec's parent container.
+    This is needed because this callback could modify (adding MODEL_MARKER) the model_spec;
+    performing this operation when the container represents model_spec will generate errors
+    because we're iterating over an object that gets mutated by the callback.
+
+    :param container: container being visited
+    :param key: attribute in container being visited as a string
+    :param path: list of path segments to the key
+    :type visited_models: dict (k,v) == (model_name, path)
+    :type swagger_spec: :class:`bravado_core.spec.Spec`
+    """
+    if not is_dict_like(container):
+        return
+
+    deref = swagger_spec.deref
+    model_spec = deref(container.get(key))
+
+    if (
+        not is_dict_like(model_spec) or
+        not is_object(swagger_spec, model_spec, ignore_config=True) or
+        determine_object_type(model_spec) != ObjectType.SCHEMA or
+        deref(model_spec.get(MODEL_MARKER)) is not None
+    ):
+        return
+
+    model_name = _get_model_name(model_spec)
+    if not model_name:
+        return
+
+    _register_visited_model(path, model_spec, model_name, visited_models, is_blessed=True)
 
 
 def collect_models(container, key, path, models, swagger_spec):
@@ -78,12 +154,11 @@ def collect_models(container, key, path, models, swagger_spec):
     :param models: created model types are placed here
     :type swagger_spec: :class:`bravado_core.spec.Spec`
     """
-    deref = swagger_spec.deref
     if key == MODEL_MARKER and is_object(swagger_spec, container):
-        model_spec = container
-        model_name = deref(model_spec.get(MODEL_MARKER))
-        models[model_name] = create_model_type(
-            swagger_spec, model_name, model_spec)
+        model_spec = swagger_spec.deref(container)
+        model_name = _get_model_name(container)
+        if model_name not in models:
+            models[model_name] = create_model_type(swagger_spec, model_name, model_spec)
 
 
 class ModelMeta(abc.ABCMeta):
@@ -472,17 +547,19 @@ def is_model(swagger_spec, schema_object_spec):
     return deref(schema_object_spec.get(MODEL_MARKER)) is not None
 
 
-def is_object(swagger_spec, object_spec):
+def is_object(swagger_spec, object_spec, ignore_config=False):
     """
     A schema definition is of type object if its type is object or if it uses
     model composition (i.e. it has an allOf property).
     :param swagger_spec: :class:`bravado_core.spec.Spec`
     :param object_spec: specification for a swagger object
     :type object_spec: dict
+    :param ignore_config: ignore bravado-core 'default_type_to_object' configuration
+    :type ignore_config: bool
     :return: True if the spec describes an object, False otherwise.
     """
     deref = swagger_spec.deref
-    default_type = 'object' if swagger_spec.config['default_type_to_object'] else None
+    default_type = 'object' if not ignore_config and swagger_spec.config['default_type_to_object'] else None
     return deref(object_spec.get('type', default_type)) == 'object' or 'allOf' in object_spec
 
 

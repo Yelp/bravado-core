@@ -25,6 +25,7 @@ from bravado_core import formatter
 from bravado_core.exception import SwaggerSchemaError
 from bravado_core.exception import SwaggerValidationError
 from bravado_core.formatter import return_true_wrapper
+from bravado_core.model import bless_models
 from bravado_core.model import collect_models
 from bravado_core.model import tag_models
 from bravado_core.resource import build_resources
@@ -217,18 +218,25 @@ class Spec(object):
         self._validate_spec()
 
         def run_post_processing(swagger_spec):
+            visited_models = {}
+            # Discover all the models
             post_process_spec(
                 swagger_spec,
                 on_container_callbacks=[
                     functools.partial(
                         tag_models,
-                        visited_models={},
-                        swagger_spec=self,
+                        visited_models=visited_models,
+                        swagger_spec=swagger_spec,
+                    ),
+                    functools.partial(
+                        bless_models,
+                        visited_models=visited_models,
+                        swagger_spec=swagger_spec,
                     ),
                     functools.partial(
                         collect_models,
                         models=swagger_spec.definitions,
-                        swagger_spec=self,
+                        swagger_spec=swagger_spec,
                     ),
                 ],
             )
@@ -542,6 +550,7 @@ def post_process_spec(swagger_spec, on_container_callbacks):
     :type swagger_spec: :class:`bravado_core.spec.Spec`
     :param on_container_callbacks: list of callbacks to be invoked on each
         container type.
+        NOTE: the individual callbacks should not mutate the current container
     """
     def fire_callbacks(container, key, path):
         for callback in on_container_callbacks:

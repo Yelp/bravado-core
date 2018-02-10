@@ -116,8 +116,7 @@ def unmarshal_response(response, op):
         if op.swagger_spec.config['validate_responses']:
             validate_schema_object(op.swagger_spec, content_spec, content_value)
 
-        return unmarshal_schema_object(
-            op.swagger_spec, content_spec, content_value)
+        return unmarshal_schema_object(op.swagger_spec, content_spec, content_value)
 
     # TODO: Non-json response contents
     return response.text

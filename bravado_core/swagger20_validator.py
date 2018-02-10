@@ -8,6 +8,7 @@ from jsonschema.exceptions import ValidationError
 from jsonschema.validators import Draft4Validator
 from swagger_spec_validator.ref_validators import in_scope
 
+from bravado_core.model import MODEL_MARKER
 from bravado_core.schema import is_param_spec
 from bravado_core.schema import is_prop_nullable
 from bravado_core.schema import is_required
@@ -150,14 +151,14 @@ def discriminator_validator(swagger_spec, validator, discriminator_attribute, in
             message='\'{}\' is not a recognized schema'.format(discriminator_value)
         )
 
-    if discriminator_value == schema['x-model']:
+    if discriminator_value == schema[MODEL_MARKER]:
         return
 
     new_schema = deepcopy(swagger_spec.definitions[discriminator_value]._model_spec)
     if 'allOf' not in new_schema:
         raise ValidationError(
             message='discriminated schema \'{}\' must inherit from \'{}\''.format(
-                discriminator_value, schema['x-model']
+                discriminator_value, schema[MODEL_MARKER]
             )
         )
 
@@ -166,7 +167,7 @@ def discriminator_validator(swagger_spec, validator, discriminator_attribute, in
         # Not checking against len(schemas_to_remove) > 1 because it should be prevented by swagger spec validation
         raise ValidationError(
             message='discriminated schema \'{}\' must inherit from \'{}\''.format(
-                discriminator_value, schema['x-model']
+                discriminator_value, schema[MODEL_MARKER]
             )
         )
 
