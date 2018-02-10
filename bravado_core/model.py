@@ -19,10 +19,22 @@ MODEL_MARKER = 'x-model'
 
 
 def tag_models(container, key, path, visited_models, swagger_spec):
-    """Callback used during the swagger spec ingestion process to tag models
+    """
+    Callback used during the swagger spec ingestion process to tag models
     with a 'x-model'. This is only done in the root document.
 
     A list of visited models is maintained to avoid duplication of tagging.
+
+    NOTE: this callback tags models only if they are on the root of a swagger file
+    in the definitions section (ie. (<swagger_file>)?#/definitions/<key>)).
+    In order to tag the model with MODEL_MARKER the model (contained in container[key])
+    need to represent an object.
+
+    INFO: Implementation detail.
+    Respect ``collect_models`` this callback gets executed on the model_spec's parent container.
+    This is needed because this callback could modify (adding MODEL_MARKER) the model_spec;
+    performing this operation when the container represents model_spec will generate errors
+    because we're iterating over an object that gets mutated by the callback.
 
     :param container: container being visited
     :param key: attribute in container being visited as a string
@@ -49,13 +61,16 @@ def tag_models(container, key, path, visited_models, swagger_spec):
             'Original "{0}" model at path {2}'
             .format(model_name, path, visited_models[model_name]))
 
-    model_spec['x-model'] = model_name
-    visited_models[model_name] = path
-
 
 def collect_models(container, key, path, models, swagger_spec):
-    """Callback used during the swagger spec ingestion to collect all the
+    """
+    Callback used during the swagger spec ingestion to collect all the
     tagged models and create appropriate python types for them.
+
+    NOTE: this callback creates the model python type only if the container
+    represents a valid "model", the container has been marked with a model name
+    (has MODEL_MARKER key) and the referenced model does not have the python
+    model type generated.
 
     :param container: container being visited
     :param key: attribute in container being visited as a string
@@ -462,8 +477,8 @@ def is_object(swagger_spec, object_spec):
     A schema definition is of type object if its type is object or if it uses
     model composition (i.e. it has an allOf property).
     :param swagger_spec: :class:`bravado_core.spec.Spec`
-    :param schema_object_spec: specification for a swagger object
-    :type schema_object_spec: dict
+    :param object_spec: specification for a swagger object
+    :type object_spec: dict
     :return: True if the spec describes an object, False otherwise.
     """
     deref = swagger_spec.deref
