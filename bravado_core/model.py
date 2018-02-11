@@ -12,6 +12,7 @@ from bravado_core.schema import is_list_like
 from bravado_core.schema import SWAGGER_PRIMITIVES
 from bravado_core.util import determine_object_type
 from bravado_core.util import ObjectType
+from bravado_core.util import strip_xscope
 
 log = logging.getLogger(__name__)
 
@@ -182,8 +183,30 @@ def collect_models(container, key, path, models, swagger_spec):
     if key == MODEL_MARKER and is_object(swagger_spec, container):
         model_spec = swagger_spec.deref(container)
         model_name = _get_model_name(container)
-        if model_name not in models:
+        model_type = models.get(model_name)
+        if not model_type:
             models[model_name] = create_model_type(swagger_spec, model_name, model_spec)
+        elif (
+            # the condition with strip_xscope is the most selective check
+            # but it implies memory allocation, so additional lightweight checks
+            # are added to avoid strip_xscope check
+            id(model_type._model_spec) != id(model_spec) and
+            model_type._model_spec != model_spec and
+            strip_xscope(model_type._model_spec) != strip_xscope(model_spec)
+        ):
+            return _raise_or_warn_duplicated_model(
+                swagger_spec=swagger_spec,
+                message='Identified duplicated model: model_name "{model_name}", path: {path}.\n'
+                '    Known model spec: "{model_type._model_spec}"\n'
+                '    New model spec: "{model_spec}"\n'
+                'TIP: enforce different model naming by using {MODEL_MARKER}'.format(
+                    path=path,
+                    model_name=model_name,
+                    model_type=model_type,
+                    model_spec=model_spec,
+                    MODEL_MARKER=MODEL_MARKER
+                ),
+            )
 
 
 class ModelMeta(abc.ABCMeta):
