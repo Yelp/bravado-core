@@ -139,3 +139,124 @@ def test_model_naming_uses_title_if_present(minimal_swagger_dict):
 
     assert set(iterkeys(swagger_spec.definitions)) == {'model_title'}
     assert response_schema.get('x-model') == 'model_title'
+
+
+def test_build_raises_in_case_of_duplicated_models_in_definitions(minimal_swagger_dict):
+    """This test ensures that inline schemas gets tagged as models they have title attribute"""
+
+    minimal_swagger_dict['definitions'] = {
+        'model': {
+            'type': 'object',
+        },
+        'duplicated_model': {
+            'type': 'object',
+            'title': 'model',
+        },
+    }
+    with pytest.raises(ValueError) as exinfo:
+        Spec.from_dict(minimal_swagger_dict)
+
+    expected_exception_string = (
+        'Duplicate "model" model found at path {new_path}. '
+        'Original "model" model at path {old_path}'.format(
+            new_path=['definitions', 'model'],
+            old_path=['definitions', 'duplicated_model'],
+        )
+    )
+    assert expected_exception_string == str(exinfo.value)
+
+
+def test_build_raises_in_case_of_duplicated_models_in_paths(minimal_swagger_dict):
+    """This test ensures that inline schemas gets tagged as models they have title attribute"""
+    model_name = 'model'
+    model_200 = {
+        'type': 'object',
+        'x-location': '200',
+        'x-model': model_name,
+    }
+    model_201 = {
+        'type': 'object',
+        'x-location': '201',
+        'x-model': model_name,
+    }
+    minimal_swagger_dict['paths'] = {
+        '/endpoint': {
+            'get': {
+                'responses': {
+                    '200': {
+                        'description': '200 description',
+                        'schema': model_200,
+                    },
+                    '201': {
+                        'description': '201 description',
+                        'schema': model_201,
+                    },
+                },
+            },
+        },
+    }
+    with pytest.raises(ValueError) as exinfo:
+        Spec.from_dict(minimal_swagger_dict)
+
+    # NOTE: the exception depends on the descending order
+    expected_exception_string = (
+        'Identified duplicated model: model_name "{mod_name}", path: {path}.\n'
+        '    Known model spec: "{known_model}"\n'
+        '    New model spec: "{new_model}"\n'
+        'TIP: enforce different model naming by using {MODEL_MARKER}'.format(
+            known_model=model_200,
+            mod_name=model_name,
+            MODEL_MARKER='x-model',
+            new_model=model_201,
+            path=['paths', '/endpoint', 'get', 'responses', '201', 'schema', 'x-model'],
+        )
+    )
+
+    assert expected_exception_string == str(exinfo.value)
+
+
+def test_build_raises_in_case_of_duplicated_models_between_paths_and_definitions(minimal_swagger_dict):
+    """This test ensures that inline schemas gets tagged as models they have title attribute"""
+    model_name = 'model'
+    definition_model = {
+        'type': 'object',
+        'x-location': 'definitions',
+    }
+    response_model = {
+        'type': 'object',
+        'x-location': 'paths',
+        'x-model': model_name,
+    }
+    minimal_swagger_dict['definitions'] = {
+        model_name: definition_model,
+    }
+    minimal_swagger_dict['paths'] = {
+        '/endpoint': {
+            'get': {
+                'responses': {
+                    '200': {
+                        'description': '200 description',
+                        'schema': response_model,
+                    },
+                },
+            },
+        },
+    }
+    with pytest.raises(ValueError) as exinfo:
+        Spec.from_dict(minimal_swagger_dict)
+
+    # NOTE: the exception depends on the descending order
+    expected_exception_string = (
+        'Identified duplicated model: model_name "{mod_name}", path: {path}.\n'
+        '    Known model spec: "{known_model}"\n'
+        '    New model spec: "{new_model}"\n'
+        'TIP: enforce different model naming by using {MODEL_MARKER}'.format(
+            known_model=definition_model,
+            mod_name=model_name,
+            MODEL_MARKER='x-model',
+            new_model=response_model,
+            path=['paths', '/endpoint', 'get', 'responses', '200', 'schema', 'x-model'],
+        )
+    )
+
+    assert expected_exception_string == str(exinfo.value)
