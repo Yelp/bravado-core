@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import pytest
 
-from bravado_core.model import MODEL_MARKER
 from bravado_core.model import tag_models
 from bravado_core.spec import Spec
 
@@ -27,7 +26,7 @@ def test_tags_model(minimal_swagger_dict, pet_model_spec):
         ['definitions', 'Pet'],
         visited_models={},
         swagger_spec=swagger_spec)
-    assert pet_model_spec[MODEL_MARKER] == 'Pet'
+    assert pet_model_spec['x-model'] == 'Pet'
 
 
 def test_type_missing(minimal_swagger_dict, pet_model_spec):
@@ -40,7 +39,7 @@ def test_type_missing(minimal_swagger_dict, pet_model_spec):
         ['definitions', 'Pet'],
         visited_models={},
         swagger_spec=swagger_spec)
-    assert MODEL_MARKER not in pet_model_spec
+    assert 'x-model' not in pet_model_spec
 
 
 def test_model_not_object(minimal_swagger_dict):
@@ -57,7 +56,7 @@ def test_model_not_object(minimal_swagger_dict):
         ['definitions', 'Pet'],
         visited_models={},
         swagger_spec=swagger_spec)
-    assert MODEL_MARKER not in minimal_swagger_dict['definitions']['Pet']
+    assert 'x-model' not in minimal_swagger_dict['definitions']['Pet']
 
 
 def test_path_too_short(minimal_swagger_dict, pet_model_spec):
@@ -69,7 +68,7 @@ def test_path_too_short(minimal_swagger_dict, pet_model_spec):
         ['definitions'],
         visited_models={},
         swagger_spec=swagger_spec)
-    assert MODEL_MARKER not in pet_model_spec
+    assert 'x-model' not in pet_model_spec
 
 
 def test_duplicate_model(minimal_swagger_dict, pet_model_spec):
@@ -86,7 +85,7 @@ def test_duplicate_model(minimal_swagger_dict, pet_model_spec):
 
 
 def test_skip_already_tagged_models(minimal_swagger_dict, pet_model_spec):
-    pet_model_spec[MODEL_MARKER] = 'SpecialPet'
+    pet_model_spec['x-model'] = 'SpecialPet'
     minimal_swagger_dict['definitions']['Pet'] = pet_model_spec
     swagger_spec = Spec(minimal_swagger_dict)
     tag_models(
@@ -95,4 +94,4 @@ def test_skip_already_tagged_models(minimal_swagger_dict, pet_model_spec):
         ['definitions', 'Pet'],
         visited_models={},
         swagger_spec=swagger_spec)
-    assert pet_model_spec[MODEL_MARKER] == 'SpecialPet'
+    assert pet_model_spec['x-model'] == 'SpecialPet'

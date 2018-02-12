@@ -2,14 +2,13 @@
 import pytest
 
 from bravado_core.model import collect_models
-from bravado_core.model import MODEL_MARKER
 from bravado_core.spec import Spec
 
 
 @pytest.fixture
 def pet_model_spec():
     return {
-        MODEL_MARKER: 'Pet',
+        'x-model': 'Pet',
         'type': 'object',
         'properties': {
             'name': {
@@ -25,7 +24,7 @@ def test_simple(minimal_swagger_dict, pet_model_spec):
     models = {}
     collect_models(
         minimal_swagger_dict['definitions']['Pet'],
-        MODEL_MARKER,
+        'x-model',
         ['definitions', 'Pet', 'x-model'],
         models=models,
         swagger_spec=swagger_spec)
@@ -56,7 +55,7 @@ def test_no_model_type_generation_for_not_object_type(minimal_swagger_dict, pet_
     models = {}
     collect_models(
         minimal_swagger_dict['definitions']['Pets'],
-        MODEL_MARKER,
+        'x-model',
         ['definitions', 'Pets', 'x-model'],
         models=models,
         swagger_spec=swagger_spec)

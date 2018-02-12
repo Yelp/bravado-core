@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import pytest
+from mock import Mock
 from mock import patch
+from six import iterkeys
 from swagger_spec_validator.common import SwaggerValidationError
 
 from bravado_core.spec import Spec
@@ -10,6 +12,7 @@ from tests.validate.conftest import email_address_format
 def assert_validate_call_count(expected_call_count, config, petstore_dict):
     spec = Spec(petstore_dict, config=config)
     with patch('bravado_core.spec.validator20.validate_spec') as m_validate:
+        spec.deref = Mock(return_value={})
         spec.build()
     assert expected_call_count == m_validate.call_count
 
@@ -75,3 +78,64 @@ def test_not_object_x_models_are_not_generating_models(minimal_swagger_dict):
     swagger_spec = Spec(minimal_swagger_dict)
     swagger_spec.build()
     assert not swagger_spec.definitions
+
+
+@pytest.mark.parametrize(
+    'definitions, expected_models',
+    (
+        (
+            {
+                'model1': {
+                    'type': 'object',
+                    'x-model': 'x-model_model1'
+                }
+            },
+            {'x-model_model1'},
+        ),
+        (
+            {
+                'model1': {
+                    'type': 'object',
+                    'title': 'title_model1'
+                }
+            },
+            {'title_model1'},
+        ),
+        (
+            {
+                'model1': {
+                    'type': 'object',
+                }
+            },
+            {'model1'},
+        ),
+    )
+)
+def test_model_naming_takes_in_account_xmodel_title_key(minimal_swagger_dict, definitions, expected_models):
+    minimal_swagger_dict['definitions'] = definitions
+    swagger_spec = Spec.from_dict(minimal_swagger_dict)
+    assert set(iterkeys(swagger_spec.definitions)) == expected_models
+
+
+def test_model_naming_uses_title_if_present(minimal_swagger_dict):
+    """This test ensures that inline schemas gets tagged as models they have title attribute"""
+    response_schema = {
+        'title': 'model_title',
+        'type': 'object',
+    }
+    minimal_swagger_dict['paths'] = {
+        '/endpoint': {
+            'get': {
+                'responses': {
+                    '200': {
+                        'description': 'aa',
+                        'schema': response_schema,
+                    },
+                },
+            },
+        },
+    }
+    swagger_spec = Spec.from_dict(minimal_swagger_dict)
+
+    assert set(iterkeys(swagger_spec.definitions)) == {'model_title'}
+    assert response_schema.get('x-model') == 'model_title'

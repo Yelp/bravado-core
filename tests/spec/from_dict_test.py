@@ -5,7 +5,6 @@ import simplejson as json
 import yaml
 from six.moves.urllib import parse as urlparse
 
-from bravado_core.model import MODEL_MARKER
 from bravado_core.response import get_response_spec
 from bravado_core.spec import Spec
 
@@ -111,7 +110,7 @@ def test_spec_with_dereffed_and_tagged_models_works(minimal_swagger_dict):
                 '200': {
                     'description': 'Returns a Pet',
                     'schema': {
-                        MODEL_MARKER: 'Pet',
+                        'x-model': 'Pet',
                         'type': 'object',
                         'properties': {
                             'name': {
