@@ -11,13 +11,6 @@ from bravado_core.spec import Spec
 
 
 @pytest.fixture
-def request_dict():
-    return {
-        'params': {}
-    }
-
-
-@pytest.fixture
 def string_param_spec():
     return {
         'name': 'username',

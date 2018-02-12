@@ -65,8 +65,3 @@ def paths_spec():
             }
         },
     }
-
-
-@pytest.fixture
-def find_by_status_path_spec(paths_spec):
-    return paths_spec['/pet/findByStatus']
