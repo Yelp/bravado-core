@@ -125,7 +125,10 @@ def bless_models(container, key, path, visited_models, swagger_spec):
 
     if (
         not is_dict_like(model_spec) or
-        not is_object(swagger_spec, model_spec, ignore_config=True) or
+        not is_object(swagger_spec, model_spec, no_default_type=True) or
+        # NOTE: determine_object_type uses a simple heuristic to determine if a model_spec has a SCHEMA type
+        # for this reason is important that model_spec is recognized as model in the most accurate way
+        # so we should not rely on default typing of a schema
         determine_object_type(model_spec) != ObjectType.SCHEMA or
         deref(model_spec.get(MODEL_MARKER)) is not None
     ):
@@ -547,19 +550,19 @@ def is_model(swagger_spec, schema_object_spec):
     return deref(schema_object_spec.get(MODEL_MARKER)) is not None
 
 
-def is_object(swagger_spec, object_spec, ignore_config=False):
+def is_object(swagger_spec, object_spec, no_default_type=False):
     """
     A schema definition is of type object if its type is object or if it uses
     model composition (i.e. it has an allOf property).
     :param swagger_spec: :class:`bravado_core.spec.Spec`
     :param object_spec: specification for a swagger object
     :type object_spec: dict
-    :param ignore_config: ignore bravado-core 'default_type_to_object' configuration
-    :type ignore_config: bool
+    :param no_default_type: ignore bravado-core 'default_type_to_object' configuration
+    :type no_default_type: bool
     :return: True if the spec describes an object, False otherwise.
     """
     deref = swagger_spec.deref
-    default_type = 'object' if not ignore_config and swagger_spec.config['default_type_to_object'] else None
+    default_type = 'object' if not no_default_type and swagger_spec.config['default_type_to_object'] else None
     return deref(object_spec.get('type', default_type)) == 'object' or 'allOf' in object_spec
 
 
