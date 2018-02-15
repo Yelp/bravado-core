@@ -34,10 +34,6 @@ SECURITY_OBJECTS = {
 }
 
 
-def test_security_object_and_definition_constants():
-    assert SECURITY_OBJECTS.keys() == SECURITY_DEFINITIONS.keys()
-
-
 @pytest.fixture
 def definitions_spec():
     return {

@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import base64
 import os
 
 import pytest
@@ -7,7 +6,6 @@ import simplejson as json
 import yaml
 from six.moves.urllib import parse as urlparse
 
-import bravado_core.formatter
 from bravado_core.spec import Spec
 
 
@@ -167,27 +165,6 @@ def flattened_multi_file_with_no_xmodel_abspath(my_dir):
 @pytest.fixture
 def flattened_multi_file_with_no_xmodel_dict(flattened_multi_file_with_no_xmodel_abspath):
     return _read_json(flattened_multi_file_with_no_xmodel_abspath)
-
-
-def del_base64():
-    del bravado_core.formatter.DEFAULT_FORMATS['base64']
-
-
-@pytest.fixture
-def base64_format():
-    return bravado_core.formatter.SwaggerFormat(
-        format='base64',
-        to_wire=base64.b64encode,
-        to_python=base64.b64decode,
-        validate=base64.b64decode,
-        description='Base64',
-    )
-
-
-@pytest.fixture(scope='function')
-def register_base64_format(base64_format, request):
-    request.addfinalizer(del_base64)
-    bravado_core.formatter.register_format(base64_format)
 
 
 @pytest.fixture

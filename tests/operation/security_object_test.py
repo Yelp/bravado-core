@@ -9,6 +9,13 @@ from bravado_core.request import IncomingRequest
 from bravado_core.request import unmarshal_request
 from bravado_core.resource import build_resources
 from bravado_core.spec import Spec
+from tests.operation.conftest import SECURITY_DEFINITIONS
+from tests.operation.conftest import SECURITY_OBJECTS
+
+
+def test_security_object_and_definition_constants():
+    """Test that ensures that constant in tests/operation/conftest.py are reasonable"""
+    assert SECURITY_OBJECTS.keys() == SECURITY_DEFINITIONS.keys()
 
 
 def test_op_with_security_in_op_without_security_defs(
