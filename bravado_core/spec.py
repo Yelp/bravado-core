@@ -588,6 +588,11 @@ def post_process_spec(swagger_spec, on_container_callbacks):
         visited_refs = visited_refs or []
 
         if is_dict_like(fragment):
+            if 'type' not in fragment:
+                if 'properties' in fragment:
+                    fragment['type'] = 'object'
+                elif 'items' in fragment:
+                    fragment['type'] = 'array'
             for key, value in iteritems(fragment):
                 fire_callbacks(fragment, key, path + [key])
                 descend(fragment[key], path + [key], visited_refs)
