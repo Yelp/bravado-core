@@ -4,7 +4,6 @@ from six import iterkeys
 from six import itervalues
 from six.moves.urllib_parse import urljoin
 
-from bravado_core.model import MODEL_MARKER
 from bravado_core.schema import is_dict_like
 from bravado_core.schema import is_list_like
 from bravado_core.spec import Spec
@@ -12,7 +11,7 @@ from bravado_core.spec import Spec
 
 def _get_model(spec_dict, model_name):
     for model_schema in itervalues(spec_dict['definitions']):
-        if model_schema.get(MODEL_MARKER) == model_name:
+        if model_schema.get('x-model') == model_name:
             return model_schema
 
 
