@@ -172,8 +172,8 @@ models is best effort with a fallback to explicit annotations as follows:
            }
        }
 
-3. Search for the ``"x-model": "<model name>"`` annotation to identify models that can't be found via method 1. or 2.
-
+3. Search for the ``"x-model": "<model name>"`` or ``"title": "<model name>"`` annotation to identify models that can't be found via method 1. or 2.
+   In case ``x-model`` and ``title`` are both defined, ``x-model`` has precedence.
    *swagger.json*
 
    .. code-block:: json
