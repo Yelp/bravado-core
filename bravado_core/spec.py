@@ -233,6 +233,12 @@ class Spec(object):
                         visited_models=visited_models,
                         swagger_spec=swagger_spec,
                     ),
+                ],
+            )
+            # Generate python models types
+            post_process_spec(
+                swagger_spec,
+                on_container_callbacks=[
                     functools.partial(
                         collect_models,
                         models=swagger_spec.definitions,
