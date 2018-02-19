@@ -1,6 +1,12 @@
 Changelog
 =========
 
+4.13.0 (xxxx-xx-xx)
+-------------------
+- Models are generated only for objects - PR #246
+- Fix: ensure that models does not have references if ``internally_dereference_refs`` is used - PR # 247
+- Model name detection uses title attribute too - PR #249
+
 4.12.1 (2018-02-07)
 -------------------
 - Make sure unsanitized param names are used when unmarshalling a request - PR #245.
