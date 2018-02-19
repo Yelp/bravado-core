@@ -13,7 +13,6 @@ from bravado_core.schema import SWAGGER_PRIMITIVES
 from bravado_core.util import determine_object_type
 from bravado_core.util import ObjectType
 
-
 log = logging.getLogger(__name__)
 
 # Models in #/definitions are tagged with this key so that they can be
@@ -29,7 +28,15 @@ def _get_model_name(model_dict):
     return model_name
 
 
-def _register_visited_model(path, model_spec, model_name, visited_models, is_blessed):
+def _raise_or_warn_duplicated_model(swagger_spec, message):
+    if swagger_spec.config['use_models']:
+        raise ValueError(message)
+    else:
+        log.warning(message)
+    return
+
+
+def _register_visited_model(path, model_spec, model_name, visited_models, is_blessed, swagger_spec):
     """
     Registers a model that has been tagged by a callback method.
 
@@ -43,12 +50,13 @@ def _register_visited_model(path, model_spec, model_name, visited_models, is_ble
     :type visited_models: dict (k,v) == (model_name, path)
     :param is_blessed: flag that determines if the model name has been obtained by blessing
     :type is_blessed: bool
+    :type swagger_spec: :class:`bravado_core.spec.Spec`
     """
     log.debug('Found model: %s (is_blessed %s)', model_name, is_blessed)
     if model_name in visited_models:
-        raise ValueError(
-            'Duplicate "{0}" model found at path {1}. '
-            'Original "{0}" model at path {2}'.format(
+        return _raise_or_warn_duplicated_model(
+            swagger_spec=swagger_spec,
+            message='Duplicate "{0}" model found at path {1}. Original "{0}" model at path {2}'.format(
                 model_name, path, visited_models[model_name],
             ),
         )
@@ -93,7 +101,14 @@ def tag_models(container, key, path, visited_models, swagger_spec):
         return
 
     model_name = _get_model_name(model_spec) or key
-    _register_visited_model(path, model_spec, model_name, visited_models, is_blessed=False)
+    _register_visited_model(
+        path=path,
+        model_spec=model_spec,
+        model_name=model_name,
+        visited_models=visited_models,
+        is_blessed=False,
+        swagger_spec=swagger_spec,
+    )
 
 
 def bless_models(container, key, path, visited_models, swagger_spec):
@@ -138,7 +153,14 @@ def bless_models(container, key, path, visited_models, swagger_spec):
     if not model_name:
         return
 
-    _register_visited_model(path, model_spec, model_name, visited_models, is_blessed=True)
+    _register_visited_model(
+        path=path,
+        model_spec=model_spec,
+        model_name=model_name,
+        visited_models=visited_models,
+        is_blessed=True,
+        swagger_spec=swagger_spec,
+    )
 
 
 def collect_models(container, key, path, models, swagger_spec):
