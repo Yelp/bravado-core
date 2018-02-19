@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import copy
 import inspect
 import re
 from functools import wraps
@@ -8,6 +9,7 @@ from six import iteritems
 from six import iterkeys
 
 from bravado_core.schema import is_dict_like
+from bravado_core.schema import is_list_like
 
 
 SANITIZE_RULES = [
@@ -170,3 +172,23 @@ def determine_object_type(object_dict):
                 #       response type it will be enough to add, to the object, one key that is not defined
                 #       in ``response_allowed_keys``.  (ie. ``additionalProperties: {}``, implicitly defined be specs)
                 return ObjectType.SCHEMA
+
+
+def strip_xscope(spec_dict):
+    """
+    :param spec_dict: Swagger spec in dict form. This is treated as read-only.
+    :return: deep copy of spec_dict with the x-scope metadata stripped out.
+    """
+    result = copy.deepcopy(spec_dict)
+
+    def descend(fragment):
+        if is_dict_like(fragment):
+            fragment.pop('x-scope', None)  # Removes 'x-scope' key if present
+            for key in iterkeys(fragment):
+                descend(fragment[key])
+        elif is_list_like(fragment):
+            for element in fragment:
+                descend(element)
+
+    descend(result)
+    return result

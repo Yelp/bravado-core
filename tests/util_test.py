@@ -7,6 +7,7 @@ from bravado_core.util import determine_object_type
 from bravado_core.util import memoize_by_id
 from bravado_core.util import ObjectType
 from bravado_core.util import sanitize_name
+from bravado_core.util import strip_xscope
 
 
 def test_cached_property():
@@ -127,3 +128,63 @@ def test_AliasKeyDict_del():
 )
 def test_determine_object_type(object_dict, expected_object_type):
     assert determine_object_type(object_dict) == expected_object_type
+
+
+def test_empty():
+    assert {} == strip_xscope({})
+
+
+def test_contained_in_dict():
+    fragment = {
+        'MON': {
+            '$ref': '#/definitions/DayHours',
+            'x-scope': [
+                'file:///happyhour/api_docs/swagger.json',
+                'file:///happyhour/api_docs/swagger.json#/definitions/WeekHours'
+            ]
+        }
+    }
+    expected = {
+        'MON': {
+            '$ref': '#/definitions/DayHours',
+        }
+    }
+    assert expected == strip_xscope(fragment)
+    assert 'x-scope' in fragment['MON']
+
+
+def test_contained_in_list():
+    fragment = [
+        {
+            '$ref': '#/definitions/DayHours',
+            'x-scope': [
+                'file:///happyhour/api_docs/swagger.json',
+                'file:///happyhour/api_docs/swagger.json#/definitions/WeekHours'
+            ]
+        }
+    ]
+    expected = [
+        {
+            '$ref': '#/definitions/DayHours',
+        }
+    ]
+    assert expected == strip_xscope(fragment)
+    assert 'x-scope' in fragment[0]
+
+
+def test_no_op():
+    fragment = {
+        'MON': {
+            '$ref': '#/definitions/DayHours',
+        }
+    }
+    expected = {
+        'MON': {
+            '$ref': '#/definitions/DayHours',
+        }
+    }
+    assert expected == strip_xscope(fragment)
+
+
+def test_petstore_spec(petstore_spec):
+    assert petstore_spec.client_spec_dict == strip_xscope(petstore_spec.spec_dict)
