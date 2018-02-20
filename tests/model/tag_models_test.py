@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+import mock
 import pytest
 
+from bravado_core import model
 from bravado_core.model import tag_models
 from bravado_core.spec import Spec
 
@@ -71,17 +73,33 @@ def test_path_too_short(minimal_swagger_dict, pet_model_spec):
     assert 'x-model' not in pet_model_spec
 
 
-def test_duplicate_model(minimal_swagger_dict, pet_model_spec):
+@pytest.mark.parametrize('use_models', [True, False])
+@mock.patch.object(model, 'log', autospec=True)
+def test_duplicate_model(mock_log, minimal_swagger_dict, pet_model_spec, use_models):
     minimal_swagger_dict['definitions']['Pet'] = pet_model_spec
-    swagger_spec = Spec(minimal_swagger_dict)
-    with pytest.raises(ValueError) as excinfo:
+    swagger_spec = Spec(minimal_swagger_dict, config={'use_models': use_models})
+
+    duplicate_message = 'Duplicate "Pet" model found at path [\'definitions\', \'Pet\']. ' \
+                        'Original "Pet" model at path [\'definitions\', \'Pet\']'
+
+    raised_exception = None
+    try:
         tag_models(
             minimal_swagger_dict['definitions'],
             'Pet',
             ['definitions', 'Pet'],
             visited_models={'Pet': ['definitions', 'Pet']},
-            swagger_spec=swagger_spec)
-    assert 'Duplicate' in str(excinfo.value)
+            swagger_spec=swagger_spec,
+        )
+    except ValueError as e:
+        raised_exception = e
+
+    if use_models:
+        assert str(raised_exception) == duplicate_message
+        assert not mock_log.warning.called
+    else:
+        assert raised_exception is None
+        mock_log.warning.assert_called_once_with(duplicate_message)
 
 
 def test_skip_already_tagged_models(minimal_swagger_dict, pet_model_spec):

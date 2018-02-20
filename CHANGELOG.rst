@@ -6,6 +6,7 @@ Changelog
 - Models are generated only for objects - PR #246
 - Fix: ensure that models does not have references if ``internally_dereference_refs`` is used - PR # 247
 - Model name detection uses title attribute too - PR #249
+- Duplicated models do not raise exception if ``use_models`` is not used - PR #253
 
 4.12.1 (2018-02-07)
 -------------------
