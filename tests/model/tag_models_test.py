@@ -81,6 +81,8 @@ def test_duplicate_model(mock_log, minimal_swagger_dict, pet_model_spec, use_mod
 
     duplicate_message = 'Duplicate "Pet" model found at path [\'definitions\', \'Pet\']. ' \
                         'Original "Pet" model at path [\'definitions\', \'Pet\']'
+
+    raised_exception = None
     try:
         tag_models(
             minimal_swagger_dict['definitions'],
@@ -90,9 +92,13 @@ def test_duplicate_model(mock_log, minimal_swagger_dict, pet_model_spec, use_mod
             swagger_spec=swagger_spec,
         )
     except ValueError as e:
-        assert str(e) == duplicate_message
+        raised_exception = e
+
+    if use_models:
+        assert str(raised_exception) == duplicate_message
         assert not mock_log.warning.called
     else:
+        assert raised_exception is None
         mock_log.warning.assert_called_once_with(duplicate_message)
 
 
