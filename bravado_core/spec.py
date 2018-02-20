@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import copy
 import functools
 import json
 import logging
@@ -36,6 +35,7 @@ from bravado_core.security_definition import SecurityDefinition
 from bravado_core.spec_flattening import flattened_spec
 from bravado_core.util import cached_property
 from bravado_core.util import memoize_by_id
+from bravado_core.util import strip_xscope
 
 
 log = logging.getLogger(__name__)
@@ -597,7 +597,7 @@ def post_process_spec(swagger_spec, on_container_callbacks):
         visited_refs = visited_refs or []
 
         if is_dict_like(fragment):
-            for key, value in iteritems(fragment):
+            for key, value in sorted(iteritems(fragment)):
                 fire_callbacks(fragment, key, path + [key])
                 descend(fragment[key], path + [key], visited_refs)
 
@@ -610,25 +610,3 @@ def post_process_spec(swagger_spec, on_container_callbacks):
         descend(swagger_spec.spec_dict)
     finally:
         descend.cache.clear()
-
-
-def strip_xscope(spec_dict):
-    """
-    :param spec_dict: Swagger spec in dict form. This is treated as read-only.
-    :return: deep copy of spec_dict with the x-scope metadata stripped out.
-    """
-    result = copy.deepcopy(spec_dict)
-
-    def descend(fragment):
-        if is_dict_like(fragment):
-            for key in list(fragment.keys()):
-                if key == 'x-scope':
-                    del fragment['x-scope']
-                else:
-                    descend(fragment[key])
-        elif is_list_like(fragment):
-            for element in fragment:
-                descend(element)
-
-    descend(result)
-    return result
