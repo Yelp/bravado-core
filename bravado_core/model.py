@@ -1,14 +1,17 @@
 # -*- coding: utf-8 -*-
 import abc
+import functools
 import logging
 from warnings import warn
 
 import six
 from six import iteritems
+from swagger_spec_validator.ref_validators import attach_scope
 
 from bravado_core.schema import collapsed_properties
 from bravado_core.schema import is_dict_like
 from bravado_core.schema import is_list_like
+from bravado_core.schema import is_ref
 from bravado_core.schema import SWAGGER_PRIMITIVES
 from bravado_core.util import determine_object_type
 from bravado_core.util import ObjectType
@@ -66,7 +69,7 @@ def _register_visited_model(path, model_spec, model_name, visited_models, is_ble
     visited_models[model_name] = path
 
 
-def tag_models(container, key, path, visited_models, swagger_spec):
+def _tag_models(container, key, path, visited_models, swagger_spec):
     """
     Callback used during the swagger spec ingestion process to tag models
     with a 'x-model'. This is only done in the root document.
@@ -112,7 +115,7 @@ def tag_models(container, key, path, visited_models, swagger_spec):
     )
 
 
-def bless_models(container, key, path, visited_models, swagger_spec):
+def _bless_models(container, key, path, visited_models, swagger_spec):
     """
     Callback used during the swagger spec ingestion process to add
     ``x-model`` attribute to models which does not define it.
@@ -164,7 +167,7 @@ def bless_models(container, key, path, visited_models, swagger_spec):
     )
 
 
-def collect_models(container, key, path, models, swagger_spec):
+def _collect_models(container, key, path, models, swagger_spec):
     """
     Callback used during the swagger spec ingestion to collect all the
     tagged models and create appropriate python types for them.
@@ -653,3 +656,135 @@ def create_model_docstring(swagger_spec, model_spec):
 
         s += '\n\t'
     return s
+
+
+def _post_process_spec(spec_dict, spec_resolver, on_container_callbacks, descend_path=None):
+    """Post-process the passed in swagger_spec.spec_dict.
+
+    For each container type (list or dict) that is traversed in spec_dict,
+    the list of passed in callbacks is called with arguments (container, key).
+
+    When the container is a dict, key is obviously the key for the value being
+    traversed.
+
+    When the container is a list, key is an integer index into the list of the
+    value being traversed.
+
+    In addition to firing the passed in callbacks, $refs are annotated with
+    an 'x-scope' key that contains the current _scope_stack of the RefResolver.
+    The 'x-scope' _scope_stack is used during request/response marshalling to
+    assume a given scope before de-reffing $refs (otherwise, de-reffing won't
+    work).
+
+    :type swagger_spec: :class:`bravado_core.spec.Spec`
+    :param on_container_callbacks: list of callbacks to be invoked on each
+        container type.
+        NOTE: the individual callbacks should not mutate the current container
+    """
+
+    if descend_path is None:
+        descend_path = []
+
+    def fire_callbacks(container, key, path):
+        for callback in on_container_callbacks:
+            callback(container, key, path)
+
+    def skip_already_visited_fragments(func):
+        func.cache = cache = set()
+
+        @functools.wraps(func)
+        def wrapper(fragment, *args, **kwargs):
+            is_reference = is_ref(fragment)
+            if is_reference:
+                ref = fragment['$ref']
+                attach_scope(fragment, spec_resolver)
+                with spec_resolver.resolving(ref) as target:
+                    if id(target) in cache:
+                        log.debug('Already visited %s', ref)
+                        return
+
+                    func(target, *args, **kwargs)
+                    return
+
+            # fragment is guaranteed not to be a ref from this point onwards
+            fragment_id = id(fragment)
+
+            if fragment_id in cache:
+                log.debug('Already visited id %d', fragment_id)
+                return
+
+            cache.add(id(fragment))
+            func(fragment, *args, **kwargs)
+        return wrapper
+
+    @skip_already_visited_fragments
+    def descend(fragment, path):
+        """
+        :param fragment: node in spec_dict
+        :param path: list of strings that form the current path to fragment
+        """
+        if is_dict_like(fragment):
+            for key, value in sorted(iteritems(fragment)):
+                fire_callbacks(fragment, key, path + [key])
+                descend(fragment[key], path + [key])
+
+        elif is_list_like(fragment):
+            for index in range(len(fragment)):
+                fire_callbacks(fragment, index, path + [str(index)])
+                descend(fragment[index], path + [str(index)])
+
+    try:
+        descend(spec_dict, path=descend_path)
+    finally:
+        descend.cache.clear()
+
+
+def _run_post_processing(spec):
+    visited_models = {}
+    # Discover all the models
+    _post_process_spec(
+        spec_dict=spec.spec_dict,
+        spec_resolver=spec.resolver,
+        on_container_callbacks=[
+            functools.partial(
+                _tag_models,
+                visited_models=visited_models,
+                swagger_spec=spec,
+            ),
+            functools.partial(
+                _bless_models,
+                visited_models=visited_models,
+                swagger_spec=spec,
+            ),
+            functools.partial(
+                _collect_models,
+                models=spec.definitions,
+                swagger_spec=spec,
+            ),
+        ],
+    )
+
+
+def model_discovery(swagger_spec):
+    # local import due to circular dependency
+    from bravado_core.resource import build_resources
+
+    # This run is needed in order to get all the available models discovered
+    # deref_flattened_spec depends on flattened_spec which assumes that model
+    # discovery is performed
+    _run_post_processing(swagger_spec)
+
+    # Flattening the specs requires resources to be available.
+    # Let's build them before self.deref_flattened_spec is called
+    swagger_spec.resources = build_resources(swagger_spec)
+
+    if swagger_spec.config['internally_dereference_refs']:
+        from bravado_core.spec import Spec  # Local import to avoid circular import
+        deref_flattened_spec = swagger_spec.deref_flattened_spec
+        tmp_spec = Spec(deref_flattened_spec, swagger_spec.origin_url, swagger_spec.http_client, swagger_spec.config)
+
+        # Rebuild definitions using dereferences specs as base
+        # this ensures that the generated models have no references
+        _run_post_processing(tmp_spec)
+        swagger_spec.resources = build_resources(tmp_spec)
+        swagger_spec.definitions = tmp_spec.definitions

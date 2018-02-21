@@ -3,7 +3,7 @@ import mock
 import pytest
 
 from bravado_core import model
-from bravado_core.model import tag_models
+from bravado_core.model import _tag_models
 from bravado_core.spec import Spec
 
 
@@ -22,7 +22,7 @@ def pet_model_spec():
 def test_tags_model(minimal_swagger_dict, pet_model_spec):
     minimal_swagger_dict['definitions']['Pet'] = pet_model_spec
     swagger_spec = Spec(minimal_swagger_dict)
-    tag_models(
+    _tag_models(
         minimal_swagger_dict['definitions'],
         'Pet',
         ['definitions', 'Pet'],
@@ -35,7 +35,7 @@ def test_type_missing(minimal_swagger_dict, pet_model_spec):
     del pet_model_spec['type']
     minimal_swagger_dict['definitions']['Pet'] = pet_model_spec
     swagger_spec = Spec(minimal_swagger_dict)
-    tag_models(
+    _tag_models(
         minimal_swagger_dict['definitions'],
         'Pet',
         ['definitions', 'Pet'],
@@ -52,7 +52,7 @@ def test_model_not_object(minimal_swagger_dict):
         },
     }
     swagger_spec = Spec(minimal_swagger_dict)
-    tag_models(
+    _tag_models(
         minimal_swagger_dict['definitions'],
         'Pet',
         ['definitions', 'Pet'],
@@ -64,7 +64,7 @@ def test_model_not_object(minimal_swagger_dict):
 def test_path_too_short(minimal_swagger_dict, pet_model_spec):
     minimal_swagger_dict['definitions']['Pet'] = pet_model_spec
     swagger_spec = Spec(minimal_swagger_dict)
-    tag_models(
+    _tag_models(
         minimal_swagger_dict,
         'definitions',
         ['definitions'],
@@ -84,7 +84,7 @@ def test_duplicate_model(mock_log, minimal_swagger_dict, pet_model_spec, use_mod
 
     raised_exception = None
     try:
-        tag_models(
+        _tag_models(
             minimal_swagger_dict['definitions'],
             'Pet',
             ['definitions', 'Pet'],
@@ -106,7 +106,7 @@ def test_skip_already_tagged_models(minimal_swagger_dict, pet_model_spec):
     pet_model_spec['x-model'] = 'SpecialPet'
     minimal_swagger_dict['definitions']['Pet'] = pet_model_spec
     swagger_spec = Spec(minimal_swagger_dict)
-    tag_models(
+    _tag_models(
         minimal_swagger_dict['definitions'],
         'Pet',
         ['definitions', 'Pet'],
