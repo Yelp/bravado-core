@@ -1,6 +1,16 @@
 Changelog
 =========
 
+5.x.x (xxxx-xx-xx)
+------------------
+- Refactor: model discovery is now handled in ``bravado_core.model``
+- Remove deprecated methods from Model type
+
+.. warning::
+    This change provides breaking changes!
+    The following methods have been removed from the public interface: ``bravado_core.model.tag_models``, ``bravado_core.model.bless_models``, ``bravado_core.model.collect_models`` and ``bravado_core.spec.post_process_spec``.
+    Deprecated methods from ``bravado_core.model.Model`` have been removed (``Model.marshal``, ``Model.unmarshal``, ``Model.isinstance`` and ``Model._isinstance``).
+
 4.13.4 (2018-05-24)
 -------------------
 - Fix marsharling and unmarshaling of optional body parameters. PR #268
