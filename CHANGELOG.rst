@@ -1,6 +1,14 @@
 Changelog
 =========
 
+5.x.x (xxxx-xx-xx)
+------------------
+- Remove deprecated parameters from ``bravado_core.spec_flattening.flattened_spec``
+
+.. warning::
+    This change provides breaking changes!
+    The signature of ``bravado_core.spec_flattening.flattened_spec`` has been updated.
+
 4.13.4 (2018-05-24)
 -------------------
 - Fix marsharling and unmarshaling of optional body parameters. PR #268
