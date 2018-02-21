@@ -2,7 +2,6 @@
 import abc
 import functools
 import logging
-from warnings import warn
 
 import six
 from six import iteritems
@@ -478,13 +477,6 @@ class Model(object):
         )
         return model
 
-    def marshal(self):
-        warn(
-            "Model object methods are now prefixed with single underscore - use _marshal() instead.",
-            DeprecationWarning,
-        )
-        return self._marshal()
-
     def _marshal(self):
         """Marshal into a json-like dict.
 
@@ -492,14 +484,6 @@ class Model(object):
         """
         from bravado_core.marshal import marshal_model
         return marshal_model(self._swagger_spec, self._model_spec, self)
-
-    @classmethod
-    def unmarshal(cls, val):
-        warn(
-            "Model object methods are now prefixed with single underscore - use _unmarshal() instead.",
-            DeprecationWarning,
-        )
-        return cls._unmarshal(val)
 
     @classmethod
     def _unmarshal(cls, val):
@@ -510,22 +494,6 @@ class Model(object):
         """
         from bravado_core.unmarshal import unmarshal_model
         return unmarshal_model(cls._swagger_spec, cls._model_spec, val)
-
-    @classmethod
-    def isinstance(cls, obj):
-        warn(
-            "Model object methods are now prefixed with single underscore - use _isinstance() instead.",
-            DeprecationWarning,
-        )
-        return cls._isinstance(obj)
-
-    @classmethod
-    def _isinstance(cls, obj):
-        warn(
-            "_isinstance is deprecated. Please use isinstance(obj, cls) instead..",
-            DeprecationWarning,
-        )
-        return isinstance(obj, cls)
 
 
 class ModelDocstring(object):

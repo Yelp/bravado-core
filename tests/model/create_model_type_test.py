@@ -58,21 +58,3 @@ def test_marshal_and_unmarshal(petstore_spec):
     assert unmarshalled_marshalled_model.id == pet_id
     assert unmarshalled_marshalled_model.name == pet_name
     assert unmarshalled_marshalled_model.photoUrls == pet_photo_urls
-
-
-def test_deprecated_marshal_and_unmarshal(petstore_spec):
-    """This test is a copy of the test above. It will be removed once we remove the deprecated
-    marshal() and unmarshal() methods."""
-    Pet = petstore_spec.definitions['Pet']
-    pet_id = 1
-    pet_name = 'Darwin'
-    pet_photo_urls = []
-    pet = Pet(id=pet_id, name=pet_name, photoUrls=pet_photo_urls)
-    marshalled_model = pet.marshal()
-    unmarshalled_marshalled_model = Pet.unmarshal(marshalled_model)
-
-    assert marshalled_model == {'id': pet_id, 'name': pet_name, 'photoUrls': pet_photo_urls}
-    assert isinstance(unmarshalled_marshalled_model, Pet)
-    assert unmarshalled_marshalled_model.id == pet_id
-    assert unmarshalled_marshalled_model.name == pet_name
-    assert unmarshalled_marshalled_model.photoUrls == pet_photo_urls
