@@ -587,24 +587,22 @@ def post_process_spec(swagger_spec, on_container_callbacks):
         return wrapper
 
     @skip_already_visited_fragments
-    def descend(fragment, path=None, visited_refs=None):
+    def descend(fragment, path=None):
         """
         :param fragment: node in spec_dict
         :param path: list of strings that form the current path to fragment
-        :param visited_refs: list of visted ref_dict
         """
         path = path or []
-        visited_refs = visited_refs or []
 
         if is_dict_like(fragment):
             for key, value in sorted(iteritems(fragment)):
                 fire_callbacks(fragment, key, path + [key])
-                descend(fragment[key], path + [key], visited_refs)
+                descend(fragment[key], path + [key])
 
         elif is_list_like(fragment):
             for index in range(len(fragment)):
                 fire_callbacks(fragment, index, path + [str(index)])
-                descend(fragment[index], path + [str(index)], visited_refs)
+                descend(fragment[index], path + [str(index)])
 
     try:
         descend(swagger_spec.spec_dict)
