@@ -562,7 +562,7 @@ def post_process_spec(swagger_spec, on_container_callbacks):
         func.cache = cache = set()
 
         @functools.wraps(func)
-        def wrapper(fragment, *args, **kwargs):
+        def wrapper(fragment, path):
             is_reference = is_ref(fragment)
             if is_reference:
                 ref = fragment['$ref']
@@ -572,7 +572,7 @@ def post_process_spec(swagger_spec, on_container_callbacks):
                         log.debug('Already visited %s', ref)
                         return
 
-                    func(target, *args, **kwargs)
+                    func(target, path)
                     return
 
             # fragment is guaranteed not to be a ref from this point onwards
@@ -583,30 +583,28 @@ def post_process_spec(swagger_spec, on_container_callbacks):
                 return
 
             cache.add(id(fragment))
-            func(fragment, *args, **kwargs)
+            func(fragment, path)
         return wrapper
 
     @skip_already_visited_fragments
-    def descend(fragment, path=None, visited_refs=None):
+    def descend(fragment, path):
         """
         :param fragment: node in spec_dict
         :param path: list of strings that form the current path to fragment
-        :param visited_refs: list of visted ref_dict
         """
         path = path or []
-        visited_refs = visited_refs or []
 
         if is_dict_like(fragment):
             for key, value in sorted(iteritems(fragment)):
                 fire_callbacks(fragment, key, path + [key])
-                descend(fragment[key], path + [key], visited_refs)
+                descend(fragment[key], path + [key])
 
         elif is_list_like(fragment):
             for index in range(len(fragment)):
                 fire_callbacks(fragment, index, path + [str(index)])
-                descend(fragment[index], path + [str(index)], visited_refs)
+                descend(fragment[index], path + [str(index)])
 
     try:
-        descend(swagger_spec.spec_dict)
+        descend(swagger_spec.spec_dict, path=[])
     finally:
         descend.cache.clear()
