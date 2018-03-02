@@ -17,6 +17,15 @@ def test_cast_failures_return_untouched_value(mock_logger):
     assert result_val == initial_val
 
 
+@patch('bravado_core.param.log')
+def test_type_error_returns_untouched_value_and_logs(mock_logger):
+    initial_val = ['123', '456']
+    result_val = cast_request_param('integer', 'gimme_int', initial_val)
+    assert result_val == initial_val
+    assert result_val is initial_val
+    assert mock_logger.warn.call_count == 1
+
+
 def test_unknown_type_returns_untouched_value():
     assert 'abc123' == cast_request_param('unknown_type', 'blah', 'abc123')
 

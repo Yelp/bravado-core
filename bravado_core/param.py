@@ -251,7 +251,7 @@ def cast_request_param(param_type, param_name, param_value):
 
     try:
         return CAST_TYPE_TO_FUNC.get(param_type, lambda x: x)(param_value)
-    except ValueError:
+    except (ValueError, TypeError):
         log.warn("Failed to cast %s value of %s to %s",
                  param_name, param_value, param_type)
         # Ignore type error, let jsonschema validation handle incorrect types
