@@ -3,15 +3,15 @@ Changelog
 
 4.13.1 (2018-03-02)
 -------------------
-- If type casting fails on a ``TypeError`` allow JSON Schema to handle the error
+- Catch TypeErrors during param unmarshalling, allowing JSON Schema to handle the error - Issue #258, PR #259. Thanks Nick DiRienzo for your contribution!
 
 4.13.0 (2018-02-23)
 -------------------
-- Models are generated only for objects - PR #246
-- Fix: ensure that models do not have references if ``internally_dereference_refs`` is used - PR # 247
-- Model name detection uses title attribute too - PR #249
-- Duplicated models do not raise exception if ``use_models`` is not used - PR #253
-- Alert or warn if pre-tagged duplicate models are found - PR #254
+- Models are generated only for objects - PR #246.
+- Fix: ensure that models do not have references if ``internally_dereference_refs`` is used - PR #247.
+- Model name detection uses title attribute too - PR #249.
+- Duplicated models do not raise exception if ``use_models`` is not used - PR #253.
+- Alert or warn if pre-tagged duplicate models are found - PR #254.
 
 4.12.1 (2018-02-07)
 -------------------
