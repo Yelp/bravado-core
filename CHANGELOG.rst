@@ -1,6 +1,10 @@
 Changelog
 =========
 
+4.13.1 (2018-03-02)
+-------------------
+- If type casting fails on a ``TypeError`` allow JSON Schema to handle the error
+
 4.13.0 (2018-02-23)
 -------------------
 - Models are generated only for objects - PR #246
