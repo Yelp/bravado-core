@@ -33,6 +33,12 @@ def test_override_scheme(origin_url):
     assert 'https://www.foo.com:80/bar/api-docs' == api_serving_url
 
 
+def test_override_scheme_multiple_schemes(origin_url):
+    spec = {'schemes': ['https', 'ws']}
+    api_serving_url = build_api_serving_url(spec, origin_url)
+    assert 'https://www.foo.com:80/bar/api-docs' == api_serving_url
+
+
 def test_pick_preferred_scheme(origin_url):
     spec = {'schemes': ['http', 'https']}
     api_serving_url = build_api_serving_url(

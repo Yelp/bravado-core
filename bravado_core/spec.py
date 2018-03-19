@@ -516,12 +516,7 @@ def build_api_serving_url(spec_dict, origin_url=None, preferred_scheme=None):
         if origin.scheme in schemes:
             return origin.scheme
 
-        if len(schemes) == 1:
-            return schemes[0]
-
-        raise SwaggerSchemaError(
-            "Origin scheme {0} not supported by API. Available schemes "
-            "include {1}".format(origin.scheme, schemes))
+        return schemes[0]
 
     netloc = spec_dict.get('host', origin.netloc)
     path = spec_dict.get('basePath', origin.path)
