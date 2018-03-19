@@ -1,6 +1,10 @@
 Changelog
 =========
 
+4.13.2 (2018-03-19)
+-------------------
+- Fix bug where multiple schemes in the spec would sometimes cause a ``SwaggerSchemaError`` - PR #260
+
 4.13.1 (2018-03-02)
 -------------------
 - Catch TypeErrors during param unmarshalling, allowing JSON Schema to handle the error - Issue #258, PR #259. Thanks Nick DiRienzo for your contribution!
