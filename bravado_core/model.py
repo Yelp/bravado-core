@@ -12,13 +12,16 @@ from bravado_core.schema import is_list_like
 from bravado_core.schema import SWAGGER_PRIMITIVES
 from bravado_core.util import determine_object_type
 from bravado_core.util import ObjectType
+from bravado_core.util import sanitize_name
 from bravado_core.util import strip_xscope
+
 
 log = logging.getLogger(__name__)
 
 # Models in #/definitions are tagged with this key so that they can be
 # differentiated from 'object' types.
 MODEL_MARKER = 'x-model'
+MODEL_MARKER_BLESSED = 'x-model-blessed'
 
 
 def _get_model_name(model_dict):
@@ -27,6 +30,10 @@ def _get_model_name(model_dict):
     if not model_name:
         model_name = model_dict.get('title')
     return model_name
+
+
+def _generate_model_name(path):
+    return sanitize_name('_'.join(path))
 
 
 def _raise_or_warn_duplicated_model(swagger_spec, message):
@@ -39,7 +46,7 @@ def _raise_or_warn_duplicated_model(swagger_spec, message):
 
 def _register_visited_model(path, model_spec, model_name, visited_models, is_blessed, swagger_spec):
     """
-    Registers a model that has been tagged by a callback method.
+    Register a model that has been tagged by a callback method.
 
     :param path: list of path segments to the key
     :type path: list
@@ -62,8 +69,27 @@ def _register_visited_model(path, model_spec, model_name, visited_models, is_ble
             ),
         )
 
-    model_spec[MODEL_MARKER] = model_name
     visited_models[model_name] = path
+    model_spec[MODEL_MARKER] = model_name
+    if is_blessed:
+        model_spec[MODEL_MARKER_BLESSED] = True
+
+
+def _unregister_visited_model(model_spec, model_name, visited_models):
+    """
+    Un-register a model that has been tagged by a callback method.
+
+    :param model_spec: swagger specification of the model
+    :type model_spec: dict
+    :param model_name: name of the model to register
+    :type model_name: str
+    :param visited_models: models that have already been identified
+    :type visited_models: dict (k,v) == (model_name, path)
+    """
+    model_spec.pop(MODEL_MARKER, None)
+    visited_models.pop(model_name, None)
+    is_blessed = model_spec.pop(MODEL_MARKER_BLESSED, False)
+    log.debug('Unregistered model: %s (is_blessed %s)', model_name, is_blessed)
 
 
 def tag_models(container, key, path, visited_models, swagger_spec):
@@ -77,6 +103,9 @@ def tag_models(container, key, path, visited_models, swagger_spec):
     in the definitions section (ie. (<swagger_file>)?#/definitions/<key>)).
     In order to tag the model with MODEL_MARKER the model (contained in container[key])
     need to represent an object.
+
+    NOTE: tag_models has priority respects bless_models.
+    So if a model_name (x-model) has been generated due to blessing it will be overridden by tag_models
 
     INFO: Implementation detail.
     Respect ``collect_models`` this callback gets executed on the model_spec's parent container.
@@ -98,8 +127,13 @@ def tag_models(container, key, path, visited_models, swagger_spec):
     if not is_object(swagger_spec, model_spec):
         return
 
-    if deref(model_spec.get(MODEL_MARKER)) is not None:
-        return
+    model_name = deref(model_spec.get(MODEL_MARKER))
+    if model_name is not None:
+        # If x-model has not been blessed, the tag is correct
+        if not deref(model_spec.get(MODEL_MARKER_BLESSED)):
+            return
+        # If x-model has been generated then remove it and use tag_models for the proper naming
+        _unregister_visited_model(model_spec, model_name, visited_models)
 
     model_name = _get_model_name(model_spec) or key
     _register_visited_model(
@@ -150,9 +184,7 @@ def bless_models(container, key, path, visited_models, swagger_spec):
     ):
         return
 
-    model_name = _get_model_name(model_spec)
-    if not model_name:
-        return
+    model_name = _get_model_name(model_spec) or _generate_model_name(path)
 
     _register_visited_model(
         path=path,

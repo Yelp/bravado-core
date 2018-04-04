@@ -29,6 +29,7 @@ def test_tags_model(minimal_swagger_dict, pet_model_spec):
         visited_models={},
         swagger_spec=swagger_spec)
     assert pet_model_spec['x-model'] == 'Pet'
+    assert 'x-model-blessed' not in pet_model_spec
 
 
 def test_type_missing(minimal_swagger_dict, pet_model_spec):

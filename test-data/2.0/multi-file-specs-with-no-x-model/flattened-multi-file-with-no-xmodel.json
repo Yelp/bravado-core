@@ -4,10 +4,22 @@
       "type": "object",
       "x-model": "lfile:aux.json|..definitions..referenced_object"
     },
+    "lfile:swagger.json|..definitions..definitions_not_used_properties_any_properties_key": {
+      "type": "object",
+      "x-model": "definitions_not_used_properties_any_properties_key",
+      "x-model-blessed": true
+    },
+    "lfile:swagger.json|..definitions..definitions_object_properties_property": {
+      "type": "object",
+      "x-model": "definitions_object_properties_property",
+      "x-model-blessed": true
+    },
     "lfile:swagger.json|..definitions..not_used_referenced": {
       "properties": {
         "key": {
-          "type": "object"
+          "type": "object",
+          "x-model": "definitions_not_used_properties_any_properties_key",
+          "x-model-blessed": true
         }
       }
     },

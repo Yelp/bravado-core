@@ -89,10 +89,11 @@ def test_bless_model_adds_model_marker(minimal_swagger_dict):
         visited_models={},
         swagger_spec=swagger_spec,
     )
-    assert response_schema.get('x-model') == response_schema['title']
+    assert response_schema['x-model'] == response_schema['title']
+    assert response_schema.get('x-model-blessed') is True
 
 
-def test_bless_model_does_not_generate_model_tag_if_no_title_is_set(minimal_swagger_dict):
+def test_bless_model_generates_model_tag_if_no_title_is_set(minimal_swagger_dict):
     response_schema = {
         'type': 'object',
     }
@@ -109,11 +110,13 @@ def test_bless_model_does_not_generate_model_tag_if_no_title_is_set(minimal_swag
         },
     }
     swagger_spec = Spec(minimal_swagger_dict)
+    path = ['paths', '/endpoint', 'post', 'responses', '200']
     bless_models(
         minimal_swagger_dict['paths']['/endpoint']['post']['responses']['200'],
         'schema',
-        ['paths', '/endpoint', 'post', 'responses', '200'],
+        path=path,
         visited_models={},
         swagger_spec=swagger_spec,
     )
-    assert 'x-model' not in response_schema
+    assert response_schema['x-model'] == '_'.join(path).replace('/', '')
+    assert response_schema.get('x-model-blessed') is True
