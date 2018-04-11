@@ -2,17 +2,18 @@
 import functools
 from copy import deepcopy
 
+import pyrfc3339
 from jsonschema import _validators
 from jsonschema import validators
 from jsonschema.exceptions import ValidationError
 from jsonschema.validators import Draft4Validator
 from swagger_spec_validator.ref_validators import in_scope
-import pyrfc3339
 
 from bravado_core.model import MODEL_MARKER
 from bravado_core.schema import is_param_spec
 from bravado_core.schema import is_prop_nullable
 from bravado_core.schema import is_required
+
 
 """Draft4Validator is not completely compatible with Swagger 2.0 schema
 objects like parameter, etc. Swagger20Validator is an extension of
@@ -36,7 +37,7 @@ def format_validator(swagger_spec, validator, format, instance, schema):
     elif format == 'date-time':
         try:
             pyrfc3339.parse(instance)
-        except:
+        except ValueError:
             raise ValidationError("'{}' is not a 'date-time'".format(instance))
 
     for error in _validators.format(validator, format, instance, schema):
