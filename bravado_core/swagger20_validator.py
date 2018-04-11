@@ -7,6 +7,7 @@ from jsonschema import validators
 from jsonschema.exceptions import ValidationError
 from jsonschema.validators import Draft4Validator
 from swagger_spec_validator.ref_validators import in_scope
+import pyrfc3339
 
 from bravado_core.model import MODEL_MARKER
 from bravado_core.schema import is_param_spec
@@ -32,6 +33,11 @@ def format_validator(swagger_spec, validator, format, instance, schema):
     if (is_param_spec(swagger_spec, schema) or
             is_prop_nullable(swagger_spec, schema)) and instance is None:
         return
+    elif format == 'date-time':
+        try:
+            pyrfc3339.parse(instance)
+        except:
+            raise ValidationError("'{}' is not a 'date-time'".format(instance))
 
     for error in _validators.format(validator, format, instance, schema):
         yield error

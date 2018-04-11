@@ -11,7 +11,7 @@ import bravado_core
 
 install_requires = [
     "jsonref",
-    "jsonschema[format]>=2.5.1",
+    "jsonschema>=2.5.1",
     "python-dateutil",
     "pyyaml",
     "simplejson",
@@ -19,6 +19,7 @@ install_requires = [
     "swagger-spec-validator>=2.0.1",
     "pytz",
     "msgpack-python",
+    "pyRFC3339",
 ]
 
 
