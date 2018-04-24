@@ -209,10 +209,9 @@ def flattened_spec(
 
     def descend(value):
         if is_ref(value):
-            uri, deref_value = resolve(value['$ref'])
-
             # Update spec_resolver scope to be able to dereference relative specs from a not root file
-            with in_scope(spec_resolver, {'x-scope': [uri]}):
+            with in_scope(spec_resolver, value):
+                uri, deref_value = resolve(value['$ref'])
                 object_type = determine_object_type(object_dict=deref_value)
                 if object_type.get_root_holder() is None:
                     return descend(value=deref_value)
