@@ -1,0 +1,24 @@
+'200':
+  description: HTTP/200
+  schema:
+    type: object
+    x-model: endpoint_v1_HTTP_OK
+'403':
+  description: HTTP/403
+  schema:
+    allOf:
+    - $ref: ../../definitions.yaml#/ErrorResponse
+    - properties:
+        action:
+          description: name of the forbidden action
+          type: string
+      required:
+      - action
+      type: object
+      x-model: endpoint_v1_HTTP_FORBIDDEN_action_part
+    type: object
+    x-model: endpoint_v1_HTTP_FORBIDDEN
+default:
+  description: Unplanned status code
+  schema:
+    $ref: ./objects.yaml#/EndpointErrorObject

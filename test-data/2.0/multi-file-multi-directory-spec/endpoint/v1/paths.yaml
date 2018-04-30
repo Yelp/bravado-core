@@ -1,0 +1,7 @@
+get:
+  description: This is the description of a random get endpoint
+  operationId: endpoint_v1
+  parameters:
+    - $ref: ../parameters.yaml#/parameters/number
+  responses:
+    $ref: ./responses.yaml

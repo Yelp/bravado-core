@@ -1,17 +1,20 @@
 # -*- coding: utf-8 -*-
 import copy
 import functools
+import os
 
 import mock
 import pytest
 from six.moves.urllib.parse import urlparse
 from swagger_spec_validator import validator20
+from yaml import safe_load
 
 from bravado_core import spec
 from bravado_core.spec import CONFIG_DEFAULTS
 from bravado_core.spec import Spec
 from bravado_core.spec_flattening import _marshal_uri
 from bravado_core.spec_flattening import _warn_if_uri_clash_on_same_marshaled_representation
+from tests.conftest import get_url
 
 
 @mock.patch('bravado_core.spec_flattening.warnings')
@@ -208,3 +211,26 @@ def test_flattened_specs_with_no_xmodel_tags(multi_file_with_no_xmodel_spec, fla
         http_handlers={},
     )
     assert flattened_spec == flattened_multi_file_with_no_xmodel_dict
+
+
+@pytest.fixture
+def multi_file_multi_directory_abspath(my_dir):
+    return os.path.abspath(os.path.join(my_dir, '../test-data/2.0/multi-file-multi-directory-spec/swagger.yaml'))
+
+
+@pytest.fixture
+def multi_file_multi_directory_dict(multi_file_multi_directory_abspath):
+    with open(multi_file_multi_directory_abspath) as f:
+        return safe_load(f)
+
+
+@pytest.fixture
+def multi_file_multi_directory_spec(multi_file_multi_directory_dict, multi_file_multi_directory_abspath):
+    return Spec.from_dict(multi_file_multi_directory_dict, origin_url=get_url(multi_file_multi_directory_abspath))
+
+
+def test_flattened_multi_file_multi_directory_specs(multi_file_multi_directory_spec):
+    try:
+        multi_file_multi_directory_spec.flattened_spec
+    except BaseException as e:
+        pytest.fail('Unexpected exception: {e}'.format(e=e), e.__traceback__)

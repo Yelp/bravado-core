@@ -1,0 +1,18 @@
+consumes:
+  - application/json
+
+info:
+  title: Consumer Mobile API v2 Service
+  version: 1.46.0
+
+definitions:
+  $ref: ./definitions.yaml
+
+paths:
+  /endpoint/v1:
+    $ref: ./endpoint/v1/paths.yaml
+
+produces:
+  - application/json
+
+swagger: '2.0'
