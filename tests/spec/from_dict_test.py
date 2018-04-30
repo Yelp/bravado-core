@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 import os
 
+import pytest
 import simplejson as json
 import yaml
 from six.moves.urllib import parse as urlparse
 
 from bravado_core.response import get_response_spec
 from bravado_core.spec import Spec
+from tests.conftest import get_url
 
 
 def test_definitions_not_present(minimal_swagger_dict):
@@ -125,3 +127,33 @@ def test_spec_with_dereffed_and_tagged_models_works(minimal_swagger_dict):
     minimal_swagger_dict['paths']['/pet'] = pet_path_spec
     spec = Spec.from_dict(minimal_swagger_dict)
     assert spec.definitions['Pet']
+
+
+@pytest.fixture
+def multi_file_multi_directory_abspath(my_dir):
+    return os.path.abspath(os.path.join(my_dir, '../test-data/2.0/multi-file-multi-directory-spec/swagger.yaml'))
+
+
+@pytest.fixture
+def multi_file_multi_directory_dict(multi_file_multi_directory_abspath):
+    with open(multi_file_multi_directory_abspath) as f:
+        return yaml.safe_load(f)
+
+
+@pytest.fixture(
+    params=[False, True],
+    ids=['with-references', 'fully-dereferenced'],
+)
+def multi_file_multi_directory_spec(request, multi_file_multi_directory_dict, multi_file_multi_directory_abspath):
+    return Spec.from_dict(
+        multi_file_multi_directory_dict,
+        origin_url=get_url(multi_file_multi_directory_abspath),
+        config={'internally_dereference_refs': request.param},
+    )
+
+
+def test_flattened_multi_file_multi_directory_specs(multi_file_multi_directory_spec):
+    try:
+        multi_file_multi_directory_spec.flattened_spec
+    except BaseException as e:
+        pytest.fail('Unexpected exception: {e}'.format(e=e), e.__traceback__)
