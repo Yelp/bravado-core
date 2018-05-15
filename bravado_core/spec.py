@@ -364,7 +364,7 @@ class Spec(object):
 
         # If resources are defined it means that Spec has been built and so swagger specs have been validated
         if self.resources is None:
-            self._validate_spec()
+            self.build()
 
         return strip_xscope(
             spec_dict=flattened_spec(
