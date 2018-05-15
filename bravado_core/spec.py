@@ -124,6 +124,8 @@ class Spec(object):
             handlers=build_http_handlers(http_client),
         )
 
+        # spec dict used to build resources, in case internally_dereference_refs config is enabled
+        # it will be overridden by the dereferenced specs (by build method). More context in PR#263
         self._internal_spec_dict = spec_dict
         self._validate_config()
 
@@ -246,6 +248,8 @@ class Spec(object):
         # deref_flattened_spec depends on flattened_spec which assumes that model
         # discovery is performed
         run_post_processing(self)
+        # Flattening the specs requires resources to be available.
+        # Let's build them before self.deref_flattened_spec is called
         self.resources = build_resources(self)
 
         if self.config['internally_dereference_refs']:

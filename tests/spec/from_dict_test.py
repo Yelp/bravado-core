@@ -8,6 +8,7 @@ from six.moves.urllib import parse as urlparse
 
 from bravado_core.response import get_response_spec
 from bravado_core.spec import Spec
+from tests.conftest import _read_json
 from tests.conftest import get_url
 
 
@@ -140,6 +141,19 @@ def multi_file_multi_directory_dict(multi_file_multi_directory_abspath):
         return yaml.safe_load(f)
 
 
+@pytest.fixture
+def flattened_multi_file_multi_directory_abspath(my_dir):
+    return os.path.join(
+        my_dir,
+        '../test-data/2.0/multi-file-multi-directory-spec/flattened-multi-file-multi-directory-spec.json',
+    )
+
+
+@pytest.fixture
+def flattened_multi_file_multi_directory_dict(flattened_multi_file_multi_directory_abspath):
+    return _read_json(flattened_multi_file_multi_directory_abspath)
+
+
 @pytest.fixture(
     params=[False, True],
     ids=['with-references', 'fully-dereferenced'],
@@ -152,8 +166,7 @@ def multi_file_multi_directory_spec(request, multi_file_multi_directory_dict, mu
     )
 
 
-def test_flattened_multi_file_multi_directory_specs(multi_file_multi_directory_spec):
-    try:
-        multi_file_multi_directory_spec.flattened_spec
-    except BaseException as e:
-        pytest.fail('Unexpected exception: {e}'.format(e=e), e.__traceback__)
+def test_flattened_multi_file_multi_directory_specs(
+    multi_file_multi_directory_spec, flattened_multi_file_multi_directory_dict,
+):
+    assert multi_file_multi_directory_spec.flattened_spec == flattened_multi_file_multi_directory_dict
