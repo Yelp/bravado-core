@@ -245,6 +245,7 @@ class Spec(object):
         # deref_flattened_spec depends on flattened_spec which assumes that model
         # discovery is performed
         run_post_processing(self)
+        self.resources = build_resources(self)
 
         if self.config['internally_dereference_refs']:
             deref_flattened_spec = self.deref_flattened_spec
@@ -253,6 +254,7 @@ class Spec(object):
             # Rebuild definitions using dereferences specs as base
             # this ensures that the generated models have no references
             run_post_processing(tmp_spec)
+            self.resources = build_resources(tmp_spec)
             self.definitions = tmp_spec.definitions
 
             # Avoid to evaluate is_ref every time, no references are possible at this time
@@ -262,7 +264,6 @@ class Spec(object):
             self.register_format(format)
 
         self.api_url = build_api_serving_url(self.spec_dict, self.origin_url)
-        self.resources = build_resources(self)
 
     @cached_property
     def _internal_spec_dict(self):
