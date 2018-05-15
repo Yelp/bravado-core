@@ -124,6 +124,7 @@ class Spec(object):
             handlers=build_http_handlers(http_client),
         )
 
+        self._internal_spec_dict = spec_dict
         self._validate_config()
 
     def _validate_config(self):
@@ -259,18 +260,12 @@ class Spec(object):
 
             # Avoid to evaluate is_ref every time, no references are possible at this time
             self.deref = lambda ref_dict: ref_dict
+            self._internal_spec_dict = self.deref_flattened_spec
 
         for format in self.config['formats']:
             self.register_format(format)
 
         self.api_url = build_api_serving_url(self.spec_dict, self.origin_url)
-
-    @cached_property
-    def _internal_spec_dict(self):
-        if self.config['internally_dereference_refs']:
-            return self.deref_flattened_spec
-        else:
-            return self.spec_dict
 
     def _force_deref(self, ref_dict):
         """Dereference ref_dict (if it is indeed a ref) and return what the
