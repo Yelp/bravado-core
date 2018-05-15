@@ -6,6 +6,7 @@ from six import iterkeys
 from swagger_spec_validator.common import SwaggerValidationError
 
 from bravado_core.spec import Spec
+from tests.conftest import get_url
 from tests.validate.conftest import email_address_format
 
 
@@ -57,9 +58,10 @@ def test_build_with_custom_format(petstore_dict):
         False,
     ]
 )
-def test_build_with_internally_dereference_refs(petstore_dict, internally_dereference_refs):
+def test_build_with_internally_dereference_refs(petstore_abspath, petstore_dict, internally_dereference_refs):
     spec = Spec(
         petstore_dict,
+        origin_url=get_url(petstore_abspath),
         config={'internally_dereference_refs': internally_dereference_refs}
     )
     assert spec.deref == spec._force_deref
