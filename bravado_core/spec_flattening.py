@@ -127,7 +127,7 @@ def _warn_if_uri_clash_on_same_marshaled_representation(uri_schema_mappings, mar
 
 
 def flattened_spec(
-    spec_dict, spec_resolver=None, spec_url=None, http_handlers=None,
+    spec_dict=None, spec_resolver=None, spec_url=None, http_handlers=None,
     marshal_uri_function=_marshal_uri, spec_definitions=None, swagger_spec=None,
 ):
     """
@@ -160,11 +160,19 @@ def flattened_spec(
     :param marshal_uri_function: function used to marshal uris in string suitable to be keys in Swagger Specs.
     :type marshal_uri_function: Callable with the same signature of ``_marshal_uri``
     :param spec_definitions: known swagger definitions (hint: definitions attribute of bravado_core.spec.Spec instance)
-    :type dict: bravado_core.spec.Spec
+    :type spec_definitions: dict
+    :param swagger_spec: bravado-core Spec object
+    :type swagger_spec: bravado_core.spec.Spec
 
     :return: Flattened representation of the Swagger Specs
     :rtype: dict
     """
+
+    if swagger_spec is not None:
+        spec_dict = swagger_spec.spec_dict if spec_dict is None else spec_dict
+        spec_resolver = swagger_spec.resolver if spec_resolver is None else spec_resolver
+        spec_url = swagger_spec.origin_url if spec_url is None else spec_url
+        spec_definitions = swagger_spec.definitions if spec_definitions is None else spec_url
 
     # Create internal copy of spec_dict to avoid external dict pollution
     spec_dict = copy.deepcopy(spec_dict)

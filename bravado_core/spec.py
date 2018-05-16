@@ -368,12 +368,8 @@ class Spec(object):
 
         return strip_xscope(
             spec_dict=flattened_spec(
-                spec_dict=self.spec_dict,
-                spec_resolver=self.resolver,
-                spec_url=self.origin_url,
-                http_handlers=build_http_handlers(self.http_client),
-                spec_definitions=self.definitions,
                 swagger_spec=self,
+                http_handlers=build_http_handlers(self.http_client),
             ),
         )
 

@@ -135,12 +135,8 @@ def test_flattened_spec_build_specs_if_not_already_built(
         mock_build.assert_called_once_with()
 
     mock_flattened_spec.assert_called_once_with(
-        spec_dict=minimal_swagger_dict,
-        spec_resolver=petstore_spec.resolver,
-        spec_url=petstore_spec.origin_url,
-        http_handlers=mock.ANY,
-        spec_definitions=mock.ANY,
         swagger_spec=petstore_spec,
+        http_handlers=mock.ANY,
     )
     mock_strip_xscope.assert_called_once_with(mock_flattened_spec.return_value)
 
@@ -159,12 +155,8 @@ def test_flattened_spec_warning_if_no_origin_url(
 
     petstore_spec.flattened_spec
     wrap_flattened_spec.assert_called_once_with(
-        spec_dict=petstore_spec.spec_dict,
-        spec_resolver=petstore_spec.resolver,
-        spec_url=petstore_spec.origin_url,
-        http_handlers=mock_build_http_handlers.return_value,
-        spec_definitions=petstore_spec.definitions,
         swagger_spec=petstore_spec,
+        http_handlers=mock_build_http_handlers.return_value,
     )
 
     if has_origin_url:
@@ -191,12 +183,8 @@ def test_flattened_spec_warning_if_no_definitions(
 
     petstore_spec.flattened_spec
     wrap_flattened_spec.assert_called_once_with(
-        spec_dict=petstore_spec.spec_dict,
-        spec_resolver=petstore_spec.resolver,
-        spec_url=petstore_spec.origin_url,
-        http_handlers=mock_build_http_handlers.return_value,
-        spec_definitions=petstore_spec.definitions,
         swagger_spec=petstore_spec,
+        http_handlers=mock_build_http_handlers.return_value,
     )
 
     if has_spec_definitions:
