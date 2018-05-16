@@ -1,6 +1,11 @@
 Changelog
 =========
 
+4.13.3 (2018-05-16)
+-------------------
+- Add support for Content-Disposition filename - PR #262. Thanks elmirjagudin for your contribution!
+- Improve specs  flattening and dereferencing in case of relative references - PR #263
+
 4.13.2 (2018-03-19)
 -------------------
 - Fix bug where multiple schemes in the spec would sometimes cause a ``SwaggerSchemaError`` - PR #260
