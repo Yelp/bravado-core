@@ -1,0 +1,12 @@
+get:
+  description: This is the description of a random get endpoint
+  operationId: endpoint_v1
+  parameters:
+    - $ref: ../parameters.yaml#/parameters/number
+  responses:
+    '200':
+      $ref: ./responses.yaml#/200
+    '403':
+      $ref: ./responses.yaml#/403
+    default:
+      $ref: ./responses.yaml#/default

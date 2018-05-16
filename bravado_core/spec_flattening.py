@@ -22,6 +22,7 @@ from bravado_core.schema import is_ref
 from bravado_core.util import determine_object_type
 from bravado_core.util import ObjectType
 
+
 MARSHAL_REPLACEMENT_PATTERNS = {
     '/': '..',  # / is converted to .. (ie. api_docs/swager.json -> api_docs..swagger.json)
     '#': '|',  # # is converted to | (ie. swager.json#definitions -> swagger.json|definitions)
@@ -127,8 +128,8 @@ def _warn_if_uri_clash_on_same_marshaled_representation(uri_schema_mappings, mar
 
 
 def flattened_spec(
-    spec_dict, spec_resolver=None, spec_url=None, http_handlers=None,
-    marshal_uri_function=_marshal_uri, spec_definitions=None,
+    spec_dict=None, spec_resolver=None, spec_url=None, http_handlers=None,
+    marshal_uri_function=_marshal_uri, spec_definitions=None, swagger_spec=None,
 ):
     """
     Flatten Swagger Specs description into an unique and JSON serializable document.
@@ -147,6 +148,10 @@ def flattened_spec(
     Please refer to https://github.com/OAI/OpenAPI-Specification/blob/3.0.0/versions/2.0.md#responseObject for the
     most recent Swagger 2.0 specifications.
 
+    WARNING: In the future releases all the parameters except swagger_spec and marshal_uri_function will be removed.
+    Please make sure to use only those two parameters.
+    Until the deprecation is not effective you can still pass all the parameters but it's strongly discouraged.
+
     :param spec_dict: Swagger Spec dictionary representation. Note: the method assumes that the specs are valid specs.
     :type spec_dict: dict
     :param spec_resolver: Swagger Spec resolver for fetching external references
@@ -160,11 +165,38 @@ def flattened_spec(
     :param marshal_uri_function: function used to marshal uris in string suitable to be keys in Swagger Specs.
     :type marshal_uri_function: Callable with the same signature of ``_marshal_uri``
     :param spec_definitions: known swagger definitions (hint: definitions attribute of bravado_core.spec.Spec instance)
-    :type dict: bravado_core.spec.Spec
+    :type spec_definitions: dict
+    :param swagger_spec: bravado-core Spec object.
+        If the parameter is set it will take precedence over spec_dict, spec_resolver, spec_url,
+            http_handlers, spec_definitions parameters
+    :type swagger_spec: bravado_core.spec.Spec
 
     :return: Flattened representation of the Swagger Specs
     :rtype: dict
     """
+    # local imports due to circular dependency
+    from bravado_core.spec import Spec
+    from bravado_core.spec import build_http_handlers
+
+    if any(value is not None for value in (spec_dict, spec_resolver, spec_url, http_handlers, spec_definitions)):
+        warnings.warn(
+            message='In the next major release the all the parameters except swagger_spec and'
+                    'marshal_uri_function  will be removed from the signature. '
+                    'Please make sure to update your code to use only the newly supported parameters',
+            category=PendingDeprecationWarning,
+        )
+
+    if swagger_spec is not None:
+        spec_dict = swagger_spec.spec_dict
+        spec_resolver = swagger_spec.resolver
+        spec_url = swagger_spec.origin_url
+        http_handlers = build_http_handlers(swagger_spec.http_client)
+        spec_definitions = swagger_spec.definitions
+
+    if spec_dict is None:
+        raise ValueError(
+            'spec_dict is None, the method assumes to receive a valid swagger spec dict or a swagger spec object'
+        )
 
     # Create internal copy of spec_dict to avoid external dict pollution
     spec_dict = copy.deepcopy(spec_dict)
@@ -207,13 +239,17 @@ def flattened_spec(
     # Avoid object attribute extraction during descend
     resolve = spec_resolver.resolve
 
+    default_type_to_object = swagger_spec.config['default_type_to_object'] if swagger_spec else True
+
     def descend(value):
         if is_ref(value):
-            uri, deref_value = resolve(value['$ref'])
-
             # Update spec_resolver scope to be able to dereference relative specs from a not root file
-            with in_scope(spec_resolver, {'x-scope': [uri]}):
-                object_type = determine_object_type(object_dict=deref_value)
+            with in_scope(spec_resolver, value):
+                uri, deref_value = resolve(value['$ref'])
+                object_type = determine_object_type(
+                    object_dict=deref_value,
+                    default_type_to_object=default_type_to_object,
+                )
                 if object_type.get_root_holder() is None:
                     return descend(value=deref_value)
                 else:
@@ -247,7 +283,6 @@ def flattened_spec(
     resolved_spec = descend(value=spec_dict)
 
     if spec_definitions is not None:
-        from bravado_core.spec import Spec  # local import due to circular dependency
         # Creating the bravado_core.spec.Spec object will trigger models discovery and tagging.
         # The process will add x-model key to ``known_mappings['definitions']`` items
         Spec.from_dict(

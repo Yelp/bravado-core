@@ -12,6 +12,7 @@ from bravado_core.spec import CONFIG_DEFAULTS
 from bravado_core.spec import Spec
 from bravado_core.spec_flattening import _marshal_uri
 from bravado_core.spec_flattening import _warn_if_uri_clash_on_same_marshaled_representation
+from bravado_core.spec_flattening import flattened_spec
 
 
 @mock.patch('bravado_core.spec_flattening.warnings')
@@ -108,12 +109,34 @@ def test_marshal_url(target, expected_marshaled_uri):
 @mock.patch('bravado_core.spec.build_api_serving_url')
 @mock.patch('bravado_core.spec.flattened_spec')
 def test_flattened_spec_raises_if_configured_to_not_validate_swagger_specs(
-    mock_flattened_dict, mock_build_api_serving_url, petstore_spec,
+    mock_flattened_dict, mock_build_api_serving_url,
 ):
     petstore_spec = Spec(mock_flattened_dict, config=dict(CONFIG_DEFAULTS, validate_swagger_spec=False))
     with pytest.raises(RuntimeError) as excinfo:
         petstore_spec.flattened_spec
     assert 'Swagger Specs have to be validated before flattening.' == str(excinfo.value)
+
+
+@mock.patch('bravado_core.spec.strip_xscope', autospec=True)
+@mock.patch('bravado_core.spec.flattened_spec', autospec=True)
+@pytest.mark.parametrize('pre_built_spec', [True, False])
+def test_flattened_spec_build_specs_if_not_already_built(
+    mock_flattened_spec, mock_strip_xscope, minimal_swagger_dict, pre_built_spec
+):
+    petstore_spec = Spec(minimal_swagger_dict)
+    if pre_built_spec:
+        petstore_spec.build()
+
+    with mock.patch.object(petstore_spec, 'build', autospec=True) as mock_build:
+        petstore_spec.flattened_spec
+
+    if pre_built_spec:
+        assert not mock_build.called
+    else:
+        mock_build.assert_called_once_with()
+
+    mock_flattened_spec.assert_called_once_with(swagger_spec=petstore_spec)
+    mock_strip_xscope.assert_called_once_with(mock_flattened_spec.return_value)
 
 
 @pytest.mark.parametrize(
@@ -129,13 +152,7 @@ def test_flattened_spec_warning_if_no_origin_url(
         petstore_spec.origin_url = None
 
     petstore_spec.flattened_spec
-    wrap_flattened_spec.assert_called_once_with(
-        spec_dict=petstore_spec.spec_dict,
-        spec_resolver=petstore_spec.resolver,
-        spec_url=petstore_spec.origin_url,
-        http_handlers=mock_build_http_handlers.return_value,
-        spec_definitions=petstore_spec.definitions,
-    )
+    wrap_flattened_spec.assert_called_once_with(swagger_spec=petstore_spec)
 
     if has_origin_url:
         assert not mock_warnings.warn.called
@@ -160,13 +177,7 @@ def test_flattened_spec_warning_if_no_definitions(
         petstore_spec.definitions = None
 
     petstore_spec.flattened_spec
-    wrap_flattened_spec.assert_called_once_with(
-        spec_dict=petstore_spec.spec_dict,
-        spec_resolver=petstore_spec.resolver,
-        spec_url=petstore_spec.origin_url,
-        http_handlers=mock_build_http_handlers.return_value,
-        spec_definitions=petstore_spec.definitions,
-    )
+    wrap_flattened_spec.assert_called_once_with(swagger_spec=petstore_spec)
 
     if has_spec_definitions:
         assert not mock_warnings.warn.called
@@ -208,3 +219,33 @@ def test_flattened_specs_with_no_xmodel_tags(multi_file_with_no_xmodel_spec, fla
         http_handlers={},
     )
     assert flattened_spec == flattened_multi_file_with_no_xmodel_dict
+
+
+@mock.patch('bravado_core.spec_flattening.warnings')
+def test_flattened_specs_warns_if_long_list_of_parameters_is_passed(mock_warnings, minimal_swagger_spec):
+    assert flattened_spec(
+        spec_dict=minimal_swagger_spec.spec_dict,
+        spec_resolver=minimal_swagger_spec.resolver,
+        spec_url='',
+        spec_definitions={},
+    ) == minimal_swagger_spec.spec_dict
+    mock_warnings.warn.assert_called_once_with(
+        message='In the next major release the all the parameters except swagger_spec and'
+                'marshal_uri_function  will be removed from the signature. '
+                'Please make sure to update your code to use only the newly supported parameters',
+        category=PendingDeprecationWarning,
+    )
+
+
+def test_flattened_specs_raises_if_spec_dict_is_None():
+    with pytest.raises(ValueError) as excinfo:
+        flattened_spec(spec_dict=None)
+    assert 'spec_dict is None, the method assumes to receive a valid ' \
+           'swagger spec dict or a swagger spec object' in str(excinfo.value)
+
+
+@mock.patch('bravado_core.spec_flattening.warnings')
+def test_flattened_specs_raises_if_spec_resolver_and_spec_url_is_None(mock_warnings):
+    with pytest.raises(ValueError) as excinfo:
+        flattened_spec(spec_dict={}, spec_url=None, spec_resolver=None, spec_definitions={})
+    assert 'spec_resolver or spec_url should be defined' in str(excinfo.value)

@@ -124,6 +124,9 @@ class Spec(object):
             handlers=build_http_handlers(http_client),
         )
 
+        # spec dict used to build resources, in case internally_dereference_refs config is enabled
+        # it will be overridden by the dereferenced specs (by build method). More context in PR#263
+        self._internal_spec_dict = spec_dict
         self._validate_config()
 
     def _validate_config(self):
@@ -245,6 +248,9 @@ class Spec(object):
         # deref_flattened_spec depends on flattened_spec which assumes that model
         # discovery is performed
         run_post_processing(self)
+        # Flattening the specs requires resources to be available.
+        # Let's build them before self.deref_flattened_spec is called
+        self.resources = build_resources(self)
 
         if self.config['internally_dereference_refs']:
             deref_flattened_spec = self.deref_flattened_spec
@@ -253,23 +259,17 @@ class Spec(object):
             # Rebuild definitions using dereferences specs as base
             # this ensures that the generated models have no references
             run_post_processing(tmp_spec)
+            self.resources = build_resources(tmp_spec)
             self.definitions = tmp_spec.definitions
 
             # Avoid to evaluate is_ref every time, no references are possible at this time
             self.deref = lambda ref_dict: ref_dict
+            self._internal_spec_dict = self.deref_flattened_spec
 
         for format in self.config['formats']:
             self.register_format(format)
 
         self.api_url = build_api_serving_url(self.spec_dict, self.origin_url)
-        self.resources = build_resources(self)
-
-    @cached_property
-    def _internal_spec_dict(self):
-        if self.config['internally_dereference_refs']:
-            return self.deref_flattened_spec
-        else:
-            return self.spec_dict
 
     def _force_deref(self, ref_dict):
         """Dereference ref_dict (if it is indeed a ref) and return what the
@@ -364,16 +364,10 @@ class Spec(object):
 
         # If resources are defined it means that Spec has been built and so swagger specs have been validated
         if self.resources is None:
-            self._validate_spec()
+            self.build()
 
         return strip_xscope(
-            spec_dict=flattened_spec(
-                spec_dict=self.spec_dict,
-                spec_resolver=self.resolver,
-                spec_url=self.origin_url,
-                http_handlers=build_http_handlers(self.http_client),
-                spec_definitions=self.definitions,
-            ),
+            spec_dict=flattened_spec(swagger_spec=self),
         )
 
     @cached_property
