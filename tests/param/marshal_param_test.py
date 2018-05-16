@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import copy
+import datetime
 
 import pytest
 from mock import Mock
@@ -153,6 +154,46 @@ def test_body(empty_swagger_spec, param_spec):
     }
     marshal_param(param, 34, request)
     assert '34' == request['data']
+    assert APP_JSON == request['headers']['Content-Type']
+
+
+def test_body_nested_date(empty_swagger_spec, param_spec):
+    now = datetime.date.today()
+    now_param = {'updated_at': now}
+    now_str = '{"updated_at": "' + now.isoformat() + '"}'
+    param_spec['in'] = 'body'
+    param_spec['schema'] = {
+        'type': 'object'
+    }
+    del param_spec['type']
+    del param_spec['format']
+    param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
+    request = {
+        'headers': {
+        }
+    }
+    marshal_param(param, now_param, request)
+    assert now_str == request['data']
+    assert APP_JSON == request['headers']['Content-Type']
+
+
+def test_body_nested_datetime(empty_swagger_spec, param_spec):
+    now = datetime.datetime.utcnow()
+    now_param = {"updated_at": now}
+    now_str = '{"updated_at": "' + now.isoformat() + '"}'
+    param_spec['in'] = 'body'
+    param_spec['schema'] = {
+        'type': 'object'
+    }
+    del param_spec['type']
+    del param_spec['format']
+    param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
+    request = {
+        'headers': {
+        }
+    }
+    marshal_param(param, now_param, request)
+    assert now_str == request['data']
     assert APP_JSON == request['headers']['Content-Type']
 
 
