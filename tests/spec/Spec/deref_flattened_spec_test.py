@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import pytest
 from six import iterkeys
 from six import itervalues
 from six.moves.urllib_parse import urljoin
@@ -37,6 +38,7 @@ def _equivalent(spec, obj1, obj2):
         return obj1 == obj2
 
 
+@pytest.mark.xfail(reason='Flaky test, issue #219')
 def test_deref_flattened_spec_not_recursive_specs(petstore_spec):
     spec_dict = petstore_spec.spec_dict
     deref_spec_dict = petstore_spec.deref_flattened_spec
