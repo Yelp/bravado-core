@@ -373,6 +373,7 @@ class Spec(object):
                 spec_url=self.origin_url,
                 http_handlers=build_http_handlers(self.http_client),
                 spec_definitions=self.definitions,
+                swagger_spec=self,
             ),
         )
 

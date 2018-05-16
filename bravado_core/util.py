@@ -125,7 +125,7 @@ class ObjectType(Enum):
         return self.value
 
 
-def determine_object_type(object_dict):
+def determine_object_type(object_dict, default_type_to_object=None):
     """
     Use best guess to determine the object type based on the object keys.
 
@@ -133,8 +133,10 @@ def determine_object_type(object_dict):
     the four types of object that could be references in the specs: parameter, path item, response and schema.
 
     :type object_dict: dict
+    :default_type_to_object: Default object type attribute to object if missing (as from bravado_core.spec.Spec config)
+    :type default_type_to_object: bool
 
-    :return: determined type of ``object_dict``. The return values is an ObjectType:
+    :return: determined type of ``object_dict``. The return values is an ObjectType
     :rtype: ObjectType
     """
 
@@ -171,7 +173,10 @@ def determine_object_type(object_dict):
                 # NOTE: In case the method is mis-determining the type of a schema object, confusing it with a
                 #       response type it will be enough to add, to the object, one key that is not defined
                 #       in ``response_allowed_keys``.  (ie. ``additionalProperties: {}``, implicitly defined be specs)
-                return ObjectType.SCHEMA
+                if default_type_to_object or 'type' in object_dict:
+                    return ObjectType.SCHEMA
+                else:
+                    return ObjectType.UNKNOWN
 
 
 def strip_xscope(spec_dict):

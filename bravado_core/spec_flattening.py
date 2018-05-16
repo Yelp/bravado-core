@@ -128,7 +128,7 @@ def _warn_if_uri_clash_on_same_marshaled_representation(uri_schema_mappings, mar
 
 def flattened_spec(
     spec_dict, spec_resolver=None, spec_url=None, http_handlers=None,
-    marshal_uri_function=_marshal_uri, spec_definitions=None,
+    marshal_uri_function=_marshal_uri, spec_definitions=None, swagger_spec=None,
 ):
     """
     Flatten Swagger Specs description into an unique and JSON serializable document.
@@ -207,12 +207,17 @@ def flattened_spec(
     # Avoid object attribute extraction during descend
     resolve = spec_resolver.resolve
 
+    default_type_to_object = swagger_spec.config['default_type_to_object'] if swagger_spec else True
+
     def descend(value):
         if is_ref(value):
             # Update spec_resolver scope to be able to dereference relative specs from a not root file
             with in_scope(spec_resolver, value):
                 uri, deref_value = resolve(value['$ref'])
-                object_type = determine_object_type(object_dict=deref_value)
+                object_type = determine_object_type(
+                    object_dict=deref_value,
+                    default_type_to_object=default_type_to_object,
+                )
                 if object_type.get_root_holder() is None:
                     return descend(value=deref_value)
                 else:

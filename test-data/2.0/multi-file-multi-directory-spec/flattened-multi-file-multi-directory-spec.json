@@ -2,48 +2,11 @@
   "consumes": [
     "application/json"
   ],
+  "info": {
+    "title": "Consumer Mobile API v2 Service",
+    "version": "1.46.0"
+  },
   "definitions": {
-    "lfile:definitions.yaml": {
-      "DebugErrorResponse": {
-        "allOf": [
-          {
-            "$ref": "#/definitions/lfile:definitions.yaml|..ErrorResponse"
-          },
-          {
-            "properties": {
-              "stacktrace": {
-                "description": "Stringified stacktrace",
-                "type": "string"
-              }
-            }
-          }
-        ],
-        "type": "object",
-        "x-model": "DebugErrorResponse"
-      },
-      "ErrorResponse": {
-        "properties": {
-          "error_code": {
-            "description": "Machine-friendly error code",
-            "type": "string"
-          },
-          "error_description": {
-            "description": "Human-friendly error code",
-            "type": "string"
-          }
-        },
-        "required": [
-          "error_code"
-        ],
-        "type": "object",
-        "x-derived-objects": [
-          {
-            "$ref": "#/definitions/lfile:endpoint..v1..objects.yaml|..EndpointErrorObject"
-          }
-        ],
-        "x-model": "ErrorResponse"
-      }
-    },
     "lfile:definitions.yaml|..ErrorResponse": {
       "properties": {
         "error_code": {
@@ -59,67 +22,23 @@
         "error_code"
       ],
       "type": "object",
+      "x-model": "ErrorResponse",
       "x-derived-objects": [
         {
-          "$ref": "#/definitions/lfile:endpoint..v1..objects.yaml|..EndpointErrorObject"
-        }
-      ],
-      "x-model": "ErrorResponse"
-    },
-    "lfile:endpoint..v1..objects.yaml|..EndpointErrorObject": {
-      "allOf": [
-        {
-          "$ref": "#/definitions/lfile:definitions.yaml|..ErrorResponse"
-        },
-        {
-          "properties": {
-            "error_specific_to_this_endpoint": {
-              "type": "string"
-            }
-          }
-        }
-      ],
-      "x-model": "lfile:endpoint..v1..objects.yaml|..EndpointErrorObject"
-    },
-    "lfile:endpoint..v1..responses.yaml": {
-      "200": {
-        "description": "HTTP/200",
-        "schema": {
-          "type": "object",
-          "x-model": "endpoint_v1_HTTP_OK"
-        }
-      },
-      "403": {
-        "description": "HTTP/403",
-        "schema": {
           "allOf": [
             {
               "$ref": "#/definitions/lfile:definitions.yaml|..ErrorResponse"
             },
             {
               "properties": {
-                "action": {
-                  "description": "name of the forbidden action",
+                "error_specific_to_this_endpoint": {
                   "type": "string"
                 }
-              },
-              "required": [
-                "action"
-              ],
-              "type": "object",
-              "x-model": "endpoint_v1_HTTP_FORBIDDEN_action_part"
+              }
             }
-          ],
-          "type": "object",
-          "x-model": "endpoint_v1_HTTP_FORBIDDEN"
+          ]
         }
-      },
-      "default": {
-        "description": "Unplanned status code",
-        "schema": {
-          "$ref": "#/definitions/lfile:endpoint..v1..objects.yaml|..EndpointErrorObject"
-        }
-      }
+      ]
     },
     "lfile:swagger.yaml|..definitions..DebugErrorResponse": {
       "allOf": [
@@ -137,6 +56,23 @@
       ],
       "type": "object",
       "x-model": "DebugErrorResponse"
+    },
+    "lfile:swagger.yaml|..definitions..endpoint_v1_HTTP_OK": {
+      "type": "object",
+      "x-model": "endpoint_v1_HTTP_OK"
+    },
+    "lfile:swagger.yaml|..definitions..endpoint_v1_HTTP_FORBIDDEN_action_part": {
+      "properties": {
+        "action": {
+          "description": "name of the forbidden action",
+          "type": "string"
+        }
+      },
+      "required": [
+        "action"
+      ],
+      "type": "object",
+      "x-model": "endpoint_v1_HTTP_FORBIDDEN_action_part"
     },
     "lfile:swagger.yaml|..definitions..endpoint_v1_HTTP_FORBIDDEN": {
       "allOf": [
@@ -159,35 +95,6 @@
       ],
       "type": "object",
       "x-model": "endpoint_v1_HTTP_FORBIDDEN"
-    },
-    "lfile:swagger.yaml|..definitions..endpoint_v1_HTTP_FORBIDDEN_action_part": {
-      "properties": {
-        "action": {
-          "description": "name of the forbidden action",
-          "type": "string"
-        }
-      },
-      "required": [
-        "action"
-      ],
-      "type": "object",
-      "x-model": "endpoint_v1_HTTP_FORBIDDEN_action_part"
-    },
-    "lfile:swagger.yaml|..definitions..endpoint_v1_HTTP_OK": {
-      "type": "object",
-      "x-model": "endpoint_v1_HTTP_OK"
-    }
-  },
-  "info": {
-    "title": "Consumer Mobile API v2 Service",
-    "version": "1.46.0"
-  },
-  "parameters": {
-    "lfile:endpoint..parameters.yaml|..parameters..number": {
-      "in": "query",
-      "name": "number",
-      "required": false,
-      "type": "integer"
     }
   },
   "paths": {
@@ -201,7 +108,55 @@
           }
         ],
         "responses": {
-          "$ref": "#/definitions/lfile:endpoint..v1..responses.yaml"
+          "200": {
+            "description": "HTTP/200",
+            "schema": {
+              "type": "object",
+              "x-model": "endpoint_v1_HTTP_OK"
+            }
+          },
+          "403": {
+            "description": "HTTP/403",
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/lfile:definitions.yaml|..ErrorResponse"
+                },
+                {
+                  "properties": {
+                    "action": {
+                      "description": "name of the forbidden action",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "action"
+                  ],
+                  "type": "object",
+                  "x-model": "endpoint_v1_HTTP_FORBIDDEN_action_part"
+                }
+              ],
+              "type": "object",
+              "x-model": "endpoint_v1_HTTP_FORBIDDEN"
+            }
+          },
+          "default": {
+            "description": "Unplanned status code",
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/lfile:definitions.yaml|..ErrorResponse"
+                },
+                {
+                  "properties": {
+                    "error_specific_to_this_endpoint": {
+                      "type": "string"
+                    }
+                  }
+                }
+              ]
+            }
+          }
         }
       }
     }
@@ -209,5 +164,13 @@
   "produces": [
     "application/json"
   ],
-  "swagger": "2.0"
+  "swagger": "2.0",
+  "parameters": {
+    "lfile:endpoint..parameters.yaml|..parameters..number": {
+      "in": "query",
+      "name": "number",
+      "type": "integer",
+      "required": false
+    }
+  }
 }
