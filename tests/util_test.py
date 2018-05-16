@@ -118,16 +118,18 @@ def test_AliasKeyDict_del():
 
 
 @pytest.mark.parametrize(
-    'object_dict, expected_object_type',
+    'default_type_to_object, object_dict, expected_object_type',
     (
-        [{'in': 'body', 'name': 'body', 'required': True, 'schema': {'type': 'object'}}, ObjectType.PARAMETER],
-        [{'get': {'responses': {'200': {'description': 'response description'}}}}, ObjectType.PATH_ITEM],
-        [{'description': 'response description', 'schema': {'type': 'object'}}, ObjectType.RESPONSE],
-        [{'description': 'response description', 'parameters': {'param': {'type': 'object'}}}, ObjectType.SCHEMA],
+        [True, 'anything that is not a dictionary', ObjectType.UNKNOWN],
+        [True, {'in': 'body', 'name': 'body', 'required': True, 'schema': {'type': 'object'}}, ObjectType.PARAMETER],
+        [True, {'get': {'responses': {'200': {'description': 'response description'}}}}, ObjectType.PATH_ITEM],
+        [True, {'description': 'response description', 'schema': {'type': 'object'}}, ObjectType.RESPONSE],
+        [True, {'description': 'response description', 'parameters': {'param': {'type': 'object'}}}, ObjectType.SCHEMA],
+        [False, {'description': 'response description', 'parameters': {'param': {'type': 'object'}}}, ObjectType.UNKNOWN],  # noqa
     )
 )
-def test_determine_object_type(object_dict, expected_object_type):
-    assert determine_object_type(object_dict) == expected_object_type
+def test_determine_object_type(default_type_to_object, object_dict, expected_object_type):
+    assert determine_object_type(object_dict, default_type_to_object) == expected_object_type
 
 
 def test_empty():

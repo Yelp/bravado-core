@@ -170,3 +170,9 @@ def test_flattened_multi_file_multi_directory_specs(
     multi_file_multi_directory_spec, flattened_multi_file_multi_directory_dict,
 ):
     assert multi_file_multi_directory_spec.flattened_spec == flattened_multi_file_multi_directory_dict
+
+    # Ensure that flattened_spec is a valid swagger spec
+    try:
+        Spec.from_dict(multi_file_multi_directory_spec.flattened_spec)
+    except Exception as e:
+        pytest.fail('Unexpected exception: {e}'.format(e=e), e.__traceback__)

@@ -140,6 +140,7 @@ def test_flattened_spec_build_specs_if_not_already_built(
         spec_url=petstore_spec.origin_url,
         http_handlers=mock.ANY,
         spec_definitions=mock.ANY,
+        swagger_spec=petstore_spec,
     )
     mock_strip_xscope.assert_called_once_with(mock_flattened_spec.return_value)
 
@@ -163,6 +164,7 @@ def test_flattened_spec_warning_if_no_origin_url(
         spec_url=petstore_spec.origin_url,
         http_handlers=mock_build_http_handlers.return_value,
         spec_definitions=petstore_spec.definitions,
+        swagger_spec=petstore_spec,
     )
 
     if has_origin_url:
@@ -194,6 +196,7 @@ def test_flattened_spec_warning_if_no_definitions(
         spec_url=petstore_spec.origin_url,
         http_handlers=mock_build_http_handlers.return_value,
         spec_definitions=petstore_spec.definitions,
+        swagger_spec=petstore_spec,
     )
 
     if has_spec_definitions:
