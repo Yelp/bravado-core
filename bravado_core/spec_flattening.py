@@ -195,7 +195,7 @@ def flattened_spec(
 
     if spec_dict is None:
         raise ValueError(
-            'spec_dict is None, the method assumes to receive a valid swagger spec dict'
+            'spec_dict is None, the method assumes to receive a valid swagger spec dict or a swagger spec object'
         )
 
     # Create internal copy of spec_dict to avoid external dict pollution

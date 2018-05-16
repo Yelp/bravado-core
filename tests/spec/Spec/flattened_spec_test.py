@@ -240,7 +240,8 @@ def test_flattened_specs_warns_if_long_list_of_parameters_is_passed(mock_warning
 def test_flattened_specs_raises_if_spec_dict_is_None():
     with pytest.raises(ValueError) as excinfo:
         flattened_spec(spec_dict=None)
-    assert 'spec_dict is None, the method assumes to receive a valid swagger spec dict' in str(excinfo.value)
+    assert 'spec_dict is None, the method assumes to receive a valid ' \
+           'swagger spec dict or a swagger spec object' in str(excinfo.value)
 
 
 @mock.patch('bravado_core.spec_flattening.warnings')
