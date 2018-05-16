@@ -367,10 +367,7 @@ class Spec(object):
             self.build()
 
         return strip_xscope(
-            spec_dict=flattened_spec(
-                swagger_spec=self,
-                http_handlers=build_http_handlers(self.http_client),
-            ),
+            spec_dict=flattened_spec(swagger_spec=self),
         )
 
     @cached_property
