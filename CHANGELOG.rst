@@ -1,6 +1,10 @@
 Changelog
 =========
 
+4.13.4 (2018-05-24)
+-------------------
+- Fix marsharling and unmarshaling of optional body parameters. PR #268
+
 4.13.3 (2018-05-16)
 -------------------
 - Add support for Content-Disposition filename - PR #262. Thanks elmirjagudin for your contribution!
