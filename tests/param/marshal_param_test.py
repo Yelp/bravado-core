@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import copy
+import datetime
+from json import loads
 
 import pytest
 from mock import Mock
@@ -234,3 +236,37 @@ def test_required_param_failure(minimal_swagger_spec, string_param_spec,
     with pytest.raises(SwaggerMappingError) as excinfo:
         marshal_param(param, value, request_dict)
     assert 'is a required value' in str(excinfo.value)
+
+
+@pytest.mark.parametrize(
+    'param_value, expected_value',
+    [
+        (None, None),
+        ({'an-attribute': datetime.date(2018, 5, 24)}, {'an-attribute': '2018-05-24'}),
+    ],
+)
+def test_body_parameter_not_present_not_required(empty_swagger_spec, request_dict, param_value, expected_value):
+    param_spec = {
+        'in': 'body',
+        'name': 'body',
+        'required': False,
+        'schema': {
+            'type': 'object',
+            'properties': {
+                'an-attribute': {
+                    'type': 'string',
+                    'format': 'date',
+                },
+            },
+            'required': [
+                'an-attribute',
+            ],
+        },
+    }
+    request = {
+        'headers': {
+        }
+    }
+    param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
+    marshal_param(param, param_value, request)
+    assert expected_value == (loads(request['data']) if 'data' in request else None)
