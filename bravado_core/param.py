@@ -115,7 +115,7 @@ def marshal_param(param, value, request):
 
     # Rely on unmarshalling behavior on the other side of the pipe to use
     # the default value if one is available.
-    if value is None and not schema.is_required(swagger_spec, param_spec):
+    if value is None and not param.required:
         return
 
     value = marshal_schema_object(swagger_spec, param_spec, value)
@@ -188,7 +188,7 @@ def unmarshal_param(param, request):
             "Don't know how to unmarshal_param with location {0}".
             format(location))
 
-    if raw_value is None and not schema.is_required(swagger_spec, param_spec):
+    if raw_value is None and not param.required:
         return None
 
     if param_type == 'array' and location != 'body':
