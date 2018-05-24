@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import datetime
+
 import pytest
 from mock import Mock
 from mock import patch
@@ -266,3 +268,34 @@ def test_ref(minimal_swagger_dict, array_param_spec):
     request = Mock(spec=IncomingRequest, query={'animals': value})
     result = unmarshal_param(param, request)
     assert ['cat', 'dog', 'bird'] == result
+
+
+@pytest.mark.parametrize(
+    'body, expected_value',
+    [
+        (None, None),
+        ({'an-attribute': '2018-05-24'}, {'an-attribute': datetime.date(2018, 5, 24)}),
+    ],
+)
+def test_body_parameter_not_present_not_required(empty_swagger_spec, body, expected_value):
+    param_spec = {
+        'in': 'body',
+        'name': 'body',
+        'required': False,
+        'schema': {
+            'type': 'object',
+            'properties': {
+                'an-attribute': {
+                    'type': 'string',
+                    'format': 'date',
+                },
+            },
+            'required': [
+                'an-attribute',
+            ],
+        },
+    }
+    param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
+    request = Mock(spec=IncomingRequest, json=Mock(return_value=body))
+    value = unmarshal_param(param, request)
+    assert expected_value == value
