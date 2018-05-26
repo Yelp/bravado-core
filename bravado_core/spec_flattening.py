@@ -156,13 +156,7 @@ def flattened_spec(swagger_spec, marshal_uri_function=_marshal_uri):
     :return: Flattened representation of the Swagger Specs
     :rtype: dict
     """
-    spec_dict = swagger_spec.spec_dict
-    spec_resolver = swagger_spec.resolver
     spec_url = swagger_spec.origin_url
-    spec_definitions = swagger_spec.definitions
-
-    # Create internal copy of spec_dict to avoid external dict pollution
-    spec_dict = copy.deepcopy(spec_dict)
 
     if spec_url is None:
         warnings.warn(
@@ -184,7 +178,8 @@ def flattened_spec(swagger_spec, marshal_uri_function=_marshal_uri):
     )
 
     # Avoid object attribute extraction during descend
-    resolve = spec_resolver.resolve
+    spec_resolver = swagger_spec.resolver
+    resolve = swagger_spec.resolver.resolve
 
     default_type_to_object = swagger_spec.config['default_type_to_object'] if swagger_spec else True
 
@@ -227,9 +222,11 @@ def flattened_spec(swagger_spec, marshal_uri_function=_marshal_uri):
         else:
             return value
 
-    resolved_spec = descend(value=spec_dict)
+    # Create internal copy of spec_dict to avoid external dict pollution
+    resolved_spec = descend(value=copy.deepcopy(swagger_spec.spec_dict))
 
-    if spec_definitions is not None:
+    # If definitions were identified by the swagger_spec object
+    if swagger_spec.definitions is not None:
         # local imports due to circular dependency
         from bravado_core.spec import Spec
 
@@ -253,7 +250,7 @@ def flattened_spec(swagger_spec, marshal_uri_function=_marshal_uri):
             for definition in itervalues(known_mappings['definitions'])
         }
 
-        for model_name, model_type in iteritems(spec_definitions):
+        for model_name, model_type in iteritems(swagger_spec.definitions):
             if model_name in flatten_models:
                 continue
             model_url = urlparse(urljoin(spec_url, '#/definitions/{}'.format(model_name)))
