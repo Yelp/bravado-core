@@ -1,0 +1,21 @@
+{
+    "definitions": {
+        "not_referenced_models_in_not_direcly_linked_file": {
+            "type": "object"
+        },
+        "random_integer": {
+            "type": "object",
+            "properties": {
+                "value": {
+                    "type": "integer"
+                },
+                "min-value": {
+                    "type": "integer"
+                },
+                "max-value": {
+                    "type": "integer"
+                }
+            }
+        }
+    }
+}

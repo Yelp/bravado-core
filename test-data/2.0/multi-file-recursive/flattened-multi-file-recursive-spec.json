@@ -1,6 +1,11 @@
 {
   "definitions": {
     "lfile:aux.json|..definitions..not_used_remote_reference": {
+      "properties": {
+        "random_number": {
+          "$ref": "#/definitions/lfile:aux_2.json|..definitions..random_integer"
+        }
+      },
       "type": "object",
       "x-model": "not_used_remote_reference"
     },
@@ -18,6 +23,25 @@
       ],
       "type": "object",
       "x-model": "ping"
+    },
+    "lfile:aux_2.json|..definitions..not_referenced_models_in_not_direcly_linked_file": {
+      "type": "object",
+      "x-model": "not_referenced_models_in_not_direcly_linked_file"
+    },
+    "lfile:aux_2.json|..definitions..random_integer": {
+      "properties": {
+        "max-value": {
+          "type": "integer"
+        },
+        "min-value": {
+          "type": "integer"
+        },
+        "value": {
+          "type": "integer"
+        }
+      },
+      "type": "object",
+      "x-model": "random_integer"
     },
     "lfile:swagger.json|..definitions..model_with_allOf_recursive": {
       "allOf": [
@@ -39,11 +63,6 @@
       "x-model": "model_with_allOf_recursive"
     },
     "lfile:swagger.json|..definitions..not_used": {
-      "properties": {
-        "not_used_remote_reference": {
-          "$ref": "#/definitions/lfile:aux.json|..definitions..not_used_remote_reference"
-        }
-      },
       "type": "object",
       "x-model": "not_used"
     },

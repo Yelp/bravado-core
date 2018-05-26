@@ -2,7 +2,7 @@
   "definitions": {
     "lfile:aux.json|..definitions..referenced_object": {
       "type": "object",
-      "x-model": "lfile:aux.json|..definitions..referenced_object"
+      "x-model": "referenced_object"
     },
     "lfile:swagger.json|..definitions..object": {
       "properties": {
