@@ -770,28 +770,63 @@ def _post_process_spec(spec_dict, spec_resolver, on_container_callbacks):
 
 def _run_post_processing(spec):
     visited_models = {}
-    # Discover all the models
-    _post_process_spec(
-        spec_dict=spec.spec_dict,
-        spec_resolver=spec.resolver,
-        on_container_callbacks=[
-            functools.partial(
-                _tag_models,
-                visited_models=visited_models,
-                swagger_spec=spec,
-            ),
-            functools.partial(
-                _bless_models,
-                visited_models=visited_models,
-                swagger_spec=spec,
-            ),
-            functools.partial(
-                _collect_models,
-                models=spec.definitions,
-                swagger_spec=spec,
-            ),
-        ],
-    )
+
+    def _call_post_process_spec(spec_dict):
+        # Discover all the models in spec_dict
+        _post_process_spec(
+            spec_dict=spec_dict,
+            spec_resolver=spec.resolver,
+            on_container_callbacks=[
+                functools.partial(
+                    _tag_models,
+                    visited_models=visited_models,
+                    swagger_spec=spec,
+                ),
+                functools.partial(
+                    _bless_models,
+                    visited_models=visited_models,
+                    swagger_spec=spec,
+                ),
+                functools.partial(
+                    _collect_models,
+                    models=spec.definitions,
+                    swagger_spec=spec,
+                ),
+            ],
+        )
+
+    # Post process specs to identify models
+    _call_post_process_spec(spec.spec_dict)
+
+    for additional_file in _get_referred_files(spec):
+        # Post process each referenced specs to identify models in definitions of linked files
+        with spec.resolver.in_scope(additional_file):
+            _call_post_process_spec(
+                spec.resolver.store[additional_file],
+            )
+
+
+def _get_referred_files(swagger_spec):
+    """
+    :type swagger_spec: bravado_core.spec.Spec
+    """
+    processed_files = {
+        uri
+        for uri in swagger_spec.resolver.store
+        if uri == swagger_spec.origin_url or re.match(r'http://json-schema.org/draft-\d+/schema', uri)
+    }
+
+    while True:
+        referred_files = [
+            uri
+            for uri in swagger_spec.resolver.store
+            if uri not in processed_files
+        ]
+        if referred_files and referred_files[0]:
+            processed_files.add(referred_files[0])
+            yield referred_files[0]
+        else:
+            return
 
 
 def model_discovery(swagger_spec):
