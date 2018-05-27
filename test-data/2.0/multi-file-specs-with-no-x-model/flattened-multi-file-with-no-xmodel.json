@@ -10,7 +10,7 @@
       "type": "object",
       "x-model": "lfile:aux.json|..definitions..referenced_object"
     },
-    "lfile:swagger.json|..definitions..object": {
+    "lfile:swagger.json|..definitions..object..x-model": {
       "properties": {
         "property": {
           "$ref": "#/definitions/lfile:aux.json|..definitions..referenced_object"

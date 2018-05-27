@@ -27,7 +27,9 @@ def test_tags_model(minimal_swagger_dict, pet_model_spec):
         'Pet',
         ['definitions', 'Pet'],
         visited_models={},
-        swagger_spec=swagger_spec)
+        swagger_spec=swagger_spec,
+        json_reference=None,
+    )
     assert pet_model_spec['x-model'] == 'Pet'
 
 
@@ -40,7 +42,9 @@ def test_type_missing(minimal_swagger_dict, pet_model_spec):
         'Pet',
         ['definitions', 'Pet'],
         visited_models={},
-        swagger_spec=swagger_spec)
+        swagger_spec=swagger_spec,
+        json_reference=None,
+    )
     assert 'x-model' not in pet_model_spec
 
 
@@ -57,7 +61,9 @@ def test_model_not_object(minimal_swagger_dict):
         'Pet',
         ['definitions', 'Pet'],
         visited_models={},
-        swagger_spec=swagger_spec)
+        swagger_spec=swagger_spec,
+        json_reference=None,
+    )
     assert 'x-model' not in minimal_swagger_dict['definitions']['Pet']
 
 
@@ -69,7 +75,9 @@ def test_path_too_short(minimal_swagger_dict, pet_model_spec):
         'definitions',
         ['definitions'],
         visited_models={},
-        swagger_spec=swagger_spec)
+        swagger_spec=swagger_spec,
+        json_reference=None,
+    )
     assert 'x-model' not in pet_model_spec
 
 
@@ -90,6 +98,7 @@ def test_duplicate_model(mock_log, minimal_swagger_dict, pet_model_spec, use_mod
             ['definitions', 'Pet'],
             visited_models={'Pet': ['definitions', 'Pet']},
             swagger_spec=swagger_spec,
+            json_reference=None,
         )
     except ValueError as e:
         raised_exception = e
@@ -111,5 +120,7 @@ def test_skip_already_tagged_models(minimal_swagger_dict, pet_model_spec):
         'Pet',
         ['definitions', 'Pet'],
         visited_models={},
-        swagger_spec=swagger_spec)
+        swagger_spec=swagger_spec,
+        json_reference=None,
+    )
     assert pet_model_spec['x-model'] == 'SpecialPet'

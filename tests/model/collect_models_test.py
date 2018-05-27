@@ -29,6 +29,7 @@ def test_simple(minimal_swagger_dict, pet_model_spec):
         ['definitions', 'Pet', 'x-model'],
         models=models,
         swagger_spec=swagger_spec,
+        json_reference='origin_url#/definitions/Pet/x-model',
     )
     assert 'Pet' in models
 
@@ -59,6 +60,7 @@ def test_no_model_type_generation_for_not_object_type(minimal_swagger_dict):
         ['definitions', 'Pets', 'x-model'],
         models=models,
         swagger_spec=swagger_spec,
+        json_reference=None,
     )
     assert 'Pets' not in models
 
@@ -82,6 +84,7 @@ def test_raise_error_if_duplicate_models_are_identified(minimal_swagger_dict, pe
             path,
             models=models,
             swagger_spec=swagger_spec,
+            json_reference=None,
         )
 
     expected_lines = [
