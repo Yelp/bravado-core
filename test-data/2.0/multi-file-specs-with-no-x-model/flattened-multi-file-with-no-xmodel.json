@@ -1,16 +1,10 @@
 {
-  "swagger": "2.0",
-  "info": {
-    "title": "Test",
-    "version": "1.0"
-  },
-  "paths": {},
   "definitions": {
     "lfile:aux.json|..definitions..referenced_object": {
       "type": "object",
       "x-model": "lfile:aux.json|..definitions..referenced_object"
     },
-    "lfile:swagger.json|..definitions..object..x-model": {
+    "lfile:swagger.json|..definitions..object": {
       "properties": {
         "property": {
           "$ref": "#/definitions/lfile:aux.json|..definitions..referenced_object"
@@ -19,5 +13,11 @@
       "type": "object",
       "x-model": "object"
     }
-  }
+  },
+  "info": {
+    "title": "Test",
+    "version": "1.0"
+  },
+  "paths": {},
+  "swagger": "2.0"
 }

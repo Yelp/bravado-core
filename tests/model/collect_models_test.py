@@ -25,11 +25,9 @@ def test_simple(minimal_swagger_dict, pet_model_spec):
     models = {}
     _collect_models(
         minimal_swagger_dict['definitions']['Pet'],
-        'x-model',
-        ['definitions', 'Pet', 'x-model'],
         models=models,
         swagger_spec=swagger_spec,
-        json_reference='origin_url#/definitions/Pet/x-model',
+        json_reference='#/definitions/Pet/x-model',
     )
     assert 'Pet' in models
 
@@ -56,11 +54,9 @@ def test_no_model_type_generation_for_not_object_type(minimal_swagger_dict):
     models = {}
     _collect_models(
         minimal_swagger_dict['definitions']['Pets'],
-        'x-model',
-        ['definitions', 'Pets', 'x-model'],
         models=models,
         swagger_spec=swagger_spec,
-        json_reference=None,
+        json_reference='#/definitions/Pets/x-model',
     )
     assert 'Pets' not in models
 
@@ -76,19 +72,21 @@ def test_raise_error_if_duplicate_models_are_identified(minimal_swagger_dict, pe
             model_spec={},
         )
     }
-    path = ['definitions', model_name, 'x-model'],
+
+    json_reference = '#/definitions/{model_name}/x-model'.format(model_name=model_name)
     with pytest.raises(ValueError) as excinfo:
         _collect_models(
             minimal_swagger_dict['definitions'][model_name],
-            'x-model',
-            path,
             models=models,
             swagger_spec=swagger_spec,
-            json_reference=None,
+            json_reference=json_reference,
         )
 
     expected_lines = [
-        'Identified duplicated model: model_name "{mod_name}", path: {path}.'.format(mod_name=model_name, path=path),
+        'Identified duplicated model: model_name "{mod_name}", uri: {json_reference}.'.format(
+            mod_name=model_name,
+            json_reference=json_reference,
+        ),
         'Known model spec: "{}"',
         'New model spec: "{pet_model_spec}"'.format(pet_model_spec=pet_model_spec),
         'TIP: enforce different model naming by using {MODEL_MARKER}'.format(MODEL_MARKER='x-model'),

@@ -28,7 +28,7 @@ def test_single_key():
         on_container_callbacks=[callback],
     )
     assert callback.call_count == 1
-    callback.assert_called_once_with(spec_dict, 'definitions', ['definitions'], json_reference='#/definitions')
+    callback.assert_called_once_with(spec_dict, '#/definitions')
 
 
 def test_visits_refs_only_once():
@@ -43,9 +43,9 @@ def test_visits_refs_only_once():
     # Yech! mock doesn't make this easy
     mutable = {'cnt': 0}
 
-    def callback(container, key, path, mutable, json_reference):
+    def callback(container, json_reference, mutable):
         # Bump the mutable counter every time bar is de-reffed
-        if key == 'bar':
+        if json_reference.endswith('/bar'):
             mutable['cnt'] += 1
 
     _post_process_spec(
