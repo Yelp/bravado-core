@@ -24,6 +24,7 @@ def test_model_discovery_flow_with_ref_dereference(mock__run_post_processing, mi
         config={
             'internally_dereference_refs': True,
         },
+        origin_url='',
     )
     model_discovery(swagger_spec=spec)
 

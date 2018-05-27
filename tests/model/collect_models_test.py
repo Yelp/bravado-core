@@ -30,6 +30,7 @@ def test_simple(minimal_swagger_dict, pet_model_spec):
         json_reference='#/definitions/Pet/x-model',
     )
     assert 'Pet' in models
+    assert models['Pet']._json_reference == '#/definitions/Pet'
 
 
 def test_no_model_type_generation_for_not_object_type(minimal_swagger_dict):

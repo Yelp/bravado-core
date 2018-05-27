@@ -193,7 +193,12 @@ def _collect_models(container, json_reference, models, swagger_spec):
         model_name = _get_model_name(container)
         model_type = models.get(model_name)
         if not model_type:
-            models[model_name] = create_model_type(swagger_spec, model_name, model_spec)
+            models[model_name] = create_model_type(
+                swagger_spec=swagger_spec,
+                model_name=model_name,
+                model_spec=model_spec,
+                json_reference=re.sub('/{MODEL_MARKER}$'.format(MODEL_MARKER=MODEL_MARKER), '', json_reference),
+            )
         elif (
             # the condition with strip_xscope is the most selective check
             # but it implies memory allocation, so additional lightweight checks
@@ -557,7 +562,7 @@ class ModelDocstring(object):
         return cls.__docstring__
 
 
-def create_model_type(swagger_spec, model_name, model_spec, bases=(Model,)):
+def create_model_type(swagger_spec, model_name, model_spec, bases=(Model,), json_reference=None):
     """Create a dynamic class from the model data defined in the swagger
     spec.
 
@@ -587,6 +592,7 @@ def create_model_type(swagger_spec, model_name, model_spec, bases=(Model,)):
         _model_spec=model_spec,
         _properties=collapsed_properties(model_spec, swagger_spec),
         _inherits_from=inherits_from,
+        _json_reference=json_reference,
     ))
 
 

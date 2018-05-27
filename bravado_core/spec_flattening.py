@@ -8,7 +8,6 @@ from collections import defaultdict
 from six import iteritems
 from six import iterkeys
 from six import itervalues
-from six.moves.urllib.parse import urljoin
 from six.moves.urllib.parse import urlparse
 from six.moves.urllib.parse import urlunparse
 from six.moves.urllib_parse import ParseResult
@@ -253,7 +252,7 @@ def flattened_spec(swagger_spec, marshal_uri_function=_marshal_uri):
         for model_name, model_type in iteritems(swagger_spec.definitions):
             if model_name in flatten_models:
                 continue
-            model_url = urlparse(urljoin(spec_url, '#/definitions/{}'.format(model_name)))
+            model_url = urlparse(model_type._json_reference)
             known_mappings['definitions'][model_url] = descend(value=model_type._model_spec)
 
     for mapping_key, mappings in iteritems(known_mappings):
