@@ -12,7 +12,6 @@ from bravado_core.spec import CONFIG_DEFAULTS
 from bravado_core.spec import Spec
 from bravado_core.spec_flattening import _marshal_uri
 from bravado_core.spec_flattening import _warn_if_uri_clash_on_same_marshaled_representation
-from bravado_core.spec_flattening import flattened_spec
 
 
 @mock.patch('bravado_core.spec_flattening.warnings')
@@ -164,30 +163,6 @@ def test_flattened_spec_warning_if_no_origin_url(
         )
 
 
-@pytest.mark.parametrize(
-    'has_spec_definitions', [True, False]
-)
-@mock.patch('bravado_core.spec_flattening.warnings')
-@mock.patch('bravado_core.spec.build_http_handlers')
-@mock.patch('bravado_core.spec.flattened_spec', wraps=spec.flattened_spec)
-def test_flattened_spec_warning_if_no_definitions(
-    wrap_flattened_spec, mock_build_http_handlers, mock_warnings, petstore_spec, has_spec_definitions,
-):
-    if not has_spec_definitions:
-        petstore_spec.definitions = None
-
-    petstore_spec.flattened_spec
-    wrap_flattened_spec.assert_called_once_with(swagger_spec=petstore_spec)
-
-    if has_spec_definitions:
-        assert not mock_warnings.warn.called
-    else:
-        mock_warnings.warn.assert_called_once_with(
-            message='Un-referenced models cannot be un-flattened if spec_definitions is not present',
-            category=Warning,
-        )
-
-
 @mock.patch('bravado_core.spec.warnings')
 @mock.patch('bravado_core.spec.build_http_handlers')
 @mock.patch('bravado_core.spec.flattened_spec')
@@ -219,33 +194,3 @@ def test_flattened_specs_with_no_xmodel_tags(multi_file_with_no_xmodel_spec, fla
         http_handlers={},
     )
     assert flattened_spec == flattened_multi_file_with_no_xmodel_dict
-
-
-@mock.patch('bravado_core.spec_flattening.warnings')
-def test_flattened_specs_warns_if_long_list_of_parameters_is_passed(mock_warnings, minimal_swagger_spec):
-    assert flattened_spec(
-        spec_dict=minimal_swagger_spec.spec_dict,
-        spec_resolver=minimal_swagger_spec.resolver,
-        spec_url='',
-        spec_definitions={},
-    ) == minimal_swagger_spec.spec_dict
-    mock_warnings.warn.assert_called_once_with(
-        message='In the next major release the all the parameters except swagger_spec and'
-                'marshal_uri_function  will be removed from the signature. '
-                'Please make sure to update your code to use only the newly supported parameters',
-        category=PendingDeprecationWarning,
-    )
-
-
-def test_flattened_specs_raises_if_spec_dict_is_None():
-    with pytest.raises(ValueError) as excinfo:
-        flattened_spec(spec_dict=None)
-    assert 'spec_dict is None, the method assumes to receive a valid ' \
-           'swagger spec dict or a swagger spec object' in str(excinfo.value)
-
-
-@mock.patch('bravado_core.spec_flattening.warnings')
-def test_flattened_specs_raises_if_spec_resolver_and_spec_url_is_None(mock_warnings):
-    with pytest.raises(ValueError) as excinfo:
-        flattened_spec(spec_dict={}, spec_url=None, spec_resolver=None, spec_definitions={})
-    assert 'spec_resolver or spec_url should be defined' in str(excinfo.value)
