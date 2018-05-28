@@ -11,7 +11,6 @@ Changelog
     This change provides breaking changes!
     The signature of ``bravado_core.spec_flattening.flattened_spec`` has been updated.
     The following methods have been removed from the public interface: ``bravado_core.model.tag_models``, ``bravado_core.model.bless_models``, ``bravado_core.model.collect_models`` and ``bravado_core.spec.post_process_spec``.
-    Deprecated methods from ``bravado_core.model.Model`` have been removed (``Model.marshal``, ``Model.unmarshal``, ``Model.isinstance`` and ``Model._isinstance``).
 
 4.13.4 (2018-05-24)
 -------------------
