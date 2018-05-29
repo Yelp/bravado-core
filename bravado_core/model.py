@@ -798,35 +798,35 @@ def _run_post_processing(spec):
     # Post process specs to identify models
     _call_post_process_spec(spec.spec_dict)
 
-    for additional_file in _get_referred_files(spec):
+    processed_uris = {
+        uri
+        for uri in spec.resolver.store
+        if uri == spec.origin_url or re.match(r'http://json-schema.org/draft-\d+/schema', uri)
+    }
+    additional_uri = _get_unprocessed_uri(spec, processed_uris)
+    while additional_uri:
         # Post process each referenced specs to identify models in definitions of linked files
-        with spec.resolver.in_scope(additional_file):
+        with spec.resolver.in_scope(additional_uri):
             _call_post_process_spec(
-                spec.resolver.store[additional_file],
+                spec.resolver.store[additional_uri],
             )
 
+        processed_uris.add(additional_uri)
+        additional_uri = _get_unprocessed_uri(spec, processed_uris)
 
-def _get_referred_files(swagger_spec):
+
+def _get_unprocessed_uri(swagger_spec, processed_uris):
     """
+    Retrieve an un-process URI from swagger spec referred URIs
+
     :type swagger_spec: bravado_core.spec.Spec
-    """
-    processed_files = {
-        uri
-        for uri in swagger_spec.resolver.store
-        if uri == swagger_spec.origin_url or re.match(r'http://json-schema.org/draft-\d+/schema', uri)
-    }
+    :param processed_uris: URIs of the already processed URIs
 
-    while True:
-        referred_files = [
-            uri
-            for uri in swagger_spec.resolver.store
-            if uri not in processed_files
-        ]
-        if referred_files and referred_files[0]:
-            processed_files.add(referred_files[0])
-            yield referred_files[0]
-        else:
-            return
+    :rtype: str
+    """
+    for uri in swagger_spec.resolver.store:
+        if uri not in processed_uris:
+            return uri
 
 
 def model_discovery(swagger_spec):
