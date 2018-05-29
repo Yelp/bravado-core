@@ -159,10 +159,10 @@ def test_build_raises_in_case_of_duplicated_models_in_definitions(minimal_swagge
         Spec.from_dict(minimal_swagger_dict)
 
     expected_exception_string = (
-        'Duplicate "model" model found at path {new_path}. '
-        'Original "model" model at path {old_path}'.format(
-            new_path=['definitions', 'model'],
-            old_path=['definitions', 'duplicated_model'],
+        'Duplicate "model" model found at "{new_json_reference}". '
+        'Original "model" model at "{old_json_reference}"'.format(
+            new_json_reference='#/definitions/model',
+            old_json_reference='#/definitions/duplicated_model',
         )
     )
     assert expected_exception_string == str(exinfo.value)
@@ -202,7 +202,7 @@ def test_build_raises_in_case_of_duplicated_models_in_paths(minimal_swagger_dict
 
     # NOTE: the exception depends on the descending order
     expected_exception_string = (
-        'Identified duplicated model: model_name "{mod_name}", path: {path}.\n'
+        'Identified duplicated model: model_name "{mod_name}", uri: {json_reference}.\n'
         '    Known model spec: "{known_model}"\n'
         '    New model spec: "{new_model}"\n'
         'TIP: enforce different model naming by using {MODEL_MARKER}'.format(
@@ -210,7 +210,7 @@ def test_build_raises_in_case_of_duplicated_models_in_paths(minimal_swagger_dict
             mod_name=model_name,
             MODEL_MARKER='x-model',
             new_model=model_201,
-            path=['paths', '/endpoint', 'get', 'responses', '201', 'schema', 'x-model'],
+            json_reference='#/paths//endpoint/get/responses/201/schema/x-model',
         )
     )
 
@@ -249,7 +249,7 @@ def test_build_raises_in_case_of_duplicated_models_between_paths_and_definitions
 
     # NOTE: the exception depends on the descending order
     expected_exception_string = (
-        'Identified duplicated model: model_name "{mod_name}", path: {path}.\n'
+        'Identified duplicated model: model_name "{mod_name}", uri: {json_reference}.\n'
         '    Known model spec: "{known_model}"\n'
         '    New model spec: "{new_model}"\n'
         'TIP: enforce different model naming by using {MODEL_MARKER}'.format(
@@ -257,7 +257,7 @@ def test_build_raises_in_case_of_duplicated_models_between_paths_and_definitions
             mod_name=model_name,
             MODEL_MARKER='x-model',
             new_model=response_model,
-            path=['paths', '/endpoint', 'get', 'responses', '200', 'schema', 'x-model'],
+            json_reference='#/paths//endpoint/get/responses/200/schema/x-model'
         )
     )
 
