@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import functools
 import json
 import logging
 import os.path
@@ -17,17 +16,13 @@ from six.moves import range
 from six.moves.urllib.parse import urlparse
 from six.moves.urllib.parse import urlunparse
 from swagger_spec_validator import validator20
-from swagger_spec_validator.ref_validators import attach_scope
 from swagger_spec_validator.ref_validators import in_scope
 
 from bravado_core import formatter
 from bravado_core.exception import SwaggerSchemaError
 from bravado_core.exception import SwaggerValidationError
 from bravado_core.formatter import return_true_wrapper
-from bravado_core.model import bless_models
-from bravado_core.model import collect_models
-from bravado_core.model import tag_models
-from bravado_core.resource import build_resources
+from bravado_core.model import model_discovery
 from bravado_core.schema import is_dict_like
 from bravado_core.schema import is_list_like
 from bravado_core.schema import is_ref
@@ -220,48 +215,9 @@ class Spec(object):
     def build(self):
         self._validate_spec()
 
-        def run_post_processing(swagger_spec):
-            visited_models = {}
-            # Discover all the models
-            post_process_spec(
-                swagger_spec,
-                on_container_callbacks=[
-                    functools.partial(
-                        tag_models,
-                        visited_models=visited_models,
-                        swagger_spec=swagger_spec,
-                    ),
-                    functools.partial(
-                        bless_models,
-                        visited_models=visited_models,
-                        swagger_spec=swagger_spec,
-                    ),
-                    functools.partial(
-                        collect_models,
-                        models=swagger_spec.definitions,
-                        swagger_spec=swagger_spec,
-                    ),
-                ],
-            )
-
-        # This run is needed in order to get all the available models discovered
-        # deref_flattened_spec depends on flattened_spec which assumes that model
-        # discovery is performed
-        run_post_processing(self)
-        # Flattening the specs requires resources to be available.
-        # Let's build them before self.deref_flattened_spec is called
-        self.resources = build_resources(self)
+        model_discovery(self)
 
         if self.config['internally_dereference_refs']:
-            deref_flattened_spec = self.deref_flattened_spec
-            tmp_spec = Spec(deref_flattened_spec, self.origin_url, self.http_client, self.config)
-
-            # Rebuild definitions using dereferences specs as base
-            # this ensures that the generated models have no references
-            run_post_processing(tmp_spec)
-            self.resources = build_resources(tmp_spec)
-            self.definitions = tmp_spec.definitions
-
             # Avoid to evaluate is_ref every time, no references are possible at this time
             self.deref = lambda ref_dict: ref_dict
             self._internal_spec_dict = self.deref_flattened_spec
@@ -516,84 +472,3 @@ def build_api_serving_url(spec_dict, origin_url=None, preferred_scheme=None):
     path = spec_dict.get('basePath', origin.path)
     scheme = pick_a_scheme(spec_dict.get('schemes'))
     return urlunparse((scheme, netloc, path, None, None, None))
-
-
-def post_process_spec(swagger_spec, on_container_callbacks):
-    """Post-process the passed in swagger_spec.spec_dict.
-
-    For each container type (list or dict) that is traversed in spec_dict,
-    the list of passed in callbacks is called with arguments (container, key).
-
-    When the container is a dict, key is obviously the key for the value being
-    traversed.
-
-    When the container is a list, key is an integer index into the list of the
-    value being traversed.
-
-    In addition to firing the passed in callbacks, $refs are annotated with
-    an 'x-scope' key that contains the current _scope_stack of the RefResolver.
-    The 'x-scope' _scope_stack is used during request/response marshalling to
-    assume a given scope before de-reffing $refs (otherwise, de-reffing won't
-    work).
-
-    :type swagger_spec: :class:`bravado_core.spec.Spec`
-    :param on_container_callbacks: list of callbacks to be invoked on each
-        container type.
-        NOTE: the individual callbacks should not mutate the current container
-    """
-    def fire_callbacks(container, key, path):
-        for callback in on_container_callbacks:
-            callback(container, key, path)
-
-    resolver = swagger_spec.resolver
-
-    def skip_already_visited_fragments(func):
-        func.cache = cache = set()
-
-        @functools.wraps(func)
-        def wrapper(fragment, path):
-            is_reference = is_ref(fragment)
-            if is_reference:
-                ref = fragment['$ref']
-                attach_scope(fragment, resolver)
-                with resolver.resolving(ref) as target:
-                    if id(target) in cache:
-                        log.debug('Already visited %s', ref)
-                        return
-
-                    func(target, path)
-                    return
-
-            # fragment is guaranteed not to be a ref from this point onwards
-            fragment_id = id(fragment)
-
-            if fragment_id in cache:
-                log.debug('Already visited id %d', fragment_id)
-                return
-
-            cache.add(id(fragment))
-            func(fragment, path)
-        return wrapper
-
-    @skip_already_visited_fragments
-    def descend(fragment, path):
-        """
-        :param fragment: node in spec_dict
-        :param path: list of strings that form the current path to fragment
-        """
-        path = path or []
-
-        if is_dict_like(fragment):
-            for key, value in sorted(iteritems(fragment)):
-                fire_callbacks(fragment, key, path + [key])
-                descend(fragment[key], path + [key])
-
-        elif is_list_like(fragment):
-            for index in range(len(fragment)):
-                fire_callbacks(fragment, index, path + [str(index)])
-                descend(fragment[index], path + [str(index)])
-
-    try:
-        descend(swagger_spec.spec_dict, path=[])
-    finally:
-        descend.cache.clear()

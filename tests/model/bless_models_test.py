@@ -2,7 +2,7 @@
 import mock
 import pytest
 
-from bravado_core.model import bless_models
+from bravado_core.model import _bless_models
 from bravado_core.spec import Spec
 
 
@@ -18,7 +18,7 @@ def test_bless_models_short_circuit_if_no_dict_like_container(mock_is_dict_like,
         },
     }
     swagger_spec = Spec(minimal_swagger_dict)
-    bless_models(
+    _bless_models(
         minimal_swagger_dict['paths']['/endpoint']['post']['responses']['200'],
         'schema',
         ['paths', '/endpoint', 'post', 'responses', '200'],
@@ -54,7 +54,7 @@ def test_bless_models_gets_out_if_initial_pre_conditions_are_not_met(
         },
     }
     swagger_spec = Spec(minimal_swagger_dict)
-    bless_models(
+    _bless_models(
         minimal_swagger_dict['paths']['/endpoint']['post']['responses']['200'],
         'schema',
         ['paths', '/endpoint', 'post', 'responses', '200'],
@@ -82,7 +82,7 @@ def test_bless_model_adds_model_marker(minimal_swagger_dict):
         },
     }
     swagger_spec = Spec(minimal_swagger_dict)
-    bless_models(
+    _bless_models(
         minimal_swagger_dict['paths']['/endpoint']['post']['responses']['200'],
         'schema',
         ['paths', '/endpoint', 'post', 'responses', '200'],
@@ -109,7 +109,7 @@ def test_bless_model_does_not_generate_model_tag_if_no_title_is_set(minimal_swag
         },
     }
     swagger_spec = Spec(minimal_swagger_dict)
-    bless_models(
+    _bless_models(
         minimal_swagger_dict['paths']['/endpoint']['post']['responses']['200'],
         'schema',
         ['paths', '/endpoint', 'post', 'responses', '200'],

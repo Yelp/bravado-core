@@ -3,11 +3,14 @@ Changelog
 
 5.x.x (xxxx-xx-xx)
 ------------------
+- Refactor: model discovery is now handled in ``bravado_core.model``
+- Remove deprecated methods from Model type
 - Remove deprecated parameters from ``bravado_core.spec_flattening.flattened_spec``
 
 .. warning::
     This change provides breaking changes!
     The signature of ``bravado_core.spec_flattening.flattened_spec`` has been updated.
+    The following methods have been removed from the public interface: ``bravado_core.model.tag_models``, ``bravado_core.model.bless_models``, ``bravado_core.model.collect_models`` and ``bravado_core.spec.post_process_spec``.
 
 4.13.4 (2018-05-24)
 -------------------

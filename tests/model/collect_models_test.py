@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import pytest
 
-from bravado_core.model import collect_models
+from bravado_core.model import _collect_models
 from bravado_core.model import create_model_type
 from bravado_core.spec import Spec
 
@@ -23,7 +23,7 @@ def test_simple(minimal_swagger_dict, pet_model_spec):
     minimal_swagger_dict['definitions']['Pet'] = pet_model_spec
     swagger_spec = Spec(minimal_swagger_dict)
     models = {}
-    collect_models(
+    _collect_models(
         minimal_swagger_dict['definitions']['Pet'],
         'x-model',
         ['definitions', 'Pet', 'x-model'],
@@ -53,7 +53,7 @@ def test_no_model_type_generation_for_not_object_type(minimal_swagger_dict):
     }
     swagger_spec = Spec(minimal_swagger_dict)
     models = {}
-    collect_models(
+    _collect_models(
         minimal_swagger_dict['definitions']['Pets'],
         'x-model',
         ['definitions', 'Pets', 'x-model'],
@@ -76,7 +76,7 @@ def test_raise_error_if_duplicate_models_are_identified(minimal_swagger_dict, pe
     }
     path = ['definitions', model_name, 'x-model'],
     with pytest.raises(ValueError) as excinfo:
-        collect_models(
+        _collect_models(
             minimal_swagger_dict['definitions'][model_name],
             'x-model',
             path,

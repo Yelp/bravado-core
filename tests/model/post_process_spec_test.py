@@ -3,14 +3,18 @@ import functools
 
 from mock import Mock
 
-from bravado_core.spec import post_process_spec
+from bravado_core.model import _post_process_spec
 from bravado_core.spec import Spec
 
 
 def test_empty():
     swagger_spec = Spec({})
     callback = Mock()
-    post_process_spec(swagger_spec, [callback])
+    _post_process_spec(
+        spec_dict=swagger_spec.spec_dict,
+        spec_resolver=swagger_spec.resolver,
+        on_container_callbacks=[callback],
+    )
     assert callback.call_count == 0
 
 
@@ -18,7 +22,11 @@ def test_single_key():
     spec_dict = {'definitions': {}}
     swagger_spec = Spec(spec_dict)
     callback = Mock()
-    post_process_spec(swagger_spec, [callback])
+    _post_process_spec(
+        spec_dict=swagger_spec.spec_dict,
+        spec_resolver=swagger_spec.resolver,
+        on_container_callbacks=[callback],
+    )
     assert callback.call_count == 1
     callback.assert_called_once_with(spec_dict, 'definitions', ['definitions'])
 
@@ -40,8 +48,15 @@ def test_visits_refs_only_once():
         if key == 'bar':
             mutable['cnt'] += 1
 
-    post_process_spec(
-        swagger_spec,
-        [functools.partial(callback, mutable=mutable)])
+    _post_process_spec(
+        spec_dict=swagger_spec.spec_dict,
+        spec_resolver=swagger_spec.resolver,
+        on_container_callbacks=[
+            functools.partial(
+                callback,
+                mutable=mutable,
+            ),
+        ],
+    )
 
     assert mutable['cnt'] == 1
