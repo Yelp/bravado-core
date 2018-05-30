@@ -1,11 +1,12 @@
 Changelog
 =========
 
-5.x.x (xxxx-xx-xx)
+5.0.0 (2018-05-30)
 ------------------
 - Refactor: model discovery is now handled in ``bravado_core.model``
 - Remove deprecated methods from Model type
 - Remove deprecated parameters from ``bravado_core.spec_flattening.flattened_spec``
+- Ensure that models in `#/definitions` of referenced files are discovered
 
 .. warning::
     This change provides breaking changes!
