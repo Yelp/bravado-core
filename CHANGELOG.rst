@@ -1,15 +1,18 @@
 Changelog
 =========
+5.0.1 (2018-05-30)
+------------------
+- No longer make sure that all config keys are known; this allows users of the library to store additional configuration. - PR #274
 
 5.0.0 (2018-05-30)
 ------------------
-- Refactor: model discovery is now handled in ``bravado_core.model``
-- Remove deprecated methods from Model type
-- Remove deprecated parameters from ``bravado_core.spec_flattening.flattened_spec``
-- Ensure that models in `#/definitions` of referenced files are discovered
+- Refactor: model discovery is now handled in ``bravado_core.model`` - PR #270
+- Remove deprecated methods from Model type - PR #270
+- Remove deprecated parameters from ``bravado_core.spec_flattening.flattened_spec`` - PR #269
+- Ensure that models in `#/definitions` of referenced files are discovered - PR #273
 
 .. warning::
-    This change provides breaking changes!
+    This release contains breaking changes!
     The signature of ``bravado_core.spec_flattening.flattened_spec`` has been updated.
     The following methods have been removed from the public interface: ``bravado_core.model.tag_models``, ``bravado_core.model.bless_models``, ``bravado_core.model.collect_models`` and ``bravado_core.spec.post_process_spec``.
 
