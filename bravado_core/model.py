@@ -770,28 +770,63 @@ def _post_process_spec(spec_dict, spec_resolver, on_container_callbacks):
 
 def _run_post_processing(spec):
     visited_models = {}
-    # Discover all the models
-    _post_process_spec(
-        spec_dict=spec.spec_dict,
-        spec_resolver=spec.resolver,
-        on_container_callbacks=[
-            functools.partial(
-                _tag_models,
-                visited_models=visited_models,
-                swagger_spec=spec,
-            ),
-            functools.partial(
-                _bless_models,
-                visited_models=visited_models,
-                swagger_spec=spec,
-            ),
-            functools.partial(
-                _collect_models,
-                models=spec.definitions,
-                swagger_spec=spec,
-            ),
-        ],
-    )
+
+    def _call_post_process_spec(spec_dict):
+        # Discover all the models in spec_dict
+        _post_process_spec(
+            spec_dict=spec_dict,
+            spec_resolver=spec.resolver,
+            on_container_callbacks=[
+                functools.partial(
+                    _tag_models,
+                    visited_models=visited_models,
+                    swagger_spec=spec,
+                ),
+                functools.partial(
+                    _bless_models,
+                    visited_models=visited_models,
+                    swagger_spec=spec,
+                ),
+                functools.partial(
+                    _collect_models,
+                    models=spec.definitions,
+                    swagger_spec=spec,
+                ),
+            ],
+        )
+
+    # Post process specs to identify models
+    _call_post_process_spec(spec.spec_dict)
+
+    processed_uris = {
+        uri
+        for uri in spec.resolver.store
+        if uri == spec.origin_url or re.match(r'http://json-schema.org/draft-\d+/schema', uri)
+    }
+    additional_uri = _get_unprocessed_uri(spec, processed_uris)
+    while additional_uri:
+        # Post process each referenced specs to identify models in definitions of linked files
+        with spec.resolver.in_scope(additional_uri):
+            _call_post_process_spec(
+                spec.resolver.store[additional_uri],
+            )
+
+        processed_uris.add(additional_uri)
+        additional_uri = _get_unprocessed_uri(spec, processed_uris)
+
+
+def _get_unprocessed_uri(swagger_spec, processed_uris):
+    """
+    Retrieve an un-process URI from swagger spec referred URIs
+
+    :type swagger_spec: bravado_core.spec.Spec
+    :param processed_uris: URIs of the already processed URIs
+
+    :rtype: str
+    """
+    for uri in swagger_spec.resolver.store:
+        if uri not in processed_uris:
+            return uri
 
 
 def model_discovery(swagger_spec):

@@ -19,18 +19,22 @@ def pet_model_spec():
     }
 
 
-def test_simple(minimal_swagger_dict, pet_model_spec):
+@pytest.mark.parametrize(
+    'origin_url', [None, 'origin_url'],
+)
+def test_simple(minimal_swagger_dict, pet_model_spec, origin_url):
     minimal_swagger_dict['definitions']['Pet'] = pet_model_spec
-    swagger_spec = Spec(minimal_swagger_dict)
+    swagger_spec = Spec(minimal_swagger_dict, origin_url=origin_url)
     models = {}
+    json_reference = '{}#/definitions/Pet'.format(origin_url or '')
     _collect_models(
         minimal_swagger_dict['definitions']['Pet'],
         models=models,
         swagger_spec=swagger_spec,
-        json_reference='#/definitions/Pet/x-model',
+        json_reference=json_reference + '/x-model',
     )
     assert 'Pet' in models
-    assert models['Pet']._json_reference == '#/definitions/Pet'
+    assert models['Pet']._json_reference == json_reference
 
 
 def test_no_model_type_generation_for_not_object_type(minimal_swagger_dict):
