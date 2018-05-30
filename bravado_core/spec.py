@@ -127,22 +127,12 @@ class Spec(object):
     def _validate_config(self):
         """
         Validates the correctness of the configurations injected and makes sure that:
-        - no extra config keys are available on the config dictionary
         - dependent configs are checked
 
         :return: True if the initial configs are valid, False otherwise
         :rtype: bool
         """
         are_config_changed = False
-
-        extraneous_keys = set(iterkeys(self.config)) - set(iterkeys(CONFIG_DEFAULTS))
-        if extraneous_keys:
-            are_config_changed = True
-            for key in extraneous_keys:
-                warnings.warn(
-                    message='config {} is not a recognized config key'.format(key),
-                    category=Warning,
-                )
 
         if self.config['internally_dereference_refs'] and not self.config['validate_swagger_spec']:
             are_config_changed = True

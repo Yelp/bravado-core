@@ -24,11 +24,6 @@ def test_validate_config_succeed(minimal_swagger_dict, minimal_swagger_abspath, 
     'config, expected_different_config, expected_warnings_call',
     [
         (
-            {'this_is_an_extra_key': True},
-            False,
-            'config this_is_an_extra_key is not a recognized config key',
-        ),
-        (
             {'validate_swagger_spec': False, 'internally_dereference_refs': True},
             True,
             'internally_dereference_refs config disabled because validate_swagger_spec has to be enabled',
