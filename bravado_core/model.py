@@ -830,17 +830,10 @@ def _get_unprocessed_uri(swagger_spec, processed_uris):
 
 
 def model_discovery(swagger_spec):
-    # local import due to circular dependency
-    from bravado_core.resource import build_resources
-
     # This run is needed in order to get all the available models discovered
     # deref_flattened_spec depends on flattened_spec which assumes that model
     # discovery is performed
     _run_post_processing(swagger_spec)
-
-    # Flattening the specs requires resources to be available.
-    # Let's build them before self.deref_flattened_spec is called
-    swagger_spec.resources = build_resources(swagger_spec)
 
     if swagger_spec.config['internally_dereference_refs']:
         from bravado_core.spec import Spec  # Local import to avoid circular import
@@ -850,5 +843,4 @@ def model_discovery(swagger_spec):
         # Rebuild definitions using dereferences specs as base
         # this ensures that the generated models have no references
         _run_post_processing(tmp_spec)
-        swagger_spec.resources = build_resources(tmp_spec)
         swagger_spec.definitions = tmp_spec.definitions

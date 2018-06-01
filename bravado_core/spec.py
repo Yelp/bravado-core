@@ -23,6 +23,7 @@ from bravado_core.exception import SwaggerSchemaError
 from bravado_core.exception import SwaggerValidationError
 from bravado_core.formatter import return_true_wrapper
 from bravado_core.model import model_discovery
+from bravado_core.resource import build_resources
 from bravado_core.schema import is_dict_like
 from bravado_core.schema import is_list_like
 from bravado_core.schema import is_ref
@@ -193,6 +194,8 @@ class Spec(object):
 
         for format in self.config['formats']:
             self.register_format(format)
+
+        self.resources = build_resources(self)
 
         self.api_url = build_api_serving_url(self.spec_dict, self.origin_url)
 
