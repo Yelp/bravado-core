@@ -122,27 +122,6 @@ class Spec(object):
         # spec dict used to build resources, in case internally_dereference_refs config is enabled
         # it will be overridden by the dereferenced specs (by build method). More context in PR#263
         self._internal_spec_dict = spec_dict
-        self._validate_config()
-
-    def _validate_config(self):
-        """
-        Validates the correctness of the configurations injected and makes sure that:
-        - dependent configs are checked
-
-        :return: True if the initial configs are valid, False otherwise
-        :rtype: bool
-        """
-        are_config_changed = False
-
-        if self.config['internally_dereference_refs'] and not self.config['validate_swagger_spec']:
-            are_config_changed = True
-            self.config['internally_dereference_refs'] = False
-            warnings.warn(
-                message='internally_dereference_refs config disabled because validate_swagger_spec has to be enabled',
-                category=Warning,
-            )
-
-        return not are_config_changed
 
     @cached_property
     def client_spec_dict(self):
@@ -301,16 +280,14 @@ class Spec(object):
     def flattened_spec(self):
         """
         Representation of the current swagger specs that could be written to a single file.
-        NOTE: The representation strips out all the definitions that are not referenced
-        :return:
+        :rtype: dict
         """
 
         if not self.config['validate_swagger_spec']:
-            raise RuntimeError('Swagger Specs have to be validated before flattening.')
-
-        # If resources are defined it means that Spec has been built and so swagger specs have been validated
-        if self.resources is None:
-            self.build()
+            log.warning(
+                'Flattening unvalidated specs could produce invalid specs. '
+                'Use it at your risk or enable `validate_swagger_specs`',
+            )
 
         return strip_xscope(
             spec_dict=flattened_spec(swagger_spec=self),
