@@ -83,7 +83,7 @@ def validate_primitive(swagger_spec, primitive_spec, value):
 def validate_array(swagger_spec, array_spec, value):
     """
     :type swagger_spec: :class:`bravado_core.spec.Spec`
-    :param spec: spec for an 'array' type in dict form
+    :param array_spec: spec for an 'array' type in dict form
     :type value: list
     """
     get_validator_type(swagger_spec)(

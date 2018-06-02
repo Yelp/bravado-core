@@ -99,10 +99,8 @@ def unmarshal_response(response, op):
     deref = op.swagger_spec.deref
     response_spec = get_response_spec(response.status_code, op)
 
-    def has_content(response_spec):
-        return 'schema' in response_spec
-
-    if not has_content(response_spec):
+    if 'schema' not in response_spec:
+        # If response spec does not define schema
         return None
 
     content_type = response.headers.get('content-type', '').lower()
@@ -141,7 +139,6 @@ def get_response_spec(status_code, op):
     :raises: MatchingResponseNotFound when the status_code could not be mapped
         to a response specification.
     """
-    # TODO: check global #/responses
     deref = op.swagger_spec.deref
     op_spec = deref(op.op_spec)
     response_specs = deref(op_spec.get('responses'))

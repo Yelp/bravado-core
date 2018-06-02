@@ -14,7 +14,7 @@ def operation_docstring_wrapper(operation):
     Docstrings can only be specified for modules, classes, and functions. Hence,
     the docstring for an Operation is static as defined by the Operation class.
     To make the docstring for an Operation invocation work correctly, it has
-    to be masquaraded as a function. The docstring will then be attached to the
+    to be masqueraded as a function. The docstring will then be attached to the
     function which works quite nicely. Example in REPL:
 
     >> petstore = SwaggerClient.from_url('http://url_to_petstore/')
@@ -26,7 +26,7 @@ def operation_docstring_wrapper(operation):
     getPetById(**kwargs)
         [GET] Find pet by ID
 
-        Returns a pet when ID < 10.  ID > 10 or nonintegers will simulate API error conditions  # noqa
+        Returns a pet when ID < 10.  ID > 10 or non-integers will simulate API error conditions  # noqa
 
         :param petId: ID of pet that needs to be fetched
         :type petId: integer

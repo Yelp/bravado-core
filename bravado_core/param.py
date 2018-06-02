@@ -252,8 +252,10 @@ def cast_request_param(param_type, param_name, param_value):
     try:
         return CAST_TYPE_TO_FUNC.get(param_type, lambda x: x)(param_value)
     except (ValueError, TypeError):
-        log.warn("Failed to cast %s value of %s to %s",
-                 param_name, param_value, param_type)
+        log.warning(
+            "Failed to cast %s value of %s to %s",
+            param_name, param_value, param_type,
+        )
         # Ignore type error, let jsonschema validation handle incorrect types
         return param_value
 
@@ -354,7 +356,7 @@ def unmarshal_collection_format(swagger_spec, param_spec, value):
     if schema.is_list_like(value):
         value_array = value
     elif collection_format == 'multi':
-        # http client lib should have already unmarshaled the value
+        # http client lib should have already unmarshalled the value
         value_array = [value]
     else:
         sep = COLLECTION_FORMATS[collection_format]

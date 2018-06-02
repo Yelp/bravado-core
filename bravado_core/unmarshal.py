@@ -17,7 +17,7 @@ from bravado_core.schema import SWAGGER_PRIMITIVES
 def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
     """Unmarshal the value using the given schema object specification.
 
-    Unmarshaling includes:
+    Unmarshalling includes:
     - transform the value according to 'format' if available
     - return the value in a form suitable for use. e.g. conversion to a Model
       type.
@@ -26,7 +26,7 @@ def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
     :type schema_object_spec: dict
     :type value: int, float, long, string, unicode, boolean, list, dict, etc
 
-    :return: unmarshaled value
+    :return: unmarshalled value
     :rtype: int, float, long, string, unicode, boolean, list, dict, object (in
         the case of a 'format' conversion', or Model type
     """

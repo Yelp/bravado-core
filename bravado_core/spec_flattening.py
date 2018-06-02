@@ -8,9 +8,9 @@ from collections import defaultdict
 from six import iteritems
 from six import iterkeys
 from six import itervalues
+from six.moves.urllib.parse import ParseResult
 from six.moves.urllib.parse import urlparse
 from six.moves.urllib.parse import urlunparse
-from six.moves.urllib_parse import ParseResult
 from swagger_spec_validator.ref_validators import in_scope
 
 from bravado_core.model import MODEL_MARKER
@@ -22,8 +22,8 @@ from bravado_core.util import ObjectType
 
 
 MARSHAL_REPLACEMENT_PATTERNS = {
-    '/': '..',  # / is converted to .. (ie. api_docs/swager.json -> api_docs..swagger.json)
-    '#': '|',  # # is converted to | (ie. swager.json#definitions -> swagger.json|definitions)
+    '/': '..',  # / is converted to .. (ie. api_docs/swagger.json -> api_docs..swagger.json)
+    '#': '|',  # # is converted to | (ie. swagger.json#definitions -> swagger.json|definitions)
 }
 
 
@@ -191,20 +191,20 @@ def flattened_spec(swagger_spec, marshal_uri_function=_marshal_uri):
                     object_dict=deref_value,
                     default_type_to_object=default_type_to_object,
                 )
-                if object_type.get_root_holder() is None:
+
+                known_mapping_key = object_type.get_root_holder()
+                if known_mapping_key is None:
                     return descend(value=deref_value)
                 else:
-                    mapping_key = object_type.get_root_holder() or 'definitions'
-
                     uri = urlparse(uri)
-                    if uri not in known_mappings.get(mapping_key, {}):
+                    if uri not in known_mappings.get(known_mapping_key, {}):
                         # The placeholder is present to interrupt the recursion
                         # during the recursive traverse of the data model (``descend``)
-                        known_mappings[mapping_key][uri] = None
+                        known_mappings[known_mapping_key][uri] = None
 
-                        known_mappings[mapping_key][uri] = descend(value=deref_value)
+                        known_mappings[known_mapping_key][uri] = descend(value=deref_value)
 
-                    return {'$ref': '#/{}/{}'.format(mapping_key, marshal_uri(uri))}
+                    return {'$ref': '#/{}/{}'.format(known_mapping_key, marshal_uri(uri))}
 
         elif is_dict_like(value):
             return {
