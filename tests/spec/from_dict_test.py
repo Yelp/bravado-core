@@ -176,3 +176,20 @@ def test_flattened_multi_file_multi_directory_specs(
         Spec.from_dict(multi_file_multi_directory_spec.flattened_spec)
     except Exception as e:
         pytest.fail('Unexpected exception: {e}'.format(e=e), e.__traceback__)
+
+
+def test_swagger_spec_in_operation_is_the_swagger_spec_that_contains_the_operation(multi_file_multi_directory_spec):
+    """
+    The objective of this test is to guarantee that bravado_core.spec.Spec object referenced by
+    operation objects is the same object that contains the resources that points to the operation
+
+    Referencing to the same object means that they share the same memory space
+
+    More details about the issue that we want to prevent with this tests are available on
+    https://github.com/Yelp/bravado-core/issues/275
+    """
+    def first(_iterable):
+        return next(iter(_iterable))
+    resource = first(multi_file_multi_directory_spec.resources.values())
+    operation = first(resource.operations.values())
+    assert id(operation.swagger_spec) == id(multi_file_multi_directory_spec)
