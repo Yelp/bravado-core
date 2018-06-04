@@ -1,5 +1,9 @@
 Changelog
 =========
+5.0.2 (2018-06-04)
+------------------
+- Fix regression if `internally_dereference_refs` is used. Issue #275, PR #276
+
 5.0.1 (2018-05-30)
 ------------------
 - No longer make sure that all config keys are known; this allows users of the library to store additional configuration. - PR #274
