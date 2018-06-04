@@ -62,7 +62,7 @@ CONFIG_DEFAULTS = {
     # Specification.
     'formats': [],
 
-    # Fill with None all the missing properties during object unmarshal-ing
+    # Fill with None all the missing properties during object unmarshalling
     'include_missing_properties': True,
 
     # What to do when a type is missing
@@ -70,7 +70,7 @@ CONFIG_DEFAULTS = {
     # If False, do no validation
     'default_type_to_object': False,
 
-    # Completely dereference $refs to maximize marshaling and unmarshaling performances.
+    # Completely dereference $refs to maximize marshaling and unmarshalling performances.
     # NOTE: this depends on validate_swagger_spec
     'internally_dereference_refs': False,
 }
@@ -81,7 +81,7 @@ class Spec(object):
 
     :param spec_dict: Swagger API specification in json-like dict form
     :param origin_url: URL from which the spec was retrieved.
-    :param http_client: Used to retrive the spec via http/https.
+    :param http_client: Used to retrieve the spec via http/https.
     :type http_client: :class:`bravado.http_client.HTTPClient`
     :param config: Configuration dict. See CONFIG_DEFAULTS.
     """
@@ -152,14 +152,14 @@ class Spec(object):
         You may be asking, "Why is there a difference between the Swagger spec
         a client sees and the one used internally?". Well, as part of the
         ingestion process, x-scope metadata is added to spec_dict so that
-        $refs can be de-reffed successfully during requset/response validation
-        and marshalling. This medatadata is specific to the context of the
+        $refs can be de-reffed successfully during request/response validation
+        and marshalling. This metadata is specific to the context of the
         server and contains files and paths that are not relevant to the
         client. This is required so the client does not re-use (and in turn,
         re-creates) the invalid x-scope metadata created by the server.
 
         For example, a section of spec_dict that contains a ref would change
-        as folows.
+        as follows.
 
         Before:
 
@@ -182,12 +182,12 @@ class Spec(object):
 
     @classmethod
     def from_dict(cls, spec_dict, origin_url=None, http_client=None, config=None):
-        """Build a :class:`Spec` from Swagger API Specificiation
+        """Build a :class:`Spec` from Swagger API Specification
 
         :param spec_dict: swagger spec in json-like dict form.
         :param origin_url: the url used to retrieve the spec, if any
         :type  origin_url: str
-        :param: http_client: http client used to download remote $refs
+        :param http_client: http client used to download remote $refs
         :param config: Configuration dict. See CONFIG_DEFAULTS.
         """
         spec = cls(spec_dict, origin_url, http_client, config)
@@ -212,8 +212,8 @@ class Spec(object):
             self.deref = lambda ref_dict: ref_dict
             self._internal_spec_dict = self.deref_flattened_spec
 
-        for format in self.config['formats']:
-            self.register_format(format)
+        for user_defined_format in self.config['formats']:
+            self.register_format(user_defined_format)
 
         self.api_url = build_api_serving_url(self.spec_dict, self.origin_url)
 
@@ -277,18 +277,18 @@ class Spec(object):
     def get_format(self, name):
         """
         :param name: Name of the format to retrieve
-        :rtype: :class:`bravado_core.formatters.SwaggerFormat`
+        :rtype: :class:`bravado_core.formatter.SwaggerFormat`
         """
-        format = self.user_defined_formats.get(name)
-        if format is None:
-            format = formatter.DEFAULT_FORMATS.get(name)
+        user_defined_format = self.user_defined_formats.get(name)
+        if user_defined_format is None:
+            user_defined_format = formatter.DEFAULT_FORMATS.get(name)
 
-        if format is None:
+        if user_defined_format is None:
             warnings.warn(
                 message='{0} format is not registered with bravado-core!'.format(name),
                 category=Warning,
             )
-        return format
+        return user_defined_format
 
     @cached_property
     def security_definitions(self):
@@ -348,13 +348,9 @@ class Spec(object):
 
 
 def is_yaml(url, content_type=None):
-    yaml_content_types = set([
-        'application/yaml',
-        'application/x-yaml',
-        'text/yaml',
-    ])
+    yaml_content_types = {'application/yaml', 'application/x-yaml', 'text/yaml'}
 
-    yaml_file_extensions = set(['.yaml', '.yml'])
+    yaml_file_extensions = {'.yaml', '.yml'}
 
     if content_type in yaml_content_types:
         return True

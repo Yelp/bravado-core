@@ -49,7 +49,7 @@ def is_prop_nullable(swagger_spec, schema_object_spec):
 def is_ref(spec):
     """ Check if the given spec is a Mapping and contains a $ref.
 
-    FYI: This function gets called A LOT during unmarshaling and is_dict_like
+    FYI: This function gets called A LOT during unmarshalling and is_dict_like
     adds a bunch of extra time. It is faster to use a try/except than it is
     to call is_dict_like first for every spec input.
 
@@ -86,6 +86,8 @@ def get_spec_for_prop(swagger_spec, object_spec, object_value, prop_name, proper
     """Given a jsonschema object spec and value, retrieve the spec for the
      given property taking 'additionalProperties' into consideration.
 
+    :param swagger_spec: Spec object
+    :type swagger_spec: bravado_core.spec.Spec
     :param object_spec: spec for a jsonschema 'object' in dict form
     :param object_value: jsonschema object containing the given property. Only
         used in error message.
@@ -135,7 +137,8 @@ def handle_null_value(swagger_spec, schema_object_spec):
      x-nullable attribute in the spec to see if it is allowed and returns None
      if so and raises an exception otherwise.
 
-    :param swagger_spec: :class:`bravado_core.spec.Spec`
+    :param swagger_spec: Spec object
+    :type swagger_spec: bravado_core.spec.Spec
     :param schema_object_spec: dict
     :return: The default if there is a default value, None if the spec is nullable
     :raises: SwaggerMappingError if the spec is not nullable and no default exists

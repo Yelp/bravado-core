@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 def _sanitize_operation_id(operation_id, http_method, path_name):
     sanitized_operation_id = sanitize_name(operation_id or '')
 
-    # Handle crazy corner cases where someone explictily sets operation
+    # Handle crazy corner cases where someone explicitly sets operation
     # id a value that gets sanitized down to an empty string
     if len(sanitized_operation_id) == 0:
         # build based on the http method and request path

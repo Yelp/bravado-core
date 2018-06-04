@@ -186,7 +186,7 @@ def ref_validator(validator, ref, instance, schema):
      the full scope built when ingesting the spec from its root
      (#/ in swagger.json). So, we need to modify the behavior of ref
      validation to use the `x-scope` annotations that were created during spec
-     ingestion (see post_process_spec in spec.py).
+     ingestion (see model_discovery in bravado_core/model.py).
 
     :param validator: Validator class used to validate the object
     :type validator: :class: `Swagger20Validator` or
@@ -198,7 +198,7 @@ def ref_validator(validator, ref, instance, schema):
         eg {'$ref': '#/foo/bar/Baz'}
     :type schema: dict
     """
-    # This is a copy of jsonscehama._validators.ref(..) with the
+    # This is a copy of jsonschema._validators.ref(..) with the
     # in_scope(..) context manager applied before any refs are resolved.
     resolve = getattr(validator.resolver, "resolve")
     if resolve is None:

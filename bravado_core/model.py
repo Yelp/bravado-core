@@ -374,24 +374,24 @@ class Model(object):
     def __getitem__(self, property_name):
         """Get a property value by name.
 
-        :type attr_name: str
+        :type property_name: str
         """
         return self.__dict[property_name]
 
     def __setitem__(self, property_name, val):
         """Set a property value by name.
 
-        :type attr_name: str
+        :type property_name: str
         """
         self.__dict[property_name] = val
 
     def __delitem__(self, property_name):
         """Unset a property by name.
 
-        Additional properties will be deleted alltogether. Properties defined
-        in the spec will be set to ``None``.
+        Properties defined in the spec will be set to ``None``.
+        Additional properties will be completely removed.
 
-        :type attr_name: str
+        :type property_name: str
         """
         if property_name in self._properties:
             self.__dict[property_name] = None
@@ -576,6 +576,8 @@ def create_model_type(swagger_spec, model_name, model_spec, bases=(Model,), json
     :param tuple bases: Base classes for type. At least one should be
         :class:`.Model` or a subclass of it.
     :returns: dynamic type inheriting from ``bases``.
+    :param json_reference: JSON Uri where model spec could be found
+    :type json_reference: str
     :rtype: type
     """
 
@@ -642,6 +644,7 @@ def create_model_docstring(swagger_spec, model_spec):
         attr_spec = deref(attr_spec)
         schema_type = deref(attr_spec['type'])
 
+        attr_type = None
         if schema_type in SWAGGER_PRIMITIVES:
             # TODO: update to python types and take 'format' into account
             attr_type = schema_type
@@ -742,7 +745,8 @@ def _post_process_spec(spec_dict, spec_resolver, on_container_callbacks):
     def descend(fragment, json_reference=None):
         """
         :param fragment: node in spec_dict
-        :param path: list of strings that form the current path to fragment
+        :param json_reference: JSON Uri where the current fragment could be found
+        :type json_reference: str
         """
         if is_dict_like(fragment):
             for key, value in sorted(iteritems(fragment)):

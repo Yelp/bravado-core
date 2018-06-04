@@ -24,7 +24,7 @@ class MatchingResponseNotFound(SwaggerMappingError):
 
 class SwaggerValidationError(SwaggerMappingError):
     """Raised when an error is encountered during validating user defined
-    format values in a request or a resposne.
+    format values in a request or a response.
     """
 
 
