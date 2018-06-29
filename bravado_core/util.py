@@ -72,6 +72,9 @@ def memoize_by_id(func):
 
 def sanitize_name(name):
     """Convert a given name so that it is a valid python identifier."""
+    if name == '':
+        return name
+
     sanitized_name = name
     for regex, replacement in SANITIZE_RULES:
         sanitized_name = regex.sub(replacement, sanitized_name)

@@ -18,13 +18,13 @@ def _sanitize_operation_id(operation_id, http_method, path_name):
 
     # Handle crazy corner cases where someone explicitly sets operation
     # id a value that gets sanitized down to an empty string
-    if len(sanitized_operation_id) == 0:
+    if sanitized_operation_id in {'', '_'}:
         # build based on the http method and request path
         sanitized_operation_id = sanitize_name(http_method + '_' + path_name)
 
     # Handle super crazy corner case where even ``http_method + '_' + path_name``
     # gets sanitized down to an empty string
-    if len(sanitized_operation_id) == 0:
+    if sanitized_operation_id in {'', '_'}:
         # This case is theoretically possible only in case http_method and path_name are
         # sanitized down to empty string. According to the specs valid values of
         # http_method will not allow this case.
