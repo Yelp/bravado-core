@@ -1,6 +1,10 @@
 Changelog
 =========
 
+5.0.4 (2018-06-29)
+------------------
+- Properly sanitize names with multiple leading digits, handle more edge cases correctly - PR #282
+
 5.0.3 (2018-06-06)
 ------------------
 - Make sure spaces in path param values are quoted using percent notation instead of using ``+``. Issue #278, PR #279
