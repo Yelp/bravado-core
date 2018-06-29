@@ -18,9 +18,26 @@ def test_model_discovery_flow_no_ref_dereference(mock__run_post_processing, mini
 
 
 @mock.patch('bravado_core.model._run_post_processing', autospec=True)
-def test_model_discovery_flow_with_ref_dereference(mock__run_post_processing, minimal_swagger_dict):
+def test_model_discovery_flow_with_ref_dereference_with_no_definitions(mock__run_post_processing, minimal_swagger_dict):
     spec = Spec(
         spec_dict=minimal_swagger_dict,
+        config={
+            'internally_dereference_refs': True,
+        },
+        origin_url='',
+    )
+    model_discovery(swagger_spec=spec)
+
+    # _run_post_processing is called 3 times
+    # 1. post processing on initial specs
+    # 2. post processing on on bravado_core.spec_flattening.flattened_spec
+    assert mock__run_post_processing.call_count == 2
+
+
+@mock.patch('bravado_core.model._run_post_processing', autospec=True)
+def test_model_discovery_flow_with_ref_dereference_with_definitions(mock__run_post_processing, minimal_swagger_dict):
+    spec = Spec(
+        spec_dict=dict(minimal_swagger_dict, definitions={'model': {'type': 'object'}}),
         config={
             'internally_dereference_refs': True,
         },
