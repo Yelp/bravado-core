@@ -47,8 +47,8 @@ def minimal_swagger_dict(minimal_swagger_abspath):
 
 
 @pytest.fixture
-def minimal_swagger_spec(minimal_swagger_dict):
-    return Spec.from_dict(minimal_swagger_dict)
+def minimal_swagger_spec(minimal_swagger_dict, minimal_swagger_abspath):
+    return Spec.from_dict(minimal_swagger_dict, origin_url=get_url(minimal_swagger_abspath))
 
 
 @pytest.fixture

@@ -11,32 +11,36 @@ from bravado_core import spec
 from bravado_core.spec import CONFIG_DEFAULTS
 from bravado_core.spec import Spec
 from bravado_core.spec_flattening import _marshal_uri
-from bravado_core.spec_flattening import _warn_if_uri_clash_on_same_marshaled_representation
+from bravado_core.spec_flattening import _SpecFlattener
 
 
-@mock.patch('bravado_core.spec_flattening.warnings')
-def test_no_warning_for_clashed_uris(mock_warnings):
-    _warn_if_uri_clash_on_same_marshaled_representation(
-        uri_schema_mappings={},
-        marshal_uri=functools.partial(
+@pytest.fixture
+def spec_flattener(minimal_swagger_spec):
+    return _SpecFlattener(
+        swagger_spec=minimal_swagger_spec,
+        marshal_uri_function=functools.partial(
             _marshal_uri,
             origin_uri=None,
         ),
     )
-    assert not mock_warnings.called
 
 
 @mock.patch('bravado_core.spec_flattening.warnings')
-def test_warning_for_clashed_uris(mock_warnings):
+def test_no_warning_for_clashed_uris(mock_warnings, spec_flattener):
+    spec_flattener.warn_if_uri_clash_on_same_marshaled_representation({})
+
+
+@mock.patch('bravado_core.spec_flattening.warnings')
+def test_warning_for_clashed_uris(mock_warnings, spec_flattener):
     clashing_uris = ['path1', 'path2']
     marshaled_uri = 'SameString'
+    spec_flattener.marshal_uri_function = functools.partial(
+        lambda *args, **kwargs: marshaled_uri,
+        origin_uri=None,
+    )
 
-    _warn_if_uri_clash_on_same_marshaled_representation(
+    spec_flattener.warn_if_uri_clash_on_same_marshaled_representation(
         uri_schema_mappings={urlparse(uri): mock.Mock() for uri in clashing_uris},
-        marshal_uri=functools.partial(
-            lambda *args, **kwargs: marshaled_uri,
-            origin_uri=None,
-        ),
     )
 
     mock_warnings.warn.assert_called_once_with(
