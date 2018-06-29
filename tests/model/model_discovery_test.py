@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import mock
 
+from bravado_core.model import _collect_models
 from bravado_core.model import model_discovery
 from bravado_core.spec import Spec
 
@@ -43,6 +44,21 @@ def test_model_discovery_flow_with_ref_dereference_with_definitions(mock__run_po
         },
         origin_url='',
     )
+
+    def _run_post_processing_side_effect(swagger_spec):
+        _collect_models(
+            container={
+                'type': 'object',
+                'x-model': 'mock_model',
+            },
+            json_reference='#/definitions/mock_model/x-model',
+            models=spec.definitions,
+            swagger_spec=swagger_spec,
+        )
+
+    # Side effect is needed to ensure that at least a model has been discovered before
+    # flattening process
+    mock__run_post_processing.side_effect = _run_post_processing_side_effect
     model_discovery(swagger_spec=spec)
 
     # _run_post_processing is called 3 times

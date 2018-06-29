@@ -13,6 +13,7 @@ from six.moves.urllib.parse import urlparse
 from six.moves.urllib.parse import urlunparse
 from swagger_spec_validator.ref_validators import in_scope
 
+from bravado_core.model import model_discovery
 from bravado_core.model import MODEL_MARKER
 from bravado_core.schema import is_dict_like
 from bravado_core.schema import is_list_like
@@ -185,7 +186,6 @@ class _SpecFlattener(object):
 
         # local imports due to circular dependency
         from bravado_core.spec import Spec
-        from bravado_core.model import model_discovery
 
         # Run model-discovery in order to tag the models available in known_mappings['definitions']
         # This is a required step that removes duplications of models due to the presence of models
