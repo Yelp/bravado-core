@@ -239,6 +239,63 @@ class _SpecFlattener(object):
                         category=Warning,
                     )
 
+    def rename_definition_references(self, flattened_spec_dict):
+        """
+        Rename definition references to more "human" names if possible.
+
+        The used approach is to use model-name as definition key, if this does not conflict
+        with an already existing key.
+
+        :param flattened_spec_dict: swagger spec dict (pre-flattened)
+        :return: swagger spec dict equivalent to flattened_spec_dict with more human references
+        :rtype: dict
+        """
+        def _rename_references_descend(value):
+            if is_ref(value):
+                return {
+                    '$ref': reference_renaming_mapping.get(value['$ref'], value['$ref'])
+                }
+            elif is_dict_like(value):
+                return {
+                    key: _rename_references_descend(value=subval)
+                    for key, subval in iteritems(value)
+                }
+
+            elif is_list_like(value):
+                return [
+                    _rename_references_descend(value=subval)
+                    for index, subval in enumerate(value)
+                ]
+
+            else:
+                return value
+
+        definition_key_to_model_name_mapping = {
+            k: v[MODEL_MARKER]
+            for k, v in iteritems(flattened_spec_dict.get('definitions', {}))
+            if is_dict_like(v) and MODEL_MARKER in v
+        }
+
+        original_definition_keys = set(iterkeys(flattened_spec_dict.get('definitions', {})))
+        new_definition_keys = set(itervalues(definition_key_to_model_name_mapping))
+
+        # Ensure that the new definition keys are not overlapping with already existing ones
+        # if this happens the new definition key needs be kept untouched
+        reference_renaming_mapping = {
+            # old-reference -> new-reference
+            '#/definitions/{}'.format(k): '#/definitions/{}'.format(v)
+            for k, v in iteritems(definition_key_to_model_name_mapping)
+            if v in new_definition_keys and v not in original_definition_keys
+        }
+
+        for old_reference, new_reference in iteritems(reference_renaming_mapping):
+            new_ref = new_reference.replace('#/definitions/', '')
+            old_ref = old_reference.replace('#/definitions/', '')
+            flattened_spec_dict['definitions'][new_ref] = flattened_spec_dict['definitions'][old_ref]
+            del flattened_spec_dict['definitions'][old_ref]
+
+        return _rename_references_descend(flattened_spec_dict)
+
     @cached_property
     def resolved_specs(self):
         # Create internal copy of spec_dict to avoid external dict pollution
@@ -259,6 +316,8 @@ class _SpecFlattener(object):
                         },
                     },
                 )
+
+        resolved_spec = self.rename_definition_references(resolved_spec)
 
         return resolved_spec
 
