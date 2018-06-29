@@ -79,6 +79,9 @@ def test_memoize_by_id_decorator():
     ('_getPetById_', 'getPetById'),        # leading/trailing underscore
     ('get__Pet_By__Id', 'get_Pet_By_Id'),  # double underscores
     ('^&#@!$foo%+++:;"<>?/', 'foo'),       # bunch of illegal chars
+    ('__foo__', 'foo'),                    # make sure we strip multiple underscores
+    ('100percent', 'percent'),             # make sure we remove all digits
+    ('100.0', '_100_0'),                   # a name consisting mostly of digits should keep them
 ])
 def test_sanitize_name(input, expected):
     assert sanitize_name(input) == expected

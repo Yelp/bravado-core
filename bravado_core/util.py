@@ -17,7 +17,17 @@ SANITIZE_RULES = [
     for regex, replacement in [
         ('[^A-Za-z0-9_]', '_'),  # valid chars for method names
         ('__+', '_'),  # collapse consecutive _
-        ('^[0-9_]|_$', ''),  # trim leading/trailing _ and leading digits
+        ('^[0-9_]+|_+$', ''),  # trim leading/trailing _ and leading digits
+    ]
+]
+
+
+FALLBACK_SANITIZE_RULES = [
+    (re.compile(regex), replacement)
+    for regex, replacement in [
+        ('[^A-Za-z0-9_]', '_'),  # valid chars for method names
+        ('^[0-9]+', '_'),  # replace leading digits
+        ('__+', '_'),  # collapse consecutive _
     ]
 ]
 
@@ -62,10 +72,19 @@ def memoize_by_id(func):
 
 def sanitize_name(name):
     """Convert a given name so that it is a valid python identifier."""
-    for regex, replacement in SANITIZE_RULES:
-        name = regex.sub(replacement, name)
+    if name == '':
+        return name
 
-    return name
+    sanitized_name = name
+    for regex, replacement in SANITIZE_RULES:
+        sanitized_name = regex.sub(replacement, sanitized_name)
+
+    if sanitized_name == '':  # use fallback rules with more underscores
+        sanitized_name = '_' + name  # prepend _ so digits are not stripped
+        for regex, replacement in FALLBACK_SANITIZE_RULES:
+            sanitized_name = regex.sub(replacement, sanitized_name)
+
+    return sanitized_name
 
 
 class AliasKeyDict(dict):
