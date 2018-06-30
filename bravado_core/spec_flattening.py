@@ -2,6 +2,7 @@
 import copy
 import functools
 import os.path
+import re
 import warnings
 from collections import defaultdict
 
@@ -296,6 +297,45 @@ class _SpecFlattener(object):
 
         return _rename_references_descend(flattened_spec_dict)
 
+    def replace_inline_models_with_refs(self, flattened_spec_dict):
+        """
+        Rename definition references to more "human" names if possible.
+
+        The used approach is to use model-name as definition key, if this does not conflict
+        with an already existing key.
+
+        :param flattened_spec_dict: swagger spec dict (pre-flattened)
+        :return: swagger spec dict equivalent to flattened_spec_dict with more human references
+        :rtype: dict
+        """
+        def _set_references_to_models_descend(value, json_ref):
+            if is_dict_like(value):
+                if (
+                    MODEL_MARKER in value and
+                    not re.match('^#/definitions/[^/]+$', json_ref) and
+                    value == flattened_spec_dict.get('definitions', {}).get(value[MODEL_MARKER])
+                ):
+                    return {
+                        '$ref': '#/definitions/{model_name}'.format(model_name=value[MODEL_MARKER])
+                    }
+
+                else:
+                    return {
+                        key: _set_references_to_models_descend(value=subval, json_ref='{}/{}'.format(json_ref, key))
+                        for key, subval in iteritems(value)
+                    }
+
+            elif is_list_like(value):
+                return [
+                    _set_references_to_models_descend(value=subval, json_ref='{}/{}'.format(json_ref, index))
+                    for index, subval in enumerate(value)
+                ]
+
+            else:
+                return value
+
+        return _set_references_to_models_descend(flattened_spec_dict, '#')
+
     @cached_property
     def resolved_specs(self):
         # Create internal copy of spec_dict to avoid external dict pollution
@@ -318,6 +358,7 @@ class _SpecFlattener(object):
                 )
 
         resolved_spec = self.rename_definition_references(resolved_spec)
+        resolved_spec = self.replace_inline_models_with_refs(resolved_spec)
 
         return resolved_spec
 

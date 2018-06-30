@@ -59,17 +59,7 @@
           "$ref": "#/definitions/ErrorResponse"
         },
         {
-          "properties": {
-            "action": {
-              "description": "name of the forbidden action",
-              "type": "string"
-            }
-          },
-          "required": [
-            "action"
-          ],
-          "type": "object",
-          "x-model": "endpoint_v1_HTTP_FORBIDDEN_action_part"
+          "$ref": "#/definitions/endpoint_v1_HTTP_FORBIDDEN_action_part"
         }
       ],
       "type": "object",
@@ -136,33 +126,13 @@
     "lfile:endpoint..v1..responses.yaml|..200": {
       "description": "HTTP/200",
       "schema": {
-        "type": "object",
-        "x-model": "endpoint_v1_HTTP_OK"
+        "$ref": "#/definitions/endpoint_v1_HTTP_OK"
       }
     },
     "lfile:endpoint..v1..responses.yaml|..403": {
       "description": "HTTP/403",
       "schema": {
-        "allOf": [
-          {
-            "$ref": "#/definitions/ErrorResponse"
-          },
-          {
-            "properties": {
-              "action": {
-                "description": "name of the forbidden action",
-                "type": "string"
-              }
-            },
-            "required": [
-              "action"
-            ],
-            "type": "object",
-            "x-model": "endpoint_v1_HTTP_FORBIDDEN_action_part"
-          }
-        ],
-        "type": "object",
-        "x-model": "endpoint_v1_HTTP_FORBIDDEN"
+        "$ref": "#/definitions/endpoint_v1_HTTP_FORBIDDEN"
       }
     },
     "lfile:endpoint..v1..responses.yaml|..default": {

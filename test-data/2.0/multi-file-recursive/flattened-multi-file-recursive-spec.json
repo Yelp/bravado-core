@@ -1,5 +1,9 @@
 {
   "definitions": {
+    "inline_model": {
+      "type": "object",
+      "x-model": "inline_model"
+    },
     "model_with_allOf_recursive": {
       "allOf": [
         {
@@ -19,9 +23,14 @@
       ],
       "x-model": "model_with_allOf_recursive"
     },
-    "not_referenced_models_in_not_direcly_linked_file": {
+    "not_referenced_models_in_not_directly_linked_file": {
+      "properties": {
+        "inline_model": {
+          "$ref": "#/definitions/inline_model"
+        }
+      },
       "type": "object",
-      "x-model": "not_referenced_models_in_not_direcly_linked_file"
+      "x-model": "not_referenced_models_in_not_directly_linked_file"
     },
     "not_used": {
       "type": "object",
