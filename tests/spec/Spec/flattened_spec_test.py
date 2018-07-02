@@ -177,3 +177,146 @@ def test_flattened_specs_with_no_xmodel_tags(multi_file_with_no_xmodel_spec, fla
         http_handlers={},
     )
     assert flattened_spec == flattened_multi_file_with_no_xmodel_dict
+
+
+@pytest.mark.parametrize(
+    'spec_dict, expected_spec_dict',
+    [
+        [
+            {
+                'definitions': {
+                    'model': {
+                        'type': 'object',
+                        'x-model': 'model',
+                    },
+                },
+            },
+            {
+                'definitions': {
+                    'model': {
+                        'type': 'object',
+                        'x-model': 'model',
+                    },
+                },
+            },
+        ],
+        [
+            {
+                'definitions': {
+                    'model': {
+                        'type': 'object',
+                        'x-model': 'different-model',
+                    },
+                },
+            },
+            {
+                'definitions': {
+                    'different-model': {
+                        'type': 'object',
+                        'x-model': 'different-model',
+                    },
+                },
+            },
+        ],
+        [
+            {
+                'definitions': {
+                    'model': {
+                        'type': 'object',
+                        'x-model': 'different-model',
+                    },
+                    'different-model': {
+                        'type': 'string',
+                    },
+                },
+            },
+            {
+                'definitions': {
+                    'model': {
+                        'type': 'object',
+                        'x-model': 'different-model',
+                    },
+                    'different-model': {
+                        'type': 'string',
+                    },
+                },
+            },
+        ],
+        [
+            {
+                'definitions': {
+                    'model': {
+                        'type': 'object',
+                        'properties': {
+                            'mod': {
+                                '$ref': '#/definitions/model'
+                            }
+                        },
+                        'x-model': 'different-model',
+                    },
+                },
+            },
+            {
+                'definitions': {
+                    'different-model': {
+                        'type': 'object',
+                        'properties': {
+                            'mod': {
+                                '$ref': '#/definitions/different-model'
+                            }
+                        },
+                        'x-model': 'different-model',
+                    },
+                },
+            },
+        ],
+        [
+            {
+                'definitions': {
+                    'model': {
+                        'type': 'object',
+                        'properties': {
+                            'mod': {
+                                '$ref': '#/definitions/second-model'
+                            }
+                        },
+                        'x-model': 'different-model',
+                    },
+                    'second-model': {
+                        'type': 'object',
+                        'properties': {
+                            'mod': {
+                                '$ref': '#/definitions/model'
+                            }
+                        },
+                        'x-model': 'second-model',
+                    },
+                },
+            },
+            {
+                'definitions': {
+                    'different-model': {
+                        'type': 'object',
+                        'properties': {
+                            'mod': {
+                                '$ref': '#/definitions/second-model'
+                            }
+                        },
+                        'x-model': 'different-model',
+                    },
+                    'second-model': {
+                        'type': 'object',
+                        'properties': {
+                            'mod': {
+                                '$ref': '#/definitions/different-model'
+                            }
+                        },
+                        'x-model': 'second-model',
+                    },
+                },
+            },
+        ],
+    ]
+)
+def test_rename_definition_references(spec_flattener, spec_dict, expected_spec_dict):
+    assert spec_flattener.rename_definition_references(spec_dict) == expected_spec_dict

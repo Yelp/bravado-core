@@ -3,10 +3,10 @@
     "application/json"
   ],
   "definitions": {
-    "lfile:definitions.yaml|..DebugErrorResponse": {
+    "DebugErrorResponse": {
       "allOf": [
         {
-          "$ref": "#/definitions/lfile:definitions.yaml|..ErrorResponse"
+          "$ref": "#/definitions/ErrorResponse"
         },
         {
           "properties": {
@@ -20,7 +20,7 @@
       "type": "object",
       "x-model": "DebugErrorResponse"
     },
-    "lfile:definitions.yaml|..ErrorResponse": {
+    "ErrorResponse": {
       "properties": {
         "error_code": {
           "description": "Machine-friendly error code",
@@ -39,7 +39,7 @@
         {
           "allOf": [
             {
-              "$ref": "#/definitions/lfile:definitions.yaml|..ErrorResponse"
+              "$ref": "#/definitions/ErrorResponse"
             },
             {
               "properties": {
@@ -53,14 +53,10 @@
       ],
       "x-model": "ErrorResponse"
     },
-    "lfile:endpoint..v1..responses.yaml|..200..schema": {
-      "type": "object",
-      "x-model": "endpoint_v1_HTTP_OK"
-    },
-    "lfile:endpoint..v1..responses.yaml|..403..schema": {
+    "endpoint_v1_HTTP_FORBIDDEN": {
       "allOf": [
         {
-          "$ref": "#/definitions/lfile:definitions.yaml|..ErrorResponse"
+          "$ref": "#/definitions/ErrorResponse"
         },
         {
           "properties": {
@@ -79,7 +75,7 @@
       "type": "object",
       "x-model": "endpoint_v1_HTTP_FORBIDDEN"
     },
-    "lfile:endpoint..v1..responses.yaml|..403..schema..allOf..1": {
+    "endpoint_v1_HTTP_FORBIDDEN_action_part": {
       "properties": {
         "action": {
           "description": "name of the forbidden action",
@@ -91,6 +87,10 @@
       ],
       "type": "object",
       "x-model": "endpoint_v1_HTTP_FORBIDDEN_action_part"
+    },
+    "endpoint_v1_HTTP_OK": {
+      "type": "object",
+      "x-model": "endpoint_v1_HTTP_OK"
     }
   },
   "info": {
@@ -145,7 +145,7 @@
       "schema": {
         "allOf": [
           {
-            "$ref": "#/definitions/lfile:definitions.yaml|..ErrorResponse"
+            "$ref": "#/definitions/ErrorResponse"
           },
           {
             "properties": {
@@ -170,7 +170,7 @@
       "schema": {
         "allOf": [
           {
-            "$ref": "#/definitions/lfile:definitions.yaml|..ErrorResponse"
+            "$ref": "#/definitions/ErrorResponse"
           },
           {
             "properties": {
