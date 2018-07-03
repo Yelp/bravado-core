@@ -12,6 +12,8 @@ from bravado_core.exception import SwaggerMappingError
 from bravado_core.operation import Operation
 from bravado_core.param import marshal_param
 from bravado_core.param import Param
+from bravado_core.param import unmarshal_param
+from bravado_core.request import IncomingRequest
 from bravado_core.spec import Spec
 
 
@@ -271,3 +273,56 @@ def test_body_parameter_not_present_not_required(empty_swagger_spec, request_dic
     param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
     marshal_param(param, param_value, request)
     assert expected_value == (loads(request['data']) if 'data' in request else None)
+
+
+@pytest.mark.parametrize(
+    'param_required, param_type, param_format, param_python_value, param_string_value',
+    [
+        (True, 'boolean', None, True, 'true'),
+        (True, 'boolean', None, False, 'false'),
+        (True, 'string', None, 'String', 'String'),
+        (True, 'string', 'date', datetime.date(2018, 7, 3), '2018-07-03'),
+        (False, 'string', None, 'String', 'String'),
+        (False, 'string', None, None, None),
+    ],
+)
+def test_boolean_query_params_are_lower_case(
+    minimal_swagger_dict, param_required, param_type, param_format, param_python_value, param_string_value,
+):
+    op_spec = {
+        'operationId': 'get_pet_by_id',
+        # op params would go here
+        'responses': {
+            '200': {
+            }
+        }
+    }
+    param_spec = {
+        'name': 'querry-param',
+        'in': 'query',
+        'required': param_required,
+        'type': param_type,
+    }
+    if param_format is not None:
+        param_spec['format'] = param_format
+
+    path_spec = {
+        'get': op_spec,
+        'parameters': [param_spec],
+    }
+
+    minimal_swagger_dict['paths']['/pets'] = path_spec
+    swagger_spec = Spec(minimal_swagger_dict)
+    request_dictionary = {'params': {}}
+
+    param = Param(swagger_spec, Mock(spec=Operation), param_spec)
+    marshal_param(param, param_python_value, request_dictionary)
+
+    if param_required or param_python_value is not None:
+        assert request_dictionary['params'][param_spec['name']] == param_string_value
+    else:
+        assert param_spec['name'] not in request_dictionary['params']
+
+    # Checks that the conversion back continues to work
+    request_object = Mock(spec=IncomingRequest, query={param_spec['name']: param_string_value})
+    assert unmarshal_param(param, request_object) == param_python_value
