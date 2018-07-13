@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import logging
-from collections import defaultdict
 from functools import partial
 
 import simplejson as json
@@ -262,15 +261,6 @@ def cast_request_param(param_type, param_name, param_value):
         return param_value
 
 
-# Method to encode a parameter type to string
-_ENCODE_TYPE_TO_FUNC = defaultdict(
-    lambda: lambda x: str(x),
-    {
-        'boolean': lambda item: str(item).lower()
-    },
-)
-
-
 def encode_request_param(param_type, param_name, param_value):
     """
     Tries to cast a request param from its specified type in scheme to a string.
@@ -281,14 +271,16 @@ def encode_request_param(param_type, param_name, param_value):
     :param param_name: param name
     :type  param_name: string
     :param param_value: param value
-    :type  param_value: string
     """
     if param_value is None:  # pragma: no cover
         # We should never get into this branch, but better be more defensive
         return None
 
     try:
-        return _ENCODE_TYPE_TO_FUNC[param_type](param_value)
+        if param_type == 'boolean':
+            return 'true' if param_value is True else 'false'
+        else:
+            return str(param_value)
     except (ValueError, TypeError):  # pragma: no cover
         # Conversion to string should never fail, but as unicode issues are always
         # a thing in python I would rather prefer logging the issue instead of
