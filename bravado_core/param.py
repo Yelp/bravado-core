@@ -127,14 +127,15 @@ def marshal_param(param, value, request):
     if param_type == 'array' and location != 'body':
         value = marshal_collection_format(swagger_spec, param_spec, value)
 
+    encode_param = partial(encode_request_param, param_type, param.name)
     if location == 'path':
         token = u'{%s}' % param.name
         quoted_value = quote(six.text_type(value).encode('utf8'), safe=',')
         request['url'] = request['url'].replace(token, quoted_value)
     elif location == 'query':
-        request['params'][param.name] = value
+        request['params'][param.name] = encode_param(value)
     elif location == 'header':
-        request['headers'][param.name] = str(value)
+        request['headers'][param.name] = encode_param(value)
     elif location == 'formData':
         if param_type == 'file':
             add_file(param, value, request)
@@ -254,6 +255,38 @@ def cast_request_param(param_type, param_name, param_value):
     except (ValueError, TypeError):
         log.warning(
             "Failed to cast %s value of %s to %s",
+            param_name, param_value, param_type,
+        )
+        # Ignore type error, let jsonschema validation handle incorrect types
+        return param_value
+
+
+def encode_request_param(param_type, param_name, param_value):
+    """
+    Tries to cast a request param from its specified type in scheme to a string.
+    This allows passing non-string params in query arg, POST data, etc.
+
+    :param param_type: name of the type to be casted to
+    :type  param_type: string
+    :param param_name: param name
+    :type  param_name: string
+    :param param_value: param value
+    """
+    if param_value is None:  # pragma: no cover
+        # We should never get into this branch, but better be more defensive
+        return None
+
+    try:
+        param_value = str(param_value)
+        if param_type == 'boolean':
+            param_value = param_value.lower()
+        return param_value
+    except (ValueError, TypeError):  # pragma: no cover
+        # Conversion to string should never fail, but as unicode issues are always
+        # a thing in python I would rather prefer logging the issue instead of
+        # raising the exception
+        log.warning(
+            "Failed to encode %s value of %s from type %s to string",
             param_name, param_value, param_type,
         )
         # Ignore type error, let jsonschema validation handle incorrect types
