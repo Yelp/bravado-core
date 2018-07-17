@@ -277,10 +277,10 @@ def encode_request_param(param_type, param_name, param_value):
         return None
 
     try:
+        param_value = str(param_value)
         if param_type == 'boolean':
-            return 'true' if param_value is True else 'false'
-        else:
-            return str(param_value)
+            param_value = param_value.lower()
+        return param_value
     except (ValueError, TypeError):  # pragma: no cover
         # Conversion to string should never fail, but as unicode issues are always
         # a thing in python I would rather prefer logging the issue instead of
