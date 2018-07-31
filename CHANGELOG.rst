@@ -1,6 +1,12 @@
 Changelog
 =========
 
+5.0.5 (2018-08-02)
+------------------
+- Swagger Spec flattening - use model names instead of generated keys - PR #284
+- Swagger Spec flattening - replace inline models with top level definitions - PR #285
+- Fix query parameter marshaling in case of boolean parameters - Issue #281 - PR #286
+
 5.0.4 (2018-06-29)
 ------------------
 - Properly sanitize names with multiple leading digits, handle more edge cases correctly - PR #282
