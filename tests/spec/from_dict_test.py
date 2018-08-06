@@ -25,28 +25,25 @@ def get_spec_json_and_url(rel_url):
         return json.loads(f.read()), urlparse.urljoin('file:', abs_path)
 
 
-def test_complicated_refs():
+def test_complicated_refs(simple_crossfer_spec):
     # Split the swagger spec into a bunch of different json files and use
     # $refs all over to place to wire stuff together - see the test-data
     # files or this will make no sense whatsoever.
-    file_path = '../../test-data/2.0/simple_crossref/swagger.json'
-    swagger_dict, origin_url = get_spec_json_and_url(file_path)
-    swagger_spec = Spec.from_dict(swagger_dict, origin_url=origin_url)
 
     # Verify things are 'reachable' (hence, have been ingested correctly)
 
     # Resource
-    assert swagger_spec.resources['pingpong']
+    assert simple_crossfer_spec.resources['pingpong']
 
     # Operation
-    op = swagger_spec.resources['pingpong'].ping
+    op = simple_crossfer_spec.resources['pingpong'].ping
     assert op
 
     # Parameter
-    assert swagger_spec.resources['pingpong'].ping.params['pung']
+    assert simple_crossfer_spec.resources['pingpong'].ping.params['pung']
 
     # Parameter name
-    assert swagger_spec.resources['pingpong'].ping.params['pung'].name == 'pung'
+    assert simple_crossfer_spec.resources['pingpong'].ping.params['pung'].name == 'pung'
 
     # Response
     response = get_response_spec(200, op)
