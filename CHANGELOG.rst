@@ -1,11 +1,16 @@
 Changelog
 =========
 
+5.0.6 (2018-08-06)
+------------------
+- Swagger Spec flattening - fix regression that led to some model definitions not having the ``x-model`` marker anymore - PR #293
+- Fix marshalling of array params that use collectionFormat ``multi`` - PR #292
+
 5.0.5 (2018-08-02)
 ------------------
 - Swagger Spec flattening - use model names instead of generated keys - PR #284
 - Swagger Spec flattening - replace inline models with top level definitions - PR #285
-- Fix query parameter marshaling in case of boolean parameters - Issue #281 - PR #286
+- Fix query parameter marshalling in case of boolean parameters - Issue #281 - PR #286
 
 5.0.4 (2018-06-29)
 ------------------
