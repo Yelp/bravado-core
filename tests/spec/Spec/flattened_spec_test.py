@@ -320,3 +320,7 @@ def test_flattened_specs_with_no_xmodel_tags(multi_file_with_no_xmodel_spec, fla
 )
 def test_rename_definition_references(spec_flattener, spec_dict, expected_spec_dict):
     assert spec_flattener.rename_definition_references(spec_dict) == expected_spec_dict
+
+
+def test_referenced_and_discovered_models_are_not_lost_after_flattening(simple_crossfer_spec):
+    assert simple_crossfer_spec.flattened_spec['definitions']['pong']['x-model'] == 'pong'
