@@ -272,6 +272,11 @@ def encode_request_param(param_type, param_name, param_value):
     :type  param_name: string
     :param param_value: param value
     """
+    if param_type == 'array':
+        # marshal_collection_format has already taken care of it; furthermore, if collectionFormat is
+        # multi then the value is still a sequence, we don't want to cast that to str
+        return param_value
+
     if param_value is None:  # pragma: no cover
         # We should never get into this branch, but better be more defensive
         return None
