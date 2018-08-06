@@ -27,23 +27,7 @@ def test_model_discovery_flow_no_ref_dereference(wrap__run_post_processing, mini
     wrap__run_post_processing.assert_called_once_with(spec)
 
 
-def test_model_discovery_flow_with_ref_dereference_with_no_definitions(wrap__run_post_processing, minimal_swagger_dict):
-    spec = Spec(
-        spec_dict=minimal_swagger_dict,
-        config={
-            'internally_dereference_refs': True,
-        },
-        origin_url='',
-    )
-    model_discovery(swagger_spec=spec)
-
-    # _run_post_processing is called 3 times
-    # 1. post processing on initial specs
-    # 2. post processing on on bravado_core.spec_flattening.flattened_spec
-    assert wrap__run_post_processing.call_count == 2
-
-
-def test_model_discovery_flow_with_ref_dereference_with_definitions(wrap__run_post_processing, minimal_swagger_dict):
+def test_model_discovery_flow_with_ref_dereference(wrap__run_post_processing, minimal_swagger_dict):
     spec = Spec(
         spec_dict=dict(minimal_swagger_dict, definitions={'model': {'type': 'object'}}),
         config={
