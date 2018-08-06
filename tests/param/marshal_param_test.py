@@ -10,6 +10,7 @@ from mock import patch
 from bravado_core.content_type import APP_JSON
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.operation import Operation
+from bravado_core.param import encode_request_param
 from bravado_core.param import marshal_param
 from bravado_core.param import Param
 from bravado_core.param import unmarshal_param
@@ -326,3 +327,18 @@ def test_boolean_query_params_are_lower_case(
     # Checks that the conversion back continues to work
     request_object = Mock(spec=IncomingRequest, query={param_spec['name']: param_string_value})
     assert unmarshal_param(param, request_object) == param_python_value
+
+
+@pytest.mark.parametrize(
+    'param_type, param_value, expected_param_value',
+    (
+        ('string', 'abc', 'abc'),
+        ('string', 5, '5'),
+        ('boolean', True, 'true'),
+        ('boolean', False, 'false'),
+        ('array', [1, 2], [1, 2]),
+    ),
+)
+def test_encode_request_param(param_type, param_value, expected_param_value):
+    value = encode_request_param(param_type, 'some_name', param_value)
+    assert value == expected_param_value
