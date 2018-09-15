@@ -428,6 +428,28 @@ def test_validate_invalid_polymorphic_object(polymorphic_spec, schema_dict, expe
     assert expected_validation_error in str(e.value.message)
 
 
+def test_validate_invalid_polymorphic_does_not_alter_validation_paths(polymorphic_spec):
+    dog_dict = {
+        'name': 'This is a dog name',
+        'type': 'Dog',
+        # 'birth_date' this is intentionally removed in order to trigger a validation error
+    }
+
+    with pytest.raises(ValidationError) as excinfo:
+        validate_object(
+            swagger_spec=polymorphic_spec,
+            object_spec=polymorphic_spec.definitions['GenericPet']._model_spec,
+            value=dog_dict,
+        )
+
+    validation_error = excinfo.value
+    assert validation_error.validator == 'required'
+    assert validation_error.validator_value == ['birth_date']
+    assert validation_error.message == '\'birth_date\' is a required property'
+    # as birth_date is defined on the 2nd item of the Dog allOf list the expected schema path should be allOf/1/required
+    assert list(validation_error.schema_path) == ['allOf', 1, 'required']
+
+
 @pytest.mark.parametrize('internally_dereference_refs', [True, False])
 def test_validate_object_with_recursive_definition(
     polymorphic_abspath, polymorphic_dict, internally_dereference_refs,
