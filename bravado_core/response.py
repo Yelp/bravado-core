@@ -110,7 +110,7 @@ def unmarshal_response(response, op):
         if content_type.startswith(APP_JSON):
             content_value = response.json()
         else:
-            content_value = msgpack.loads(response.raw_bytes, encoding='utf-8')
+            content_value = msgpack.loads(response.raw_bytes, raw=False)
         if op.swagger_spec.config['validate_responses']:
             validate_schema_object(op.swagger_spec, content_spec, content_value)
 
@@ -199,7 +199,7 @@ def validate_response_body(op, response_spec, response):
         if response.content_type == APP_JSON:
             response_value = response.json()
         else:
-            response_value = msgpack.loads(response.raw_bytes, encoding='utf-8')
+            response_value = msgpack.loads(response.raw_bytes, raw=False)
         validate_schema_object(
             op.swagger_spec, response_body_spec, response_value)
     elif response.content_type.startswith("text/"):
