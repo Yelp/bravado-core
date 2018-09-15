@@ -3,9 +3,6 @@ import mock
 import pytest
 
 from bravado_core.model import create_model_type
-from tests.model.conftest import \
-    definitions_spec as definitions_spec_fixture
-from tests.model.conftest import pet_spec as pet_spec_fixture
 
 
 def test_pet_model(empty_swagger_spec, pet_spec):
@@ -33,12 +30,7 @@ def test_no_arg_constructor(empty_swagger_spec, pet_spec):
 
 
 @mock.patch('bravado_core.model.create_model_docstring', autospec=True)
-def test_create_model_type_lazy_docstring(mock_create_docstring,
-                                          empty_swagger_spec):
-    # NOTE: some sort of weird interaction with pytest, pytest-mock and mock
-    #       made using the 'mocker' fixture here a no-go.
-    definitions_spec = definitions_spec_fixture()
-    pet_spec = pet_spec_fixture(definitions_spec)
+def test_create_model_type_lazy_docstring(mock_create_docstring, empty_swagger_spec, pet_spec):
     pet_type = create_model_type(empty_swagger_spec, 'Pet', pet_spec)
     assert mock_create_docstring.call_count == 0
     assert pet_type.__doc__ == mock_create_docstring.return_value
