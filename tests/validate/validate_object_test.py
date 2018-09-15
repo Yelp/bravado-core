@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 import pytest
 from jsonschema.exceptions import ValidationError
+from six import iteritems
 
+from bravado_core.spec import Spec
 from bravado_core.validate import validate_object
+from tests.conftest import get_url
 from tests.validate.conftest import email_address_format
 
 
@@ -423,3 +426,40 @@ def test_validate_invalid_polymorphic_object(polymorphic_spec, schema_dict, expe
             value=schema_dict,
         )
     assert expected_validation_error in str(e.value.message)
+
+
+@pytest.mark.parametrize('internally_dereference_refs', [True, False])
+def test_validate_object_with_recursive_definition(
+    polymorphic_abspath, polymorphic_dict, internally_dereference_refs,
+):
+    # The goal of this test is to ensure that recursive definitions are properly handled
+    # even if internally_dereference_refs is enabled.
+    # Introduce a recursion definition into vendor extensions, this "trick" could be used
+    # to force bravado-core to recognize models that are defined on #/definitions of
+    # referenced files or defined on un-referenced files
+    polymorphic_dict['definitions']['GenericPet']['x-referred-schema'] = [
+        {'$ref': '#/definitions/{}'.format(definition_key)}
+        for definition_key, definition in iteritems(polymorphic_dict['definitions'])
+        if {'$ref': '#/definitions/GenericPet'} in definition.get('allOf', [])
+    ]
+
+    polymorphic_spec = Spec.from_dict(
+        spec_dict=polymorphic_dict,
+        origin_url=get_url(polymorphic_abspath),
+        config={'internally_dereference_refs': internally_dereference_refs},
+    )
+
+    dog_dict = {
+        'name': 'This is a dog name',
+        'type': 'Dog',
+        'birth_date': '2018-01-01',
+    }
+
+    try:
+        validate_object(
+            swagger_spec=polymorphic_spec,
+            object_spec=polymorphic_spec.definitions['GenericPet']._model_spec,
+            value=dog_dict,
+        )
+    except RuntimeError:  # Not catching RecursionError as it was introduced in Python 3.5+
+        pytest.fail('Unbounded recursion has been detected while calling validate_object')
