@@ -177,9 +177,8 @@ def discriminator_validator(swagger_spec, validator, discriminator_attribute, in
     #   it in order to have a brand new dictionary that we can modify
     new_schema = discriminated_schema.copy()
     new_schema['allOf'] = [
-        all_of_schema
+        all_of_schema if all_of_schema not in schemas_to_remove else {}
         for all_of_schema in new_schema['allOf']
-        if all_of_schema not in schemas_to_remove
     ]
 
     from bravado_core.validate import validate_object  # Local import due to circular dependency
