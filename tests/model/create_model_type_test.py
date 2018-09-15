@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import mock
+import pytest
 
 from bravado_core.model import create_model_type
 from tests.model.conftest import \
@@ -60,6 +61,7 @@ def test_marshal_and_unmarshal(petstore_spec):
     assert unmarshalled_marshalled_model.photoUrls == pet_photo_urls
 
 
+@pytest.mark.filterwarnings("ignore: Model object methods are now prefixed with single underscore")
 def test_deprecated_marshal_and_unmarshal(petstore_spec):
     """This test is a copy of the test above. It will be removed once we remove the deprecated
     marshal() and unmarshal() methods."""
