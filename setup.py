@@ -18,7 +18,7 @@ install_requires = [
     "six",
     "swagger-spec-validator>=2.0.1",
     "pytz",
-    "msgpack-python",
+    "msgpack-python>=0.5.2",
 ]
 
 
