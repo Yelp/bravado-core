@@ -92,7 +92,7 @@ class Operation(object):
 
     @property
     def acceptable_security_definition_combinations(self):
-        return sorted(sorted(security_item.keys()) for security_item in self.security_specs)
+        return [sorted(security_item.keys()) for security_item in self.security_specs]
 
     @cached_property
     def security_parameters(self):
