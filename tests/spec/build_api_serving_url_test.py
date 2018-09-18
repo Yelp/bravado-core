@@ -12,13 +12,13 @@ def origin_url():
 
 def test_no_overrides(origin_url):
     spec = {}
-    assert origin_url == build_api_serving_url(spec, origin_url)
+    assert 'http://www.foo.com:80/' == build_api_serving_url(spec, origin_url)
 
 
 def test_override_host(origin_url):
     spec = {'host': 'womble.com'}
     api_serving_url = build_api_serving_url(spec, origin_url)
-    assert 'http://womble.com/bar/api-docs' == api_serving_url
+    assert 'http://womble.com/' == api_serving_url
 
 
 def test_override_basepath(origin_url):
@@ -30,26 +30,26 @@ def test_override_basepath(origin_url):
 def test_override_scheme(origin_url):
     spec = {'schemes': ['https']}
     api_serving_url = build_api_serving_url(spec, origin_url)
-    assert 'https://www.foo.com:80/bar/api-docs' == api_serving_url
+    assert 'https://www.foo.com:80/' == api_serving_url
 
 
 def test_override_scheme_multiple_schemes(origin_url):
     spec = {'schemes': ['https', 'ws']}
     api_serving_url = build_api_serving_url(spec, origin_url)
-    assert 'https://www.foo.com:80/bar/api-docs' == api_serving_url
+    assert 'https://www.foo.com:80/' == api_serving_url
 
 
 def test_pick_preferred_scheme(origin_url):
     spec = {'schemes': ['http', 'https']}
     api_serving_url = build_api_serving_url(
         spec, origin_url, preferred_scheme='https')
-    assert 'https://www.foo.com:80/bar/api-docs' == api_serving_url
+    assert 'https://www.foo.com:80/' == api_serving_url
 
 
 def test_pick_origin_scheme_when_preferred_scheme_none(origin_url):
     spec = {'schemes': ['http', 'https']}
     api_serving_url = build_api_serving_url(spec, origin_url)
-    assert 'http://www.foo.com:80/bar/api-docs' == api_serving_url
+    assert 'http://www.foo.com:80/' == api_serving_url
 
 
 def test_preferred_scheme_not_available(origin_url):
