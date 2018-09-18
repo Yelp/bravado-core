@@ -1,6 +1,12 @@
 Changelog
 =========
 
+5.0.7 (2018-09-18)
+------------------
+- Fix security object validation issue - PR #294
+- Fix unbounded recursion during object validation (if ``internally_dereference_refs`` is enabled) - PR #297
+- Fix api_url generation - PR #295. Thanks mulmschneider for your contribution!
+
 5.0.6 (2018-08-06)
 ------------------
 - Swagger Spec flattening - fix regression that led to some model definitions not having the ``x-model`` marker anymore - PR #293
