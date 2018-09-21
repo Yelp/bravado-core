@@ -7,6 +7,7 @@ from swagger_spec_validator.common import SwaggerValidationError
 
 from bravado_core.spec import Spec
 from tests.conftest import get_url
+from tests.conftest import get_url_path
 from tests.validate.conftest import email_address_format
 
 
@@ -67,6 +68,35 @@ def test_build_with_internally_dereference_refs(petstore_abspath, petstore_dict,
     assert spec.deref == spec._force_deref
     spec.build()
     assert (spec.deref == spec._force_deref) == (not internally_dereference_refs)
+
+
+@pytest.mark.parametrize(
+    'use_spec_url_for_base_path',
+    [
+        True,
+        False,
+    ]
+)
+def test_build_using_spec_url_for_base_path(petstore_abspath, petstore_dict, use_spec_url_for_base_path):
+    # use_spec_url_for_base_path is only effective when basePath is not present
+    # in the spec, so remove it
+    del petstore_dict['basePath']
+
+    origin_url = get_url(petstore_abspath)
+    spec = Spec(
+        petstore_dict,
+        origin_url=origin_url,
+        config={'use_spec_url_for_base_path': use_spec_url_for_base_path}
+    )
+
+    spec.build()
+
+    base_url = 'http://' + petstore_dict['host']
+    if not use_spec_url_for_base_path:
+        assert spec.api_url == base_url + '/'
+    else:
+        petstore_path = get_url_path(origin_url)
+        assert spec.api_url == base_url + petstore_path
 
 
 def test_not_object_x_models_are_not_generating_models(minimal_swagger_dict):

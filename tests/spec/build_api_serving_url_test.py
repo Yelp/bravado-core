@@ -27,6 +27,54 @@ def test_override_basepath(origin_url):
     assert 'http://www.foo.com:80/v1' == api_serving_url
 
 
+def test_use_spec_url_True():
+    api_serving_url = build_api_serving_url({},
+                                            use_spec_url_for_base_path=True)
+    assert 'http://localhost/' == api_serving_url
+
+
+def test_use_spec_url_True_when_basePath_present():
+    api_serving_url = build_api_serving_url({'basePath': '/v1'},
+                                            use_spec_url_for_base_path=True)
+    assert 'http://localhost/v1' == api_serving_url
+
+
+def test_use_spec_url_True_when_origin_url_present(origin_url):
+    api_serving_url = build_api_serving_url({}, origin_url,
+                                            use_spec_url_for_base_path=True)
+    assert 'http://www.foo.com:80/bar/api-docs' == api_serving_url
+
+
+def test_use_spec_url_True_when_basePath_and_origin_url_present(origin_url):
+    api_serving_url = build_api_serving_url({'basePath': '/v1'}, origin_url,
+                                            use_spec_url_for_base_path=True)
+    assert 'http://www.foo.com:80/v1' == api_serving_url
+
+
+def test_use_spec_url_False():
+    api_serving_url = build_api_serving_url({},
+                                            use_spec_url_for_base_path=False)
+    assert 'http://localhost/' == api_serving_url
+
+
+def test_use_spec_url_False_when_basePath_present():
+    api_serving_url = build_api_serving_url({'basePath': '/v1'},
+                                            use_spec_url_for_base_path=False)
+    assert 'http://localhost/v1' == api_serving_url
+
+
+def test_use_spec_url_False_when_origin_url_present(origin_url):
+    api_serving_url = build_api_serving_url({}, origin_url,
+                                            use_spec_url_for_base_path=False)
+    assert 'http://www.foo.com:80/' == api_serving_url
+
+
+def test_use_spec_url_False_when_basePath_and_origin_url_present(origin_url):
+    api_serving_url = build_api_serving_url({'basePath': '/v1'}, origin_url,
+                                            use_spec_url_for_base_path=True)
+    assert 'http://www.foo.com:80/v1' == api_serving_url
+
+
 def test_override_scheme(origin_url):
     spec = {'schemes': ['https']}
     api_serving_url = build_api_serving_url(spec, origin_url)
