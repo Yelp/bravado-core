@@ -99,10 +99,8 @@ def unmarshal_response(response, op):
     deref = op.swagger_spec.deref
     response_spec = get_response_spec(response.status_code, op)
 
-    def has_content(response_spec):
-        return 'schema' in response_spec
-
-    if not has_content(response_spec):
+    if 'schema' not in response_spec:
+        # If response spec does not define schema
         return None
 
     content_type = response.headers.get('content-type', '').lower()
@@ -112,7 +110,7 @@ def unmarshal_response(response, op):
         if content_type.startswith(APP_JSON):
             content_value = response.json()
         else:
-            content_value = msgpack.loads(response.raw_bytes, encoding='utf-8')
+            content_value = msgpack.loads(response.raw_bytes, raw=False)
         if op.swagger_spec.config['validate_responses']:
             validate_schema_object(op.swagger_spec, content_spec, content_value)
 
@@ -141,7 +139,6 @@ def get_response_spec(status_code, op):
     :raises: MatchingResponseNotFound when the status_code could not be mapped
         to a response specification.
     """
-    # TODO: check global #/responses
     deref = op.swagger_spec.deref
     op_spec = deref(op.op_spec)
     response_specs = deref(op_spec.get('responses'))
@@ -202,7 +199,7 @@ def validate_response_body(op, response_spec, response):
         if response.content_type == APP_JSON:
             response_value = response.json()
         else:
-            response_value = msgpack.loads(response.raw_bytes, encoding='utf-8')
+            response_value = msgpack.loads(response.raw_bytes, raw=False)
         validate_schema_object(
             op.swagger_spec, response_body_spec, response_value)
     elif response.content_type.startswith("text/"):

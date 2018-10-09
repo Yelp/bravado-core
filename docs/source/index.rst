@@ -1,7 +1,7 @@
 bravado_core documentation
 ==========================
 
-bravado_core is a Python library that implements the Swagger 2.0 Specification.
+bravado_core is a Python library that implements the `Swagger 2.0 <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md>`_ Specification.
 
 Client and servers alike can use bravado_core to implement these features:
 

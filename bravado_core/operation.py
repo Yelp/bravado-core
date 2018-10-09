@@ -16,15 +16,15 @@ log = logging.getLogger(__name__)
 def _sanitize_operation_id(operation_id, http_method, path_name):
     sanitized_operation_id = sanitize_name(operation_id or '')
 
-    # Handle crazy corner cases where someone explictily sets operation
-    # id a value that gets sanitized down to an empty string
-    if len(sanitized_operation_id) == 0:
+    # Handle crazy corner cases where someone explicitly sets operation
+    # id a value that gets sanitized down to an empty string or an underscore
+    if sanitized_operation_id in {'', '_'}:
         # build based on the http method and request path
         sanitized_operation_id = sanitize_name(http_method + '_' + path_name)
 
     # Handle super crazy corner case where even ``http_method + '_' + path_name``
-    # gets sanitized down to an empty string
-    if len(sanitized_operation_id) == 0:
+    # gets sanitized down to just an underscore (the empty string is just there for good measure)
+    if sanitized_operation_id in {'', '_'}:
         # This case is theoretically possible only in case http_method and path_name are
         # sanitized down to empty string. According to the specs valid values of
         # http_method will not allow this case.
@@ -92,7 +92,7 @@ class Operation(object):
 
     @property
     def acceptable_security_definition_combinations(self):
-        return sorted(sorted(security_item.keys()) for security_item in self.security_specs)
+        return [sorted(security_item.keys()) for security_item in self.security_specs]
 
     @cached_property
     def security_parameters(self):

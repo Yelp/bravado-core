@@ -11,32 +11,36 @@ from bravado_core import spec
 from bravado_core.spec import CONFIG_DEFAULTS
 from bravado_core.spec import Spec
 from bravado_core.spec_flattening import _marshal_uri
-from bravado_core.spec_flattening import _warn_if_uri_clash_on_same_marshaled_representation
+from bravado_core.spec_flattening import _SpecFlattener
 
 
-@mock.patch('bravado_core.spec_flattening.warnings')
-def test_no_warning_for_clashed_uris(mock_warnings):
-    _warn_if_uri_clash_on_same_marshaled_representation(
-        uri_schema_mappings={},
-        marshal_uri=functools.partial(
+@pytest.fixture
+def spec_flattener(minimal_swagger_spec):
+    return _SpecFlattener(
+        swagger_spec=minimal_swagger_spec,
+        marshal_uri_function=functools.partial(
             _marshal_uri,
             origin_uri=None,
         ),
     )
-    assert not mock_warnings.called
 
 
 @mock.patch('bravado_core.spec_flattening.warnings')
-def test_warning_for_clashed_uris(mock_warnings):
+def test_no_warning_for_clashed_uris(mock_warnings, spec_flattener):
+    spec_flattener.warn_if_uri_clash_on_same_marshaled_representation({})
+
+
+@mock.patch('bravado_core.spec_flattening.warnings')
+def test_warning_for_clashed_uris(mock_warnings, spec_flattener):
     clashing_uris = ['path1', 'path2']
     marshaled_uri = 'SameString'
+    spec_flattener.marshal_uri_function = functools.partial(
+        lambda *args, **kwargs: marshaled_uri,
+        origin_uri=None,
+    )
 
-    _warn_if_uri_clash_on_same_marshaled_representation(
+    spec_flattener.warn_if_uri_clash_on_same_marshaled_representation(
         uri_schema_mappings={urlparse(uri): mock.Mock() for uri in clashing_uris},
-        marshal_uri=functools.partial(
-            lambda *args, **kwargs: marshaled_uri,
-            origin_uri=None,
-        ),
     )
 
     mock_warnings.warn.assert_called_once_with(
@@ -105,15 +109,16 @@ def test_marshal_url(target, expected_marshaled_uri):
     assert marshaled_uri == expected_marshaled_uri
 
 
-@mock.patch('bravado_core.spec.build_api_serving_url')
-@mock.patch('bravado_core.spec.flattened_spec')
-def test_flattened_spec_raises_if_configured_to_not_validate_swagger_specs(
-    mock_flattened_dict, mock_build_api_serving_url, petstore_spec,
+@mock.patch('bravado_core.spec.log', autospec=True)
+def test_flattened_spec_warns_if_configured_to_not_validate_swagger_specs(
+    mock_log, minimal_swagger_dict,
 ):
-    petstore_spec = Spec(mock_flattened_dict, config=dict(CONFIG_DEFAULTS, validate_swagger_spec=False))
-    with pytest.raises(RuntimeError) as excinfo:
-        petstore_spec.flattened_spec
-    assert 'Swagger Specs have to be validated before flattening.' == str(excinfo.value)
+    petstore_spec = Spec.from_dict(minimal_swagger_dict, '', config=dict(CONFIG_DEFAULTS, validate_swagger_spec=False))
+    assert petstore_spec.flattened_spec == minimal_swagger_dict
+    mock_log.warning.assert_called_once_with(
+        'Flattening unvalidated specs could produce invalid specs. '
+        'Use it at your risk or enable `validate_swagger_specs`',
+    )
 
 
 @pytest.mark.parametrize(
@@ -129,13 +134,7 @@ def test_flattened_spec_warning_if_no_origin_url(
         petstore_spec.origin_url = None
 
     petstore_spec.flattened_spec
-    wrap_flattened_spec.assert_called_once_with(
-        spec_dict=petstore_spec.spec_dict,
-        spec_resolver=petstore_spec.resolver,
-        spec_url=petstore_spec.origin_url,
-        http_handlers=mock_build_http_handlers.return_value,
-        spec_definitions=petstore_spec.definitions,
-    )
+    wrap_flattened_spec.assert_called_once_with(swagger_spec=petstore_spec)
 
     if has_origin_url:
         assert not mock_warnings.warn.called
@@ -143,36 +142,6 @@ def test_flattened_spec_warning_if_no_origin_url(
         mock_warnings.warn.assert_called_once_with(
             message='It is recommended to set origin_url to your spec before flattering it. '
                     'Doing so internal paths will be hidden, reducing the amount of exposed information.',
-            category=Warning,
-        )
-
-
-@pytest.mark.parametrize(
-    'has_spec_definitions', [True, False]
-)
-@mock.patch('bravado_core.spec_flattening.warnings')
-@mock.patch('bravado_core.spec.build_http_handlers')
-@mock.patch('bravado_core.spec.flattened_spec', wraps=spec.flattened_spec)
-def test_flattened_spec_warning_if_no_definitions(
-    wrap_flattened_spec, mock_build_http_handlers, mock_warnings, petstore_spec, has_spec_definitions,
-):
-    if not has_spec_definitions:
-        petstore_spec.definitions = None
-
-    petstore_spec.flattened_spec
-    wrap_flattened_spec.assert_called_once_with(
-        spec_dict=petstore_spec.spec_dict,
-        spec_resolver=petstore_spec.resolver,
-        spec_url=petstore_spec.origin_url,
-        http_handlers=mock_build_http_handlers.return_value,
-        spec_definitions=petstore_spec.definitions,
-    )
-
-    if has_spec_definitions:
-        assert not mock_warnings.warn.called
-    else:
-        mock_warnings.warn.assert_called_once_with(
-            message='Un-referenced models cannot be un-flattened if spec_definitions is not present',
             category=Warning,
         )
 
@@ -208,3 +177,150 @@ def test_flattened_specs_with_no_xmodel_tags(multi_file_with_no_xmodel_spec, fla
         http_handlers={},
     )
     assert flattened_spec == flattened_multi_file_with_no_xmodel_dict
+
+
+@pytest.mark.parametrize(
+    'spec_dict, expected_spec_dict',
+    [
+        [
+            {
+                'definitions': {
+                    'model': {
+                        'type': 'object',
+                        'x-model': 'model',
+                    },
+                },
+            },
+            {
+                'definitions': {
+                    'model': {
+                        'type': 'object',
+                        'x-model': 'model',
+                    },
+                },
+            },
+        ],
+        [
+            {
+                'definitions': {
+                    'model': {
+                        'type': 'object',
+                        'x-model': 'different-model',
+                    },
+                },
+            },
+            {
+                'definitions': {
+                    'different-model': {
+                        'type': 'object',
+                        'x-model': 'different-model',
+                    },
+                },
+            },
+        ],
+        [
+            {
+                'definitions': {
+                    'model': {
+                        'type': 'object',
+                        'x-model': 'different-model',
+                    },
+                    'different-model': {
+                        'type': 'string',
+                    },
+                },
+            },
+            {
+                'definitions': {
+                    'model': {
+                        'type': 'object',
+                        'x-model': 'different-model',
+                    },
+                    'different-model': {
+                        'type': 'string',
+                    },
+                },
+            },
+        ],
+        [
+            {
+                'definitions': {
+                    'model': {
+                        'type': 'object',
+                        'properties': {
+                            'mod': {
+                                '$ref': '#/definitions/model'
+                            }
+                        },
+                        'x-model': 'different-model',
+                    },
+                },
+            },
+            {
+                'definitions': {
+                    'different-model': {
+                        'type': 'object',
+                        'properties': {
+                            'mod': {
+                                '$ref': '#/definitions/different-model'
+                            }
+                        },
+                        'x-model': 'different-model',
+                    },
+                },
+            },
+        ],
+        [
+            {
+                'definitions': {
+                    'model': {
+                        'type': 'object',
+                        'properties': {
+                            'mod': {
+                                '$ref': '#/definitions/second-model'
+                            }
+                        },
+                        'x-model': 'different-model',
+                    },
+                    'second-model': {
+                        'type': 'object',
+                        'properties': {
+                            'mod': {
+                                '$ref': '#/definitions/model'
+                            }
+                        },
+                        'x-model': 'second-model',
+                    },
+                },
+            },
+            {
+                'definitions': {
+                    'different-model': {
+                        'type': 'object',
+                        'properties': {
+                            'mod': {
+                                '$ref': '#/definitions/second-model'
+                            }
+                        },
+                        'x-model': 'different-model',
+                    },
+                    'second-model': {
+                        'type': 'object',
+                        'properties': {
+                            'mod': {
+                                '$ref': '#/definitions/different-model'
+                            }
+                        },
+                        'x-model': 'second-model',
+                    },
+                },
+            },
+        ],
+    ]
+)
+def test_rename_definition_references(spec_flattener, spec_dict, expected_spec_dict):
+    assert spec_flattener.rename_definition_references(spec_dict) == expected_spec_dict
+
+
+def test_referenced_and_discovered_models_are_not_lost_after_flattening(simple_crossfer_spec):
+    assert simple_crossfer_spec.flattened_spec['definitions']['pong']['x-model'] == 'pong'

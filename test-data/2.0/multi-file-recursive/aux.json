@@ -17,6 +17,11 @@
         },
         "not_used_remote_reference": {
             "type": "object",
+            "properties": {
+                "random_number": {
+                    "$ref": "aux_2.json#/definitions/random_integer"
+                }
+            },
             "x-model": "not_used_remote_reference"
         }
     },

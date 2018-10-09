@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import copy
+import datetime
+from json import loads
 
 import pytest
 from mock import Mock
@@ -8,8 +10,11 @@ from mock import patch
 from bravado_core.content_type import APP_JSON
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.operation import Operation
+from bravado_core.param import encode_request_param
 from bravado_core.param import marshal_param
 from bravado_core.param import Param
+from bravado_core.param import unmarshal_param
+from bravado_core.request import IncomingRequest
 from bravado_core.spec import Spec
 
 
@@ -101,6 +106,7 @@ def test_path_integer(empty_swagger_spec, param_spec):
     'string_param, expected_path',
     [
         ('34', '/pet/34'),
+        ('a value', '/pet/a%20value'),
         (u'Ümlaut', '/pet/%C3%9Cmlaut'),
         ('/\%?=', '/pet/%2F%5C%25%3F%3D'),
     ]
@@ -234,3 +240,105 @@ def test_required_param_failure(minimal_swagger_spec, string_param_spec,
     with pytest.raises(SwaggerMappingError) as excinfo:
         marshal_param(param, value, request_dict)
     assert 'is a required value' in str(excinfo.value)
+
+
+@pytest.mark.parametrize(
+    'param_value, expected_value',
+    [
+        (None, None),
+        ({'an-attribute': datetime.date(2018, 5, 24)}, {'an-attribute': '2018-05-24'}),
+    ],
+)
+def test_body_parameter_not_present_not_required(empty_swagger_spec, request_dict, param_value, expected_value):
+    param_spec = {
+        'in': 'body',
+        'name': 'body',
+        'required': False,
+        'schema': {
+            'type': 'object',
+            'properties': {
+                'an-attribute': {
+                    'type': 'string',
+                    'format': 'date',
+                },
+            },
+            'required': [
+                'an-attribute',
+            ],
+        },
+    }
+    request = {
+        'headers': {
+        }
+    }
+    param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
+    marshal_param(param, param_value, request)
+    assert expected_value == (loads(request['data']) if 'data' in request else None)
+
+
+@pytest.mark.parametrize(
+    'param_required, param_type, param_format, param_python_value, param_string_value',
+    [
+        (True, 'boolean', None, True, 'true'),
+        (True, 'boolean', None, False, 'false'),
+        (True, 'string', None, 'String', 'String'),
+        (True, 'string', 'date', datetime.date(2018, 7, 3), '2018-07-03'),
+        (False, 'string', None, 'String', 'String'),
+        (False, 'string', None, None, None),
+    ],
+)
+def test_boolean_query_params_are_lower_case(
+    minimal_swagger_dict, param_required, param_type, param_format, param_python_value, param_string_value,
+):
+    op_spec = {
+        'operationId': 'get_pet_by_id',
+        # op params would go here
+        'responses': {
+            '200': {
+            }
+        }
+    }
+    param_spec = {
+        'name': 'querry-param',
+        'in': 'query',
+        'required': param_required,
+        'type': param_type,
+    }
+    if param_format is not None:
+        param_spec['format'] = param_format
+
+    path_spec = {
+        'get': op_spec,
+        'parameters': [param_spec],
+    }
+
+    minimal_swagger_dict['paths']['/pets'] = path_spec
+    swagger_spec = Spec(minimal_swagger_dict)
+    request_dictionary = {'params': {}}
+
+    param = Param(swagger_spec, Mock(spec=Operation), param_spec)
+    marshal_param(param, param_python_value, request_dictionary)
+
+    if param_required or param_python_value is not None:
+        assert request_dictionary['params'][param_spec['name']] == param_string_value
+    else:
+        assert param_spec['name'] not in request_dictionary['params']
+
+    # Checks that the conversion back continues to work
+    request_object = Mock(spec=IncomingRequest, query={param_spec['name']: param_string_value})
+    assert unmarshal_param(param, request_object) == param_python_value
+
+
+@pytest.mark.parametrize(
+    'param_type, param_value, expected_param_value',
+    (
+        ('string', 'abc', 'abc'),
+        ('string', 5, '5'),
+        ('boolean', True, 'true'),
+        ('boolean', False, 'false'),
+        ('array', [1, 2], [1, 2]),
+    ),
+)
+def test_encode_request_param(param_type, param_value, expected_param_value):
+    value = encode_request_param(param_type, 'some_name', param_value)
+    assert value == expected_param_value

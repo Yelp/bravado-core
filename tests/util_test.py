@@ -79,6 +79,9 @@ def test_memoize_by_id_decorator():
     ('_getPetById_', 'getPetById'),        # leading/trailing underscore
     ('get__Pet_By__Id', 'get_Pet_By_Id'),  # double underscores
     ('^&#@!$foo%+++:;"<>?/', 'foo'),       # bunch of illegal chars
+    ('__foo__', 'foo'),                    # make sure we strip multiple underscores
+    ('100percent', 'percent'),             # make sure we remove all digits
+    ('100.0', '_100_0'),                   # a name consisting mostly of digits should keep them
 ])
 def test_sanitize_name(input, expected):
     assert sanitize_name(input) == expected
@@ -118,16 +121,18 @@ def test_AliasKeyDict_del():
 
 
 @pytest.mark.parametrize(
-    'object_dict, expected_object_type',
+    'default_type_to_object, object_dict, expected_object_type',
     (
-        [{'in': 'body', 'name': 'body', 'required': True, 'schema': {'type': 'object'}}, ObjectType.PARAMETER],
-        [{'get': {'responses': {'200': {'description': 'response description'}}}}, ObjectType.PATH_ITEM],
-        [{'description': 'response description', 'schema': {'type': 'object'}}, ObjectType.RESPONSE],
-        [{'description': 'response description', 'parameters': {'param': {'type': 'object'}}}, ObjectType.SCHEMA],
+        [True, 'anything that is not a dictionary', ObjectType.UNKNOWN],
+        [True, {'in': 'body', 'name': 'body', 'required': True, 'schema': {'type': 'object'}}, ObjectType.PARAMETER],
+        [True, {'get': {'responses': {'200': {'description': 'response description'}}}}, ObjectType.PATH_ITEM],
+        [True, {'description': 'response description', 'schema': {'type': 'object'}}, ObjectType.RESPONSE],
+        [True, {'description': 'response description', 'parameters': {'param': {'type': 'object'}}}, ObjectType.SCHEMA],
+        [False, {'description': 'response description', 'parameters': {'param': {'type': 'object'}}}, ObjectType.UNKNOWN],  # noqa
     )
 )
-def test_determine_object_type(object_dict, expected_object_type):
-    assert determine_object_type(object_dict) == expected_object_type
+def test_determine_object_type(default_type_to_object, object_dict, expected_object_type):
+    assert determine_object_type(object_dict, default_type_to_object) == expected_object_type
 
 
 def test_empty():

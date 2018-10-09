@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 import os
 
+import pytest
 import simplejson as json
 import yaml
 from six.moves.urllib import parse as urlparse
 
 from bravado_core.response import get_response_spec
 from bravado_core.spec import Spec
+from tests.conftest import _read_json
+from tests.conftest import get_url
 
 
 def test_definitions_not_present(minimal_swagger_dict):
@@ -22,28 +25,25 @@ def get_spec_json_and_url(rel_url):
         return json.loads(f.read()), urlparse.urljoin('file:', abs_path)
 
 
-def test_complicated_refs():
+def test_complicated_refs(simple_crossfer_spec):
     # Split the swagger spec into a bunch of different json files and use
     # $refs all over to place to wire stuff together - see the test-data
     # files or this will make no sense whatsoever.
-    file_path = '../../test-data/2.0/simple_crossref/swagger.json'
-    swagger_dict, origin_url = get_spec_json_and_url(file_path)
-    swagger_spec = Spec.from_dict(swagger_dict, origin_url=origin_url)
 
     # Verify things are 'reachable' (hence, have been ingested correctly)
 
     # Resource
-    assert swagger_spec.resources['pingpong']
+    assert simple_crossfer_spec.resources['pingpong']
 
     # Operation
-    op = swagger_spec.resources['pingpong'].ping
+    op = simple_crossfer_spec.resources['pingpong'].ping
     assert op
 
     # Parameter
-    assert swagger_spec.resources['pingpong'].ping.params['pung']
+    assert simple_crossfer_spec.resources['pingpong'].ping.params['pung']
 
     # Parameter name
-    assert swagger_spec.resources['pingpong'].ping.params['pung'].name == 'pung'
+    assert simple_crossfer_spec.resources['pingpong'].ping.params['pung'].name == 'pung'
 
     # Response
     response = get_response_spec(200, op)
@@ -125,3 +125,68 @@ def test_spec_with_dereffed_and_tagged_models_works(minimal_swagger_dict):
     minimal_swagger_dict['paths']['/pet'] = pet_path_spec
     spec = Spec.from_dict(minimal_swagger_dict)
     assert spec.definitions['Pet']
+
+
+@pytest.fixture
+def multi_file_multi_directory_abspath(my_dir):
+    return os.path.abspath(os.path.join(my_dir, '../test-data/2.0/multi-file-multi-directory-spec/swagger.yaml'))
+
+
+@pytest.fixture
+def multi_file_multi_directory_dict(multi_file_multi_directory_abspath):
+    with open(multi_file_multi_directory_abspath) as f:
+        return yaml.safe_load(f)
+
+
+@pytest.fixture
+def flattened_multi_file_multi_directory_abspath(my_dir):
+    return os.path.join(
+        my_dir,
+        '../test-data/2.0/multi-file-multi-directory-spec/flattened-multi-file-multi-directory-spec.json',
+    )
+
+
+@pytest.fixture
+def flattened_multi_file_multi_directory_dict(flattened_multi_file_multi_directory_abspath):
+    return _read_json(flattened_multi_file_multi_directory_abspath)
+
+
+@pytest.fixture(
+    params=[False, True],
+    ids=['with-references', 'fully-dereferenced'],
+)
+def multi_file_multi_directory_spec(request, multi_file_multi_directory_dict, multi_file_multi_directory_abspath):
+    return Spec.from_dict(
+        multi_file_multi_directory_dict,
+        origin_url=get_url(multi_file_multi_directory_abspath),
+        config={'internally_dereference_refs': request.param},
+    )
+
+
+def test_flattened_multi_file_multi_directory_specs(
+    multi_file_multi_directory_spec, flattened_multi_file_multi_directory_dict,
+):
+    assert multi_file_multi_directory_spec.flattened_spec == flattened_multi_file_multi_directory_dict
+
+    # Ensure that flattened_spec is a valid swagger spec
+    try:
+        Spec.from_dict(multi_file_multi_directory_spec.flattened_spec)
+    except Exception as e:
+        pytest.fail('Unexpected exception: {e}'.format(e=e), e.__traceback__)
+
+
+def test_swagger_spec_in_operation_is_the_swagger_spec_that_contains_the_operation(multi_file_multi_directory_spec):
+    """
+    The objective of this test is to guarantee that bravado_core.spec.Spec object referenced by
+    operation objects is the same object that contains the resources that points to the operation
+
+    Referencing to the same object means that they share the same memory space
+
+    More details about the issue that we want to prevent with this tests are available on
+    https://github.com/Yelp/bravado-core/issues/275
+    """
+    def first(_iterable):
+        return next(iter(_iterable))
+    resource = first(multi_file_multi_directory_spec.resources.values())
+    operation = first(resource.operations.values())
+    assert id(operation.swagger_spec) == id(multi_file_multi_directory_spec)

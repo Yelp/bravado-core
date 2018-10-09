@@ -17,7 +17,17 @@ SANITIZE_RULES = [
     for regex, replacement in [
         ('[^A-Za-z0-9_]', '_'),  # valid chars for method names
         ('__+', '_'),  # collapse consecutive _
-        ('^[0-9_]|_$', ''),  # trim leading/trailing _ and leading digits
+        ('^[0-9_]+|_+$', ''),  # trim leading/trailing _ and leading digits
+    ]
+]
+
+
+FALLBACK_SANITIZE_RULES = [
+    (re.compile(regex), replacement)
+    for regex, replacement in [
+        ('[^A-Za-z0-9_]', '_'),  # valid chars for method names
+        ('^[0-9]+', '_'),  # replace leading digits
+        ('__+', '_'),  # collapse consecutive _
     ]
 ]
 
@@ -62,10 +72,19 @@ def memoize_by_id(func):
 
 def sanitize_name(name):
     """Convert a given name so that it is a valid python identifier."""
-    for regex, replacement in SANITIZE_RULES:
-        name = regex.sub(replacement, name)
+    if name == '':
+        return name
 
-    return name
+    sanitized_name = name
+    for regex, replacement in SANITIZE_RULES:
+        sanitized_name = regex.sub(replacement, sanitized_name)
+
+    if sanitized_name == '':  # use fallback rules with more underscores
+        sanitized_name = '_' + name  # prepend _ so digits are not stripped
+        for regex, replacement in FALLBACK_SANITIZE_RULES:
+            sanitized_name = regex.sub(replacement, sanitized_name)
+
+    return sanitized_name
 
 
 class AliasKeyDict(dict):
@@ -125,7 +144,7 @@ class ObjectType(Enum):
         return self.value
 
 
-def determine_object_type(object_dict):
+def determine_object_type(object_dict, default_type_to_object=None):
     """
     Use best guess to determine the object type based on the object keys.
 
@@ -133,8 +152,10 @@ def determine_object_type(object_dict):
     the four types of object that could be references in the specs: parameter, path item, response and schema.
 
     :type object_dict: dict
+    :default_type_to_object: Default object type attribute to object if missing (as from bravado_core.spec.Spec config)
+    :type default_type_to_object: bool
 
-    :return: determined type of ``object_dict``. The return values is an ObjectType:
+    :return: determined type of ``object_dict``. The return values is an ObjectType
     :rtype: ObjectType
     """
 
@@ -171,7 +192,10 @@ def determine_object_type(object_dict):
                 # NOTE: In case the method is mis-determining the type of a schema object, confusing it with a
                 #       response type it will be enough to add, to the object, one key that is not defined
                 #       in ``response_allowed_keys``.  (ie. ``additionalProperties: {}``, implicitly defined be specs)
-                return ObjectType.SCHEMA
+                if default_type_to_object or 'type' in object_dict:
+                    return ObjectType.SCHEMA
+                else:
+                    return ObjectType.UNKNOWN
 
 
 def strip_xscope(spec_dict):

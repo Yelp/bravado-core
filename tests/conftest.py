@@ -47,8 +47,8 @@ def minimal_swagger_dict(minimal_swagger_abspath):
 
 
 @pytest.fixture
-def minimal_swagger_spec(minimal_swagger_dict):
-    return Spec.from_dict(minimal_swagger_dict)
+def minimal_swagger_spec(minimal_swagger_dict, minimal_swagger_abspath):
+    return Spec.from_dict(minimal_swagger_dict, origin_url=get_url(minimal_swagger_abspath))
 
 
 @pytest.fixture
@@ -165,6 +165,21 @@ def flattened_multi_file_with_no_xmodel_abspath(my_dir):
 @pytest.fixture
 def flattened_multi_file_with_no_xmodel_dict(flattened_multi_file_with_no_xmodel_abspath):
     return _read_json(flattened_multi_file_with_no_xmodel_abspath)
+
+
+@pytest.fixture
+def simple_crossfer_abspath(my_dir):
+    return os.path.join(my_dir, '../test-data/2.0/simple_crossref/swagger.json')
+
+
+@pytest.fixture
+def simple_crossfer_dict(simple_crossfer_abspath):
+    return _read_json(simple_crossfer_abspath)
+
+
+@pytest.fixture
+def simple_crossfer_spec(simple_crossfer_dict, simple_crossfer_abspath):
+    return Spec.from_dict(simple_crossfer_dict, origin_url=get_url(simple_crossfer_abspath))
 
 
 @pytest.fixture

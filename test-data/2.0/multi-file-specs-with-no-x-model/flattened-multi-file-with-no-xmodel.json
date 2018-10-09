@@ -1,24 +1,17 @@
 {
   "definitions": {
-    "lfile:aux.json|..definitions..referenced_object": {
-      "type": "object",
-      "x-model": "lfile:aux.json|..definitions..referenced_object"
-    },
-    "lfile:swagger.json|..definitions..not_used_referenced": {
-      "properties": {
-        "key": {
-          "type": "object"
-        }
-      }
-    },
-    "lfile:swagger.json|..definitions..object": {
+    "object": {
       "properties": {
         "property": {
-          "$ref": "#/definitions/lfile:aux.json|..definitions..referenced_object"
+          "$ref": "#/definitions/referenced_object"
         }
       },
       "type": "object",
       "x-model": "object"
+    },
+    "referenced_object": {
+      "type": "object",
+      "x-model": "referenced_object"
     }
   },
   "info": {

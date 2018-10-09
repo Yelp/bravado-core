@@ -1,6 +1,60 @@
 Changelog
 =========
 
+5.0.7 (2018-09-18)
+------------------
+- Fix security object validation issue - PR #294
+- Fix unbounded recursion during object validation (if ``internally_dereference_refs`` is enabled) - PR #297
+- Fix api_url generation - PR #295. Thanks mulmschneider for your contribution!
+
+5.0.6 (2018-08-06)
+------------------
+- Swagger Spec flattening - fix regression that led to some model definitions not having the ``x-model`` marker anymore - PR #293
+- Fix marshalling of array params that use collectionFormat ``multi`` - PR #292
+
+5.0.5 (2018-08-02)
+------------------
+- Swagger Spec flattening - use model names instead of generated keys - PR #284
+- Swagger Spec flattening - replace inline models with top level definitions - PR #285
+- Fix query parameter marshalling in case of boolean parameters - Issue #281 - PR #286
+
+5.0.4 (2018-06-29)
+------------------
+- Properly sanitize names with multiple leading digits, handle more edge cases correctly - PR #282
+
+5.0.3 (2018-06-06)
+------------------
+- Make sure spaces in path param values are quoted using percent notation instead of using ``+``. Issue #278, PR #279
+
+5.0.2 (2018-06-04)
+------------------
+- Fix regression if `internally_dereference_refs` is used. Issue #275, PR #276
+
+5.0.1 (2018-05-30)
+------------------
+- No longer make sure that all config keys are known; this allows users of the library to store additional configuration. - PR #274
+
+5.0.0 (2018-05-30)
+------------------
+- Refactor: model discovery is now handled in ``bravado_core.model`` - PR #270
+- Remove deprecated methods from Model type - PR #270
+- Remove deprecated parameters from ``bravado_core.spec_flattening.flattened_spec`` - PR #269
+- Ensure that models in `#/definitions` of referenced files are discovered - PR #273
+
+.. warning::
+    This release contains breaking changes!
+    The signature of ``bravado_core.spec_flattening.flattened_spec`` has been updated.
+    The following methods have been removed from the public interface: ``bravado_core.model.tag_models``, ``bravado_core.model.bless_models``, ``bravado_core.model.collect_models`` and ``bravado_core.spec.post_process_spec``.
+
+4.13.4 (2018-05-24)
+-------------------
+- Fix marsharling and unmarshaling of optional body parameters. PR #268
+
+4.13.3 (2018-05-16)
+-------------------
+- Add support for Content-Disposition filename - PR #262. Thanks elmirjagudin for your contribution!
+- Improve specs  flattening and dereferencing in case of relative references - PR #263
+
 4.13.2 (2018-03-19)
 -------------------
 - Fix bug where multiple schemes in the spec would sometimes cause a ``SwaggerSchemaError`` - PR #260

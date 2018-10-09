@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import functools
-from copy import deepcopy
 
 import pyrfc3339
 from jsonschema import _validators
@@ -161,15 +160,15 @@ def discriminator_validator(swagger_spec, validator, discriminator_attribute, in
     if discriminator_value == schema[MODEL_MARKER]:
         return
 
-    new_schema = deepcopy(swagger_spec.definitions[discriminator_value]._model_spec)
-    if 'allOf' not in new_schema:
+    discriminated_schema = swagger_spec.definitions[discriminator_value]._model_spec
+    if 'allOf' not in discriminated_schema:
         raise ValidationError(
             message='discriminated schema \'{}\' must inherit from \'{}\''.format(
                 discriminator_value, schema[MODEL_MARKER]
             )
         )
 
-    schemas_to_remove = [s for s in new_schema['allOf'] if swagger_spec.deref(s) == schema]
+    schemas_to_remove = [s for s in discriminated_schema['allOf'] if swagger_spec.deref(s) == schema]
     if not schemas_to_remove:
         # Not checking against len(schemas_to_remove) > 1 because it should be prevented by swagger spec validation
         raise ValidationError(
@@ -180,7 +179,14 @@ def discriminator_validator(swagger_spec, validator, discriminator_attribute, in
 
     # Remove the current schema from the allOf list in order to avoid unbounded recursion
     # (the current object is already validated against schema)
-    new_schema['allOf'].remove(schemas_to_remove[0])
+    # WARNING: This is especially important if internally_dereference_refs is set to true
+    #   as we're modifying new_schema and new_schema is a dict (so mutable) we need to copy
+    #   it in order to have a brand new dictionary that we can modify
+    new_schema = discriminated_schema.copy()
+    new_schema['allOf'] = [
+        all_of_schema if all_of_schema not in schemas_to_remove else {}
+        for all_of_schema in new_schema['allOf']
+    ]
 
     from bravado_core.validate import validate_object  # Local import due to circular dependency
     validate_object(swagger_spec=swagger_spec, object_spec=new_schema, value=instance)
@@ -193,7 +199,7 @@ def ref_validator(validator, ref, instance, schema):
      the full scope built when ingesting the spec from its root
      (#/ in swagger.json). So, we need to modify the behavior of ref
      validation to use the `x-scope` annotations that were created during spec
-     ingestion (see post_process_spec in spec.py).
+     ingestion (see model_discovery in bravado_core/model.py).
 
     :param validator: Validator class used to validate the object
     :type validator: :class: `Swagger20Validator` or
@@ -205,7 +211,7 @@ def ref_validator(validator, ref, instance, schema):
         eg {'$ref': '#/foo/bar/Baz'}
     :type schema: dict
     """
-    # This is a copy of jsonscehama._validators.ref(..) with the
+    # This is a copy of jsonschema._validators.ref(..) with the
     # in_scope(..) context manager applied before any refs are resolved.
     resolve = getattr(validator.resolver, "resolve")
     if resolve is None:

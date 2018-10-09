@@ -2,29 +2,31 @@
 import copy
 import functools
 import os.path
+import re
 import warnings
 from collections import defaultdict
 
-from jsonschema import RefResolver
 from six import iteritems
 from six import iterkeys
 from six import itervalues
-from six.moves.urllib.parse import urljoin
+from six.moves.urllib.parse import ParseResult
 from six.moves.urllib.parse import urlparse
 from six.moves.urllib.parse import urlunparse
-from six.moves.urllib_parse import ParseResult
 from swagger_spec_validator.ref_validators import in_scope
 
+from bravado_core.model import model_discovery
 from bravado_core.model import MODEL_MARKER
 from bravado_core.schema import is_dict_like
 from bravado_core.schema import is_list_like
 from bravado_core.schema import is_ref
+from bravado_core.util import cached_property
 from bravado_core.util import determine_object_type
 from bravado_core.util import ObjectType
 
+
 MARSHAL_REPLACEMENT_PATTERNS = {
-    '/': '..',  # / is converted to .. (ie. api_docs/swager.json -> api_docs..swagger.json)
-    '#': '|',  # # is converted to | (ie. swager.json#definitions -> swagger.json|definitions)
+    '/': '..',  # / is converted to .. (ie. api_docs/swagger.json -> api_docs..swagger.json)
+    '#': '|',  # # is converted to | (ie. swagger.json#definitions -> swagger.json|definitions)
 }
 
 
@@ -99,37 +101,268 @@ def _marshal_uri(target_uri, origin_uri):
     return marshalled_target
 
 
-def _warn_if_uri_clash_on_same_marshaled_representation(uri_schema_mappings, marshal_uri):
-    """
-    Verifies that all the uris present on the definitions are represented by a different marshaled uri.
-    If is not the case a warning will filed.
+class _SpecFlattener(object):
+    def __init__(self, swagger_spec, marshal_uri_function):
+        self.swagger_spec = swagger_spec
+        self.spec_url = self.swagger_spec.origin_url
 
-    In case of presence of warning please keep us informed about the issue, in the meantime you can
-    workaround this calling directly ``flattened_spec(spec, marshal_uri_function)`` passing your
-    marshalling function.
-    """
-    # Check that URIs are NOT clashing to same marshaled representation
-    marshaled_uri_mapping = defaultdict(set)
-    for uri in iterkeys(uri_schema_mappings):
-        marshaled_uri_mapping[marshal_uri(uri)].add(uri)
+        if self.spec_url is None:
+            warnings.warn(
+                message='It is recommended to set origin_url to your spec before flattering it. '
+                        'Doing so internal paths will be hidden, reducing the amount of exposed information.',
+                category=Warning,
+            )
 
-    if len(marshaled_uri_mapping) != len(uri_schema_mappings):
-        # At least two uris clashed to the same marshaled representation
-        for marshaled_uri, uris in iteritems(marshaled_uri_mapping):
-            if len(uris) > 1:
-                warnings.warn(
-                    message='{s_uris} clashed to {marshaled}'.format(
-                        s_uris=', '.join(sorted(urlunparse(uri) for uri in uris)),
-                        marshaled=marshaled_uri,
-                    ),
-                    category=Warning,
+        self.known_mappings = {
+            object_type.get_root_holder(): {}
+            for object_type in ObjectType
+            if object_type.get_root_holder()
+        }
+        self.marshal_uri_function = marshal_uri_function
+
+    @cached_property
+    def marshal_uri(self):
+        return functools.partial(
+            self.marshal_uri_function,
+            origin_uri=urlparse(self.spec_url) if self.spec_url else None,
+        )
+
+    @cached_property
+    def spec_resolver(self):
+        return self.swagger_spec.resolver
+
+    @cached_property
+    def resolve(self):
+        return self.swagger_spec.resolver.resolve
+
+    @cached_property
+    def default_type_to_object(self):
+        return self.swagger_spec.config['default_type_to_object']
+
+    def descend(self, value):
+        if is_ref(value):
+            # Update spec_resolver scope to be able to dereference relative specs from a not root file
+            with in_scope(self.spec_resolver, value):
+                uri, deref_value = self.resolve(value['$ref'])
+                object_type = determine_object_type(
+                    object_dict=deref_value,
+                    default_type_to_object=self.default_type_to_object,
                 )
 
+                known_mapping_key = object_type.get_root_holder()
+                if known_mapping_key is None:
+                    return self.descend(value=deref_value)
+                else:
+                    uri = urlparse(uri)
+                    if uri not in self.known_mappings.get(known_mapping_key, {}):
+                        # The placeholder is present to interrupt the recursion
+                        # during the recursive traverse of the data model (``descend``)
+                        self.known_mappings[known_mapping_key][uri] = None
 
-def flattened_spec(
-    spec_dict, spec_resolver=None, spec_url=None, http_handlers=None,
-    marshal_uri_function=_marshal_uri, spec_definitions=None,
-):
+                        self.known_mappings[known_mapping_key][uri] = self.descend(value=deref_value)
+
+                    return {'$ref': '#/{}/{}'.format(known_mapping_key, self.marshal_uri(uri))}
+
+        elif is_dict_like(value):
+            return {
+                key: self.descend(value=subval)
+                for key, subval in iteritems(value)
+            }
+
+        elif is_list_like(value):
+            return [
+                self.descend(value=subval)
+                for index, subval in enumerate(value)
+            ]
+
+        else:
+            return value
+
+    def warn_if_uri_clash_on_same_marshaled_representation(self, uri_schema_mappings):
+        """
+        Verifies that all the uris present on the definitions are represented by a different marshaled uri.
+        If is not the case a warning will filed.
+
+        In case of presence of warning please keep us informed about the issue, in the meantime you can
+        workaround this calling directly ``flattened_spec(spec, marshal_uri_function)`` passing your
+        marshalling function.
+        """
+        # Check that URIs are NOT clashing to same marshaled representation
+        marshaled_uri_mapping = defaultdict(set)
+        for uri in iterkeys(uri_schema_mappings):
+            marshaled_uri_mapping[self.marshal_uri(uri)].add(uri)
+
+        if len(marshaled_uri_mapping) != len(uri_schema_mappings):
+            # At least two uris clashed to the same marshaled representation
+            for marshaled_uri, uris in iteritems(marshaled_uri_mapping):
+                if len(uris) > 1:
+                    warnings.warn(
+                        message='{s_uris} clashed to {marshaled}'.format(
+                            s_uris=', '.join(sorted(urlunparse(uri) for uri in uris)),
+                            marshaled=marshaled_uri,
+                        ),
+                        category=Warning,
+                    )
+
+    def rename_definition_references(self, flattened_spec_dict):
+        """
+        Rename definition references to more "human" names if possible.
+
+        The used approach is to use model-name as definition key, if this does not conflict
+        with an already existing key.
+
+        :param flattened_spec_dict: swagger spec dict (pre-flattened)
+        :return: swagger spec dict equivalent to flattened_spec_dict with more human references
+        :rtype: dict
+        """
+        def _rename_references_descend(value):
+            if is_ref(value):
+                return {
+                    '$ref': reference_renaming_mapping.get(value['$ref'], value['$ref'])
+                }
+            elif is_dict_like(value):
+                return {
+                    key: _rename_references_descend(value=subval)
+                    for key, subval in iteritems(value)
+                }
+
+            elif is_list_like(value):
+                return [
+                    _rename_references_descend(value=subval)
+                    for index, subval in enumerate(value)
+                ]
+
+            else:
+                return value
+
+        definition_key_to_model_name_mapping = {
+            k: v[MODEL_MARKER]
+            for k, v in iteritems(flattened_spec_dict.get('definitions', {}))
+            if is_dict_like(v) and MODEL_MARKER in v
+        }
+
+        original_definition_keys = set(iterkeys(flattened_spec_dict.get('definitions', {})))
+        new_definition_keys = set(itervalues(definition_key_to_model_name_mapping))
+
+        # Ensure that the new definition keys are not overlapping with already existing ones
+        # if this happens the new definition key needs be kept untouched
+        reference_renaming_mapping = {
+            # old-reference -> new-reference
+            '#/definitions/{}'.format(k): '#/definitions/{}'.format(v)
+            for k, v in iteritems(definition_key_to_model_name_mapping)
+            if v in new_definition_keys and v not in original_definition_keys
+        }
+
+        for old_reference, new_reference in iteritems(reference_renaming_mapping):
+            new_ref = new_reference.replace('#/definitions/', '')
+            old_ref = old_reference.replace('#/definitions/', '')
+            flattened_spec_dict['definitions'][new_ref] = flattened_spec_dict['definitions'][old_ref]
+            del flattened_spec_dict['definitions'][old_ref]
+
+        return _rename_references_descend(flattened_spec_dict)
+
+    def replace_inline_models_with_refs(self, flattened_spec_dict):
+        """
+        Rename definition references to more "human" names if possible.
+
+        The used approach is to use model-name as definition key, if this does not conflict
+        with an already existing key.
+
+        :param flattened_spec_dict: swagger spec dict (pre-flattened)
+        :return: swagger spec dict equivalent to flattened_spec_dict with more human references
+        :rtype: dict
+        """
+        def _set_references_to_models_descend(value, json_ref):
+            if is_dict_like(value):
+                if (
+                    MODEL_MARKER in value and
+                    not re.match('^#/definitions/[^/]+$', json_ref) and
+                    value == flattened_spec_dict.get('definitions', {}).get(value[MODEL_MARKER])
+                ):
+                    return {
+                        '$ref': '#/definitions/{model_name}'.format(model_name=value[MODEL_MARKER])
+                    }
+
+                else:
+                    return {
+                        key: _set_references_to_models_descend(value=subval, json_ref='{}/{}'.format(json_ref, key))
+                        for key, subval in iteritems(value)
+                    }
+
+            elif is_list_like(value):
+                return [
+                    _set_references_to_models_descend(value=subval, json_ref='{}/{}'.format(json_ref, index))
+                    for index, subval in enumerate(value)
+                ]
+
+            else:
+                return value
+
+        return _set_references_to_models_descend(flattened_spec_dict, '#')
+
+    def model_discovery(self):
+        # local imports due to circular dependency
+        from bravado_core.spec import Spec
+
+        # Run model-discovery in order to tag the models available in known_mappings['definitions']
+        # This is a required step that removes duplications of models due to the presence of models
+        # in swagger.json#/definitions and the equivalent models generated by flattening
+        model_discovery(Spec(
+            spec_dict={
+                'definitions': {
+                    self.marshal_uri(uri): value
+                    for uri, value in iteritems(self.known_mappings['definitions'])
+                },
+            },
+        ))
+
+    def add_original_models_into_known_mappings(self):
+        flatten_models = {
+            # schema objects might not have a "type" set so they won't be tagged as models
+            definition.get(MODEL_MARKER)
+            for definition in itervalues(self.known_mappings['definitions'])
+        }
+
+        for model_name, model_type in iteritems(self.swagger_spec.definitions):
+            if model_name in flatten_models:
+                continue
+            model_url = urlparse(model_type._json_reference)
+            self.known_mappings['definitions'][model_url] = self.descend(
+                value=model_type._model_spec,
+            )
+
+    @cached_property
+    def resolved_specs(self):
+        # Create internal copy of spec_dict to avoid external dict pollution
+        resolved_spec = self.descend(value=copy.deepcopy(self.swagger_spec.spec_dict))
+
+        # Perform model discovery of the newly identified definitions
+        self.model_discovery()
+
+        # Add the identified models that are not available on the know_mappings definitions
+        # This could happen in case of models that have been discovered because on
+        # '#/definitions' of a referenced file, but not directly referenced by the specs
+        self.add_original_models_into_known_mappings()
+
+        for mapping_key, mappings in iteritems(self.known_mappings):
+            self.warn_if_uri_clash_on_same_marshaled_representation(mappings)
+            if len(mappings) > 0:
+                resolved_spec.update(
+                    {
+                        mapping_key: {
+                            self.marshal_uri(uri): value
+                            for uri, value in iteritems(mappings)
+                        },
+                    },
+                )
+
+        resolved_spec = self.rename_definition_references(resolved_spec)
+        resolved_spec = self.replace_inline_models_with_refs(resolved_spec)
+
+        return resolved_spec
+
+
+def flattened_spec(swagger_spec, marshal_uri_function=_marshal_uri):
     """
     Flatten Swagger Specs description into an unique and JSON serializable document.
     The flattening injects in place the referenced [path item objects](https://swagger.io/specification/#pathItemObject)
@@ -147,142 +380,16 @@ def flattened_spec(
     Please refer to https://github.com/OAI/OpenAPI-Specification/blob/3.0.0/versions/2.0.md#responseObject for the
     most recent Swagger 2.0 specifications.
 
-    :param spec_dict: Swagger Spec dictionary representation. Note: the method assumes that the specs are valid specs.
-    :type spec_dict: dict
-    :param spec_resolver: Swagger Spec resolver for fetching external references
-    :type spec_resolver: RefResolver
-    :param spec_url: Base url of your Swagger Specs. It is used to hide internal paths during uri marshaling.
-    :type spec_url: str
-    :param http_handlers: custom handlers for retrieving external specs.
-        The expected format is {protocol: read_protocol}, with read_protocol similar to  read_protocol=lambda uri: ...
-        An example could be provided by ``bravado_core.spec.build_http_handlers``
-    :type http_handlers: dict
+    WARNING: In the future releases all the parameters except swagger_spec and marshal_uri_function will be removed.
+    Please make sure to use only those two parameters.
+    Until the deprecation is not effective you can still pass all the parameters but it's strongly discouraged.
+
+    :param swagger_spec: bravado-core Spec object
+    :type swagger_spec: bravado_core.spec.Spec
     :param marshal_uri_function: function used to marshal uris in string suitable to be keys in Swagger Specs.
     :type marshal_uri_function: Callable with the same signature of ``_marshal_uri``
-    :param spec_definitions: known swagger definitions (hint: definitions attribute of bravado_core.spec.Spec instance)
-    :type dict: bravado_core.spec.Spec
 
     :return: Flattened representation of the Swagger Specs
     :rtype: dict
     """
-
-    # Create internal copy of spec_dict to avoid external dict pollution
-    spec_dict = copy.deepcopy(spec_dict)
-
-    if spec_url is None:
-        warnings.warn(
-            message='It is recommended to set origin_url to your spec before flattering it. '
-                    'Doing so internal paths will be hidden, reducing the amount of exposed information.',
-            category=Warning,
-        )
-
-    if not spec_resolver:
-        if not spec_url:
-            raise ValueError('spec_resolver or spec_url should be defined')
-
-        spec_resolver = RefResolver(
-            base_uri=spec_url,
-            referrer=spec_dict,
-            handlers=http_handlers or {},
-        )
-
-    if spec_definitions is None:
-        warnings.warn(
-            message='Un-referenced models cannot be un-flattened if spec_definitions is not present',
-            category=Warning,
-        )
-
-    known_mappings = {
-        object_type.get_root_holder(): {}
-        for object_type in ObjectType
-        if object_type.get_root_holder()
-    }
-
-    # Define marshal_uri method to be used by descend
-    marshal_uri = functools.partial(
-        marshal_uri_function,
-        origin_uri=urlparse(spec_url) if spec_url else None,
-    )
-
-    # Avoid object attribute extraction during descend
-    resolve = spec_resolver.resolve
-
-    def descend(value):
-        if is_ref(value):
-            uri, deref_value = resolve(value['$ref'])
-
-            # Update spec_resolver scope to be able to dereference relative specs from a not root file
-            with in_scope(spec_resolver, {'x-scope': [uri]}):
-                object_type = determine_object_type(object_dict=deref_value)
-                if object_type.get_root_holder() is None:
-                    return descend(value=deref_value)
-                else:
-                    mapping_key = object_type.get_root_holder() or 'definitions'
-
-                    uri = urlparse(uri)
-                    if uri not in known_mappings.get(mapping_key, {}):
-                        # The placeholder is present to interrupt the recursion
-                        # during the recursive traverse of the data model (``descend``)
-                        known_mappings[mapping_key][uri] = None
-
-                        known_mappings[mapping_key][uri] = descend(value=deref_value)
-
-                    return {'$ref': '#/{}/{}'.format(mapping_key, marshal_uri(uri))}
-
-        elif is_dict_like(value):
-            return {
-                key: descend(value=subval)
-                for key, subval in iteritems(value)
-            }
-
-        elif is_list_like(value):
-            return [
-                descend(value=subval)
-                for index, subval in enumerate(value)
-            ]
-
-        else:
-            return value
-
-    resolved_spec = descend(value=spec_dict)
-
-    if spec_definitions is not None:
-        from bravado_core.spec import Spec  # local import due to circular dependency
-        # Creating the bravado_core.spec.Spec object will trigger models discovery and tagging.
-        # The process will add x-model key to ``known_mappings['definitions']`` items
-        Spec.from_dict(
-            # Minimalistic swagger spec like object
-            # it's not a valid spec due to lack of info and paths, but it's good enough to trigger model discovery
-            spec_dict={
-                'definitions': {
-                    marshal_uri(uri): value
-                    for uri, value in iteritems(known_mappings['definitions'])
-                }
-            },
-            config={'validate_swagger_spec': False},  # Not validate specs, which are known to not be valid
-        )
-
-        flatten_models = {
-            # schema objects might not have a "type" set so they won't be tagged as models
-            definition.get(MODEL_MARKER)
-            for definition in itervalues(known_mappings['definitions'])
-        }
-
-        for model_name, model_type in iteritems(spec_definitions):
-            if model_name in flatten_models:
-                continue
-            model_url = urlparse(urljoin(spec_url, '#/definitions/{}'.format(model_name)))
-            known_mappings['definitions'][model_url] = descend(value=model_type._model_spec)
-
-    for mapping_key, mappings in iteritems(known_mappings):
-        _warn_if_uri_clash_on_same_marshaled_representation(
-            uri_schema_mappings=mappings,
-            marshal_uri=marshal_uri,
-        )
-        if len(mappings) > 0:
-            resolved_spec.update({mapping_key: {
-                marshal_uri(uri): value
-                for uri, value in iteritems(mappings)
-            }})
-
-    return resolved_spec
+    return _SpecFlattener(swagger_spec, marshal_uri_function).resolved_specs

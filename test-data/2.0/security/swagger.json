@@ -115,6 +115,31 @@
           }
         }
       }
+    },
+    "/example6": {
+      "get": {
+        "description": "Endpoint not requires any header parameter",
+        "security": [
+          {
+            "apiKey1": []
+          },
+          {
+            "apiKey2": []
+          },
+          {
+            "apiKey3": []
+          },
+          {
+            "apiKey1": [],
+            "apiKey2": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
     }
   }
 }

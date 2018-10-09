@@ -1,14 +1,18 @@
 # -*- coding: utf-8 -*-
 import abc
+import functools
 import logging
+import re
 from warnings import warn
 
 import six
 from six import iteritems
+from swagger_spec_validator.ref_validators import attach_scope
 
 from bravado_core.schema import collapsed_properties
 from bravado_core.schema import is_dict_like
 from bravado_core.schema import is_list_like
+from bravado_core.schema import is_ref
 from bravado_core.schema import SWAGGER_PRIMITIVES
 from bravado_core.util import determine_object_type
 from bravado_core.util import ObjectType
@@ -37,12 +41,12 @@ def _raise_or_warn_duplicated_model(swagger_spec, message):
     return
 
 
-def _register_visited_model(path, model_spec, model_name, visited_models, is_blessed, swagger_spec):
+def _register_visited_model(json_reference, model_spec, model_name, visited_models, is_blessed, swagger_spec):
     """
     Registers a model that has been tagged by a callback method.
 
-    :param path: list of path segments to the key
-    :type path: list
+    :param json_reference: JSON Uri where model spec could be found
+    :type json_reference: str
     :param model_spec: swagger specification of the model
     :type model_spec: dict
     :param model_name: name of the model to register
@@ -57,16 +61,16 @@ def _register_visited_model(path, model_spec, model_name, visited_models, is_ble
     if model_name in visited_models:
         return _raise_or_warn_duplicated_model(
             swagger_spec=swagger_spec,
-            message='Duplicate "{0}" model found at path {1}. Original "{0}" model at path {2}'.format(
-                model_name, path, visited_models[model_name],
+            message='Duplicate "{0}" model found at "{1}". Original "{0}" model at "{2}"'.format(
+                model_name, json_reference, visited_models[model_name],
             ),
         )
 
     model_spec[MODEL_MARKER] = model_name
-    visited_models[model_name] = path
+    visited_models[model_name] = json_reference
 
 
-def tag_models(container, key, path, visited_models, swagger_spec):
+def _tag_models(container, json_reference, visited_models, swagger_spec):
     """
     Callback used during the swagger spec ingestion process to tag models
     with a 'x-model'. This is only done in the root document.
@@ -85,13 +89,15 @@ def tag_models(container, key, path, visited_models, swagger_spec):
     because we're iterating over an object that gets mutated by the callback.
 
     :param container: container being visited
-    :param key: attribute in container being visited as a string
-    :param path: list of path segments to the key
+    :param json_reference: URI of the current container
+    :type json_reference: str
     :type visited_models: dict (k,v) == (model_name, path)
     :type swagger_spec: :class:`bravado_core.spec.Spec`
     """
-    if len(path) < 2 or path[-2] != 'definitions':
+    if not re.match('^[^#]*#/definitions/[^/]+$', json_reference):
         return
+
+    key = json_reference.split('/')[-1]
     deref = swagger_spec.deref
     model_spec = deref(container.get(key))
 
@@ -103,7 +109,7 @@ def tag_models(container, key, path, visited_models, swagger_spec):
 
     model_name = _get_model_name(model_spec) or key
     _register_visited_model(
-        path=path,
+        json_reference=json_reference,
         model_spec=model_spec,
         model_name=model_name,
         visited_models=visited_models,
@@ -112,7 +118,7 @@ def tag_models(container, key, path, visited_models, swagger_spec):
     )
 
 
-def bless_models(container, key, path, visited_models, swagger_spec):
+def _bless_models(container, json_reference, visited_models, swagger_spec):
     """
     Callback used during the swagger spec ingestion process to add
     ``x-model`` attribute to models which does not define it.
@@ -128,14 +134,15 @@ def bless_models(container, key, path, visited_models, swagger_spec):
     because we're iterating over an object that gets mutated by the callback.
 
     :param container: container being visited
-    :param key: attribute in container being visited as a string
-    :param path: list of path segments to the key
+    :param json_reference: URI of the current container
+    :type json_reference: str
     :type visited_models: dict (k,v) == (model_name, path)
     :type swagger_spec: :class:`bravado_core.spec.Spec`
     """
     if not is_dict_like(container):
         return
 
+    key = json_reference.split('/')[-1]
     deref = swagger_spec.deref
     model_spec = deref(container.get(key))
 
@@ -155,7 +162,7 @@ def bless_models(container, key, path, visited_models, swagger_spec):
         return
 
     _register_visited_model(
-        path=path,
+        json_reference=json_reference,
         model_spec=model_spec,
         model_name=model_name,
         visited_models=visited_models,
@@ -164,7 +171,7 @@ def bless_models(container, key, path, visited_models, swagger_spec):
     )
 
 
-def collect_models(container, key, path, models, swagger_spec):
+def _collect_models(container, json_reference, models, swagger_spec):
     """
     Callback used during the swagger spec ingestion to collect all the
     tagged models and create appropriate python types for them.
@@ -175,17 +182,23 @@ def collect_models(container, key, path, models, swagger_spec):
     model type generated.
 
     :param container: container being visited
-    :param key: attribute in container being visited as a string
-    :param path: list of path segments to the key
+    :param json_reference: URI of the current container
+    :type json_reference: str
     :param models: created model types are placed here
     :type swagger_spec: :class:`bravado_core.spec.Spec`
     """
+    key = json_reference.split('/')[-1]
     if key == MODEL_MARKER and is_object(swagger_spec, container):
         model_spec = swagger_spec.deref(container)
         model_name = _get_model_name(container)
         model_type = models.get(model_name)
         if not model_type:
-            models[model_name] = create_model_type(swagger_spec, model_name, model_spec)
+            models[model_name] = create_model_type(
+                swagger_spec=swagger_spec,
+                model_name=model_name,
+                model_spec=model_spec,
+                json_reference=re.sub('/{MODEL_MARKER}$'.format(MODEL_MARKER=MODEL_MARKER), '', json_reference),
+            )
         elif (
             # the condition with strip_xscope is the most selective check
             # but it implies memory allocation, so additional lightweight checks
@@ -196,11 +209,11 @@ def collect_models(container, key, path, models, swagger_spec):
         ):
             return _raise_or_warn_duplicated_model(
                 swagger_spec=swagger_spec,
-                message='Identified duplicated model: model_name "{model_name}", path: {path}.\n'
+                message='Identified duplicated model: model_name "{model_name}", uri: {json_reference}.\n'
                 '    Known model spec: "{model_type._model_spec}"\n'
                 '    New model spec: "{model_spec}"\n'
                 'TIP: enforce different model naming by using {MODEL_MARKER}'.format(
-                    path=path,
+                    json_reference=json_reference,
                     model_name=model_name,
                     model_type=model_type,
                     model_spec=model_spec,
@@ -361,24 +374,24 @@ class Model(object):
     def __getitem__(self, property_name):
         """Get a property value by name.
 
-        :type attr_name: str
+        :type property_name: str
         """
         return self.__dict[property_name]
 
     def __setitem__(self, property_name, val):
         """Set a property value by name.
 
-        :type attr_name: str
+        :type property_name: str
         """
         self.__dict[property_name] = val
 
     def __delitem__(self, property_name):
         """Unset a property by name.
 
-        Additional properties will be deleted alltogether. Properties defined
-        in the spec will be set to ``None``.
+        Properties defined in the spec will be set to ``None``.
+        Additional properties will be completely removed.
 
-        :type attr_name: str
+        :type property_name: str
         """
         if property_name in self._properties:
             self.__dict[property_name] = None
@@ -549,7 +562,7 @@ class ModelDocstring(object):
         return cls.__docstring__
 
 
-def create_model_type(swagger_spec, model_name, model_spec, bases=(Model,)):
+def create_model_type(swagger_spec, model_name, model_spec, bases=(Model,), json_reference=None):
     """Create a dynamic class from the model data defined in the swagger
     spec.
 
@@ -563,6 +576,8 @@ def create_model_type(swagger_spec, model_name, model_spec, bases=(Model,)):
     :param tuple bases: Base classes for type. At least one should be
         :class:`.Model` or a subclass of it.
     :returns: dynamic type inheriting from ``bases``.
+    :param json_reference: JSON Uri where model spec could be found
+    :type json_reference: str
     :rtype: type
     """
 
@@ -579,6 +594,7 @@ def create_model_type(swagger_spec, model_name, model_spec, bases=(Model,)):
         _model_spec=model_spec,
         _properties=collapsed_properties(model_spec, swagger_spec),
         _inherits_from=inherits_from,
+        _json_reference=json_reference,
     ))
 
 
@@ -628,6 +644,7 @@ def create_model_docstring(swagger_spec, model_spec):
         attr_spec = deref(attr_spec)
         schema_type = deref(attr_spec['type'])
 
+        attr_type = None
         if schema_type in SWAGGER_PRIMITIVES:
             # TODO: update to python types and take 'format' into account
             attr_type = schema_type
@@ -653,3 +670,181 @@ def create_model_docstring(swagger_spec, model_spec):
 
         s += '\n\t'
     return s
+
+
+def _post_process_spec(spec_dict, spec_resolver, on_container_callbacks):
+    """Post-process the passed in swagger_spec.spec_dict.
+
+    For each container type (list or dict) that is traversed in spec_dict,
+    the list of passed in callbacks is called with arguments (container, key).
+
+    When the container is a dict, key is obviously the key for the value being
+    traversed.
+
+    When the container is a list, key is an integer index into the list of the
+    value being traversed.
+
+    In addition to firing the passed in callbacks, $refs are annotated with
+    an 'x-scope' key that contains the current _scope_stack of the RefResolver.
+    The 'x-scope' _scope_stack is used during request/response marshalling to
+    assume a given scope before de-reffing $refs (otherwise, de-reffing won't
+    work).
+
+    :param on_container_callbacks: list of callbacks to be invoked on each
+        container type.
+        NOTE: the individual callbacks should not mutate the current container
+    """
+
+    def fire_callbacks(container, json_reference):
+        for callback in on_container_callbacks:
+            callback(container, json_reference)
+
+    def skip_already_visited_fragments(func):
+        func.cache = cache = set()
+
+        @functools.wraps(func)
+        def wrapper(fragment, json_reference=None):
+            if json_reference is None:
+                json_reference = '{}#'.format(spec_resolver.resolution_scope)
+
+            is_reference = is_ref(fragment)
+            if is_reference:
+                ref = fragment['$ref']
+                attach_scope(fragment, spec_resolver)
+                with spec_resolver.resolving(ref) as target:
+                    if id(target) in cache:
+                        log.debug('Already visited %s', ref)
+                        return
+
+                    json_reference = spec_resolver.resolution_scope
+                    if '#' not in json_reference:
+                        # If $ref points to a file make sure that the fragment sign is present
+                        json_reference = '{}#'.format(json_reference)
+
+                    func(
+                        fragment=target,
+                        json_reference=json_reference,
+                    )
+                    return
+
+            # fragment is guaranteed not to be a ref from this point onwards
+            fragment_id = id(fragment)
+
+            if fragment_id in cache:
+                log.debug('Already visited id %d', fragment_id)
+                return
+
+            cache.add(id(fragment))
+            func(
+                fragment=fragment,
+                json_reference=json_reference,
+            )
+        return wrapper
+
+    @skip_already_visited_fragments
+    def descend(fragment, json_reference=None):
+        """
+        :param fragment: node in spec_dict
+        :param json_reference: JSON Uri where the current fragment could be found
+        :type json_reference: str
+        """
+        if is_dict_like(fragment):
+            for key, value in sorted(iteritems(fragment)):
+                json_ref = '{}/{}'.format(json_reference or '', key)
+                fire_callbacks(fragment, json_ref)
+                descend(
+                    fragment=fragment[key],
+                    json_reference=json_ref,
+                )
+
+        elif is_list_like(fragment):
+            for index in range(len(fragment)):
+                json_ref = '{}/{}'.format(json_reference or '', index)
+                fire_callbacks(fragment, json_ref)
+                descend(
+                    fragment=fragment[index],
+                    json_reference=json_ref,
+                )
+
+    try:
+        descend(spec_dict)
+    finally:
+        descend.cache.clear()
+
+
+def _run_post_processing(spec):
+    visited_models = {}
+
+    def _call_post_process_spec(spec_dict):
+        # Discover all the models in spec_dict
+        _post_process_spec(
+            spec_dict=spec_dict,
+            spec_resolver=spec.resolver,
+            on_container_callbacks=[
+                functools.partial(
+                    _tag_models,
+                    visited_models=visited_models,
+                    swagger_spec=spec,
+                ),
+                functools.partial(
+                    _bless_models,
+                    visited_models=visited_models,
+                    swagger_spec=spec,
+                ),
+                functools.partial(
+                    _collect_models,
+                    models=spec.definitions,
+                    swagger_spec=spec,
+                ),
+            ],
+        )
+
+    # Post process specs to identify models
+    _call_post_process_spec(spec.spec_dict)
+
+    processed_uris = {
+        uri
+        for uri in spec.resolver.store
+        if uri == spec.origin_url or re.match(r'http://json-schema.org/draft-\d+/schema', uri)
+    }
+    additional_uri = _get_unprocessed_uri(spec, processed_uris)
+    while additional_uri:
+        # Post process each referenced specs to identify models in definitions of linked files
+        with spec.resolver.in_scope(additional_uri):
+            _call_post_process_spec(
+                spec.resolver.store[additional_uri],
+            )
+
+        processed_uris.add(additional_uri)
+        additional_uri = _get_unprocessed_uri(spec, processed_uris)
+
+
+def _get_unprocessed_uri(swagger_spec, processed_uris):
+    """
+    Retrieve an un-process URI from swagger spec referred URIs
+
+    :type swagger_spec: bravado_core.spec.Spec
+    :param processed_uris: URIs of the already processed URIs
+
+    :rtype: str
+    """
+    for uri in swagger_spec.resolver.store:
+        if uri not in processed_uris:
+            return uri
+
+
+def model_discovery(swagger_spec):
+    # This run is needed in order to get all the available models discovered
+    # deref_flattened_spec depends on flattened_spec which assumes that model
+    # discovery is performed
+    _run_post_processing(swagger_spec)
+
+    if swagger_spec.config['internally_dereference_refs']:
+        from bravado_core.spec import Spec  # Local import to avoid circular import
+        deref_flattened_spec = swagger_spec.deref_flattened_spec
+        tmp_spec = Spec(deref_flattened_spec, swagger_spec.origin_url, swagger_spec.http_client, swagger_spec.config)
+
+        # Rebuild definitions using dereferences specs as base
+        # this ensures that the generated models have no references
+        _run_post_processing(tmp_spec)
+        swagger_spec.definitions = tmp_spec.definitions

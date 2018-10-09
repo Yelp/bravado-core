@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import functools
 import json
 import logging
 import os.path
@@ -17,16 +16,13 @@ from six.moves import range
 from six.moves.urllib.parse import urlparse
 from six.moves.urllib.parse import urlunparse
 from swagger_spec_validator import validator20
-from swagger_spec_validator.ref_validators import attach_scope
 from swagger_spec_validator.ref_validators import in_scope
 
 from bravado_core import formatter
 from bravado_core.exception import SwaggerSchemaError
 from bravado_core.exception import SwaggerValidationError
 from bravado_core.formatter import return_true_wrapper
-from bravado_core.model import bless_models
-from bravado_core.model import collect_models
-from bravado_core.model import tag_models
+from bravado_core.model import model_discovery
 from bravado_core.resource import build_resources
 from bravado_core.schema import is_dict_like
 from bravado_core.schema import is_list_like
@@ -67,7 +63,7 @@ CONFIG_DEFAULTS = {
     # Specification.
     'formats': [],
 
-    # Fill with None all the missing properties during object unmarshal-ing
+    # Fill with None all the missing properties during object unmarshalling
     'include_missing_properties': True,
 
     # What to do when a type is missing
@@ -75,7 +71,7 @@ CONFIG_DEFAULTS = {
     # If False, do no validation
     'default_type_to_object': False,
 
-    # Completely dereference $refs to maximize marshaling and unmarshaling performances.
+    # Completely dereference $refs to maximize marshaling and unmarshalling performances.
     # NOTE: this depends on validate_swagger_spec
     'internally_dereference_refs': False,
 }
@@ -86,7 +82,7 @@ class Spec(object):
 
     :param spec_dict: Swagger API specification in json-like dict form
     :param origin_url: URL from which the spec was retrieved.
-    :param http_client: Used to retrive the spec via http/https.
+    :param http_client: Used to retrieve the spec via http/https.
     :type http_client: :class:`bravado.http_client.HTTPClient`
     :param config: Configuration dict. See CONFIG_DEFAULTS.
     """
@@ -124,37 +120,9 @@ class Spec(object):
             handlers=build_http_handlers(http_client),
         )
 
-        self._validate_config()
-
-    def _validate_config(self):
-        """
-        Validates the correctness of the configurations injected and makes sure that:
-        - no extra config keys are available on the config dictionary
-        - dependent configs are checked
-
-        :return: True if the initial configs are valid, False otherwise
-        :rtype: bool
-        """
-        are_config_changed = False
-
-        extraneous_keys = set(iterkeys(self.config)) - set(iterkeys(CONFIG_DEFAULTS))
-        if extraneous_keys:
-            are_config_changed = True
-            for key in extraneous_keys:
-                warnings.warn(
-                    message='config {} is not a recognized config key'.format(key),
-                    category=Warning,
-                )
-
-        if self.config['internally_dereference_refs'] and not self.config['validate_swagger_spec']:
-            are_config_changed = True
-            self.config['internally_dereference_refs'] = False
-            warnings.warn(
-                message='internally_dereference_refs config disabled because validate_swagger_spec has to be enabled',
-                category=Warning,
-            )
-
-        return not are_config_changed
+        # spec dict used to build resources, in case internally_dereference_refs config is enabled
+        # it will be overridden by the dereferenced specs (by build method). More context in PR#263
+        self._internal_spec_dict = spec_dict
 
     @cached_property
     def client_spec_dict(self):
@@ -164,14 +132,14 @@ class Spec(object):
         You may be asking, "Why is there a difference between the Swagger spec
         a client sees and the one used internally?". Well, as part of the
         ingestion process, x-scope metadata is added to spec_dict so that
-        $refs can be de-reffed successfully during requset/response validation
-        and marshalling. This medatadata is specific to the context of the
+        $refs can be de-reffed successfully during request/response validation
+        and marshalling. This metadata is specific to the context of the
         server and contains files and paths that are not relevant to the
         client. This is required so the client does not re-use (and in turn,
         re-creates) the invalid x-scope metadata created by the server.
 
         For example, a section of spec_dict that contains a ref would change
-        as folows.
+        as follows.
 
         Before:
 
@@ -194,12 +162,12 @@ class Spec(object):
 
     @classmethod
     def from_dict(cls, spec_dict, origin_url=None, http_client=None, config=None):
-        """Build a :class:`Spec` from Swagger API Specificiation
+        """Build a :class:`Spec` from Swagger API Specification
 
         :param spec_dict: swagger spec in json-like dict form.
         :param origin_url: the url used to retrieve the spec, if any
         :type  origin_url: str
-        :param: http_client: http client used to download remote $refs
+        :param http_client: http client used to download remote $refs
         :param config: Configuration dict. See CONFIG_DEFAULTS.
         """
         spec = cls(spec_dict, origin_url, http_client, config)
@@ -217,59 +185,19 @@ class Spec(object):
     def build(self):
         self._validate_spec()
 
-        def run_post_processing(swagger_spec):
-            visited_models = {}
-            # Discover all the models
-            post_process_spec(
-                swagger_spec,
-                on_container_callbacks=[
-                    functools.partial(
-                        tag_models,
-                        visited_models=visited_models,
-                        swagger_spec=swagger_spec,
-                    ),
-                    functools.partial(
-                        bless_models,
-                        visited_models=visited_models,
-                        swagger_spec=swagger_spec,
-                    ),
-                    functools.partial(
-                        collect_models,
-                        models=swagger_spec.definitions,
-                        swagger_spec=swagger_spec,
-                    ),
-                ],
-            )
-
-        # This run is needed in order to get all the available models discovered
-        # deref_flattened_spec depends on flattened_spec which assumes that model
-        # discovery is performed
-        run_post_processing(self)
+        model_discovery(self)
 
         if self.config['internally_dereference_refs']:
-            deref_flattened_spec = self.deref_flattened_spec
-            tmp_spec = Spec(deref_flattened_spec, self.origin_url, self.http_client, self.config)
-
-            # Rebuild definitions using dereferences specs as base
-            # this ensures that the generated models have no references
-            run_post_processing(tmp_spec)
-            self.definitions = tmp_spec.definitions
-
             # Avoid to evaluate is_ref every time, no references are possible at this time
             self.deref = lambda ref_dict: ref_dict
+            self._internal_spec_dict = self.deref_flattened_spec
 
-        for format in self.config['formats']:
-            self.register_format(format)
+        for user_defined_format in self.config['formats']:
+            self.register_format(user_defined_format)
 
-        self.api_url = build_api_serving_url(self.spec_dict, self.origin_url)
         self.resources = build_resources(self)
 
-    @cached_property
-    def _internal_spec_dict(self):
-        if self.config['internally_dereference_refs']:
-            return self.deref_flattened_spec
-        else:
-            return self.spec_dict
+        self.api_url = build_api_serving_url(self.spec_dict, self.origin_url)
 
     def _force_deref(self, ref_dict):
         """Dereference ref_dict (if it is indeed a ref) and return what the
@@ -331,18 +259,18 @@ class Spec(object):
     def get_format(self, name):
         """
         :param name: Name of the format to retrieve
-        :rtype: :class:`bravado_core.formatters.SwaggerFormat`
+        :rtype: :class:`bravado_core.formatter.SwaggerFormat`
         """
-        format = self.user_defined_formats.get(name)
-        if format is None:
-            format = formatter.DEFAULT_FORMATS.get(name)
+        user_defined_format = self.user_defined_formats.get(name)
+        if user_defined_format is None:
+            user_defined_format = formatter.DEFAULT_FORMATS.get(name)
 
-        if format is None:
+        if user_defined_format is None:
             warnings.warn(
                 message='{0} format is not registered with bravado-core!'.format(name),
                 category=Warning,
             )
-        return format
+        return user_defined_format
 
     @cached_property
     def security_definitions(self):
@@ -355,25 +283,17 @@ class Spec(object):
     def flattened_spec(self):
         """
         Representation of the current swagger specs that could be written to a single file.
-        NOTE: The representation strips out all the definitions that are not referenced
-        :return:
+        :rtype: dict
         """
 
         if not self.config['validate_swagger_spec']:
-            raise RuntimeError('Swagger Specs have to be validated before flattening.')
-
-        # If resources are defined it means that Spec has been built and so swagger specs have been validated
-        if self.resources is None:
-            self._validate_spec()
+            log.warning(
+                'Flattening unvalidated specs could produce invalid specs. '
+                'Use it at your risk or enable `validate_swagger_specs`',
+            )
 
         return strip_xscope(
-            spec_dict=flattened_spec(
-                spec_dict=self.spec_dict,
-                spec_resolver=self.resolver,
-                spec_url=self.origin_url,
-                http_handlers=build_http_handlers(self.http_client),
-                spec_definitions=self.definitions,
-            ),
+            spec_dict=flattened_spec(swagger_spec=self),
         )
 
     @cached_property
@@ -408,13 +328,9 @@ class Spec(object):
 
 
 def is_yaml(url, content_type=None):
-    yaml_content_types = set([
-        'application/yaml',
-        'application/x-yaml',
-        'text/yaml',
-    ])
+    yaml_content_types = {'application/yaml', 'application/x-yaml', 'text/yaml'}
 
-    yaml_file_extensions = set(['.yaml', '.yml'])
+    yaml_file_extensions = {'.yaml', '.yml'}
 
     if content_type in yaml_content_types:
         return True
@@ -519,87 +435,6 @@ def build_api_serving_url(spec_dict, origin_url=None, preferred_scheme=None):
         return schemes[0]
 
     netloc = spec_dict.get('host', origin.netloc)
-    path = spec_dict.get('basePath', origin.path)
+    path = spec_dict.get('basePath', '/')
     scheme = pick_a_scheme(spec_dict.get('schemes'))
     return urlunparse((scheme, netloc, path, None, None, None))
-
-
-def post_process_spec(swagger_spec, on_container_callbacks):
-    """Post-process the passed in swagger_spec.spec_dict.
-
-    For each container type (list or dict) that is traversed in spec_dict,
-    the list of passed in callbacks is called with arguments (container, key).
-
-    When the container is a dict, key is obviously the key for the value being
-    traversed.
-
-    When the container is a list, key is an integer index into the list of the
-    value being traversed.
-
-    In addition to firing the passed in callbacks, $refs are annotated with
-    an 'x-scope' key that contains the current _scope_stack of the RefResolver.
-    The 'x-scope' _scope_stack is used during request/response marshalling to
-    assume a given scope before de-reffing $refs (otherwise, de-reffing won't
-    work).
-
-    :type swagger_spec: :class:`bravado_core.spec.Spec`
-    :param on_container_callbacks: list of callbacks to be invoked on each
-        container type.
-        NOTE: the individual callbacks should not mutate the current container
-    """
-    def fire_callbacks(container, key, path):
-        for callback in on_container_callbacks:
-            callback(container, key, path)
-
-    resolver = swagger_spec.resolver
-
-    def skip_already_visited_fragments(func):
-        func.cache = cache = set()
-
-        @functools.wraps(func)
-        def wrapper(fragment, path):
-            is_reference = is_ref(fragment)
-            if is_reference:
-                ref = fragment['$ref']
-                attach_scope(fragment, resolver)
-                with resolver.resolving(ref) as target:
-                    if id(target) in cache:
-                        log.debug('Already visited %s', ref)
-                        return
-
-                    func(target, path)
-                    return
-
-            # fragment is guaranteed not to be a ref from this point onwards
-            fragment_id = id(fragment)
-
-            if fragment_id in cache:
-                log.debug('Already visited id %d', fragment_id)
-                return
-
-            cache.add(id(fragment))
-            func(fragment, path)
-        return wrapper
-
-    @skip_already_visited_fragments
-    def descend(fragment, path):
-        """
-        :param fragment: node in spec_dict
-        :param path: list of strings that form the current path to fragment
-        """
-        path = path or []
-
-        if is_dict_like(fragment):
-            for key, value in sorted(iteritems(fragment)):
-                fire_callbacks(fragment, key, path + [key])
-                descend(fragment[key], path + [key])
-
-        elif is_list_like(fragment):
-            for index in range(len(fragment)):
-                fire_callbacks(fragment, index, path + [str(index)])
-                descend(fragment[index], path + [str(index)])
-
-    try:
-        descend(swagger_spec.spec_dict, path=[])
-    finally:
-        descend.cache.clear()

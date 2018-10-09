@@ -7,7 +7,7 @@ from bravado_core.param import cast_request_param
 @patch('bravado_core.param.log')
 def test_logs_cast_failure(mock_logger):
     cast_request_param('integer', 'gimme_int', 'not_int')
-    assert mock_logger.warn.call_count == 1
+    assert mock_logger.warning.call_count == 1
 
 
 @patch('bravado_core.param.log')
@@ -23,7 +23,7 @@ def test_type_error_returns_untouched_value_and_logs(mock_logger):
     result_val = cast_request_param('integer', 'gimme_int', initial_val)
     assert result_val == initial_val
     assert result_val is initial_val
-    assert mock_logger.warn.call_count == 1
+    assert mock_logger.warning.call_count == 1
 
 
 def test_unknown_type_returns_untouched_value():

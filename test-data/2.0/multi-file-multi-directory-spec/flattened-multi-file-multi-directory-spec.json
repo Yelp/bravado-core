@@ -1,0 +1,157 @@
+{
+  "consumes": [
+    "application/json"
+  ],
+  "definitions": {
+    "DebugErrorResponse": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ErrorResponse"
+        },
+        {
+          "properties": {
+            "stacktrace": {
+              "description": "Stringified stacktrace",
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "type": "object",
+      "x-model": "DebugErrorResponse"
+    },
+    "ErrorResponse": {
+      "properties": {
+        "error_code": {
+          "description": "Machine-friendly error code",
+          "type": "string"
+        },
+        "error_description": {
+          "description": "Human-friendly error code",
+          "type": "string"
+        }
+      },
+      "required": [
+        "error_code"
+      ],
+      "type": "object",
+      "x-derived-objects": [
+        {
+          "allOf": [
+            {
+              "$ref": "#/definitions/ErrorResponse"
+            },
+            {
+              "properties": {
+                "error_specific_to_this_endpoint": {
+                  "type": "string"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "x-model": "ErrorResponse"
+    },
+    "endpoint_v1_HTTP_FORBIDDEN": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ErrorResponse"
+        },
+        {
+          "$ref": "#/definitions/endpoint_v1_HTTP_FORBIDDEN_action_part"
+        }
+      ],
+      "type": "object",
+      "x-model": "endpoint_v1_HTTP_FORBIDDEN"
+    },
+    "endpoint_v1_HTTP_FORBIDDEN_action_part": {
+      "properties": {
+        "action": {
+          "description": "name of the forbidden action",
+          "type": "string"
+        }
+      },
+      "required": [
+        "action"
+      ],
+      "type": "object",
+      "x-model": "endpoint_v1_HTTP_FORBIDDEN_action_part"
+    },
+    "endpoint_v1_HTTP_OK": {
+      "type": "object",
+      "x-model": "endpoint_v1_HTTP_OK"
+    }
+  },
+  "info": {
+    "title": "Consumer Mobile API v2 Service",
+    "version": "1.46.0"
+  },
+  "parameters": {
+    "lfile:endpoint..parameters.yaml|..parameters..number": {
+      "in": "query",
+      "name": "number",
+      "required": false,
+      "type": "integer"
+    }
+  },
+  "paths": {
+    "/endpoint/v1": {
+      "get": {
+        "description": "This is the description of a random get endpoint",
+        "operationId": "endpoint_v1",
+        "parameters": [
+          {
+            "$ref": "#/parameters/lfile:endpoint..parameters.yaml|..parameters..number"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/lfile:endpoint..v1..responses.yaml|..200"
+          },
+          "403": {
+            "$ref": "#/responses/lfile:endpoint..v1..responses.yaml|..403"
+          },
+          "default": {
+            "$ref": "#/responses/lfile:endpoint..v1..responses.yaml|..default"
+          }
+        }
+      }
+    }
+  },
+  "produces": [
+    "application/json"
+  ],
+  "responses": {
+    "lfile:endpoint..v1..responses.yaml|..200": {
+      "description": "HTTP/200",
+      "schema": {
+        "$ref": "#/definitions/endpoint_v1_HTTP_OK"
+      }
+    },
+    "lfile:endpoint..v1..responses.yaml|..403": {
+      "description": "HTTP/403",
+      "schema": {
+        "$ref": "#/definitions/endpoint_v1_HTTP_FORBIDDEN"
+      }
+    },
+    "lfile:endpoint..v1..responses.yaml|..default": {
+      "description": "Unplanned status code",
+      "schema": {
+        "allOf": [
+          {
+            "$ref": "#/definitions/ErrorResponse"
+          },
+          {
+            "properties": {
+              "error_specific_to_this_endpoint": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "swagger": "2.0"
+}

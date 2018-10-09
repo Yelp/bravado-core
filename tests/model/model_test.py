@@ -82,12 +82,14 @@ def test_model_as_dict(definitions_spec, user_type, user_kwargs):
     assert user._asdict() == user_dict
 
 
+@pytest.mark.filterwarnings('ignore:_isinstance is deprecated')
 def test_model_is_instance_same_class(user_type, user_kwargs):
     user = user_type(**user_kwargs)
     assert user_type._isinstance(user)
     assert isinstance(user, user_type)
 
 
+@pytest.mark.filterwarnings('ignore:_isinstance is deprecated')
 def test_model_is_instance_inherits_from(cat_swagger_spec, pet_type, pet_spec, cat_type, cat_kwargs):
     cat = cat_type(**cat_kwargs)
     new_pet_type = create_model_type(cat_swagger_spec, 'Pet', pet_spec)

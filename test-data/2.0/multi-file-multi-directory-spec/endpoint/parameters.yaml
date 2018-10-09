@@ -1,0 +1,6 @@
+parameters:
+  number:
+    in: query
+    name: number
+    type: integer
+    required: false

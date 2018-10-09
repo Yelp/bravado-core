@@ -4,7 +4,7 @@ from functools import partial
 
 import simplejson as json
 import six
-from six.moves.urllib.parse import quote_plus
+from six.moves.urllib.parse import quote
 
 from bravado_core import schema
 from bravado_core.content_type import APP_JSON
@@ -115,7 +115,7 @@ def marshal_param(param, value, request):
 
     # Rely on unmarshalling behavior on the other side of the pipe to use
     # the default value if one is available.
-    if value is None and not schema.is_required(swagger_spec, param_spec):
+    if value is None and not param.required:
         return
 
     value = marshal_schema_object(swagger_spec, param_spec, value)
@@ -127,14 +127,15 @@ def marshal_param(param, value, request):
     if param_type == 'array' and location != 'body':
         value = marshal_collection_format(swagger_spec, param_spec, value)
 
+    encode_param = partial(encode_request_param, param_type, param.name)
     if location == 'path':
         token = u'{%s}' % param.name
-        quoted_value = quote_plus(six.text_type(value).encode('utf8'), safe=',')
+        quoted_value = quote(six.text_type(value).encode('utf8'), safe=',')
         request['url'] = request['url'].replace(token, quoted_value)
     elif location == 'query':
-        request['params'][param.name] = value
+        request['params'][param.name] = encode_param(value)
     elif location == 'header':
-        request['headers'][param.name] = str(value)
+        request['headers'][param.name] = encode_param(value)
     elif location == 'formData':
         if param_type == 'file':
             add_file(param, value, request)
@@ -188,7 +189,7 @@ def unmarshal_param(param, request):
             "Don't know how to unmarshal_param with location {0}".
             format(location))
 
-    if raw_value is None and not schema.is_required(swagger_spec, param_spec):
+    if raw_value is None and not param.required:
         return None
 
     if param_type == 'array' and location != 'body':
@@ -252,8 +253,47 @@ def cast_request_param(param_type, param_name, param_value):
     try:
         return CAST_TYPE_TO_FUNC.get(param_type, lambda x: x)(param_value)
     except (ValueError, TypeError):
-        log.warn("Failed to cast %s value of %s to %s",
-                 param_name, param_value, param_type)
+        log.warning(
+            "Failed to cast %s value of %s to %s",
+            param_name, param_value, param_type,
+        )
+        # Ignore type error, let jsonschema validation handle incorrect types
+        return param_value
+
+
+def encode_request_param(param_type, param_name, param_value):
+    """
+    Tries to cast a request param from its specified type in scheme to a string.
+    This allows passing non-string params in query arg, POST data, etc.
+
+    :param param_type: name of the type to be casted to
+    :type  param_type: string
+    :param param_name: param name
+    :type  param_name: string
+    :param param_value: param value
+    """
+    if param_type == 'array':
+        # marshal_collection_format has already taken care of it; furthermore, if collectionFormat is
+        # multi then the value is still a sequence, we don't want to cast that to str
+        return param_value
+
+    if param_value is None:  # pragma: no cover
+        # We should never get into this branch, but better be more defensive
+        return None
+
+    try:
+        param_value = str(param_value)
+        if param_type == 'boolean':
+            param_value = param_value.lower()
+        return param_value
+    except (ValueError, TypeError):  # pragma: no cover
+        # Conversion to string should never fail, but as unicode issues are always
+        # a thing in python I would rather prefer logging the issue instead of
+        # raising the exception
+        log.warning(
+            "Failed to encode %s value of %s from type %s to string",
+            param_name, param_value, param_type,
+        )
         # Ignore type error, let jsonschema validation handle incorrect types
         return param_value
 
@@ -285,7 +325,12 @@ def add_file(param, value, request):
                     param.op.consumes
             ))
 
-    file_tuple = (param.name, (param.name, value))
+    if isinstance(value, tuple):
+        filename, val = value
+    else:
+        filename, val = param.name, value
+
+    file_tuple = (param.name, (filename, val))
     request['files'].append(file_tuple)
 
 
@@ -349,7 +394,7 @@ def unmarshal_collection_format(swagger_spec, param_spec, value):
     if schema.is_list_like(value):
         value_array = value
     elif collection_format == 'multi':
-        # http client lib should have already unmarshaled the value
+        # http client lib should have already unmarshalled the value
         value_array = [value]
     else:
         sep = COLLECTION_FORMATS[collection_format]

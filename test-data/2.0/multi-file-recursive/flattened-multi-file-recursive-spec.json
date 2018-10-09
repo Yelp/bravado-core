@@ -1,16 +1,57 @@
 {
   "definitions": {
-    "lfile:aux.json|..definitions..not_used_remote_reference": {
+    "inline_model": {
+      "type": "object",
+      "x-model": "inline_model"
+    },
+    "model_with_allOf_recursive": {
+      "allOf": [
+        {
+          "properties": {
+            "pong": {
+              "$ref": "#/definitions/pong"
+            }
+          }
+        },
+        {
+          "properties": {
+            "ping": {
+              "$ref": "#/definitions/ping"
+            }
+          }
+        }
+      ],
+      "x-model": "model_with_allOf_recursive"
+    },
+    "not_referenced_models_in_not_directly_linked_file": {
+      "properties": {
+        "inline_model": {
+          "$ref": "#/definitions/inline_model"
+        }
+      },
+      "type": "object",
+      "x-model": "not_referenced_models_in_not_directly_linked_file"
+    },
+    "not_used": {
+      "type": "object",
+      "x-model": "not_used"
+    },
+    "not_used_remote_reference": {
+      "properties": {
+        "random_number": {
+          "$ref": "#/definitions/random_integer"
+        }
+      },
       "type": "object",
       "x-model": "not_used_remote_reference"
     },
-    "lfile:aux.json|..definitions..ping": {
+    "ping": {
       "properties": {
         "message": {
           "type": "string"
         },
         "pong": {
-          "$ref": "#/definitions/lfile:swagger.json|..definitions..pong"
+          "$ref": "#/definitions/pong"
         }
       },
       "required": [
@@ -19,41 +60,13 @@
       "type": "object",
       "x-model": "ping"
     },
-    "lfile:swagger.json|..definitions..model_with_allOf_recursive": {
-      "allOf": [
-        {
-          "properties": {
-            "pong": {
-              "$ref": "#/definitions/lfile:swagger.json|..definitions..pong"
-            }
-          }
-        },
-        {
-          "properties": {
-            "ping": {
-              "$ref": "#/definitions/lfile:aux.json|..definitions..ping"
-            }
-          }
-        }
-      ],
-      "x-model": "model_with_allOf_recursive"
-    },
-    "lfile:swagger.json|..definitions..not_used": {
-      "properties": {
-        "not_used_remote_reference": {
-          "$ref": "#/definitions/lfile:aux.json|..definitions..not_used_remote_reference"
-        }
-      },
-      "type": "object",
-      "x-model": "not_used"
-    },
-    "lfile:swagger.json|..definitions..pong": {
+    "pong": {
       "properties": {
         "message": {
           "type": "string"
         },
         "ping": {
-          "$ref": "#/definitions/lfile:aux.json|..definitions..ping"
+          "$ref": "#/definitions/ping"
         }
       },
       "required": [
@@ -61,6 +74,21 @@
       ],
       "type": "object",
       "x-model": "pong"
+    },
+    "random_integer": {
+      "properties": {
+        "max-value": {
+          "type": "integer"
+        },
+        "min-value": {
+          "type": "integer"
+        },
+        "value": {
+          "type": "integer"
+        }
+      },
+      "type": "object",
+      "x-model": "random_integer"
     }
   },
   "info": {
@@ -109,7 +137,7 @@
           "200": {
             "description": "A recursive response",
             "schema": {
-              "$ref": "#/definitions/lfile:aux.json|..definitions..ping"
+              "$ref": "#/definitions/ping"
             }
           }
         }
@@ -122,7 +150,7 @@
             "description": "A list of recursive response",
             "schema": {
               "items": {
-                "$ref": "#/definitions/lfile:aux.json|..definitions..ping"
+                "$ref": "#/definitions/ping"
               },
               "type": "array"
             }
