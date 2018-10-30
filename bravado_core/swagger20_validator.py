@@ -146,7 +146,7 @@ def discriminator_validator(swagger_spec, validator, discriminator_attribute, in
     try:
         discriminator_value = instance[discriminator_attribute]
     except KeyError:
-        raise ValidationError("'discriminator_field' is a required property".format(discriminator_attribute))
+        raise ValidationError("'{}' is a required property".format(discriminator_attribute))
 
     if discriminator_value not in swagger_spec.definitions:
         raise ValidationError(
