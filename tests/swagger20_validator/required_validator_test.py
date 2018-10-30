@@ -16,8 +16,9 @@ def param_spec():
     }
 
 
-def test_fail_if_required_parameter_but_not_present(minimal_swagger_spec,
-                                                    param_spec):
+def test_fail_if_required_parameter_but_not_present(
+    minimal_swagger_spec, param_spec,
+):
     errors = list(
         required_validator(
             minimal_swagger_spec,
@@ -30,8 +31,9 @@ def test_fail_if_required_parameter_but_not_present(minimal_swagger_spec,
     assert 'foo is a required parameter' in str(error)
 
 
-def test_pass_if_not_required_parameter_and_not_present(minimal_swagger_spec,
-                                                        param_spec):
+def test_pass_if_not_required_parameter_and_not_present(
+    minimal_swagger_spec, param_spec,
+):
     param_spec['required'] = False
     errors = list(
         required_validator(
@@ -44,16 +46,17 @@ def test_pass_if_not_required_parameter_and_not_present(minimal_swagger_spec,
     assert len(errors) == 0
 
 
-def test_call_to_jsonschema_if_not_param(minimal_swagger_spec):
+@patch('bravado_core.swagger20_validator._DRAFT4_REQUIRED_VALIDATOR')
+def test_call_to_jsonschema_if_not_param(jsonschema_required_validator, minimal_swagger_spec):
     property_spec = {'type': 'integer'}
     validator = Mock()
     required = True
     instance = 34
-    with patch('jsonschema._validators.required_draft4') as m:
-        list(required_validator(
-            minimal_swagger_spec,
-            validator,
-            required,
-            instance,
-            property_spec))
-    m.assert_called_once_with(validator, required, instance, property_spec)
+    list(required_validator(
+        minimal_swagger_spec,
+        validator,
+        required,
+        instance,
+        property_spec,
+    ))
+    jsonschema_required_validator.assert_called_once_with(validator, required, instance, property_spec)
