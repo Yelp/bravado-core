@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import functools
 
-from jsonschema import _validators
 from jsonschema import validators
 from jsonschema.exceptions import ValidationError
 from jsonschema.validators import Draft4Validator
@@ -18,6 +17,12 @@ Draft4Validator which customizes/wraps some of the operations of the default
 validator.
 """
 
+# Extract "original" validators as defined in jsonschema library. Saving those to constants to reduce indirections during validation.  # noqa
+_DRAFT4_ENUM_VALIDATOR = Draft4Validator.VALIDATORS['enum']
+_DRAFT4_FORMAT_VALIDATOR = Draft4Validator.VALIDATORS['format']
+_DRAFT4_REQUIRED_VALIDATOR = Draft4Validator.VALIDATORS['required']
+_DRAFT4_TYPE_VALIDATOR = Draft4Validator.VALIDATORS['type']
+
 
 def format_validator(swagger_spec, validator, format, instance, schema):
     """Skip the `format` validator when a Swagger parameter value is None.
@@ -32,7 +37,7 @@ def format_validator(swagger_spec, validator, format, instance, schema):
             is_prop_nullable(swagger_spec, schema)) and instance is None:
         return
 
-    for error in _validators.format(validator, format, instance, schema):
+    for error in _DRAFT4_FORMAT_VALIDATOR(validator, format, instance, schema):
         yield error
 
 
@@ -59,7 +64,7 @@ def type_validator(swagger_spec, validator, types, instance, schema):
             is_prop_nullable(swagger_spec, schema)) and instance is None:
         return
 
-    for error in _validators.type_draft4(validator, types, instance, schema):
+    for error in _DRAFT4_TYPE_VALIDATOR(validator, types, instance, schema):
         yield error
 
 
@@ -83,8 +88,7 @@ def required_validator(swagger_spec, validator, required, instance, schema):
             yield ValidationError('{0} is a required parameter.'.format(
                 schema['name']))
     else:
-        for error in _validators.required_draft4(validator, required, instance,
-                                                 schema):
+        for error in _DRAFT4_REQUIRED_VALIDATOR(validator, required, instance, schema):
             yield error
 
 
@@ -109,7 +113,7 @@ def enum_validator(swagger_spec, validator, enums, instance, schema):
 
     if schema.get('type') == 'array':
         for element in instance:
-            for error in _validators.enum(validator, enums, element, schema):
+            for error in _DRAFT4_ENUM_VALIDATOR(validator, enums, element, schema):
                 yield error
         return
 
@@ -118,7 +122,7 @@ def enum_validator(swagger_spec, validator, enums, instance, schema):
         if not is_required(swagger_spec, schema) and instance is None:
             return
 
-    for error in _validators.enum(validator, enums, instance, schema):
+    for error in _DRAFT4_ENUM_VALIDATOR(validator, enums, instance, schema):
         yield error
 
 
