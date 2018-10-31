@@ -75,6 +75,24 @@ def test_text_content(empty_swagger_spec, response_spec):
         assert 'Monday' == unmarshal_response(response, op)
 
 
+def test_raw_response(empty_swagger_spec, response_spec):
+    empty_swagger_spec.config['validate_responses'] = False
+    empty_swagger_spec.config['return_raw_response'] = True
+    return_value = object()
+    response = Mock(
+        spec=IncomingResponse,
+        status_code=200,
+        headers={'content-type': APP_JSON},
+        json=Mock(return_value=return_value))
+
+    with patch('bravado_core.response.unmarshal_schema_object') as unmarshal_schem:
+        with patch('bravado_core.response.get_response_spec') as m:
+            m.return_value = response_spec
+            op = Mock(swagger_spec=empty_swagger_spec)
+            assert return_value == unmarshal_response(response, op)
+            assert unmarshal_schem.call_count == 0
+
+
 def test_skips_validation(empty_swagger_spec, response_spec):
     empty_swagger_spec.config['validate_responses'] = False
     response = Mock(
