@@ -108,7 +108,7 @@ def test_path_integer(empty_swagger_spec, param_spec):
         ('34', '/pet/34'),
         ('a value', '/pet/a%20value'),
         (u'Ümlaut', '/pet/%C3%9Cmlaut'),
-        ('/\%?=', '/pet/%2F%5C%25%3F%3D'),
+        ('/\\%?=', '/pet/%2F%5C%25%3F%3D'),
     ]
 )
 def test_path_string(empty_swagger_spec, param_spec, string_param, expected_path):

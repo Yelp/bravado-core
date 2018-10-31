@@ -1,10 +1,7 @@
--   repo: git://github.com/pre-commit/pre-commit-hooks
-    sha: v0.7.1
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.0.0
     hooks:
-    -   id: autopep8-wrapper
-        args:
-        - -i
-        - --ignore=E309,E501
     -   id: check-json
     -   id: check-yaml
     -   id: debug-statements
@@ -15,12 +12,19 @@
     -   id: trailing-whitespace
     -   id: requirements-txt-fixer
         files: requirements-dev.txt
--   repo: git://github.com/asottile/reorder_python_imports
-    sha: v0.3.2
+-   repo: https://github.com/pre-commit/mirrors-autopep8
+    rev: v1.4.2
+    hooks:
+    -   id: autopep8
+        args:
+        - -i
+        - --ignore=E309,E501
+-   repo: https://github.com/asottile/reorder_python_imports
+    rev: v1.3.3
     hooks:
     -   id: reorder-python-imports
--   repo: git://github.com/Yelp/detect-secrets
-    sha: 0.9.1
+-   repo: https://github.com/Yelp/detect-secrets
+    rev: 0.10.5
     hooks:
     -   id: detect-secrets
         args: ['--baseline', '.secrets.baseline']
