@@ -485,3 +485,29 @@ def test_validate_object_with_recursive_definition(
         )
     except RuntimeError:  # Not catching RecursionError as it was introduced in Python 3.5+
         pytest.fail('Unbounded recursion has been detected while calling validate_object')
+
+
+def test_validate_object_raises_ValidationError_if_discriminator_key_is_missing(
+    minimal_swagger_dict,
+):
+    # More context for this test on https://github.com/Yelp/bravado-core/issues/301
+    minimal_swagger_dict['definitions'] = {
+        'Model': {
+            "type": 'object',
+            "properties": {
+                "discriminator_field": {"type": 'string'},
+            },
+            "discriminator": "discriminator_field",
+            "required": ["discriminator_field"],
+        }
+    }
+
+    spec = Spec.from_dict(minimal_swagger_dict)
+    with pytest.raises(ValidationError) as excinfo:
+        validate_object(
+            swagger_spec=spec,
+            object_spec=minimal_swagger_dict['definitions']['Model'],
+            value={},
+        )
+
+    assert "'discriminator_field' is a required property" in excinfo.value.message

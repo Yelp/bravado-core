@@ -80,8 +80,7 @@ def required_validator(swagger_spec, validator, required, instance, schema):
     """
     if is_param_spec(swagger_spec, schema):
         if required and instance is None:
-            yield ValidationError('{0} is a required parameter.'.format(
-                schema['name']))
+            yield ValidationError('{0} is a required parameter.'.format(schema['name']))
     else:
         for error in _validators.required_draft4(validator, required, instance,
                                                  schema):
@@ -144,7 +143,11 @@ def discriminator_validator(swagger_spec, validator, discriminator_attribute, in
     :type schema: dict
     """
 
-    discriminator_value = instance[discriminator_attribute]
+    try:
+        discriminator_value = instance[discriminator_attribute]
+    except KeyError:
+        raise ValidationError("'{}' is a required property".format(discriminator_attribute))
+
     if discriminator_value not in swagger_spec.definitions:
         raise ValidationError(
             message='\'{}\' is not a recognized schema'.format(discriminator_value)
