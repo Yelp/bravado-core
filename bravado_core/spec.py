@@ -74,6 +74,12 @@ CONFIG_DEFAULTS = {
     # Completely dereference $refs to maximize marshaling and unmarshalling performances.
     # NOTE: this depends on validate_swagger_spec
     'internally_dereference_refs': False,
+
+    # What value to assume for basePath if it is missing from the spec (this
+    # config option is ignored if basePath is present in the spec)
+    # If True, use the 'path' element of the URL the spec was retrieved from
+    # If False, set basePath to '/' (conforms to Swagger 2.0 specification)
+    'use_spec_url_for_base_path': False
 }
 
 
@@ -197,7 +203,12 @@ class Spec(object):
 
         self.resources = build_resources(self)
 
-        self.api_url = build_api_serving_url(self.spec_dict, self.origin_url)
+        build_api_kwargs = {}
+        if self.config['use_spec_url_for_base_path']:
+            build_api_kwargs['use_spec_url_for_base_path'] = True
+
+        self.api_url = build_api_serving_url(self.spec_dict, self.origin_url,
+                                             **build_api_kwargs)
 
     def _force_deref(self, ref_dict):
         """Dereference ref_dict (if it is indeed a ref) and return what the
@@ -380,7 +391,8 @@ def build_http_handlers(http_client):
     }
 
 
-def build_api_serving_url(spec_dict, origin_url=None, preferred_scheme=None):
+def build_api_serving_url(spec_dict, origin_url=None, preferred_scheme=None,
+                          use_spec_url_for_base_path=False):
     """The URL used to service API requests does not necessarily have to be the
     same URL that was used to retrieve the API spec_dict.
 
@@ -410,6 +422,9 @@ def build_api_serving_url(spec_dict, origin_url=None, preferred_scheme=None):
     :param spec_dict: the Swagger spec in json-like dict form
     :param origin_url: the URL from which the spec was retrieved, if any. This
         is only used in Swagger clients.
+    :param use_spec_url_for_base_path: only effective when 'basePath' is missing
+        from `spec_dict`. When True, 'basePath' will be set to the path portion
+        of `origin_url`. When False, 'basePath' will be set to '/'.
     :param preferred_scheme: preferred scheme to use if more than one scheme is
         supported by the API.
     :return: base url which services api requests
@@ -435,6 +450,9 @@ def build_api_serving_url(spec_dict, origin_url=None, preferred_scheme=None):
         return schemes[0]
 
     netloc = spec_dict.get('host', origin.netloc)
-    path = spec_dict.get('basePath', '/')
+    base_path = '/'
+    if use_spec_url_for_base_path:
+        base_path = origin.path
+    path = spec_dict.get('basePath', base_path)
     scheme = pick_a_scheme(spec_dict.get('schemes'))
     return urlunparse((scheme, netloc, path, None, None, None))

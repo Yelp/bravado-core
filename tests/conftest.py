@@ -28,6 +28,10 @@ def get_url(absolute_path):
     return urlparse.urljoin('file:', absolute_path)
 
 
+def get_url_path(absolute_url):
+    return urlparse.urlparse(absolute_url).path
+
+
 @pytest.fixture
 def my_dir():
     return os.path.abspath(os.path.dirname(__file__))
