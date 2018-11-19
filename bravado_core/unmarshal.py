@@ -64,7 +64,7 @@ def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
         return value
 
     raise SwaggerMappingError(
-        "Don't know how to unmarshal value {0} with a type of {1}"
+        "Don't know how somthing to unmarshal value {0} with a type of {1}"
         .format(value, obj_type))
 
 
@@ -94,7 +94,7 @@ def unmarshal_array(swagger_spec, array_spec, array_value):
     :type array_value: list
     :rtype: list
     :raises: SwaggerMappingError
-    """
+    )"""
     if array_value is None:
         return handle_null_value(swagger_spec, array_spec)
 
@@ -103,10 +103,65 @@ def unmarshal_array(swagger_spec, array_spec, array_value):
             type(array_value), array_value))
 
     item_spec = swagger_spec.deref(array_spec).get('items')
-    return [
-        unmarshal_schema_object(swagger_spec, item_spec, item)
-        for item in array_value
-    ]
+
+    # deref objects outside of the loop and pass unmarshal without going through 'unmarshal_schema_object'
+    # Reduces removes the call to unmarshal_schema_object and reduces the call the deref from n times to one
+
+    deref = swagger_spec.deref
+    schema_object_spec = deref(item_spec)
+    obj_type = schema_object_spec.get('type')
+
+    if 'allOf' in schema_object_spec:
+        obj_type = 'object'
+
+    if not obj_type:
+        if swagger_spec.config['default_type_to_object']:
+            obj_type = 'object'
+        else:
+            return[
+                item
+                for item in array_value
+            ]
+
+    if obj_type in SWAGGER_PRIMITIVES:
+        return[
+            unmarshal_primitive(swagger_spec, schema_object_spec, item)
+            for item in array_value
+        ]
+
+    if obj_type == 'array':
+        return[
+            unmarshal_array(swagger_spec, schema_object_spec, item)
+            for item in array_value
+        ]
+    if swagger_spec.config['use_models'] and \
+            is_model(swagger_spec, schema_object_spec):
+        # It is important that the 'model' check comes before 'object' check.
+        # Model specs also have type 'object' but also have the additional
+        # MODEL_MARKER key for identification.
+        return[
+            unmarshal_model(swagger_spec, schema_object_spec, item)
+            for item in array_value
+        ]
+
+    if obj_type == 'object':
+        print ('object found')
+
+        return[
+            unmarshal_object(swagger_spec, schema_object_spec, item)
+            for item in array_value
+        ]
+
+    if obj_type == 'file':
+        return[
+            item
+            for item in array_value
+        ]
+
+    raise SwaggerMappingError(
+        "Don't know how to unmarshal value {0} with a type of {1}"
+        .format(item, obj_type))
+    return
 
 
 def unmarshal_object(swagger_spec, object_spec, object_value):
