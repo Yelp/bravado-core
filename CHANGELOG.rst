@@ -1,6 +1,13 @@
 Changelog
 =========
 
+5.0.8 (2018-11-19)
+------------------
+
+-Sped up unmarshal array by removing the call to 'unmarshal-schema-object'
+-Reduced calls to Deref from N elements in the array to 1
+-Roughly 20% improvment in speed 
+
 5.0.7 (2018-09-18)
 ------------------
 - Fix security object validation issue - PR #294
