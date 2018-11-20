@@ -129,6 +129,8 @@ class Spec(object):
         # spec dict used to build resources, in case internally_dereference_refs config is enabled
         # it will be overridden by the dereferenced specs (by build method). More context in PR#263
         self._internal_spec_dict = spec_dict
+        self.cache_spec = {}
+        self.cache_schema = {}
 
     @cached_property
     def client_spec_dict(self):
@@ -228,8 +230,25 @@ class Spec(object):
             _, target = self.resolver.resolve(ref_dict['$ref'])
             return target
 
+    def fast_deref(self, ref_dict):
+        """Dereference ref_dict (if it is indeed a ref) and return what the
+        ref points to.
+
+        :param ref_dict:  {'$ref': '#/blah/blah'}
+        :return: dereferenced value of ref_dict
+        :rtype: scalar, list, dict
+        """
+        i = id(ref_dict)
+        try:
+            return self.cache_spec[i]
+        except KeyError:
+            result = self._force_deref(ref_dict)
+            self.cache_spec[i] = result;
+            return result
+
     # NOTE: deref gets overridden, if internally_dereference_refs is enabled, after calling build
     deref = _force_deref
+    fast_deref = fast_deref
 
     def get_op_for_request(self, http_method, path_pattern):
         """Return the Swagger operation for the passed in request http method

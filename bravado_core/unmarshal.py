@@ -30,7 +30,7 @@ def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
     :rtype: int, float, long, string, unicode, boolean, list, dict, object (in
         the case of a 'format' conversion', or Model type
     """
-    deref = swagger_spec.deref
+    deref = swagger_spec.fast_deref
     schema_object_spec = deref(schema_object_spec)
 
     obj_type = schema_object_spec.get('type')
@@ -102,7 +102,7 @@ def unmarshal_array(swagger_spec, array_spec, array_value):
         raise SwaggerMappingError('Expected list like type for {0}:{1}'.format(
             type(array_value), array_value))
 
-    item_spec = swagger_spec.deref(array_spec).get('items')
+    item_spec = swagger_spec.fast_deref(array_spec).get('items')
     return [
         unmarshal_schema_object(swagger_spec, item_spec, item)
         for item in array_value
@@ -118,7 +118,7 @@ def unmarshal_object(swagger_spec, object_spec, object_value):
     :rtype: dict
     :raises: SwaggerMappingError
     """
-    deref = swagger_spec.deref
+    deref = swagger_spec.fast_deref
 
     if object_value is None:
         return handle_null_value(swagger_spec, object_spec)
@@ -164,7 +164,7 @@ def unmarshal_model(swagger_spec, model_spec, model_value):
     :rtype: Model instance
     :raises: SwaggerMappingError
     """
-    deref = swagger_spec.deref
+    deref = swagger_spec.fast_deref
     model_name = deref(model_spec).get(MODEL_MARKER)
     model_type = swagger_spec.definitions.get(model_name, None)
 
