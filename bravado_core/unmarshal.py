@@ -32,7 +32,40 @@ def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
     """
     deref = swagger_spec.deref
     schema_object_spec = deref(schema_object_spec)
-    unmarshal_schema_object_sub(swagger_spec, schema_object_spec, value)
+    obj_type = schema_object_spec.get('type')
+
+    if 'allOf' in schema_object_spec:
+        obj_type = 'object'
+
+    if not obj_type:
+        if swagger_spec.config['default_type_to_object']:
+            obj_type = 'object'
+        else:
+            return value
+
+    if obj_type in SWAGGER_PRIMITIVES:
+        return unmarshal_primitive(swagger_spec, schema_object_spec, value)
+
+    if obj_type == 'array':
+        return unmarshal_array(swagger_spec, schema_object_spec, value)
+
+    if swagger_spec.config['use_models'] and \
+            is_model(swagger_spec, schema_object_spec):
+        # It is important that the 'model' check comes before 'object' check.
+        # Model specs also have type 'object' but also have the additional
+        # MODEL_MARKER key for identification.
+        return unmarshal_model(swagger_spec, schema_object_spec, value)
+
+    if obj_type == 'object':
+        return unmarshal_object(swagger_spec, schema_object_spec, value)
+
+    if obj_type == 'file':
+        return value
+
+    raise SwaggerMappingError(
+        "Don't know how to unmarshal value {0} with a type of {1}"
+        .format(value, obj_type))
+
 
 def unmarshal_schema_object_sub(swagger_spec, schema_object_spec, value):
     obj_type = schema_object_spec.get('type')
@@ -105,9 +138,9 @@ def unmarshal_array(swagger_spec, array_spec, array_value):
             type(array_value), array_value))
 
     item_spec = swagger_spec.deref(array_spec).get('items')
-    item_spec_deref = swagger_spec.deref(item_spec)
+    item_spec = swagger_spec.deref(item_spec)
     return [
-        unmarshal_schema_object_sub(swagger_spec, item_spec_deref, item)
+        unmarshal_schema_object_sub(swagger_spec, item_spec, item)
         for item in array_value
     ]
 
