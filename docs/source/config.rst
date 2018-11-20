@@ -43,4 +43,16 @@ Config key                    Type            Default   Description
                                                         | to ``object`` and be validated as such.
                                                         | When set to ``False``, missing types will not be
                                                         | validated at all.
+----------------------------- --------------- --------- ----------------------------------------------------
+*internally_dereference_refs* boolean         False     | Completely dereference $refs to maximize
+                                                        | marshalling and unmarshalling performance.
+                                                        | **NOTE**: this depends on validate_swagger_spec
+----------------------------- --------------- --------- ----------------------------------------------------
+*use_spec_url_for_base_path*  boolean         False     | What value to assume for `basePath` if it is missing
+                                                        | from the spec (this config option is ignored if
+                                                        | `basePath` is present in the spec).
+                                                        | If enabled, use the `path` element of the URL the
+                                                        | spec was retrieved from.
+                                                        | If disabled, set `basePath` to `/` (conforms to
+                                                        | the Swagger 2.0 specification)
 ============================= =============== ========= ====================================================
