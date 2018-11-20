@@ -32,7 +32,9 @@ def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
     """
     deref = swagger_spec.deref
     schema_object_spec = deref(schema_object_spec)
+    unmarshal_schema_object_sub(swagger_spec, schema_object_spec, value)
 
+def unmarshal_schema_object_sub(swagger_spec, schema_object_spec, value):
     obj_type = schema_object_spec.get('type')
 
     if 'allOf' in schema_object_spec:
@@ -103,8 +105,9 @@ def unmarshal_array(swagger_spec, array_spec, array_value):
             type(array_value), array_value))
 
     item_spec = swagger_spec.deref(array_spec).get('items')
+    item_spec_deref = swagger_spec.deref(item_spec)
     return [
-        unmarshal_schema_object(swagger_spec, item_spec, item)
+        unmarshal_schema_object_sub(swagger_spec, item_spec_deref, item)
         for item in array_value
     ]
 
