@@ -85,7 +85,6 @@ def is_list_like(spec):
 def get_spec_for_prop(swagger_spec, object_spec, object_value, prop_name, properties=None):
     """Given a jsonschema object spec and value, retrieve the spec for the
      given property taking 'additionalProperties' into consideration.
-
     :param swagger_spec: Spec object
     :type swagger_spec: bravado_core.spec.Spec
     :param object_spec: spec for a jsonschema 'object' in dict form
@@ -93,51 +92,42 @@ def get_spec_for_prop(swagger_spec, object_spec, object_value, prop_name, proper
         used in error message.
     :param prop_name: name of the property to retrieve the spec for
     :param properties: collapsed properties of the object
-
     :return: spec for the given property or None if no spec found
     :rtype: dict or None
     """
-    i = id(prop_name)
-    try:
-        return swagger_spec.cache_schema[i]
-    except KeyError:
-        deref = swagger_spec.fast_deref
+    deref = swagger_spec.deref
 
-        if properties is None:
-            properties = collapsed_properties(deref(object_spec), swagger_spec)
-        prop_spec = properties.get(prop_name)
+    if properties is None:
+        properties = fast_collapsed_properties(deref(object_spec), swagger_spec)
+    prop_spec = properties.get(prop_name)
 
-        if prop_spec is not None:
-            result_spec = deref(prop_spec)
+    if prop_spec is not None:
+        result_spec = deref(prop_spec)
         # If the de-referenced specification is for a x-nullable property
         # then copy the spec and add the x-nullable property.
         # If in the future there are other attributes on the property that
         # modify a referenced schema, it can be done here (or rewrite
         # unmarshal to pass the unreferenced property spec as another arg).
-            if 'x-nullable' in prop_spec and 'x-nullable' not in result_spec:
-                result_spec = copy.deepcopy(result_spec)
-                result_spec['x-nullable'] = prop_spec['x-nullable']
+        if 'x-nullable' in prop_spec and 'x-nullable' not in result_spec:
+            result_spec = copy.deepcopy(result_spec)
+            result_spec['x-nullable'] = prop_spec['x-nullable']
+        return result_spec
 
-            swagger_spec.cache_schema[i] = result_spec
-            return result_spec
+    additional_props = deref(object_spec).get('additionalProperties', True)
 
-        additional_props = deref(object_spec).get('additionalProperties', True)
-
-        if isinstance(additional_props, bool):
+    if isinstance(additional_props, bool):
         # no spec for additional properties to conform to - this is basically
         # a way to send pretty much anything across the wire as is.
-            swagger_spec.cache_schema[i] = None
-            return None
+        return None
 
-        additional_props = deref(additional_props)
-        if is_dict_like(additional_props):
+    additional_props = deref(additional_props)
+    if is_dict_like(additional_props):
         # spec that all additional props MUST conform to
-            swagger_spec.cache_schema[i] = additional_props
-            return additional_props
+        return additional_props
 
-        raise SwaggerMappingError(
-            "Don't know what to do with `additionalProperties` in spec {0} "
-            "when inspecting value {1}".format(object_spec, object_value))
+    raise SwaggerMappingError(
+        "Don't know what to do with `additionalProperties` in spec {0} "
+        "when inspecting value {1}".format(object_spec, object_value))
 
 
 def handle_null_value(swagger_spec, schema_object_spec):
@@ -162,6 +152,35 @@ def handle_null_value(swagger_spec, schema_object_spec):
 
 
 def collapsed_properties(model_spec, swagger_spec):
+    """Processes model spec and outputs dictionary with attributes
+    as the keys and attribute spec as the value for the model.
+    This handles traversing any polymorphic models and the hierarchy
+    of properties properly.
+    :param model_spec: model specification (must be dereferenced already)
+    :type model_spec: dict
+    :param swagger_spec: :class:`bravado_core.spec.Spec`
+    :returns: dict
+    """
+
+    properties = {}
+
+    # properties may or may not be present
+    if 'properties' in model_spec:
+        for attr, attr_spec in iteritems(model_spec['properties']):
+            properties[attr] = attr_spec
+
+    # allOf may or may not be present
+    if 'allOf' in model_spec:
+        deref = swagger_spec.deref
+        for item_spec in model_spec['allOf']:
+            item_spec = deref(item_spec)
+            more_properties = collapsed_properties(item_spec, swagger_spec)
+            properties.update(more_properties)
+
+    return properties
+
+
+def fast_collapsed_properties(model_spec, swagger_spec):
     """Processes model spec and outputs dictionary with attributes
     as the keys and attribute spec as the value for the model.
 
@@ -190,7 +209,8 @@ def collapsed_properties(model_spec, swagger_spec):
             deref = swagger_spec.deref
             for item_spec in model_spec['allOf']:
                 item_spec = deref(item_spec)
-                more_properties = collapsed_properties(item_spec, swagger_spec)
+                more_properties = fast_collapsed_properties(item_spec, swagger_spec)
                 properties.update(more_properties)
-        swagger_spec.cache_schema[i] = properties
+            swagger_spec.cache_schema[i] = properties
+
         return properties
