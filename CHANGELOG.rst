@@ -1,6 +1,12 @@
 Changelog
 =========
 
+5.10.0 (2018-11-20)
+-------------------
+- Add ``use_spec_url_for_base_path`` configuration option - PR #300 - Thanks DStape for your contribution!
+- Ensure ``jsonschema >= 3`` compatibility - PR #304
+- Minor improvement on discriminator validation - PR #302
+
 5.0.7 (2018-09-18)
 ------------------
 - Fix security object validation issue - PR #294
