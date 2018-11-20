@@ -1,5 +1,10 @@
 Changelog
 =========
+5.0.8 (2018-11-19)
+------------------
+- Memoize the result of deref() function in Spec.py, collapse_properties(), get_spec_for_prop() in Schema.py
+- Add a dictionary in Spec.py to store the result
+- Change all deref fuction called in unmarshalling process to fast_deref
 
 5.0.7 (2018-09-18)
 ------------------
