@@ -445,7 +445,7 @@ def test_validate_invalid_polymorphic_does_not_alter_validation_paths(polymorphi
     validation_error = excinfo.value
     assert validation_error.validator == 'required'
     assert validation_error.validator_value == ['birth_date']
-    assert validation_error.message == '\'birth_date\' is a required property'
+    assert validation_error.message == '{} is a required property'.format(repr(u'birth_date'))
     # as birth_date is defined on the 2nd item of the Dog allOf list the expected schema path should be allOf/1/required
     assert list(validation_error.schema_path) == ['allOf', 1, 'required']
 
