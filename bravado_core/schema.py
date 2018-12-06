@@ -99,7 +99,7 @@ def get_spec_for_prop(swagger_spec, object_spec, object_value, prop_name, proper
     deref = swagger_spec.deref
 
     if properties is None:
-        properties = fast_collapsed_properties(deref(object_spec), swagger_spec)
+        properties = collapsed_properties(deref(object_spec), swagger_spec)
     prop_spec = properties.get(prop_name)
 
     if prop_spec is not None:
@@ -152,6 +152,7 @@ def handle_null_value(swagger_spec, schema_object_spec):
         'Spec {0} is a required value'.format(schema_object_spec))
 
 
+@memoize_by_id
 def collapsed_properties(model_spec, swagger_spec):
     """Processes model spec and outputs dictionary with attributes
     as the keys and attribute spec as the value for the model.
