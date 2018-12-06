@@ -5,6 +5,7 @@ from collections import Mapping
 from six import iteritems
 
 from bravado_core.exception import SwaggerMappingError
+from bravado_core.util import memoize_by_id
 
 
 # 'object' and 'array' are omitted since this should really be read as
@@ -180,6 +181,7 @@ def collapsed_properties(model_spec, swagger_spec):
     return properties
 
 
+@memoize_by_id
 def fast_collapsed_properties(model_spec, swagger_spec):
     """Processes model spec and outputs dictionary with attributes
     as the keys and attribute spec as the value for the model.
@@ -192,25 +194,19 @@ def fast_collapsed_properties(model_spec, swagger_spec):
     :param swagger_spec: :class:`bravado_core.spec.Spec`
     :returns: dict
     """
-
-    i = id(model_spec)
-    try:
-        return swagger_spec.cache_schema[i]
-    except KeyError:
-        properties = {}
+    properties = {}
 
     # properties may or may not be present
-        if 'properties' in model_spec:
-            for attr, attr_spec in iteritems(model_spec['properties']):
-                properties[attr] = attr_spec
+    if 'properties' in model_spec:
+        for attr, attr_spec in iteritems(model_spec['properties']):
+            properties[attr] = attr_spec
 
     # allOf may or may not be present
-        if 'allOf' in model_spec:
-            deref = swagger_spec.deref
-            for item_spec in model_spec['allOf']:
-                item_spec = deref(item_spec)
-                more_properties = fast_collapsed_properties(item_spec, swagger_spec)
-                properties.update(more_properties)
-            swagger_spec.cache_schema[i] = properties
+    if 'allOf' in model_spec:
+        deref = swagger_spec.deref
+        for item_spec in model_spec['allOf']:
+            item_spec = deref(item_spec)
+            more_properties = collapsed_properties(item_spec, swagger_spec)
+            properties.update(more_properties)
 
-        return properties
+    return properties
