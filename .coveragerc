@@ -1,7 +1,21 @@
+[run]
+branch = True
+source =
+    .
+
 [report]
+show_missing = True
+skip_covered = True
+omit =
+    .tox/*
+    venv/*
+    /usr/*
+    setup.py
 exclude_lines =
     def __repr__
     raise AssertionError
     raise NotImplementedError
+    if typing.TYPE_CHECKING:
+    if getattr\(typing, 'TYPE_CHECKING', False\):
     if __name__ == .__main__.:
     pragma: no cover
