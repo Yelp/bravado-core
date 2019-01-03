@@ -11,6 +11,8 @@ matrix:
   - env: TOXENV=pre-commit
   - python: "3.6"
     env: TOXENV=benchmark
+  - python: "3.6"
+    env: TOXENV=mypy
   allow_failures:
   - env: TOXENV=benchmark
   fast_finish: true
