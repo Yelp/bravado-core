@@ -9,19 +9,6 @@ from setuptools import setup
 import bravado_core
 
 
-install_requires = [
-    "jsonref",
-    "jsonschema[format]>=2.5.1",
-    "python-dateutil",
-    "pyyaml",
-    "simplejson",
-    "six",
-    "swagger-spec-validator>=2.0.1",
-    "pytz",
-    "msgpack-python>=0.5.2",
-]
-
-
 setup(
     name="bravado-core",
     version=bravado_core.version,
@@ -44,8 +31,22 @@ setup(
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
     ],
-    install_requires=install_requires,
+    install_requires=[
+        "jsonref",
+        "jsonschema[format]>=2.5.1",
+        "python-dateutil",
+        "pyyaml",
+        "simplejson",
+        "six",
+        "swagger-spec-validator>=2.0.1",
+        "pytz",
+        "msgpack-python>=0.5.2",
+    ],
+    package_data={
+        'bravado': ['py.typed'],
+    },
     extras_require={
         ':python_version<"3.4"': ['enum34'],
+        ':python_version<"3.5"': ['typing'],
     },
 )

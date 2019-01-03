@@ -3,5 +3,6 @@ exclude_lines =
     def __repr__
     raise AssertionError
     raise NotImplementedError
+    if typing.TYPE_CHECKING:
     if __name__ == .__main__.:
     pragma: no cover
