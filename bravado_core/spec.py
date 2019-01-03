@@ -5,6 +5,7 @@ import os.path
 import warnings
 from contextlib import closing
 
+import typing
 import yaml
 from jsonref import JsonRef
 from jsonschema import FormatChecker
@@ -22,8 +23,12 @@ from bravado_core import formatter
 from bravado_core.exception import SwaggerSchemaError
 from bravado_core.exception import SwaggerValidationError
 from bravado_core.formatter import return_true_wrapper
+from bravado_core.formatter import SwaggerFormat  # noqa: F401
+from bravado_core.model import Model  # noqa: F401
 from bravado_core.model import model_discovery
+from bravado_core.operation import Operation  # noqa: F401
 from bravado_core.resource import build_resources
+from bravado_core.resource import Resource  # noqa: F401
 from bravado_core.schema import is_dict_like
 from bravado_core.schema import is_list_like
 from bravado_core.schema import is_ref
@@ -33,8 +38,15 @@ from bravado_core.util import cached_property
 from bravado_core.util import memoize_by_id
 from bravado_core.util import strip_xscope
 
-
 log = logging.getLogger(__name__)
+
+if typing.TYPE_CHECKING:
+    T = typing.TypeVar('T', bound='Spec')
+
+    class HttpClientProtocol(typing.Protocol):
+        def request(self, request_params):
+            # type: (typing.MutableMapping[str, typing.Any]) -> typing.Any
+            pass
 
 
 CONFIG_DEFAULTS = {
@@ -93,8 +105,14 @@ class Spec(object):
     :param config: Configuration dict. See CONFIG_DEFAULTS.
     """
 
-    def __init__(self, spec_dict, origin_url=None, http_client=None,
-                 config=None):
+    def __init__(
+        self,
+        spec_dict,  # type: typing.Mapping[typing.Text, typing.Any]
+        origin_url=None,  # type: typing.Optional[typing.Text]
+        http_client=None,  # type: typing.Optional[HttpClientProtocol]
+        config=None,  # type: typing.Optional[typing.Mapping[typing.Text, typing.Any]]
+    ):
+        # type: (...) -> None
         self.spec_dict = spec_dict
         self.origin_url = origin_url
         self.http_client = http_client
@@ -103,21 +121,21 @@ class Spec(object):
 
         # (key, value) = (simple format def name, Model type)
         # (key, value) = (#/ format def ref, Model type)
-        self.definitions = {}
+        self.definitions = {}  # type: typing.Dict[typing.Text, Model]
 
         # (key, value) = (simple resource name, Resource)
         # (key, value) = (#/ format resource ref, Resource)
-        self.resources = None
+        self.resources = {}  # type: typing.Dict[typing.Text, Resource]
 
         # (key, value) = (simple ref name, param_spec in dict form)
         # (key, value) = (#/ format ref name, param_spec in dict form)
-        self.params = None
+        self.params = {}  # type: typing.Dict[typing.Text, typing.Mapping[typing.Text, typing.Any]]
 
         # Built on-demand - see get_op_for_request(..)
-        self._request_to_op_map = None
+        self._request_to_op_map = None  # type: typing.Optional[typing.Dict[typing.Tuple[typing.Text, typing.Text], Operation]]  # noqa
 
         # (key, value) = (format name, SwaggerFormat)
-        self.user_defined_formats = {}
+        self.user_defined_formats = {}  # type: typing.Dict[str, SwaggerFormat]
         self.format_checker = FormatChecker()
 
         self.resolver = RefResolver(
@@ -132,6 +150,7 @@ class Spec(object):
 
     @cached_property
     def client_spec_dict(self):
+        # type: (...) -> typing.Dict[typing.Text, typing.Any]
         """Return a copy of spec_dict with x-scope metadata removed so that it
         is suitable for consumption by Swagger clients.
 
@@ -167,7 +186,14 @@ class Spec(object):
         return strip_xscope(self.spec_dict)
 
     @classmethod
-    def from_dict(cls, spec_dict, origin_url=None, http_client=None, config=None):
+    def from_dict(
+        cls,  # type: typing.Type[T]
+        spec_dict,  # type: typing.Mapping[typing.Text, typing.Any]
+        origin_url=None,  # type: typing.Optional[typing.Text]
+        http_client=None,  # type: typing.Optional[HttpClientProtocol]
+        config=None,  # type: typing.Optional[typing.Mapping[typing.Text, typing.Any]]
+    ):
+        # type: (...) -> T
         """Build a :class:`Spec` from Swagger API Specification
 
         :param spec_dict: swagger spec in json-like dict form.
@@ -181,6 +207,7 @@ class Spec(object):
         return spec
 
     def _validate_spec(self):
+        # type: () -> None
         if self.config['validate_swagger_spec']:
             self.resolver = validator20.validate_spec(
                 spec_dict=self.spec_dict,
@@ -188,29 +215,8 @@ class Spec(object):
                 http_handlers=build_http_handlers(self.http_client),
             )
 
-    def build(self):
-        self._validate_spec()
-
-        model_discovery(self)
-
-        if self.config['internally_dereference_refs']:
-            # Avoid to evaluate is_ref every time, no references are possible at this time
-            self.deref = lambda ref_dict: ref_dict
-            self._internal_spec_dict = self.deref_flattened_spec
-
-        for user_defined_format in self.config['formats']:
-            self.register_format(user_defined_format)
-
-        self.resources = build_resources(self)
-
-        build_api_kwargs = {}
-        if self.config['use_spec_url_for_base_path']:
-            build_api_kwargs['use_spec_url_for_base_path'] = True
-
-        self.api_url = build_api_serving_url(self.spec_dict, self.origin_url,
-                                             **build_api_kwargs)
-
     def _force_deref(self, ref_dict):
+        # type: (typing.Mapping[typing.Text, typing.Any]) -> typing.Any
         """Dereference ref_dict (if it is indeed a ref) and return what the
         ref points to.
 
@@ -231,7 +237,31 @@ class Spec(object):
     # NOTE: deref gets overridden, if internally_dereference_refs is enabled, after calling build
     deref = _force_deref
 
+    def build(self):
+        # type: () -> None
+        self._validate_spec()
+
+        model_discovery(self)
+
+        if self.config['internally_dereference_refs']:
+            # Avoid to evaluate is_ref every time, no references are possible at this time
+            self.deref = lambda ref_dict: ref_dict  # type: ignore
+            self._internal_spec_dict = self.deref_flattened_spec
+
+        for user_defined_format in self.config['formats']:
+            self.register_format(user_defined_format)
+
+        self.resources = build_resources(self)
+
+        build_api_kwargs = {}
+        if self.config['use_spec_url_for_base_path']:
+            build_api_kwargs['use_spec_url_for_base_path'] = True
+
+        self.api_url = build_api_serving_url(self.spec_dict, self.origin_url,
+                                             **build_api_kwargs)
+
     def get_op_for_request(self, http_method, path_pattern):
+        # type: (typing.Text, typing.Text) -> typing.Optional[Operation]
         """Return the Swagger operation for the passed in request http method
         and path pattern. Makes it really easy for server-side implementations
         to map incoming requests to the Swagger spec.
@@ -244,7 +274,7 @@ class Spec(object):
         """
         if self._request_to_op_map is None:
             # lazy initialization
-            self._request_to_op_map = {}
+            self._request_to_op_map = {}  # type: typing.Dict[typing.Tuple[typing.Text, typing.Text], Operation]
             base_path = self.spec_dict.get('basePath', '').rstrip('/')
             for resource in self.resources.values():
                 for op in resource.operations.values():

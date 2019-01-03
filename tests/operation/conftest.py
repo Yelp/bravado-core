@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import pytest
+import typing  # noqa: F401
 from six import iteritems
 
 SECURITY_DEFINITIONS = {
@@ -31,7 +32,7 @@ SECURITY_OBJECTS = {
     'basic': [{'basic': []}],
     'apiKey': [{'apiKey': []}],
     'oauth2': [{'oauth2': []}],
-}
+}  # type: typing.Mapping[str, typing.List[typing.Mapping[str, typing.List[str]]]]
 
 
 @pytest.fixture
