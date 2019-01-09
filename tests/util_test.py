@@ -5,6 +5,7 @@ from bravado_core.util import AliasKeyDict
 from bravado_core.util import cached_property
 from bravado_core.util import determine_object_type
 from bravado_core.util import memoize_by_id
+from bravado_core.util import normalize_uri
 from bravado_core.util import ObjectType
 from bravado_core.util import sanitize_name
 from bravado_core.util import strip_xscope
@@ -193,3 +194,15 @@ def test_no_op():
 
 def test_petstore_spec(petstore_spec):
     assert petstore_spec.client_spec_dict == strip_xscope(petstore_spec.spec_dict)
+
+
+@pytest.mark.parametrize(
+    'uri, normalized_uri',
+    [
+        ('uri', 'uri'),
+        ('uri#/fragment', 'uri#/fragment'),
+        ('uri#fragment', 'uri#/fragment'),
+    ],
+)
+def test_normalize_uri(uri, normalized_uri):
+    assert normalize_uri(uri) == normalized_uri

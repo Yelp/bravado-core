@@ -7,6 +7,8 @@ from functools import wraps
 from enum import Enum
 from six import iteritems
 from six import iterkeys
+from six.moves.urllib.parse import urlparse
+from six.moves.urllib.parse import urlunparse
 
 from bravado_core.schema import is_dict_like
 from bravado_core.schema import is_list_like
@@ -216,3 +218,23 @@ def strip_xscope(spec_dict):
 
     descend(result)
     return result
+
+
+def normalize_uri(uri):
+    """
+    Normalize the input uri to reduce as much as possible equivalent URIs to
+    have different representation.
+
+    Currently supported cases:
+     * fragments not starting with /.
+       NOTE: from JSON pointer prospective whatever#fragment is equivalent to whatever#/fragment
+
+    :param uri: uri to normalize
+    :return: normalized uri
+    """
+    scheme, netloc, url, params, query, fragment = urlparse(uri)
+
+    if fragment and not fragment.startswith('/'):
+        fragment = '/{}'.format(fragment)
+
+    return urlunparse((scheme, netloc, url, params, query, fragment))
