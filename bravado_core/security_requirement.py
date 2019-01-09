@@ -2,8 +2,15 @@
 import logging
 
 import six
+import typing
 
 from bravado_core.exception import SwaggerSchemaError
+
+if typing.TYPE_CHECKING:
+    from bravado_core.security_definition import SecurityDefinition  # noqa: F401
+    from bravado_core.spec import Spec  # noqa: F401
+
+    T = typing.TypeVar('T')
 
 log = logging.getLogger(__name__)
 
@@ -18,6 +25,7 @@ class SecurityRequirement(object):
     """
 
     def __init__(self, swagger_spec, security_requirement_spec):
+        # type: (Spec, typing.Mapping[typing.Text, typing.Mapping[typing.Text, typing.List[typing.Text]]]) -> None
         self.swagger_spec = swagger_spec
         self.security_requirement_spec = swagger_spec.deref(security_requirement_spec)
         for security_definition in six.iterkeys(security_requirement_spec):
@@ -31,20 +39,23 @@ class SecurityRequirement(object):
 
     @property
     def security_definitions(self):
-        return dict(
-            (security_name, self.swagger_spec.security_definitions[security_name])
+        # type: () -> typing.Mapping[typing.Text, SecurityDefinition]
+        return {
+            security_name: self.swagger_spec.security_definitions[security_name]
             for security_name in six.iterkeys(self.security_requirement_spec)
-        )
+        }
 
     @property
     def security_scopes(self):
-        return dict(
-            (security_name, self.security_requirement_spec[security_name])
+        # type: () -> typing.Mapping[typing.Text, typing.Mapping[typing.Text, typing.List[typing.Text]]]
+        return {
+            security_name: self.security_requirement_spec[security_name]
             for security_name in six.iterkeys(self.security_requirement_spec)
-        )
+        }
 
     @property
     def parameters_representation_dict(self):
+        # type: () -> typing.List[typing.Mapping[typing.Text, typing.Any]]
         return [
             definition.parameter_representation_dict
             for definition in six.itervalues(self.security_definitions)
@@ -52,4 +63,5 @@ class SecurityRequirement(object):
         ]
 
     def __iter__(self):
+        # type: () -> typing.Iterable[SecurityDefinition]
         return six.itervalues(self.security_definitions)
