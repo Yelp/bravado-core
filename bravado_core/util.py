@@ -15,7 +15,10 @@ from bravado_core.schema import is_list_like
 
 if getattr(typing, 'TYPE_CHECKING', False):
     from bravado_core._compat_typing import FuncType
+    from bravado_core._compat_typing import JSONDict
+
     CacheKey = typing.Tuple[typing.Tuple[typing.Text, int], ...]
+    T = typing.TypeVar('T')
 
 
 SANITIZE_RULES = [
@@ -48,10 +51,12 @@ class cached_property(object):
     """
 
     def __init__(self, func):
+        # type: (FuncType) -> None
         self.__doc__ = getattr(func, '__doc__')
         self.func = func
 
     def __get__(self, obj, cls):
+        # type: (typing.Any, typing.Any) -> typing.Any
         if obj is None:
             return self
         value = obj.__dict__[self.func.__name__] = self.func(obj)
@@ -66,11 +71,13 @@ class lazy_class_attribute(object):
     """
 
     def __init__(self, func):
+        # type: (FuncType) -> None
         self.__doc__ = getattr(func, '__doc__')
         self.func = func
         super(lazy_class_attribute, self).__init__()
 
     def __get__(self, obj, cls):
+        # type: (T, typing.Type[T]) -> typing.Any
         value = self.func(cls)
         setattr(cls, self.func.__name__, value)
         return value
@@ -119,10 +126,11 @@ def memoize_by_id(func):
             key_in_progress_set.remove(cache_key)
             cache[cache_key] = cached_value
         return cached_value
-    return wrapper
+    return wrapper  # type: ignore  # ignoring type to avoiding typing.cast call
 
 
 def sanitize_name(name):
+    # type: (typing.Text) -> typing.Text
     """Convert a given name so that it is a valid python identifier."""
     if name == '':
         return name
@@ -145,37 +153,46 @@ class AliasKeyDict(dict):
     keys are returned."""
 
     def __init__(self, *args, **kwargs):
+        # type: (typing.Any, typing.Any) -> None
         super(AliasKeyDict, self).__init__(*args, **kwargs)
-        self.alias_to_key = {}
+        self.alias_to_key = {}  # type: typing.Dict[typing.Text, typing.Any]
 
     def add_alias(self, alias, key):
+        # type: (typing.Text, typing.Text) -> None
         if alias != key:
             self.alias_to_key[alias] = key
 
     def determine_key(self, key):
+        # type: (typing.Any) -> typing.Any
         if key in self.alias_to_key:  # this will normally be False, optimize for it
             key = self.alias_to_key[key]
         return key
 
-    def get(self, key, *args, **kwargs):
-        return super(AliasKeyDict, self).get(self.determine_key(key), *args, **kwargs)
+    def get(self, key, default=None):
+        # type: (typing.Text, typing.Any) -> typing.Any
+        return super(AliasKeyDict, self).get(self.determine_key(key), default)
 
-    def pop(self, key, *args, **kwargs):
-        return super(AliasKeyDict, self).pop(self.determine_key(key), *args, **kwargs)
+    def pop(self, key, default=None):
+        # type: (typing.Text, typing.Any) -> typing.Any
+        return super(AliasKeyDict, self).pop(self.determine_key(key), default)
 
     def __getitem__(self, key):
+        # type: (typing.Text) -> typing.Any
         return super(AliasKeyDict, self).__getitem__(self.determine_key(key))
 
     def __delitem__(self, key):
+        # type: (typing.Text) -> None
         final_key = self.alias_to_key.get(key, key)
         if final_key != key:
             del self.alias_to_key[key]
         return super(AliasKeyDict, self).__delitem__(final_key)
 
     def __contains__(self, key):
+        # type: (typing.Any) -> bool
         return super(AliasKeyDict, self).__contains__(self.determine_key(key))
 
     def copy(self):
+        # type: () -> 'AliasKeyDict'
         copied_dict = type(self)(self)
         copied_dict.alias_to_key = self.alias_to_key.copy()
         return copied_dict
@@ -193,10 +210,12 @@ class ObjectType(Enum):
     PATH_ITEM = None
 
     def get_root_holder(self):
+        # type: () -> typing.Optional[typing.Text]
         return self.value
 
 
 def determine_object_type(object_dict, default_type_to_object=None):
+    # type: (typing.Any, typing.Optional[bool]) -> ObjectType
     """
     Use best guess to determine the object type based on the object keys.
 
@@ -246,11 +265,11 @@ def determine_object_type(object_dict, default_type_to_object=None):
                 #       in ``response_allowed_keys``.  (ie. ``additionalProperties: {}``, implicitly defined be specs)
                 if default_type_to_object or 'type' in object_dict:
                     return ObjectType.SCHEMA
-                else:
-                    return ObjectType.UNKNOWN
+    return ObjectType.UNKNOWN
 
 
 def strip_xscope(spec_dict):
+    # type: (JSONDict) -> typing.Mapping[typing.Text, typing.Any]
     """
     :param spec_dict: Swagger spec in dict form. This is treated as read-only.
     :return: deep copy of spec_dict with the x-scope metadata stripped out.
@@ -258,6 +277,7 @@ def strip_xscope(spec_dict):
     result = copy.deepcopy(spec_dict)
 
     def descend(fragment):
+        # type: (typing.Any) -> None
         if is_dict_like(fragment):
             fragment.pop('x-scope', None)  # Removes 'x-scope' key if present
             for key in iterkeys(fragment):
