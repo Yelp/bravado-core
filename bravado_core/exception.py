@@ -2,6 +2,12 @@
 import sys
 
 import six
+import typing
+
+
+if typing.TYPE_CHECKING:
+    FuncType = typing.Callable[..., typing.Any]
+    F = typing.TypeVar('F', bound=FuncType)
 
 
 class SwaggerError(Exception):
@@ -40,13 +46,16 @@ class SwaggerSecurityValidationError(SwaggerValidationError):
 
 
 def wrap_exception(exception_class):
+    # type: (typing.Type[BaseException]) -> typing.Callable[[F], F]
     """Helper decorator method to modify the raised exception class to
     `exception_class` but keeps the message and trace intact.
 
     :param exception_class: class to wrap raised exception with
     """
     def generic_exception(method):
+        # type: (F) -> F
         def wrapper(*args, **kwargs):
+            # type: (typing.Any, typing.Any) -> typing.Any
             try:
                 return method(*args, **kwargs)
             except Exception as e:
@@ -54,5 +63,5 @@ def wrap_exception(exception_class):
                     exception_class,
                     exception_class(str(e)),
                     sys.exc_info()[2])
-        return wrapper
+        return wrapper  # type: ignore  # ignoring type to avoiding typing.cast call
     return generic_exception
