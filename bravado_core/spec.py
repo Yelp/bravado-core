@@ -4,6 +4,7 @@ import logging
 import os.path
 import warnings
 from contextlib import closing
+from functools import partial
 
 import typing
 import yaml
@@ -116,7 +117,7 @@ class Spec(object):
         self.spec_dict = spec_dict
         self.origin_url = origin_url
         self.http_client = http_client
-        self.api_url = None
+        self.api_url = None  # type: typing.Optional[typing.Text]
         self.config = dict(CONFIG_DEFAULTS, **(config or {}))
 
         # (key, value) = (simple format def name, Model type)
@@ -135,7 +136,7 @@ class Spec(object):
         self._request_to_op_map = None  # type: typing.Optional[typing.Dict[typing.Tuple[typing.Text, typing.Text], Operation]]  # noqa
 
         # (key, value) = (format name, SwaggerFormat)
-        self.user_defined_formats = {}  # type: typing.Dict[str, SwaggerFormat]
+        self.user_defined_formats = {}  # type: typing.Dict[typing.Text, SwaggerFormat]
         self.format_checker = FormatChecker()
 
         self.resolver = RefResolver(
@@ -245,7 +246,7 @@ class Spec(object):
 
         if self.config['internally_dereference_refs']:
             # Avoid to evaluate is_ref every time, no references are possible at this time
-            self.deref = lambda ref_dict: ref_dict  # type: ignore
+            self.deref = lambda ref_dict: ref_dict  # type: ignore  # (mypy complains that deref is already defined)
             self._internal_spec_dict = self.deref_flattened_spec
 
         for user_defined_format in self.config['formats']:
@@ -253,12 +254,10 @@ class Spec(object):
 
         self.resources = build_resources(self)
 
-        build_api_kwargs = {}
-        if self.config['use_spec_url_for_base_path']:
-            build_api_kwargs['use_spec_url_for_base_path'] = True
-
-        self.api_url = build_api_serving_url(self.spec_dict, self.origin_url,
-                                             **build_api_kwargs)
+        self.api_url = build_api_serving_url(
+            self.spec_dict, self.origin_url,
+            use_spec_url_for_base_path=bool(self.config.get('use_spec_url_for_base_path')),
+        )
 
     def get_op_for_request(self, http_method, path_pattern):
         # type: (typing.Text, typing.Text) -> typing.Optional[Operation]
@@ -286,6 +285,7 @@ class Spec(object):
         return self._request_to_op_map.get(key)
 
     def register_format(self, user_defined_format):
+        # type: (SwaggerFormat) -> None
         """Registers a user-defined format to be used with this spec.
 
         :type user_defined_format:
@@ -298,6 +298,7 @@ class Spec(object):
             name, raises=(SwaggerValidationError,))(validate)
 
     def get_format(self, name):
+        # type: (typing.Text) -> typing.Optional[SwaggerFormat]
         """
         :param name: Name of the format to retrieve
         :rtype: :class:`bravado_core.formatter.SwaggerFormat`
@@ -315,6 +316,7 @@ class Spec(object):
 
     @cached_property
     def security_definitions(self):
+        # type: () -> typing.Optional[typing.Mapping[typing.Text, SecurityDefinition]]
         security_defs = {}
         for security_name, security_def in iteritems(self.spec_dict.get('securityDefinitions', {})):
             security_defs[security_name] = SecurityDefinition(self, security_def)
@@ -322,6 +324,7 @@ class Spec(object):
 
     @cached_property
     def flattened_spec(self):
+        # type: () -> typing.Mapping[typing.Text, typing.Any]
         """
         Representation of the current swagger specs that could be written to a single file.
         :rtype: dict
@@ -339,10 +342,12 @@ class Spec(object):
 
     @cached_property
     def deref_flattened_spec(self):
+        # type: () -> typing.Mapping[typing.Text, typing.Any]
         deref_spec_dict = JsonRef.replace_refs(self.flattened_spec)
 
         @memoize_by_id
         def descend(obj):
+            # type: (typing.Any) -> typing.Any
             # Inline modification of obj
             # This method is needed because JsonRef could produce performance penalties in accessing
             # the proxied attributes
@@ -369,6 +374,7 @@ class Spec(object):
 
 
 def is_yaml(url, content_type=None):
+    # type: (typing.Text, typing.Optional[bool]) -> bool
     yaml_content_types = {'application/yaml', 'application/x-yaml', 'text/yaml'}
 
     yaml_file_extensions = {'.yaml', '.yml'}
@@ -384,6 +390,7 @@ def is_yaml(url, content_type=None):
 
 
 def build_http_handlers(http_client):
+    # type: (typing.Optional[HttpClientProtocol]) -> typing.Mapping[str, typing.Callable[[typing.Text], typing.Any]]
     """Create a mapping of uri schemes to callables that take a uri. The
     callable is used by jsonschema's RefResolver to download remote $refs.
 
@@ -391,13 +398,15 @@ def build_http_handlers(http_client):
 
     :returns: dict like {'http': callable, 'https': callable)
     """
-    def download(uri):
+
+    def download(uri, client):
+        # type: (typing.Text, HttpClientProtocol) -> typing.Any
         log.debug('Downloading %s', uri)
         request_params = {
             'method': 'GET',
             'url': uri,
         }
-        response = http_client.request(request_params).result()
+        response = client.request(request_params).result()
         content_type = response.headers.get('content-type', '').lower()
         if is_yaml(uri, content_type):
             return yaml.safe_load(response.content)
@@ -405,24 +414,36 @@ def build_http_handlers(http_client):
             return response.json()
 
     def read_file(uri):
+        # type: (typing.Text) -> typing.Any
         with closing(urlopen(uri)) as fp:
             if is_yaml(uri):
                 return yaml.safe_load(fp)
             else:
                 return json.loads(fp.read().decode("utf-8"))
 
-    return {
-        'http': download,
-        'https': download,
+    handlers = {
         # jsonschema ordinarily handles file:// requests, but it assumes that
         # all files are json formatted. We override it here so that we can
         # load yaml files when necessary.
         'file': read_file,
     }
 
+    if http_client:
+        handlers.update({
+            'http': partial(download, client=http_client),
+            'https': partial(download, client=http_client),
+        })
 
-def build_api_serving_url(spec_dict, origin_url=None, preferred_scheme=None,
-                          use_spec_url_for_base_path=False):
+    return handlers
+
+
+def build_api_serving_url(
+    spec_dict,  # type: typing.Mapping[typing.Text, typing.Any]
+    origin_url=None,  # type: typing.Optional[typing.Text]
+    preferred_scheme=None,  # type: typing.Optional[typing.Text]
+    use_spec_url_for_base_path=False,  # type: bool
+):
+    # type: (...) -> typing.Text
     """The URL used to service API requests does not necessarily have to be the
     same URL that was used to retrieve the API spec_dict.
 
@@ -464,6 +485,7 @@ def build_api_serving_url(spec_dict, origin_url=None, preferred_scheme=None,
     origin = urlparse(origin_url)
 
     def pick_a_scheme(schemes):
+        # type: (typing.Optional[typing.Text]) -> typing.Text
         if not schemes:
             return origin.scheme
 
@@ -485,4 +507,4 @@ def build_api_serving_url(spec_dict, origin_url=None, preferred_scheme=None,
         base_path = origin.path
     path = spec_dict.get('basePath', base_path)
     scheme = pick_a_scheme(spec_dict.get('schemes'))
-    return urlunparse((scheme, netloc, path, None, None, None))
+    return urlunparse((scheme, netloc, path, '', '', ''))

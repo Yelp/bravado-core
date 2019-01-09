@@ -9,6 +9,7 @@ from collections import namedtuple
 import dateutil.parser
 import pytz
 import six
+import typing  # noqa: F401
 
 from bravado_core import schema
 from bravado_core.exception import SwaggerMappingError
@@ -147,4 +148,4 @@ DEFAULT_FORMATS = {
         to_python=lambda i: i if isinstance(i, long) else long(i),
         validate=NO_OP,  # jsonschema validates integer
         description='Converts [wire]integer:int64 <=> python long'),
-}
+}  # type: typing.Mapping[typing.Text, SwaggerFormat]
