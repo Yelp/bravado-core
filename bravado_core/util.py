@@ -4,6 +4,7 @@ import inspect
 import re
 from functools import wraps
 
+import typing
 from enum import Enum
 from six import iteritems
 from six import iterkeys
@@ -12,6 +13,11 @@ from six.moves.urllib.parse import urlunparse
 
 from bravado_core.schema import is_dict_like
 from bravado_core.schema import is_list_like
+
+
+if typing.TYPE_CHECKING:
+    FuncType = typing.Callable[..., typing.Any]
+    F = typing.TypeVar('F', bound=FuncType)
 
 
 SANITIZE_RULES = [
@@ -44,10 +50,12 @@ class cached_property(object):
     """
 
     def __init__(self, func):
+        # type: (F) -> None
         self.__doc__ = getattr(func, '__doc__')
         self.func = func
 
     def __get__(self, obj, cls):
+        # type: (typing.Any, typing.Any) -> typing.Any
         if obj is None:
             return self
         value = obj.__dict__[self.func.__name__] = self.func(obj)
@@ -55,24 +63,31 @@ class cached_property(object):
 
 
 def memoize_by_id(func):
-    cache = func.cache = {}
+    # type: (F) -> F
+    cache = {}  # type: typing.MutableMapping[typing.Tuple[typing.Tuple[typing.Text, int], ...], typing.Any]
+    # ignoring type to avoid the creation of generics that allow an the function to have added cache attribute
+    func.cache = cache  # type: ignore
+
     _CACHE_MISS = object()
 
     def make_key(*args, **kwargs):
+        # type: (typing.Any, typing.Any) -> typing.Tuple[typing.Tuple[typing.Text, int], ...]
         return tuple((key, id(value)) for key, value in sorted(iteritems(inspect.getcallargs(func, *args, **kwargs))))
 
     @wraps(func)
     def wrapper(*args, **kwargs):
+        # type: (typing.Any, typing.Any) -> typing.Any
         cache_key = make_key(*args, **kwargs)
         cached_value = cache.get(cache_key, _CACHE_MISS)
         if cached_value is _CACHE_MISS:
             cached_value = func(*args, **kwargs)
             cache[cache_key] = cached_value
         return cached_value
-    return wrapper
+    return wrapper  # type: ignore  # ignoring type to avoiding typing.cast call
 
 
 def sanitize_name(name):
+    # type: (typing.Text) -> typing.Text
     """Convert a given name so that it is a valid python identifier."""
     if name == '':
         return name
@@ -95,37 +110,46 @@ class AliasKeyDict(dict):
     keys are returned."""
 
     def __init__(self, *args, **kwargs):
+        # type: (typing.Any, typing.Any) -> None
         super(AliasKeyDict, self).__init__(*args, **kwargs)
-        self.alias_to_key = {}
+        self.alias_to_key = {}  # type: typing.Dict[typing.Text, typing.Any]
 
     def add_alias(self, alias, key):
+        # type: (typing.Text, typing.Text) -> None
         if alias != key:
             self.alias_to_key[alias] = key
 
     def determine_key(self, key):
+        # type: (typing.Any) -> typing.Any
         if key in self.alias_to_key:  # this will normally be False, optimize for it
             key = self.alias_to_key[key]
         return key
 
-    def get(self, key, *args, **kwargs):
-        return super(AliasKeyDict, self).get(self.determine_key(key), *args, **kwargs)
+    def get(self, key, default=None):
+        # type: (typing.Text, typing.Any) -> typing.Any
+        return super(AliasKeyDict, self).get(self.determine_key(key), default)
 
-    def pop(self, key, *args, **kwargs):
-        return super(AliasKeyDict, self).pop(self.determine_key(key), *args, **kwargs)
+    def pop(self, key, default=None):
+        # type: (typing.Text, typing.Any) -> typing.Any
+        return super(AliasKeyDict, self).pop(self.determine_key(key), default)
 
     def __getitem__(self, key):
+        # type: (typing.Text) -> typing.Any
         return super(AliasKeyDict, self).__getitem__(self.determine_key(key))
 
     def __delitem__(self, key):
+        # type: (typing.Text) -> None
         final_key = self.alias_to_key.get(key, key)
         if final_key != key:
             del self.alias_to_key[key]
         return super(AliasKeyDict, self).__delitem__(final_key)
 
     def __contains__(self, key):
+        # type: (typing.Any) -> bool
         return super(AliasKeyDict, self).__contains__(self.determine_key(key))
 
     def copy(self):
+        # type: () -> 'AliasKeyDict'
         copied_dict = type(self)(self)
         copied_dict.alias_to_key = self.alias_to_key.copy()
         return copied_dict
@@ -143,10 +167,12 @@ class ObjectType(Enum):
     PATH_ITEM = None
 
     def get_root_holder(self):
+        # type: () -> typing.Optional[typing.Text]
         return self.value
 
 
 def determine_object_type(object_dict, default_type_to_object=None):
+    # type: (typing.Any, typing.Optional[bool]) -> ObjectType
     """
     Use best guess to determine the object type based on the object keys.
 
@@ -196,11 +222,11 @@ def determine_object_type(object_dict, default_type_to_object=None):
                 #       in ``response_allowed_keys``.  (ie. ``additionalProperties: {}``, implicitly defined be specs)
                 if default_type_to_object or 'type' in object_dict:
                     return ObjectType.SCHEMA
-                else:
-                    return ObjectType.UNKNOWN
+    return ObjectType.UNKNOWN
 
 
 def strip_xscope(spec_dict):
+    # type: (typing.MutableMapping[typing.Text, typing.Any]) -> typing.Mapping[typing.Text, typing.Any]
     """
     :param spec_dict: Swagger spec in dict form. This is treated as read-only.
     :return: deep copy of spec_dict with the x-scope metadata stripped out.
@@ -208,6 +234,7 @@ def strip_xscope(spec_dict):
     result = copy.deepcopy(spec_dict)
 
     def descend(fragment):
+        # type: (typing.Any) -> None
         if is_dict_like(fragment):
             fragment.pop('x-scope', None)  # Removes 'x-scope' key if present
             for key in iterkeys(fragment):
@@ -221,6 +248,7 @@ def strip_xscope(spec_dict):
 
 
 def normalize_uri(uri):
+    # type: (typing.Text) -> typing.Text
     """
     Normalize the input uri to reduce as much as possible equivalent URIs to
     have different representation.

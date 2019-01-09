@@ -108,7 +108,7 @@ class Spec(object):
 
     def __init__(
         self,
-        spec_dict,  # type: typing.Mapping[typing.Text, typing.Any]
+        spec_dict,  # type: typing.MutableMapping[typing.Text, typing.Any]
         origin_url=None,  # type: typing.Optional[typing.Text]
         http_client=None,  # type: typing.Optional[HttpClientProtocol]
         config=None,  # type: typing.Optional[typing.Mapping[typing.Text, typing.Any]]
@@ -151,7 +151,7 @@ class Spec(object):
 
     @cached_property
     def client_spec_dict(self):
-        # type: (...) -> typing.Dict[typing.Text, typing.Any]
+        # type: (...) -> typing.Mapping[typing.Text, typing.Any]
         """Return a copy of spec_dict with x-scope metadata removed so that it
         is suitable for consumption by Swagger clients.
 
@@ -189,7 +189,7 @@ class Spec(object):
     @classmethod
     def from_dict(
         cls,  # type: typing.Type[T]
-        spec_dict,  # type: typing.Mapping[typing.Text, typing.Any]
+        spec_dict,  # type: typing.MutableMapping[typing.Text, typing.Any]
         origin_url=None,  # type: typing.Optional[typing.Text]
         http_client=None,  # type: typing.Optional[HttpClientProtocol]
         config=None,  # type: typing.Optional[typing.Mapping[typing.Text, typing.Any]]
@@ -370,7 +370,7 @@ class Spec(object):
             return descend(deref_spec_dict)
         finally:
             # Make sure that all memory allocated, for caching, could be released
-            descend.cache.clear()
+            descend.cache.clear()  # type: ignore
 
 
 def is_yaml(url, content_type=None):
