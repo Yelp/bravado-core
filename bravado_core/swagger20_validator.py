@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import functools
 
+import typing
 from jsonschema import validators
 from jsonschema.exceptions import ValidationError
 from jsonschema.validators import Draft4Validator
@@ -17,6 +18,10 @@ Draft4Validator which customizes/wraps some of the operations of the default
 validator.
 """
 
+if typing.TYPE_CHECKING:
+    from bravado_core.spec import Spec  # noqa: F401
+
+
 # Extract "original" validators as defined in jsonschema library. Saving those to constants to reduce indirections during validation.  # noqa
 _DRAFT4_ENUM_VALIDATOR = Draft4Validator.VALIDATORS['enum']
 _DRAFT4_FORMAT_VALIDATOR = Draft4Validator.VALIDATORS['format']
@@ -24,7 +29,14 @@ _DRAFT4_REQUIRED_VALIDATOR = Draft4Validator.VALIDATORS['required']
 _DRAFT4_TYPE_VALIDATOR = Draft4Validator.VALIDATORS['type']
 
 
-def format_validator(swagger_spec, validator, format, instance, schema):
+def format_validator(
+    swagger_spec,  # type: Spec
+    validator,  # type: Draft4Validator
+    format,  # type: typing.Any
+    instance,  # type: typing.Any
+    schema,  # type: typing.Mapping[typing.Text, typing.Any]
+):
+    # type: (...) -> typing.Generator[ValidationError, None, None]
     """Skip the `format` validator when a Swagger parameter value is None.
     Otherwise it will fail with a "Failed validating u'format' in schema" failure instead
     of letting the downstream `required_validator` do its job.
@@ -41,7 +53,14 @@ def format_validator(swagger_spec, validator, format, instance, schema):
         yield error
 
 
-def type_validator(swagger_spec, validator, types, instance, schema):
+def type_validator(
+    swagger_spec,  # type: Spec
+    validator,  # type: Draft4Validator
+    types,  # type: typing.Any
+    instance,  # type: typing.Any
+    schema,  # type: typing.Mapping[typing.Text, typing.Any]
+):
+    # type: (...) -> typing.Generator[ValidationError, None, None]
     """Skip the `type` validator when a Swagger parameter value is None.
     Otherwise it will fail with a "None is not a valid type" failure instead
     of letting the downstream `required_validator` do its job.
@@ -68,7 +87,14 @@ def type_validator(swagger_spec, validator, types, instance, schema):
         yield error
 
 
-def required_validator(swagger_spec, validator, required, instance, schema):
+def required_validator(
+    swagger_spec,  # type: Spec
+    validator,  # type: Draft4Validator
+    required,  # type: typing.Any
+    instance,  # type: typing.Any
+    schema,  # type: typing.Mapping[typing.Text, typing.Any]
+):
+    # type: (...) -> typing.Generator[ValidationError, None, None]
     """Swagger 2.0 expects `required` to be a bool in the Parameter object,
     but a list of properties everywhere else.
 
@@ -91,7 +117,14 @@ def required_validator(swagger_spec, validator, required, instance, schema):
             yield error
 
 
-def enum_validator(swagger_spec, validator, enums, instance, schema):
+def enum_validator(
+    swagger_spec,  # type: Spec
+    validator,  # type: Draft4Validator
+    enums,  # type: typing.Any
+    instance,  # type: typing.Any
+    schema,  # type: typing.Mapping[typing.Text, typing.Any]
+):
+    # type: (...) -> typing.Generator[ValidationError, None, None]
     """Swagger 2.0 allows enums to be validated against objects of type
     arrays, like query parameter (collectionFormat: multi)
 
@@ -125,7 +158,14 @@ def enum_validator(swagger_spec, validator, enums, instance, schema):
         yield error
 
 
-def discriminator_validator(swagger_spec, validator, discriminator_attribute, instance, schema):
+def discriminator_validator(
+    swagger_spec,  # type: Spec
+    validator,  # type: Draft4Validator
+    discriminator_attribute,  # type: typing.Any
+    instance,  # type: typing.Any
+    schema,  # type: typing.Mapping[typing.Text, typing.Any]
+):
+    # type: (...) -> typing.Generator[ValidationError, None, None]
     """
     Validates instance against the schema defined by the discriminator attribute.
 
@@ -158,7 +198,7 @@ def discriminator_validator(swagger_spec, validator, discriminator_attribute, in
         )
 
     if discriminator_value == schema[MODEL_MARKER]:
-        return
+        raise StopIteration()
 
     discriminated_schema = swagger_spec.definitions[discriminator_value]._model_spec
     if 'allOf' not in discriminated_schema:
@@ -191,8 +231,16 @@ def discriminator_validator(swagger_spec, validator, discriminator_attribute, in
     from bravado_core.validate import validate_object  # Local import due to circular dependency
     validate_object(swagger_spec=swagger_spec, object_spec=new_schema, value=instance)
 
+    raise StopIteration()
 
-def ref_validator(validator, ref, instance, schema):
+
+def ref_validator(
+    validator,  # type: Draft4Validator
+    ref,  # type: typing.Any
+    instance,  # type: typing.Any
+    schema,  # type: typing.Mapping[typing.Text, typing.Any]
+):
+    # type: (...) -> typing.Generator[ValidationError, None, None]
     """When validating a request or response that contain $refs, jsonschema's
      RefResolver only contains scope (RefResolver._scopes_stack) for the
      request_spec or response_spec that it is fed. This scope doesn't contain
@@ -232,6 +280,7 @@ def ref_validator(validator, ref, instance, schema):
 
 
 def get_validator_type(swagger_spec):
+    # type: (Spec) -> typing.Mapping[typing.Text, typing.Callable[..., typing.Generator[ValidationError, None, None]]]
     """Create a custom jsonschema validator for Swagger 2.0 specs.
 
     :rtype: Its complicated. See jsonschema.validators.create()
