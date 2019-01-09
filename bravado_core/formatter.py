@@ -5,24 +5,40 @@ https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#dataType
 """
 import base64
 import functools
-from collections import namedtuple
 
 import dateutil.parser
 import pytz
 import six
+import typing
 
 from bravado_core import schema
 from bravado_core.exception import SwaggerMappingError
+
+
+if getattr(typing, 'TYPE_CHECKING', False):
+    from bravado_core._compat_typing import JSONDict
+    from bravado_core._compat_typing import MarshalingMethod  # noqa: F401
+    from bravado_core._compat_typing import UnmarshalingMethod  # noqa: F401
+    from bravado_core.spec import Spec
+
+    T = typing.TypeVar('T')
+
 
 if six.PY3:
     long = int
 
 
 def NO_OP(x):
+    # type: (T) -> T
     return x
 
 
-def to_wire(swagger_spec, primitive_spec, value):
+def to_wire(
+    swagger_spec,  # type: Spec
+    primitive_spec,  # type: JSONDict
+    value,  # type: typing.Any
+):
+    # type: (...) -> typing.Any
     """Converts a python primitive or object to a reasonable wire
     representation if it has an associated Swagger `format`.
 
@@ -50,7 +66,12 @@ def to_wire(swagger_spec, primitive_spec, value):
         )
 
 
-def to_python(swagger_spec, primitive_spec, value):
+def to_python(
+    swagger_spec,  # type: Spec
+    primitive_spec,  # type: JSONDict
+    value,  # type: typing.Any
+):
+    # type: (...) -> typing.Any
     """Converts a value in wire format to its python representation if
      it has an associated Swagger `format`.
 
@@ -67,9 +88,15 @@ def to_python(swagger_spec, primitive_spec, value):
 
 
 class SwaggerFormat(
-    namedtuple(
+    typing.NamedTuple(
         'SwaggerFormat',
-        'format to_python to_wire validate description',
+        [
+            ('format', typing.Text),
+            ('to_python', 'UnmarshalingMethod'),
+            ('to_wire', 'MarshalingMethod'),
+            ('validate', typing.Callable[[typing.Any], typing.Any]),
+            ('description', typing.Text),
+        ],
     ),
 ):
     """User-defined format which can be registered with a
@@ -89,6 +116,7 @@ class SwaggerFormat(
 
 
 def return_true_wrapper(validate_func):
+    # type: (typing.Callable[[typing.Any], typing.Any]) -> typing.Callable[[typing.Any], bool]
     """Decorator for the SwaggerFormat.validate function to always return True.
 
     The contract for `SwaggerFormat.validate` is to raise an exception
@@ -101,6 +129,7 @@ def return_true_wrapper(validate_func):
     """
     @functools.wraps(validate_func)
     def wrapper(validatable_primitive):
+        # type: (typing.Callable[[typing.Any], typing.Any]) -> bool
         validate_func(validatable_primitive)
         return True
 
