@@ -15,6 +15,7 @@ from bravado_core.schema import is_list_like
 from bravado_core.schema import is_ref
 from bravado_core.schema import SWAGGER_PRIMITIVES
 from bravado_core.util import determine_object_type
+from bravado_core.util import normalize_uri
 from bravado_core.util import ObjectType
 from bravado_core.util import strip_xscope
 
@@ -707,9 +708,8 @@ def _post_process_spec(spec_dict, spec_resolver, on_container_callbacks):
             if json_reference is None:
                 json_reference = '{}#'.format(spec_resolver.resolution_scope)
 
-            is_reference = is_ref(fragment)
-            if is_reference:
-                ref = fragment['$ref']
+            if is_ref(fragment):
+                fragment['$ref'] = ref = normalize_uri(fragment['$ref'])
                 attach_scope(fragment, spec_resolver)
                 with spec_resolver.resolving(ref) as target:
                     if id(target) in cache:

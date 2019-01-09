@@ -92,6 +92,19 @@
                     }
                 }
             }
+        },
+        "/normalised_uri": {
+            "get": {
+                "description": "This endpoint defines 200 and 300 response code with two equivalent but different references, after flattening we do expect the same reference",
+                "responses": {
+                    "200": {
+                        "$ref": "aux.json#/responses/ok_response"
+                    },
+                    "300": {
+                        "$ref": "aux.json#responses/ok_response"
+                    }
+                }
+            }
         }
     },
     "swagger": "2.0"
