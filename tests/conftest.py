@@ -187,6 +187,31 @@ def simple_crossfer_spec(simple_crossfer_dict, simple_crossfer_abspath):
 
 
 @pytest.fixture
+def specs_with_none_in_ref_abspath(my_dir):
+    return os.path.join(my_dir, '../test-data/2.0/specs-with-None-in-ref/swagger.json')
+
+
+@pytest.fixture
+def specs_with_none_in_ref_dict(specs_with_none_in_ref_abspath):
+    return _read_json(specs_with_none_in_ref_abspath)
+
+
+@pytest.fixture
+def specs_with_none_in_ref_spec(specs_with_none_in_ref_dict, specs_with_none_in_ref_abspath):
+    return Spec.from_dict(specs_with_none_in_ref_dict, origin_url=get_url(specs_with_none_in_ref_abspath))
+
+
+@pytest.fixture
+def flattened_specs_with_none_in_ref_abspath(my_dir):
+    return os.path.join(my_dir, '../test-data/2.0/specs-with-None-in-ref/flattened.json')
+
+
+@pytest.fixture
+def flattened_specs_with_none_in_ref_dict(flattened_specs_with_none_in_ref_abspath):
+    return _read_json(flattened_specs_with_none_in_ref_abspath)
+
+
+@pytest.fixture
 def node_spec():
     """Used in tests that have recursive $refs
     """

@@ -324,3 +324,7 @@ def test_rename_definition_references(spec_flattener, spec_dict, expected_spec_d
 
 def test_referenced_and_discovered_models_are_not_lost_after_flattening(simple_crossfer_spec):
     assert simple_crossfer_spec.flattened_spec['definitions']['pong']['x-model'] == 'pong'
+
+
+def test_specs_with_none_in_ref_spec(specs_with_none_in_ref_spec, flattened_specs_with_none_in_ref_dict):
+    assert specs_with_none_in_ref_spec.flattened_spec == flattened_specs_with_none_in_ref_dict
