@@ -3,6 +3,7 @@ import copy
 from collections import Mapping
 
 from six import iteritems
+from six import string_types
 
 from bravado_core.exception import SwaggerMappingError
 
@@ -57,7 +58,7 @@ def is_ref(spec):
     :rtype: boolean
     """
     try:
-        return '$ref' in spec and is_dict_like(spec)
+        return '$ref' in spec and is_dict_like(spec) and isinstance(spec['$ref'], string_types)
     except TypeError:
         return False
 
