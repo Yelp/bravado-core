@@ -1,6 +1,11 @@
 Changelog
 =========
 
+5.10.1 (2019-01-15)
+-------------------
+- Ensure that flattening Swagger Spec with ``$ref: None`` will not cause unbounded recursion - PR #315
+- Enhance ``is_ref`` detection to recognize only objects with ``$ref`` attribute and ``string`` value as reference - PR #315
+
 5.10.0 (2018-11-20)
 -------------------
 - Add ``use_spec_url_for_base_path`` configuration option - PR #300 - Thanks DStape for your contribution!
