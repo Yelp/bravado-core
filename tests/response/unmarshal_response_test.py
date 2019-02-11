@@ -6,6 +6,7 @@ from mock import patch
 
 from bravado_core.content_type import APP_JSON
 from bravado_core.content_type import APP_MSGPACK
+from bravado_core.content_type import APP_OCTET
 from bravado_core.response import IncomingResponse
 from bravado_core.response import unmarshal_response
 
@@ -74,6 +75,17 @@ def test_text_content(empty_swagger_spec, response_spec):
         op = Mock(swagger_spec=empty_swagger_spec)
         assert 'Monday' == unmarshal_response(response, op)
 
+def test_binary_content(empty_swagger_spec, response_spec):
+    response = Mock(
+        spec=IncomingResponse,
+        status_code=200,
+        headers={'content-type': APP_OCTET},
+        raw_bytes='Monday')
+
+    with patch('bravado_core.response.get_response_spec') as m:
+        m.return_value = response_spec
+        op = Mock(swagger_spec=empty_swagger_spec)
+        assert 'Monday' == unmarshal_response(response, op)
 
 def test_skips_validation(empty_swagger_spec, response_spec):
     empty_swagger_spec.config['validate_responses'] = False

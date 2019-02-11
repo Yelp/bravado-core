@@ -4,6 +4,7 @@ import pytest
 from mock import Mock
 
 from bravado_core.content_type import APP_MSGPACK
+from bravado_core.content_type import APP_OCTET
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.operation import Operation
 from bravado_core.response import EMPTY_BODIES
@@ -141,5 +142,19 @@ def test_success_text_plain_response(minimal_swagger_spec):
         spec=OutgoingResponse,
         content_type='text/plain',
         text="Plain Text"
+    )
+    validate_response_body(op, response_spec, response)
+
+def test_success_binary_data_response(minimal_swagger_spec):
+    response_spec = {
+        'description': 'Binary Data Response',
+        'schema': {}
+    }
+    op = Operation(minimal_swagger_spec, '/foo', 'get',
+                   op_spec={'produces': [APP_OCTET]})
+    response = Mock(
+        spec=OutgoingResponse,
+        content_type=APP_OCTET,
+        raw_bytes="Binary Data"
     )
     validate_response_body(op, response_spec, response)

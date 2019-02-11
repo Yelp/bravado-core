@@ -6,3 +6,9 @@ APP_EXCEL_OPENXML = (
 APP_JSON = 'application/json'
 APP_MSGPACK = 'application/msgpack'
 APP_OCTET = 'application/octet-stream'
+
+BINARY_CONTENT_TYPES = (
+    APP_EXCEL,
+    APP_EXCEL_OPENXML,
+    APP_OCTET
+)

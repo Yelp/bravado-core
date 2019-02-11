@@ -4,6 +4,7 @@ from six import iteritems
 
 from bravado_core.content_type import APP_JSON
 from bravado_core.content_type import APP_MSGPACK
+from bravado_core.content_type import BINARY_CONTENT_TYPES
 from bravado_core.exception import MatchingResponseNotFound
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.unmarshal import unmarshal_schema_object
@@ -116,7 +117,8 @@ def unmarshal_response(response, op):
 
         return unmarshal_schema_object(op.swagger_spec, content_spec, content_value)
 
-    # TODO: Non-json response contents
+    if content_type in BINARY_CONTENT_TYPES:
+        return response.raw_bytes
     return response.text
 
 
@@ -205,6 +207,9 @@ def validate_response_body(op, response_spec, response):
     elif response.content_type.startswith("text/"):
         # TODO: support some kind of validation for text/* responses
         # TODO: but in the meantime don't raise errors for them
+        pass
+    elif response.content_type in BINARY_CONTENT_TYPES:
+        # explicitly skip validation of known binary data types
         pass
     else:
         # TODO: Expand content-type support for non-json types
