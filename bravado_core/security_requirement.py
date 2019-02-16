@@ -10,8 +10,6 @@ if typing.TYPE_CHECKING:
     from bravado_core.security_definition import SecurityDefinition  # noqa: F401
     from bravado_core.spec import Spec  # noqa: F401
 
-    T = typing.TypeVar('T')
-
 log = logging.getLogger(__name__)
 
 
