@@ -3,12 +3,10 @@ import json
 import logging
 import os.path
 import warnings
-from contextlib import closing
 
 import yaml
 from jsonref import JsonRef
 from jsonschema import FormatChecker
-from jsonschema.compat import urlopen
 from jsonschema.validators import RefResolver
 from six import iteritems
 from six import iterkeys
@@ -375,7 +373,7 @@ def build_http_handlers(http_client):
             return response.json()
 
     def read_file(uri):
-        with closing(urlopen(uri)) as fp:
+        with open(urlparse(uri).path) as fp:
             if is_yaml(uri):
                 return yaml.safe_load(fp)
             else:
