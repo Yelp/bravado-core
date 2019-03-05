@@ -14,7 +14,7 @@ docs:
 install:
 	pip install .
 
-test: install-hooks
+test:
 	tox -- tests --ignore tests/profiling
 
 tests: test
@@ -24,7 +24,7 @@ benchmark: install-hooks
 
 .PHONY: install-hooks
 install-hooks:
-	tox -e pre-commit -- install -f --install-hooks
+	tox -e pre-commit
 
 clean:
 	@rm -rf .benchmarks .tox build dist docs/build *.egg-info
