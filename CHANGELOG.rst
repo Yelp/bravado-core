@@ -1,6 +1,10 @@
 Changelog
 =========
 
+5.10.2 (2019-03-06)
+-------------------
+- Fix issue with jsonschema 3.0 compatibility on Python 2.7 - Issue #318, PR #319, 320
+
 5.10.1 (2019-01-15)
 -------------------
 - Ensure that flattening Swagger Spec with ``$ref: None`` will not cause unbounded recursion - PR #315
