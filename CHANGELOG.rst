@@ -1,6 +1,10 @@
 Changelog
 =========
 
+5.11.0 (2019-03-08)
+-------------------
+- Do not throw ``SwaggerMappingError`` in case of missing body with optional body parameter - Issue #321, PR #322
+
 5.10.2 (2019-03-06)
 -------------------
 - Fix issue with jsonschema 3.0 compatibility on Python 2.7 - Issue #318, PR #319, 320
