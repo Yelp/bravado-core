@@ -178,12 +178,19 @@ def unmarshal_param(param, request):
         else:
             raw_value = cast_param(request.form.get(param.name, default_value))
     elif location == 'body':
-        # TODO: verify content-type header
         try:
+            # TODO: verify content-type header
             raw_value = request.json()
         except ValueError as json_error:
-            raise SwaggerMappingError("Error reading request body JSON: {0}".
-                                      format(str(json_error)))
+            # If the body parameter is required then we should make sure that an exception
+            # is thrown, instead if the body parameter is optional is OK-ish to assume that
+            # raw_value is the default_value
+            if param.required:
+                raise SwaggerMappingError(
+                    "Error reading request body JSON: {0}".format(str(json_error)),
+                )
+            else:
+                raw_value = default_value
     else:
         raise SwaggerMappingError(
             "Don't know how to unmarshal_param with location {0}".

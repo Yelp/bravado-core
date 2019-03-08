@@ -3,6 +3,7 @@ import pytest
 from mock import Mock
 
 from bravado_core.exception import SwaggerMappingError
+from bravado_core.operation import Operation
 from bravado_core.request import IncomingRequest
 from bravado_core.request import unmarshal_request
 
@@ -28,10 +29,24 @@ def test_request_with_no_parameters(petstore_spec):
     assert 0 == len(request_data)
 
 
-def test_request_with_no_json(petstore_spec):
+def test_request_with_no_json_and_required_body_parameter(petstore_spec):
     request = Mock(spec=IncomingRequest, path={'petId': '1234'},
                    json=Mock(side_effect=ValueError("No json here bub")))
     op = petstore_spec.resources['pet'].operations['updatePet']
     with pytest.raises(SwaggerMappingError) as excinfo:
         unmarshal_request(request, op)
     assert "Error reading request body JSON" in str(excinfo.value)
+
+
+def test_request_with_no_json_and_optional_body_parameter(petstore_spec):
+    request = Mock(spec=IncomingRequest, path={'petId': '1234'},
+                   json=Mock(side_effect=ValueError("No json here bub")))
+    op = petstore_spec.resources['pet'].operations['updatePet']
+    op.op_spec['parameters'][0]['required'] = False
+    op = Operation.from_spec(
+        swagger_spec=petstore_spec,
+        path_name=op.path_name,
+        http_method=op.http_method,
+        op_spec=op.op_spec,
+    )
+    assert unmarshal_request(request, op) == {'body': None}
