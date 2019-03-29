@@ -1,5 +1,33 @@
 {
     "definitions": {
+        "mobile_ping": {
+            "allOf": [
+                {"$ref":  "#/definitions/ping"},
+                {
+                    "properties": {
+                        "text": {
+                            "type": "string"
+                        }
+                    }
+                }
+            ],
+            "type": "object",
+            "x-model": "mobile_ping"
+        },
+        "phone_ping": {
+            "allOf": [
+                {"$ref":  "#/definitions/ping"},
+                {
+                    "properties": {
+                        "duration": {
+                            "type": "number"
+                        }
+                    }
+                }
+            ],
+            "type": "object",
+            "x-model": "phone_ping"
+        },
         "ping": {
             "properties": {
                 "message": {
@@ -7,11 +35,16 @@
                 },
                 "pong": {
                     "$ref": "swagger.json#/definitions/pong"
+                },
+                "type": {
+                    "type": "string"
                 }
             },
             "required": [
-                "message"
+                "message",
+                "type"
             ],
+            "discriminator": "type",
             "type": "object",
             "x-model": "ping"
         },

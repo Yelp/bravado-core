@@ -316,20 +316,51 @@ class _SpecFlattener(object):
             },
         ))
 
-    def add_original_models_into_known_mappings(self):
+    def include_discriminated_models(self):
+        """
+        This function ensures that discriminated models, present on the original Spec object
+        but not directly referenced by the flattened schema (because there is no direct $ref
+        attribute) are included in the final flattened specs
+
+        NOTE: The method re-run model_discovery in case additional models have been added to
+              the flattened models
+        """
         flatten_models = {
             # schema objects might not have a "type" set so they won't be tagged as models
             definition.get(MODEL_MARKER)
             for definition in itervalues(self.known_mappings['definitions'])
         }
 
-        for model_name, model_type in iteritems(self.swagger_spec.definitions):
-            if model_name in flatten_models:
-                continue
-            model_url = urlparse(model_type._json_reference)
-            self.known_mappings['definitions'][model_url] = self.descend(
-                value=model_type._model_spec,
-            )
+        def unflattened_models():
+            for m_name, m_type in iteritems(self.swagger_spec.definitions):
+                if m_name not in flatten_models:
+                    yield m_name, m_type
+
+        def register_unflattened_models():
+            """
+            :return: True if new models have been added
+            """
+            initial_number_of_models = len(self.known_mappings['definitions'])
+
+            modified = True
+            while modified:
+                modified = False
+                for model_name, model_type in unflattened_models():
+                    if any(
+                        parent in flatten_models
+                        for parent in model_type._inherits_from
+                    ):
+                        model_url = urlparse(model_type._json_reference)
+                        flatten_models.add(model_name)
+                        self.known_mappings['definitions'][model_url] = self.descend(
+                            value=model_type._model_spec,
+                        )
+                        modified = True
+
+            return len(self.known_mappings['definitions']) != initial_number_of_models
+
+        while register_unflattened_models():
+            self.model_discovery()
 
     @cached_property
     def resolved_specs(self):
@@ -340,9 +371,10 @@ class _SpecFlattener(object):
         self.model_discovery()
 
         # Add the identified models that are not available on the know_mappings definitions
-        # This could happen in case of models that have been discovered because on
-        # '#/definitions' of a referenced file, but not directly referenced by the specs
-        self.add_original_models_into_known_mappings()
+        # but that are related, via polymorphism (discriminator), to flattened models
+        # This could happen in case discriminated models are not directly referenced by the specs
+        # but is fair to assume that they should be on the final artifact due to polymorphism
+        self.include_discriminated_models()
 
         for mapping_key, mappings in iteritems(self.known_mappings):
             self.warn_if_uri_clash_on_same_marshaled_representation(mappings)

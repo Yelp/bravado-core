@@ -8,10 +8,6 @@
         }
       ],
       "x-model": "model1"
-    },
-    "model2": {
-      "type": "object",
-      "x-model": "model2"
     }
   },
   "info": {

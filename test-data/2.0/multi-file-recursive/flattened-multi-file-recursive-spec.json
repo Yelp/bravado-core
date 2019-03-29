@@ -1,61 +1,53 @@
 {
   "definitions": {
-    "inline_model": {
-      "type": "object",
-      "x-model": "inline_model"
-    },
-    "model_with_allOf_recursive": {
+    "mobile_ping": {
       "allOf": [
         {
-          "properties": {
-            "pong": {
-              "$ref": "#/definitions/pong"
-            }
-          }
+          "$ref": "#/definitions/ping"
         },
         {
           "properties": {
-            "ping": {
-              "$ref": "#/definitions/ping"
+            "text": {
+              "type": "string"
             }
           }
         }
       ],
-      "x-model": "model_with_allOf_recursive"
+      "type": "object",
+      "x-model": "mobile_ping"
     },
-    "not_referenced_models_in_not_directly_linked_file": {
-      "properties": {
-        "inline_model": {
-          "$ref": "#/definitions/inline_model"
+    "phone_ping": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ping"
+        },
+        {
+          "properties": {
+            "duration": {
+              "type": "number"
+            }
+          }
         }
-      },
+      ],
       "type": "object",
-      "x-model": "not_referenced_models_in_not_directly_linked_file"
-    },
-    "not_used": {
-      "type": "object",
-      "x-model": "not_used"
-    },
-    "not_used_remote_reference": {
-      "properties": {
-        "random_number": {
-          "$ref": "#/definitions/random_integer"
-        }
-      },
-      "type": "object",
-      "x-model": "not_used_remote_reference"
+      "x-model": "phone_ping"
     },
     "ping": {
+      "discriminator": "type",
       "properties": {
         "message": {
           "type": "string"
         },
         "pong": {
           "$ref": "#/definitions/pong"
+        },
+        "type": {
+          "type": "string"
         }
       },
       "required": [
-        "message"
+        "message",
+        "type"
       ],
       "type": "object",
       "x-model": "ping"
@@ -74,21 +66,6 @@
       ],
       "type": "object",
       "x-model": "pong"
-    },
-    "random_integer": {
-      "properties": {
-        "max-value": {
-          "type": "integer"
-        },
-        "min-value": {
-          "type": "integer"
-        },
-        "value": {
-          "type": "integer"
-        }
-      },
-      "type": "object",
-      "x-model": "random_integer"
     }
   },
   "info": {
