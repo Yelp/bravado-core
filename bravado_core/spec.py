@@ -121,7 +121,7 @@ class Spec(object):
         self.resolver = RefResolver(
             base_uri=origin_url or '',
             referrer=self.spec_dict,
-            handlers=build_http_handlers(http_client),
+            handlers=self.get_ref_handlers(),
         )
 
         # spec dict used to build resources, in case internally_dereference_refs config is enabled
@@ -183,7 +183,7 @@ class Spec(object):
             self.resolver = validator20.validate_spec(
                 spec_dict=self.spec_dict,
                 spec_url=self.origin_url or '',
-                http_handlers=build_http_handlers(self.http_client),
+                http_handlers=self.get_ref_handlers(),
             )
 
     def build(self):
@@ -207,6 +207,17 @@ class Spec(object):
 
         self.api_url = build_api_serving_url(self.spec_dict, self.origin_url,
                                              **build_api_kwargs)
+
+    def get_ref_handlers(self):
+        """Get mapping from URI schemes to handlers that takes a URI.
+
+        The handlers (callables) are used by the RefResolver to retrieve
+        remote specification $refs.
+
+        :returns: dict like {'http': callable, 'https': callable}
+        :rtype: dict
+        """
+        return build_http_handlers(self.http_client)
 
     def _force_deref(self, ref_dict):
         """Dereference ref_dict (if it is indeed a ref) and return what the
@@ -357,7 +368,7 @@ def build_http_handlers(http_client):
 
     :param http_client: http_client with a request() method
 
-    :returns: dict like {'http': callable, 'https': callable)
+    :returns: dict like {'http': callable, 'https': callable}
     """
     def download(uri):
         log.debug('Downloading %s', uri)
