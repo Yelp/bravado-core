@@ -16,6 +16,29 @@
       "type": "object",
       "x-model": "mobile_ping"
     },
+    "model_with_allOf_recursive": {
+      "allOf": [
+        {
+          "properties": {
+            "pong": {
+              "$ref": "#/definitions/pong"
+            }
+          }
+        },
+        {
+          "properties": {
+            "ping": {
+              "$ref": "#/definitions/ping"
+            }
+          }
+        }
+      ],
+      "x-model": "model_with_allOf_recursive"
+    },
+    "not_used": {
+      "type": "object",
+      "x-model": "not_used"
+    },
     "phone_ping": {
       "allOf": [
         {

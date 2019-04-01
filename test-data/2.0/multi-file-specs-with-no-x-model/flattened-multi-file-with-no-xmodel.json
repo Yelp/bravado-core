@@ -1,5 +1,14 @@
 {
   "definitions": {
+    "object": {
+      "properties": {
+        "property": {
+          "$ref": "#/definitions/referenced_object"
+        }
+      },
+      "type": "object",
+      "x-model": "object"
+    },
     "referenced_object": {
       "type": "object",
       "x-model": "referenced_object"

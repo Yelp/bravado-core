@@ -10,6 +10,7 @@ from six import iteritems
 from six import iterkeys
 from six import itervalues
 from six.moves.urllib.parse import ParseResult
+from six.moves.urllib.parse import urldefrag
 from six.moves.urllib.parse import urlparse
 from six.moves.urllib.parse import urlunparse
 from swagger_spec_validator.ref_validators import in_scope
@@ -362,6 +363,14 @@ class _SpecFlattener(object):
         while register_unflattened_models():
             self.model_discovery()
 
+    def include_root_definition(self):
+        self.known_mappings['definitions'].update({
+            urlparse(v._json_reference): self.descend(value=v._model_spec)
+            for v in itervalues(self.swagger_spec.definitions)
+            # urldefrag(url)[0] returns the url without the fragment, it is guaranteed to be present
+            if urldefrag(v._json_reference)[0] == self.swagger_spec.origin_url
+        })
+
     @cached_property
     def resolved_specs(self):
         # Create internal copy of spec_dict to avoid external dict pollution
@@ -369,6 +378,9 @@ class _SpecFlattener(object):
 
         # Perform model discovery of the newly identified definitions
         self.model_discovery()
+
+        # Ensure that all the root definitions, even if not referenced, are not lost due to flattening.
+        self.include_root_definition()
 
         # Add the identified models that are not available on the know_mappings definitions
         # but that are related, via polymorphism (discriminator), to flattened models
