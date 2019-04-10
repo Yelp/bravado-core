@@ -1,6 +1,12 @@
 Changelog
 =========
 
+5.12.0 (2019-04-10)
+-------------------
+- Allow ``Spec`` subclasses to provide their own ``$ref`` handlers - PR #323
+- Fix model name and model discovery bugs, better logic for including models in flattened spec - PR #324
+- Add deepcopy support to ``Model`` instances - PR #325
+
 5.11.0 (2019-03-08)
 -------------------
 - Do not throw ``SwaggerMappingError`` in case of missing body with optional body parameter - Issue #321, PR #322
