@@ -589,7 +589,7 @@ def create_model_type(swagger_spec, model_name, model_spec, bases=(Model,), json
     inherits_from = []
     if 'allOf' in model_spec:
         for schema in model_spec['allOf']:
-            inherited_name = swagger_spec.deref(schema).get(MODEL_MARKER, None)
+            inherited_name = _get_model_name(swagger_spec.deref(schema))
             if inherited_name:
                 inherits_from.append(inherited_name)
 
@@ -813,7 +813,7 @@ def _run_post_processing(spec):
         if uri == spec.origin_url or re.match(r'http://json-schema.org/draft-\d+/schema', uri)
     }
     additional_uri = _get_unprocessed_uri(spec, processed_uris)
-    while additional_uri:
+    while additional_uri is not None:
         # Post process each referenced specs to identify models in definitions of linked files
         with spec.resolver.in_scope(additional_uri):
             _call_post_process_spec(

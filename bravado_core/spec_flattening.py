@@ -10,6 +10,7 @@ from six import iteritems
 from six import iterkeys
 from six import itervalues
 from six.moves.urllib.parse import ParseResult
+from six.moves.urllib.parse import urldefrag
 from six.moves.urllib.parse import urlparse
 from six.moves.urllib.parse import urlunparse
 from swagger_spec_validator.ref_validators import in_scope
@@ -316,20 +317,59 @@ class _SpecFlattener(object):
             },
         ))
 
-    def add_original_models_into_known_mappings(self):
+    def include_discriminated_models(self):
+        """
+        This function ensures that discriminated models, present on the original Spec object
+        but not directly referenced by the flattened schema (because there is no direct $ref
+        attribute) are included in the final flattened specs
+
+        NOTE: The method re-run model_discovery in case additional models have been added to
+              the flattened models
+        """
         flatten_models = {
             # schema objects might not have a "type" set so they won't be tagged as models
             definition.get(MODEL_MARKER)
             for definition in itervalues(self.known_mappings['definitions'])
         }
 
-        for model_name, model_type in iteritems(self.swagger_spec.definitions):
-            if model_name in flatten_models:
-                continue
-            model_url = urlparse(model_type._json_reference)
-            self.known_mappings['definitions'][model_url] = self.descend(
-                value=model_type._model_spec,
-            )
+        def unflattened_models():
+            for m_name, m_type in iteritems(self.swagger_spec.definitions):
+                if m_name not in flatten_models:
+                    yield m_name, m_type
+
+        def register_unflattened_models():
+            """
+            :return: True if new models have been added
+            """
+            initial_number_of_models = len(self.known_mappings['definitions'])
+
+            modified = True
+            while modified:
+                modified = False
+                for model_name, model_type in unflattened_models():
+                    if any(
+                        parent in flatten_models
+                        for parent in model_type._inherits_from
+                    ):
+                        model_url = urlparse(model_type._json_reference)
+                        flatten_models.add(model_name)
+                        self.known_mappings['definitions'][model_url] = self.descend(
+                            value=model_type._model_spec,
+                        )
+                        modified = True
+
+            return len(self.known_mappings['definitions']) != initial_number_of_models
+
+        while register_unflattened_models():
+            self.model_discovery()
+
+    def include_root_definition(self):
+        self.known_mappings['definitions'].update({
+            urlparse(v._json_reference): self.descend(value=v._model_spec)
+            for v in itervalues(self.swagger_spec.definitions)
+            # urldefrag(url)[0] returns the url without the fragment, it is guaranteed to be present
+            if urldefrag(v._json_reference)[0] == self.swagger_spec.origin_url
+        })
 
     @cached_property
     def resolved_specs(self):
@@ -339,10 +379,14 @@ class _SpecFlattener(object):
         # Perform model discovery of the newly identified definitions
         self.model_discovery()
 
+        # Ensure that all the root definitions, even if not referenced, are not lost due to flattening.
+        self.include_root_definition()
+
         # Add the identified models that are not available on the know_mappings definitions
-        # This could happen in case of models that have been discovered because on
-        # '#/definitions' of a referenced file, but not directly referenced by the specs
-        self.add_original_models_into_known_mappings()
+        # but that are related, via polymorphism (discriminator), to flattened models
+        # This could happen in case discriminated models are not directly referenced by the specs
+        # but is fair to assume that they should be on the final artifact due to polymorphism
+        self.include_discriminated_models()
 
         for mapping_key, mappings in iteritems(self.known_mappings):
             self.warn_if_uri_clash_on_same_marshaled_representation(mappings)

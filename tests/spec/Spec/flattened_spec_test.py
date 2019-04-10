@@ -4,6 +4,7 @@ import functools
 
 import mock
 import pytest
+from six.moves.urllib.parse import urljoin
 from six.moves.urllib.parse import urlparse
 from swagger_spec_validator import validator20
 
@@ -12,17 +13,22 @@ from bravado_core.spec import CONFIG_DEFAULTS
 from bravado_core.spec import Spec
 from bravado_core.spec_flattening import _marshal_uri
 from bravado_core.spec_flattening import _SpecFlattener
+from tests.conftest import get_url
 
 
-@pytest.fixture
-def spec_flattener(minimal_swagger_spec):
+def _spec_flattener(swagger_spec):
     return _SpecFlattener(
-        swagger_spec=minimal_swagger_spec,
+        swagger_spec=swagger_spec,
         marshal_uri_function=functools.partial(
             _marshal_uri,
             origin_uri=None,
         ),
     )
+
+
+@pytest.fixture
+def spec_flattener(minimal_swagger_spec):
+    return _spec_flattener(minimal_swagger_spec)
 
 
 @mock.patch('bravado_core.spec_flattening.warnings')
@@ -328,3 +334,65 @@ def test_referenced_and_discovered_models_are_not_lost_after_flattening(simple_c
 
 def test_specs_with_none_in_ref_spec(specs_with_none_in_ref_spec, flattened_specs_with_none_in_ref_dict):
     assert specs_with_none_in_ref_spec.flattened_spec == flattened_specs_with_none_in_ref_dict
+
+
+def test_include_root_definition(minimal_swagger_dict, minimal_swagger_abspath):
+    minimal_swagger_dict['definitions'] = {
+        'not_used_model': {
+            'type': 'object',
+        },
+    }
+    spec_flattener = _spec_flattener(Spec.from_dict(minimal_swagger_dict, origin_url=get_url(minimal_swagger_abspath)))
+
+    spec_flattener.include_root_definition()
+
+    fragment_uri = urljoin('file:', '{}#/definitions/not_used_model'.format(minimal_swagger_abspath))
+    assert spec_flattener.known_mappings['definitions'] == {
+        urlparse(fragment_uri): minimal_swagger_dict['definitions']['not_used_model'],
+    }
+
+
+def test_include_discriminated_models(minimal_swagger_dict, minimal_swagger_abspath):
+    minimal_swagger_dict['definitions'] = {
+        'base': {
+            'type': 'object',
+            'properties': {
+                'discriminator_field': {'type': 'string'},
+            },
+            'discriminator': 'discriminator_field',
+            'required': ['discriminator_field'],
+        },
+        'not_used_extend_base': {
+            'allOf': [
+                {'$ref': '#/definitions/base'},
+                {
+                    'properties': {
+                        'text': {'type': 'string'},
+                    },
+                },
+            ],
+        },
+    }
+    spec_flattener = _spec_flattener(Spec.from_dict(minimal_swagger_dict, origin_url=get_url(minimal_swagger_abspath)))
+
+    base_fragment_uri = urljoin('file:', '{}#/definitions/base'.format(minimal_swagger_abspath))
+    spec_flattener.known_mappings['definitions'] = {
+        urlparse(base_fragment_uri): minimal_swagger_dict['definitions']['base'],
+    }
+
+    spec_flattener.include_discriminated_models()
+
+    not_used_extend_base_fragment_uri = urljoin(
+        'file:',
+        '{}#/definitions/not_used_extend_base'.format(minimal_swagger_abspath),
+    )
+    assert spec_flattener.known_mappings['definitions'] == {
+        urlparse(base_fragment_uri): minimal_swagger_dict['definitions']['base'],
+        urlparse(not_used_extend_base_fragment_uri): {
+            'allOf': [
+                mock.ANY,  # not checking the exact content as it contains a marshaled reference and x-scope
+                minimal_swagger_dict['definitions']['not_used_extend_base']['allOf'][1]
+            ],
+            'x-model': 'not_used_extend_base',
+        },
+    }
