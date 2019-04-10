@@ -3,6 +3,7 @@ import abc
 import functools
 import logging
 import re
+from copy import deepcopy
 from warnings import warn
 
 import six
@@ -426,6 +427,10 @@ class Model(object):
             if attr_name in self
         ]
         return "{0}({1})".format(self.__class__.__name__, ', '.join(s))
+
+    def __deepcopy__(self, memodict={}):
+        """Deep copy all properties, but not metadata like the Swagger or Model spec attributes."""
+        return self.__class__(**deepcopy(self.__dict))
 
     @property
     def _additional_props(self):

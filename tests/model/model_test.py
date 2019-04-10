@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from copy import deepcopy
+
 import pytest
 from mock import Mock
 
@@ -97,6 +99,15 @@ def test_model_is_instance_inherits_from(cat_swagger_spec, pet_type, pet_spec, c
     assert isinstance(cat, cat_type)
     assert isinstance(cat, pet_type)
     assert isinstance(cat, new_pet_type)
+
+
+def test_model_deepcopy(user_type, user_kwargs):
+    user = user_type(**user_kwargs)
+    user_copy = deepcopy(user)
+
+    assert isinstance(user_copy, user_type)
+    assert user == user_copy
+    assert user._as_dict() == user_copy._as_dict()
 
 
 @pytest.mark.parametrize(
