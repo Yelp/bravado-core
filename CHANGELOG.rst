@@ -1,6 +1,10 @@
 Changelog
 =========
 
+5.12.1 (2019-??-??)
+-------------------
+- Prevent ``DeprecationWarning`` in Python 3.7
+
 5.12.0 (2019-04-10)
 -------------------
 - Allow ``Spec`` subclasses to provide their own ``$ref`` handlers - PR #323

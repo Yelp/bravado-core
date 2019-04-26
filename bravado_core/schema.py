@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 import copy
 try:
-    from collections import Mapping
-except ImportError:  # Python 3.8+
     from collections.abc import Mapping
+except ImportError:  # Python 3.2 or older
+    from collections import Mapping
 
 from six import iteritems
 from six import string_types
