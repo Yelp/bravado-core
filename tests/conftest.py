@@ -5,6 +5,7 @@ import pytest
 import simplejson as json
 import yaml
 from six.moves.urllib import parse as urlparse
+from six.moves.urllib.request import url2pathname
 
 from bravado_core.spec import Spec
 
@@ -29,7 +30,7 @@ def get_url(absolute_path):
 
 
 def get_url_path(absolute_url):
-    return urlparse.urlparse(absolute_url).path
+    return url2pathname(urlparse.urlparse(absolute_url).path)
 
 
 @pytest.fixture
