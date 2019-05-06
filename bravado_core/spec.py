@@ -13,6 +13,7 @@ from six import iterkeys
 from six.moves import range
 from six.moves.urllib.parse import urlparse
 from six.moves.urllib.parse import urlunparse
+from six.moves.urllib.request import url2pathname
 from swagger_spec_validator import validator20
 from swagger_spec_validator.ref_validators import in_scope
 
@@ -384,7 +385,7 @@ def build_http_handlers(http_client):
             return response.json()
 
     def read_file(uri):
-        with open(urlparse(uri).path, mode='rb') as fp:
+        with open(url2pathname(urlparse(uri).path), mode='rb') as fp:
             if is_yaml(uri):
                 return yaml.safe_load(fp)
             else:
