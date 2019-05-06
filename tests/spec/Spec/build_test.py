@@ -3,6 +3,7 @@ import pytest
 from mock import Mock
 from mock import patch
 from six import iterkeys
+from six.moves.urllib.request import pathname2url
 from swagger_spec_validator.common import SwaggerValidationError
 
 from bravado_core.spec import Spec
@@ -96,7 +97,7 @@ def test_build_using_spec_url_for_base_path(petstore_abspath, petstore_dict, use
         assert spec.api_url == base_url + '/'
     else:
         petstore_path = get_url_path(origin_url)
-        assert spec.api_url == base_url + petstore_path
+        assert spec.api_url == '{}/{}'.format(base_url, pathname2url(petstore_path).lstrip('/'))
 
 
 def test_not_object_x_models_are_not_generating_models(minimal_swagger_dict):
