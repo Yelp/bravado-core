@@ -13,6 +13,8 @@ from six.moves.urllib.parse import ParseResult
 from six.moves.urllib.parse import urldefrag
 from six.moves.urllib.parse import urlparse
 from six.moves.urllib.parse import urlunparse
+from six.moves.urllib.request import pathname2url
+from six.moves.urllib.request import url2pathname
 from swagger_spec_validator.ref_validators import in_scope
 
 from bravado_core.model import model_discovery
@@ -92,9 +94,9 @@ def _marshal_uri(target_uri, origin_uri):
 
         # Masquerade the absolute file path on the "local" server using
         # relative paths from the root swagger spec file
-        spec_dir = os.path.dirname(origin_uri.path)
+        spec_dir = os.path.dirname(url2pathname(origin_uri.path))
         scheme = 'lfile'
-        path = os.path.relpath(path, spec_dir)
+        path = pathname2url(os.path.relpath(url2pathname(path), spec_dir))
         marshalled_target = urlunparse((scheme, netloc, path, params, query, fragment))
 
     for src, dst in iteritems(MARSHAL_REPLACEMENT_PATTERNS):

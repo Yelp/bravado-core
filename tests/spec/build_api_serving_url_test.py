@@ -28,8 +28,10 @@ def test_override_basepath(origin_url):
 
 
 def test_use_spec_url_True():
-    api_serving_url = build_api_serving_url({},
-                                            use_spec_url_for_base_path=True)
+    api_serving_url = build_api_serving_url(
+        {},
+        use_spec_url_for_base_path=True,
+    )
     assert 'http://localhost/' == api_serving_url
 
 
