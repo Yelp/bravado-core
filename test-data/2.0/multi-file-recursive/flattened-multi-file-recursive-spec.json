@@ -96,7 +96,7 @@
     "version": "1.0.0"
   },
   "parameters": {
-    "lfile:aux.json|..parameters..UserAgent": {
+    "lfile:auxiliary.json|..parameters..UserAgent": {
       "description": "HTTP Header [User Agent](https://tools.ietf.org/html/rfc1945#section-10.15)",
       "in": "header",
       "minLength": 1,
@@ -127,7 +127,7 @@
           "$ref": "#/parameters/lfile:swagger.json|..parameters..AcceptLanguage"
         },
         {
-          "$ref": "#/parameters/lfile:aux.json|..parameters..UserAgent"
+          "$ref": "#/parameters/lfile:auxiliary.json|..parameters..UserAgent"
         }
       ]
     },
@@ -162,14 +162,14 @@
       "get": {
         "responses": {
           "200": {
-            "$ref": "#/responses/lfile:aux.json|..responses..ok_response"
+            "$ref": "#/responses/lfile:auxiliary.json|..responses..ok_response"
           }
         }
       }
     }
   },
   "responses": {
-    "lfile:aux.json|..responses..ok_response": {
+    "lfile:auxiliary.json|..responses..ok_response": {
       "description": "A HTTP/200 response retrieved with $ref"
     }
   },
