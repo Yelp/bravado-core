@@ -82,7 +82,7 @@
                     "$ref": "swagger.json#/parameters/AcceptLanguage"
                 },
                 {
-                    "$ref": "aux.json#/parameters/UserAgent"
+                    "$ref": "auxiliary.json#/parameters/UserAgent"
                 }
             ]
         }

@@ -4,7 +4,6 @@ import os
 import pytest
 import simplejson as json
 import yaml
-from six.moves.urllib import parse as urlparse
 
 from bravado_core.response import get_response_spec
 from bravado_core.spec import Spec
@@ -16,13 +15,6 @@ def test_definitions_not_present(minimal_swagger_dict):
     del minimal_swagger_dict['definitions']
     spec = Spec.from_dict(minimal_swagger_dict)
     assert 0 == len(spec.definitions)
-
-
-def get_spec_json_and_url(rel_url):
-    my_dir = os.path.abspath(os.path.dirname(__file__))
-    abs_path = os.path.join(my_dir, rel_url)
-    with open(abs_path) as f:
-        return json.loads(f.read()), urlparse.urljoin('file:', abs_path)
 
 
 def test_complicated_refs(simple_crossfer_spec):
@@ -73,28 +65,27 @@ def test_ref_to_external_path_with_ref_to_local_model():
     my_dir = os.path.abspath(os.path.dirname(__file__))
 
     swagger_json_path = os.path.join(
-        my_dir,
-        '../../test-data/2.0/x-model/swagger.json')
+        os.path.dirname(os.path.dirname(my_dir)),
+        'test-data', '2.0', 'x-model', 'swagger.json')
 
     with open(swagger_json_path) as f:
         swagger_json_content = json.loads(f.read())
 
-    swagger_json_url = urlparse.urljoin('file:', swagger_json_path)
+    swagger_json_url = get_url(swagger_json_path)
     spec = Spec.from_dict(swagger_json_content, swagger_json_url)
     assert 'Pet' in spec.definitions
 
 
-def test_yaml_files():
-    my_dir = os.path.abspath(os.path.dirname(__file__))
-
+def test_yaml_files(my_dir):
     swagger_yaml_path = os.path.join(
-        my_dir,
-        '../../test-data/2.0/yaml/swagger.yml')
+        os.path.dirname(my_dir),
+        'test-data', '2.0', 'yaml', 'swagger.yml',
+    )
 
     with open(swagger_yaml_path) as f:
         swagger_yaml_content = yaml.load(f)
 
-    swagger_yaml_url = urlparse.urljoin('file:', swagger_yaml_path)
+    swagger_yaml_url = get_url(swagger_yaml_path)
     spec = Spec.from_dict(swagger_yaml_content, swagger_yaml_url)
     assert 'Pet' in spec.definitions
 
@@ -129,7 +120,10 @@ def test_spec_with_dereffed_and_tagged_models_works(minimal_swagger_dict):
 
 @pytest.fixture
 def multi_file_multi_directory_abspath(my_dir):
-    return os.path.abspath(os.path.join(my_dir, '../test-data/2.0/multi-file-multi-directory-spec/swagger.yaml'))
+    return os.path.join(
+        os.path.dirname(my_dir),
+        'test-data', '2.0', 'multi-file-multi-directory-spec', 'swagger.yaml',
+    )
 
 
 @pytest.fixture
@@ -141,8 +135,8 @@ def multi_file_multi_directory_dict(multi_file_multi_directory_abspath):
 @pytest.fixture
 def flattened_multi_file_multi_directory_abspath(my_dir):
     return os.path.join(
-        my_dir,
-        '../test-data/2.0/multi-file-multi-directory-spec/flattened-multi-file-multi-directory-spec.json',
+        os.path.dirname(my_dir),
+        'test-data', '2.0', 'multi-file-multi-directory-spec', 'flattened-multi-file-multi-directory-spec.json',
     )
 
 

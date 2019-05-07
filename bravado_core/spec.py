@@ -202,12 +202,11 @@ class Spec(object):
 
         self.resources = build_resources(self)
 
-        build_api_kwargs = {}
-        if self.config['use_spec_url_for_base_path']:
-            build_api_kwargs['use_spec_url_for_base_path'] = True
-
-        self.api_url = build_api_serving_url(self.spec_dict, self.origin_url,
-                                             **build_api_kwargs)
+        self.api_url = build_api_serving_url(
+            spec_dict=self.spec_dict,
+            origin_url=self.origin_url,
+            use_spec_url_for_base_path=self.config['use_spec_url_for_base_path'],
+        )
 
     def get_ref_handlers(self):
         """Get mapping from URI schemes to handlers that takes a URI.
@@ -401,8 +400,9 @@ def build_http_handlers(http_client):
     }
 
 
-def build_api_serving_url(spec_dict, origin_url=None, preferred_scheme=None,
-                          use_spec_url_for_base_path=False):
+def build_api_serving_url(
+    spec_dict, origin_url=None, preferred_scheme=None, use_spec_url_for_base_path=False,
+):
     """The URL used to service API requests does not necessarily have to be the
     same URL that was used to retrieve the API spec_dict.
 
@@ -463,6 +463,7 @@ def build_api_serving_url(spec_dict, origin_url=None, preferred_scheme=None,
     base_path = '/'
     if use_spec_url_for_base_path:
         base_path = origin.path
+
     path = spec_dict.get('basePath', base_path)
     scheme = pick_a_scheme(spec_dict.get('schemes'))
     return urlunparse((scheme, netloc, path, None, None, None))

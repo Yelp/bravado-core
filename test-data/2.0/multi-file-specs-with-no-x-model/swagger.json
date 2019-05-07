@@ -23,7 +23,7 @@
     "object": {
       "properties": {
         "property": {
-          "$ref": "aux.json#/definitions/referenced_object"
+          "$ref": "auxiliary.json#/definitions/referenced_object"
         }
       },
       "type": "object"

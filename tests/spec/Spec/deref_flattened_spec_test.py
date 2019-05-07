@@ -2,11 +2,11 @@
 import pytest
 from six import iterkeys
 from six import itervalues
-from six.moves.urllib_parse import urljoin
 
 from bravado_core.schema import is_dict_like
 from bravado_core.schema import is_list_like
 from bravado_core.spec import Spec
+from tests.conftest import get_url
 
 
 def _get_model(spec_dict, model_name):
@@ -75,7 +75,7 @@ def test_build_spec_object_with_recursive_specs_and_fully_dereference(
     # Test pass if spec object is built
     assert Spec.from_dict(
         spec_dict=multi_file_recursive_dict,
-        origin_url=urljoin('file:', multi_file_recursive_abspath),
+        origin_url=get_url(multi_file_recursive_abspath),
         config={
             'internally_dereference_refs': True,
         }

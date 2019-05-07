@@ -5,6 +5,7 @@ import pytest
 import simplejson as json
 import yaml
 from six.moves.urllib import parse as urlparse
+from six.moves.urllib.request import pathname2url
 from six.moves.urllib.request import url2pathname
 
 from bravado_core.spec import Spec
@@ -26,7 +27,7 @@ def _read_yaml(json_path):
 
 
 def get_url(absolute_path):
-    return urlparse.urljoin('file:', absolute_path)
+    return urlparse.urljoin('file:', pathname2url(absolute_path))
 
 
 def get_url_path(absolute_url):
@@ -40,7 +41,7 @@ def my_dir():
 
 @pytest.fixture
 def minimal_swagger_abspath(my_dir):
-    return os.path.join(my_dir, '../test-data/2.0/minimal_swagger/swagger.json')
+    return os.path.join(os.path.dirname(my_dir), 'test-data', '2.0', 'minimal_swagger', 'swagger.json')
 
 
 @pytest.fixture
@@ -58,7 +59,7 @@ def minimal_swagger_spec(minimal_swagger_dict, minimal_swagger_abspath):
 
 @pytest.fixture
 def composition_abspath(my_dir):
-    return os.path.join(my_dir, '../test-data/2.0/composition/swagger.json')
+    return os.path.join(os.path.dirname(my_dir), 'test-data', '2.0', 'composition', 'swagger.json')
 
 
 @pytest.fixture
@@ -76,7 +77,7 @@ def composition_spec(request, composition_dict, composition_abspath):
 
 @pytest.fixture
 def multi_file_recursive_abspath(my_dir):
-    return os.path.join(my_dir, '../test-data/2.0/multi-file-recursive/swagger.json')
+    return os.path.join(os.path.dirname(my_dir), 'test-data', '2.0', 'multi-file-recursive', 'swagger.json')
 
 
 @pytest.fixture
@@ -91,7 +92,10 @@ def multi_file_recursive_spec(multi_file_recursive_dict, multi_file_recursive_ab
 
 @pytest.fixture
 def flattened_multi_file_recursive_abspath(my_dir):
-    return os.path.join(my_dir, '../test-data/2.0/multi-file-recursive/flattened-multi-file-recursive-spec.json')
+    return os.path.join(
+        os.path.dirname(my_dir),
+        'test-data', '2.0', 'multi-file-recursive', 'flattened-multi-file-recursive-spec.json',
+    )
 
 
 @pytest.fixture
@@ -101,7 +105,7 @@ def flattened_multi_file_recursive_dict(flattened_multi_file_recursive_abspath):
 
 @pytest.fixture
 def petstore_abspath(my_dir):
-    return os.path.join(my_dir, '../test-data/2.0/petstore/swagger.json')
+    return os.path.join(os.path.dirname(my_dir), 'test-data', '2.0', 'petstore', 'swagger.json')
 
 
 @pytest.fixture
@@ -116,7 +120,7 @@ def petstore_spec(petstore_dict, petstore_abspath):
 
 @pytest.fixture
 def polymorphic_abspath(my_dir):
-    return os.path.join(my_dir, '../test-data/2.0/polymorphic_specs/swagger.json')
+    return os.path.join(os.path.dirname(my_dir), 'test-data', '2.0', 'polymorphic_specs', 'swagger.json')
 
 
 @pytest.fixture
@@ -131,7 +135,7 @@ def polymorphic_spec(polymorphic_dict):
 
 @pytest.fixture
 def security_abspath(my_dir):
-    return os.path.join(my_dir, '../test-data/2.0/security/swagger.json')
+    return os.path.join(os.path.dirname(my_dir), 'test-data', '2.0', 'security', 'swagger.json')
 
 
 @pytest.fixture
@@ -146,7 +150,7 @@ def security_spec(security_dict):
 
 @pytest.fixture
 def multi_file_with_no_xmodel_abspath(my_dir):
-    return os.path.join(my_dir, '../test-data/2.0/multi-file-specs-with-no-x-model/swagger.json')
+    return os.path.join(os.path.dirname(my_dir), 'test-data', '2.0', 'multi-file-specs-with-no-x-model', 'swagger.json')
 
 
 @pytest.fixture
@@ -162,8 +166,8 @@ def multi_file_with_no_xmodel_spec(multi_file_with_no_xmodel_dict, multi_file_wi
 @pytest.fixture
 def flattened_multi_file_with_no_xmodel_abspath(my_dir):
     return os.path.join(
-        my_dir,
-        '../test-data/2.0/multi-file-specs-with-no-x-model/flattened-multi-file-with-no-xmodel.json',
+        os.path.dirname(my_dir),
+        'test-data', '2.0', 'multi-file-specs-with-no-x-model', 'flattened-multi-file-with-no-xmodel.json',
     )
 
 
@@ -174,7 +178,7 @@ def flattened_multi_file_with_no_xmodel_dict(flattened_multi_file_with_no_xmodel
 
 @pytest.fixture
 def simple_crossfer_abspath(my_dir):
-    return os.path.join(my_dir, '../test-data/2.0/simple_crossref/swagger.json')
+    return os.path.join(os.path.dirname(my_dir), 'test-data', '2.0', 'simple_crossref', 'swagger.json')
 
 
 @pytest.fixture
@@ -189,7 +193,7 @@ def simple_crossfer_spec(simple_crossfer_dict, simple_crossfer_abspath):
 
 @pytest.fixture
 def specs_with_none_in_ref_abspath(my_dir):
-    return os.path.join(my_dir, '../test-data/2.0/specs-with-None-in-ref/swagger.json')
+    return os.path.join(os.path.dirname(my_dir), 'test-data', '2.0', 'specs-with-None-in-ref', 'swagger.json')
 
 
 @pytest.fixture
@@ -204,7 +208,7 @@ def specs_with_none_in_ref_spec(specs_with_none_in_ref_dict, specs_with_none_in_
 
 @pytest.fixture
 def flattened_specs_with_none_in_ref_abspath(my_dir):
-    return os.path.join(my_dir, '../test-data/2.0/specs-with-None-in-ref/flattened.json')
+    return os.path.join(os.path.dirname(my_dir), 'test-data', '2.0', 'specs-with-None-in-ref', 'flattened.json')
 
 
 @pytest.fixture

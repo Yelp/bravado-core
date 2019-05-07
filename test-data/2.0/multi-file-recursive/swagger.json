@@ -12,7 +12,7 @@
                 {
                     "properties": {
                         "ping": {
-                            "$ref": "aux.json#/definitions/ping"
+                            "$ref": "auxiliary.json#/definitions/ping"
                         }
                     }
                 }
@@ -29,7 +29,7 @@
                     "type": "string"
                 },
                 "ping": {
-                    "$ref": "aux.json#/definitions/ping"
+                    "$ref": "auxiliary.json#/definitions/ping"
                 }
             },
             "required": [
@@ -55,7 +55,7 @@
     },
     "paths": {
         "/endpoint_defined_on_other_file": {
-            "$ref": "aux.json#/paths/endpoint_defined_on_other_file"
+            "$ref": "auxiliary.json#/paths/endpoint_defined_on_other_file"
         },
         "/recursive/response": {
             "get": {
@@ -63,7 +63,7 @@
                     "200": {
                         "description": "A recursive response",
                         "schema": {
-                            "$ref": "aux.json#/definitions/ping"
+                            "$ref": "auxiliary.json#/definitions/ping"
                         }
                     }
                 }
@@ -77,7 +77,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "aux.json#/definitions/ping"
+                                "$ref": "auxiliary.json#/definitions/ping"
                             }
                         }
                     }
@@ -88,7 +88,7 @@
             "get": {
                 "responses": {
                     "200": {
-                        "$ref": "aux.json#/responses/ok_response"
+                        "$ref": "auxiliary.json#/responses/ok_response"
                     }
                 }
             }

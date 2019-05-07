@@ -4,7 +4,6 @@ import functools
 
 import mock
 import pytest
-from six.moves.urllib.parse import urljoin
 from six.moves.urllib.parse import urlparse
 from swagger_spec_validator import validator20
 
@@ -346,7 +345,7 @@ def test_include_root_definition(minimal_swagger_dict, minimal_swagger_abspath):
 
     spec_flattener.include_root_definition()
 
-    fragment_uri = urljoin('file:', '{}#/definitions/not_used_model'.format(minimal_swagger_abspath))
+    fragment_uri = '{}#/definitions/not_used_model'.format(get_url(minimal_swagger_abspath))
     assert spec_flattener.known_mappings['definitions'] == {
         urlparse(fragment_uri): minimal_swagger_dict['definitions']['not_used_model'],
     }
@@ -375,17 +374,15 @@ def test_include_discriminated_models(minimal_swagger_dict, minimal_swagger_absp
     }
     spec_flattener = _spec_flattener(Spec.from_dict(minimal_swagger_dict, origin_url=get_url(minimal_swagger_abspath)))
 
-    base_fragment_uri = urljoin('file:', '{}#/definitions/base'.format(minimal_swagger_abspath))
+    base_fragment_uri = '{}#/definitions/base'.format(get_url(minimal_swagger_abspath))
     spec_flattener.known_mappings['definitions'] = {
         urlparse(base_fragment_uri): minimal_swagger_dict['definitions']['base'],
     }
 
     spec_flattener.include_discriminated_models()
 
-    not_used_extend_base_fragment_uri = urljoin(
-        'file:',
-        '{}#/definitions/not_used_extend_base'.format(minimal_swagger_abspath),
-    )
+    not_used_extend_base_fragment_uri = '{}#/definitions/not_used_extend_base'.format(get_url(minimal_swagger_abspath))
+
     assert spec_flattener.known_mappings['definitions'] == {
         urlparse(base_fragment_uri): minimal_swagger_dict['definitions']['base'],
         urlparse(not_used_extend_base_fragment_uri): {
