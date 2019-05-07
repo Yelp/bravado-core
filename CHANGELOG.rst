@@ -1,9 +1,10 @@
 Changelog
 =========
 
-5.12.1 (2019-??-??)
+5.12.1 (2019-05.07)
 -------------------
-- Prevent ``DeprecationWarning`` in Python 3.7
+- Prevent ``DeprecationWarning`` in Python 3.7 - PR #326
+- Ensure compatibility with Windows Platform - PR #327, #328
 
 5.12.0 (2019-04-10)
 -------------------
