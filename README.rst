@@ -1,9 +1,6 @@
 .. image:: https://img.shields.io/travis/Yelp/bravado-core/master.svg?label=Linux+Build
   :target: https://travis-ci.org/Yelp/bravado-core?branch=master
 
-.. image:: https://img.shields.io/appveyor/ci/Yelp/bravado-core/master.svg?label=Windows+Build
-  :target: https://travis-ci.org/Yelp/bravado-core?branch=master
-
 .. image:: https://img.shields.io/coveralls/Yelp/bravado-core.svg
   :target: https://coveralls.io/r/Yelp/bravado-core
 
