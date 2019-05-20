@@ -54,6 +54,24 @@ class cached_property(object):
         return value
 
 
+class lazy_class_attribute(object):
+    """
+    An attribute that is computed once per class.
+
+    WARNING: once the attribute has been evaluated is not possible to modify it
+    """
+
+    def __init__(self, func):
+        self.__doc__ = getattr(func, '__doc__')
+        self.func = func
+        super(lazy_class_attribute, self).__init__()
+
+    def __get__(self, obj, cls):
+        value = self.func(cls)
+        setattr(cls, self.func.__name__, value)
+        return value
+
+
 def memoize_by_id(func):
     cache = func.cache = {}
     _CACHE_MISS = object()

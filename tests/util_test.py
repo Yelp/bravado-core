@@ -7,6 +7,7 @@ from six import add_metaclass
 from bravado_core.util import AliasKeyDict
 from bravado_core.util import cached_property
 from bravado_core.util import determine_object_type
+from bravado_core.util import lazy_class_attribute
 from bravado_core.util import memoize_by_id
 from bravado_core.util import ObjectType
 from bravado_core.util import sanitize_name
@@ -62,6 +63,26 @@ def test_cached_property_in_metaclasses():
     del Class.class_property
     assert Class.class_property == 2
     assert Class.calls == 2
+
+
+def test_class_cached_property():
+    class Class(object):
+        calls = 0
+
+        @lazy_class_attribute
+        def prop(cls):
+            cls.calls += 1
+            return cls.calls
+
+    class_instance_1 = Class()
+    assert class_instance_1.calls == 0
+    assert class_instance_1.prop == 1
+    assert class_instance_1.calls == 1
+
+    class_instance_2 = Class()
+    assert class_instance_2.calls == 1
+    assert class_instance_2.prop == 1
+    assert class_instance_2.calls == 1
 
 
 def test_memoize_by_id_decorator():
