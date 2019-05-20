@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
+import abc
+
 import pytest
+from six import add_metaclass
 
 from bravado_core.util import AliasKeyDict
 from bravado_core.util import cached_property
@@ -34,6 +37,31 @@ def test_cached_property():
     del class_instance.property_1
     assert class_instance.property_1 == 2
     assert class_instance.calls == 2
+
+
+def test_cached_property_in_metaclasses():
+    class CustomType(abc.ABCMeta):
+        calls = 0
+        @cached_property
+        def class_property(cls):
+            cls.calls += 1
+            return cls.calls
+
+    @add_metaclass(CustomType)
+    class Class:
+        pass
+
+    assert Class.class_property == 1
+    assert Class.calls == 1
+
+    # If property is called twice no calls are received from the method
+    assert Class.class_property == 1
+    assert Class.calls == 1
+
+    # If property is deleted then the method is called again
+    del Class.class_property
+    assert Class.class_property == 2
+    assert Class.calls == 2
 
 
 def test_memoize_by_id_decorator():
