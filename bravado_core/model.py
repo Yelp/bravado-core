@@ -234,7 +234,7 @@ class ModelMeta(abc.ABCMeta):
         if not isinstance(type(instance), type(self)):
             return False
 
-        if not hasattr(self, '_model_spec'):
+        if type(self) == ModelMeta:
             # This is the base Model class
             return True
 
@@ -319,6 +319,14 @@ class Model(object):
     # been possible to use the instance's __dict__ itself except that then
     # __getattribute__ would have to have been overridden instead of
     # __getattr__.
+
+    # Use slots to reduce memory footprint of the Model instance
+    __slots__ = (
+        '_json_reference',
+        '_swagger_spec',
+        '_model_spec',
+        '_Model__dict',  # Note the name mangling!
+    )
 
     def __init__(self, **kwargs):
         """Initialize from property values in keyword arguments.
