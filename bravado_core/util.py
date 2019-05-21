@@ -48,9 +48,25 @@ class cached_property(object):
     def __get__(self, obj, cls):
         if obj is None:
             return self
+        value = obj.__dict__[self.func.__name__] = self.func(obj)
+        return value
 
-        value = self.func(obj)
-        setattr(obj, self.func.__name__, value)
+
+class lazy_class_attribute(object):
+    """
+    An attribute that is computed once per class.
+
+    WARNING: once the attribute has been evaluated is not possible to modify it
+    """
+
+    def __init__(self, func):
+        self.__doc__ = getattr(func, '__doc__')
+        self.func = func
+        super(lazy_class_attribute, self).__init__()
+
+    def __get__(self, obj, cls):
+        value = self.func(cls)
+        setattr(cls, self.func.__name__, value)
         return value
 
 

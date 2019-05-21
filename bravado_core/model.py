@@ -6,7 +6,7 @@ import re
 from copy import deepcopy
 from warnings import warn
 
-import six
+from six import add_metaclass
 from six import iteritems
 from swagger_spec_validator.ref_validators import attach_scope
 
@@ -16,6 +16,7 @@ from bravado_core.schema import is_list_like
 from bravado_core.schema import is_ref
 from bravado_core.schema import SWAGGER_PRIMITIVES
 from bravado_core.util import determine_object_type
+from bravado_core.util import lazy_class_attribute
 from bravado_core.util import ObjectType
 from bravado_core.util import strip_xscope
 
@@ -233,7 +234,7 @@ class ModelMeta(abc.ABCMeta):
         if not isinstance(type(instance), type(self)):
             return False
 
-        if not hasattr(self, '_model_spec'):
+        if type(self) == ModelMeta:
             # This is the base Model class
             return True
 
@@ -246,7 +247,7 @@ class ModelMeta(abc.ABCMeta):
         return self.__name__ in type(instance)._inherits_from
 
 
-@six.add_metaclass(ModelMeta)
+@add_metaclass(ModelMeta)
 class Model(object):
     """Base class for Swagger models.
 
@@ -258,7 +259,7 @@ class Model(object):
     the names of attributes used in the Python implementation of the model
     (methods, etc.). The solution here is to have all non-property attributes
     making up the public API of this class prefixed by a single underscore
-    (this is done with the :func:`collections.namedtuple` type factory, which
+    (this is how :func:`collections.namedtuple` type factory works, which
     also uses property values with arbitrary names). There may still be name
     conflicts but only if the property name also begins with an underscore,
     which is uncommon. Truly private attributes are prefixed with double
@@ -280,14 +281,36 @@ class Model(object):
 
     .. attribute:: _model_spec
 
-        Class attribute that must be assigned on subclasses. JSON-like dict
-        that describes the model.
+        Class attribute that must be assigned on subclasses.
+        JSON-like dict that describes the model.
 
     .. attribute:: _properties
 
-        Class attribute that must be assigned on subclasses. Dict mapping
-        property names to their specs. See
+        Class attribute that must be assigned on subclasses.
+        Dict mapping property names to their specs. See
         :func:`bravado_core.schema.collapsed_properties`.
+
+    .. attribute:: _inherits_from
+
+        Class attribute that must be assigned on subclasses.
+        List of the models from which the current model inherits from.
+        The list will be non-empty only for schemas with allOf
+
+
+    .. attribute:: _deny_additional_properties
+
+        Class attribute that must be assigned on subclasses.
+        Flag that specifies if the model does or does not allow additional
+        properties. NOTE: If _deny_additional_properties is set to True
+        then any operation (get, set or delete) of undefined properties
+        will raise an AttributeError or a KeyError
+
+    .. attribute:: _include_missing_properties
+
+        Class attribute that must be assigned on subclasses.
+        Flag that specified if the model will hold the content of all the
+        parameters even if not explicitly passed. NOTE: the automatically
+        added parameters will be added with `None` value.
     """
 
     # Implementation details:
@@ -296,6 +319,14 @@ class Model(object):
     # been possible to use the instance's __dict__ itself except that then
     # __getattribute__ would have to have been overridden instead of
     # __getattr__.
+
+    # Use slots to reduce memory footprint of the Model instance
+    __slots__ = (
+        '_json_reference',
+        '_swagger_spec',
+        '_model_spec',
+        '_Model__dict',  # Note the name mangling!
+    )
 
     def __init__(self, **kwargs):
         """Initialize from property values in keyword arguments.
@@ -319,7 +350,7 @@ class Model(object):
         # Additional property names in dct
         additional = set(dct).difference(self._properties)
 
-        if additional and not self._model_spec.get('additionalProperties', True):
+        if additional and self._deny_additional_properties:
             raise AttributeError(
                 "Model {0} does not have attributes for: {1}"
                 .format(type(self), list(additional))
@@ -333,6 +364,31 @@ class Model(object):
         # we've got additionalProperties to set on the model
         for attr_name in additional:
             self.__dict[attr_name] = dct[attr_name]
+
+    @lazy_class_attribute
+    def _properties(self):
+        return collapsed_properties(self._model_spec, self._swagger_spec)
+
+    @lazy_class_attribute
+    def _inherits_from(self):
+        inherits_from_generator = (
+            _get_model_name(self._swagger_spec.deref(schema))
+            for schema in self._model_spec.get('allOf', [])
+        )
+
+        return [
+            inherits_from
+            for inherits_from in inherits_from_generator
+            if inherits_from is not None
+        ]
+
+    @lazy_class_attribute
+    def _deny_additional_properties(self):
+        return self._model_spec.get('additionalProperties') is False
+
+    @lazy_class_attribute
+    def _include_missing_properties(self):
+        return self._swagger_spec.config['include_missing_properties']
 
     def __contains__(self, obj):
         """Has a property set (including additional)."""
@@ -489,7 +545,7 @@ class Model(object):
         model = object.__new__(cls)
         model.__init_from_dict(
             dct=dct,
-            include_missing_properties=cls._swagger_spec.config['include_missing_properties'],
+            include_missing_properties=cls._include_missing_properties,
         )
         return model
 
@@ -586,19 +642,10 @@ def create_model_type(swagger_spec, model_name, model_spec, bases=(Model,), json
     :rtype: type
     """
 
-    inherits_from = []
-    if 'allOf' in model_spec:
-        for schema in model_spec['allOf']:
-            inherited_name = _get_model_name(swagger_spec.deref(schema))
-            if inherited_name:
-                inherits_from.append(inherited_name)
-
     return type(str(model_name), bases, dict(
         __doc__=ModelDocstring(),
         _swagger_spec=swagger_spec,
         _model_spec=model_spec,
-        _properties=collapsed_properties(model_spec, swagger_spec),
-        _inherits_from=inherits_from,
         _json_reference=json_reference,
     ))
 
