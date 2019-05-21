@@ -2,12 +2,12 @@
 import copy
 import inspect
 import re
-from functools import wraps
 
 from enum import Enum
 from six import iteritems
 from six import iterkeys
 
+from bravado_core._compat import wraps
 from bravado_core.schema import is_dict_like
 from bravado_core.schema import is_list_like
 
