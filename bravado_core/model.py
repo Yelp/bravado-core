@@ -294,13 +294,13 @@ class Model(object):
 
         Class attribute that must be assigned on subclasses.
         List of the models from which the current model inherits from.
-        (The list will be not empty only for schemas with allOf)
+        The list will be non-empty only for schemas with allOf
 
 
     .. attribute:: _deny_additional_properties
 
         Class attribute that must be assigned on subclasses.
-        Flag that specifies if the model can or cannot allow additional
+        Flag that specifies if the model does or does not allow additional
         properties. NOTE: If _deny_additional_properties is set to True
         then any operation (get, set or delete) of undefined properties
         will raise an AttributeError or a KeyError
