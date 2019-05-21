@@ -63,6 +63,15 @@ def perf_petstore_spec(request, petstore_spec):
     )
 
 
+@pytest.fixture
+def findByStatusReponseSchema(perf_petstore_spec):
+    parts = ['paths', '/pet/findByStatus', 'get', 'responses', '200', 'schema']
+    result = perf_petstore_spec._internal_spec_dict
+    for part in parts:
+        result = perf_petstore_spec.deref(result[part])
+    return result
+
+
 @pytest.fixture(
     params=[True, False],
     ids=['validate', 'not_validate'],
