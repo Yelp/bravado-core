@@ -254,12 +254,11 @@ def test_unmarshal_model_polymorphic_specs(polymorphic_spec):
             {'property': '2018-05-21T00:00:00+00:00', 'other': '2018-05-21'},
             {'property': datetime.datetime(2018, 5, 21, tzinfo=tzutc()), 'other': '2018-05-21'},
         ),
-        pytest.param(
+        (
             False,
             {'property': '2018-05-21T00:00:00+00:00', 'other': '2018-05-21'},
             # Unmarshaling does not do validation
             {'property': datetime.datetime(2018, 5, 21, tzinfo=tzutc()), 'other': '2018-05-21'},
-            marks=pytest.mark.xfail(reason='Unmarshaling should not perform validation, but this is the case for now'),
         ),
         (
             {'type': 'string', 'format': 'date'},
