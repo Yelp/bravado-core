@@ -335,12 +335,15 @@ class Model(object):
         """
         self.__init_from_dict(kwargs)
 
-    def __init_from_dict(self, dct, include_missing_properties=True):
+    def __init_from_dict(self, dct, include_missing_properties=None):
         """Initialize model from a dictionary of property values.
 
         :param dict dct: Dictionary of property values by name. They need not
             actually exist in :attr:`_properties`.
         """
+
+        if include_missing_properties is None:
+            include_missing_properties = self._include_missing_properties
 
         # Create the attribute value dictionary
         # We need bypass the overloaded __setattr__ method
@@ -367,6 +370,10 @@ class Model(object):
             self.__dict[attr_name] = dct[attr_name]
 
     @lazy_class_attribute
+    def _required_properties(self):
+        return self._model_spec.get('required', [])
+
+    @lazy_class_attribute
     def _properties(self):
         return collapsed_properties(self._model_spec, self._swagger_spec)
 
@@ -390,6 +397,20 @@ class Model(object):
     @lazy_class_attribute
     def _include_missing_properties(self):
         return self._swagger_spec.config['include_missing_properties']
+
+    @lazy_class_attribute
+    def _use_models(cls):
+        return cls._swagger_spec.config['use_models']
+
+    @lazy_class_attribute
+    def _additional_properties_schema(cls):
+        if cls._deny_additional_properties:
+            return None
+        additional_properties_schema = cls._model_spec.get('additionalProperties', {})
+        if additional_properties_schema is True:
+            return {}
+        else:
+            return additional_properties_schema
 
     def __contains__(self, obj):
         """Has a property set (including additional)."""
@@ -581,8 +602,8 @@ class Model(object):
         :type val: dict
         :rtype: .Model
         """
-        from bravado_core.unmarshal import unmarshal_model
-        return unmarshal_model(cls._swagger_spec, cls._model_spec, val)
+        from bravado_core.unmarshal import unmarshal_schema_object
+        return unmarshal_schema_object(cls._swagger_spec, cls._model_spec, val)
 
     @classmethod
     def isinstance(cls, obj):
