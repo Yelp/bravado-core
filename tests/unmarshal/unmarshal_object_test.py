@@ -531,7 +531,7 @@ def test_unmarshal_object_polymorphic_specs(polymorphic_spec):
                 'type': 'Cat',
                 'color': 'white',
             },
-        ]
+        ],
     }
 
 
@@ -558,12 +558,11 @@ def test_unmarshal_object_polymorphic_specs(polymorphic_spec):
             {'property': '2018-05-21T00:00:00+00:00', 'other': '2018-05-21'},
             {'property': datetime.datetime(2018, 5, 21, tzinfo=tzutc()), 'other': '2018-05-21'},
         ),
-        pytest.param(
+        (
             False,
             {'property': '2018-05-21T00:00:00+00:00', 'other': '2018-05-21'},
             # Unmarshaling does not do validation
             {'property': datetime.datetime(2018, 5, 21, tzinfo=tzutc()), 'other': '2018-05-21'},
-            marks=pytest.mark.xfail(reason='Unmarshaling should not perform validation, but this is the case for now'),
         ),
         (
             {'type': 'string', 'format': 'date'},
@@ -587,8 +586,7 @@ def test_unmarshal_object_with_additional_properties(minimal_swagger_dict, addit
         MyModel_spec['additionalProperties'] = additionalProperties
     minimal_swagger_dict['definitions']['MyModel'] = MyModel_spec
     spec = Spec.from_dict(minimal_swagger_dict)
-    MyModel = spec.definitions['MyModel']
-    assert MyModel._unmarshal(value)._as_dict() == expected
+    assert unmarshal_object(spec, MyModel_spec, value) == expected
 
 
 def test_default_with_format(empty_swagger_spec):

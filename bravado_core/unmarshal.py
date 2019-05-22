@@ -153,16 +153,9 @@ def unmarshal_object(swagger_spec, object_spec, object_value):
     discriminator = object_spec.get('discriminator')
     if discriminator is not None:
         child_model_name = object_value.get(discriminator, None)
-        child_model_type = swagger_spec.definitions.get(child_model_name, _NOT_FOUND)
-        if child_model_type is _NOT_FOUND:
-            # TODO: should this be here? not think so
-            raise SwaggerMappingError(
-                'Unknown model {0} when trying to unmarshal {1}. '
-                'Value of discriminator {2} did not match any definitions.'
-                .format(child_model_name, object_value, discriminator)
-            )
-        elif child_model_type._model_spec != object_spec:
-            # The discriminator field does targets a different model, let's unmarshal it
+        child_model_type = swagger_spec.definitions.get(child_model_name, None)
+        if child_model_type and child_model_type._model_spec != object_spec:
+            # The discriminator field does targets a different model, let's unmarshal with it
             return unmarshal_schema_object(swagger_spec, child_model_type._model_spec, object_value)
 
     result = {}
@@ -221,16 +214,11 @@ def unmarshal_model(swagger_spec, model_spec, model_value):
     discriminator = model_spec.get('discriminator')
     if discriminator is not None:
         child_model_name = model_value.get(discriminator, None)
-        if child_model_name not in swagger_spec.definitions:
-            raise SwaggerMappingError(
-                'Unknown model {0} when trying to unmarshal {1}. '
-                'Value of {2}\'s discriminator {3} did not match any definitions.'.format(
-                    child_model_name, model_value, model_name, discriminator,
-                ),
-            )
-        model_type = swagger_spec.definitions.get(child_model_name)
-        model_spec = model_type._model_spec
+        child_model_type = swagger_spec.definitions.get(child_model_name, None)
+        if child_model_type and child_model_type != model_type:
+            # The discriminator field does targets a different model, let's unmarshal with it
+            return unmarshal_model(swagger_spec, child_model_type._model_spec, model_value)
 
-    model_as_dict = unmarshal_object(swagger_spec, model_spec, model_value)
+    model_as_dict = unmarshal_object(swagger_spec, model_type._model_spec, model_value)
     model_instance = model_type._from_dict(model_as_dict)
     return model_instance
