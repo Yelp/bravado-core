@@ -84,7 +84,7 @@ def test_yaml_files(my_dir):
     )
 
     with open(swagger_yaml_path) as f:
-        swagger_yaml_content = yaml.load(f)
+        swagger_yaml_content = yaml.safe_load(f)
 
     swagger_yaml_url = get_url(swagger_yaml_path)
     spec = Spec.from_dict(swagger_yaml_content, swagger_yaml_url)

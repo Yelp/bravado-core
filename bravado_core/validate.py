@@ -5,12 +5,12 @@ as the single point of entry for validations should we need to further
 customize the behavior.
 """
 import sys
-from functools import wraps
 
 import jsonschema
 from six import itervalues
 from six import reraise
 
+from bravado_core._compat import wraps
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.exception import SwaggerSecurityValidationError
 from bravado_core.model import is_object

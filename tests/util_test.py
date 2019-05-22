@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import mock
 import pytest
 
 from bravado_core.util import AliasKeyDict
@@ -7,6 +8,7 @@ from bravado_core.util import determine_object_type
 from bravado_core.util import lazy_class_attribute
 from bravado_core.util import memoize_by_id
 from bravado_core.util import ObjectType
+from bravado_core.util import RecursiveCallException
 from bravado_core.util import sanitize_name
 from bravado_core.util import strip_xscope
 
@@ -55,6 +57,19 @@ def test_class_cached_property():
     assert class_instance_2.calls == 1
     assert class_instance_2.prop == 1
     assert class_instance_2.calls == 1
+
+
+def test_memoize_by_id_decorator_recursive_call():
+    calls = []
+
+    @memoize_by_id
+    def function(a):
+        calls.append(a)
+        return function(a)
+
+    with pytest.raises(RecursiveCallException):
+        function(mock.sentinel.A)
+    assert calls == [mock.sentinel.A]
 
 
 def test_memoize_by_id_decorator():

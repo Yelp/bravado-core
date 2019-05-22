@@ -14,6 +14,9 @@ from bravado_core.schema import is_list_like
 from bravado_core.schema import SWAGGER_PRIMITIVES
 
 
+_NOT_FOUND = object()
+
+
 def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
     """Unmarshal the value using the given schema object specification.
 
@@ -80,7 +83,10 @@ def unmarshal_primitive(swagger_spec, primitive_spec, value):
     :raises: SwaggerMappingError
     """
     if value is None:
-        return handle_null_value(swagger_spec, primitive_spec)
+        value = handle_null_value(swagger_spec, primitive_spec)
+
+    if value is None:
+        return None
 
     value = formatter.to_python(swagger_spec, primitive_spec, value)
     return value
@@ -96,7 +102,10 @@ def unmarshal_array(swagger_spec, array_spec, array_value):
     :raises: SwaggerMappingError
     """
     if array_value is None:
-        return handle_null_value(swagger_spec, array_spec)
+        array_value = handle_null_value(swagger_spec, array_spec)
+
+    if array_value is None:
+        return None
 
     if not is_list_like(array_value):
         raise SwaggerMappingError(
@@ -124,7 +133,10 @@ def unmarshal_object(swagger_spec, object_spec, object_value):
     deref = swagger_spec.deref
 
     if object_value is None:
-        return handle_null_value(swagger_spec, object_spec)
+        object_value = handle_null_value(swagger_spec, object_spec)
+
+    if object_value is None:
+        return None
 
     if not is_dict_like(object_value):
         raise SwaggerMappingError(
@@ -136,6 +148,15 @@ def unmarshal_object(swagger_spec, object_spec, object_value):
     object_spec = deref(object_spec)
     required_fields = object_spec.get('required', [])
     properties = collapsed_properties(object_spec, swagger_spec)
+
+    # Check if object_spec is polymorphic
+    discriminator = object_spec.get('discriminator')
+    if discriminator is not None:
+        child_model_name = object_value.get(discriminator, None)
+        child_model_type = swagger_spec.definitions.get(child_model_name, None)
+        if child_model_type and child_model_type._model_spec != object_spec:
+            # The discriminator field does targets a different model, let's unmarshal with it
+            return unmarshal_schema_object(swagger_spec, child_model_type._model_spec, object_value)
 
     result = {}
     for k, v in iteritems(object_value):
@@ -193,16 +214,11 @@ def unmarshal_model(swagger_spec, model_spec, model_value):
     discriminator = model_spec.get('discriminator')
     if discriminator is not None:
         child_model_name = model_value.get(discriminator, None)
-        if child_model_name not in swagger_spec.definitions:
-            raise SwaggerMappingError(
-                'Unknown model {0} when trying to unmarshal {1}. '
-                'Value of {2}\'s discriminator {3} did not match any definitions.'.format(
-                    child_model_name, model_value, model_name, discriminator,
-                ),
-            )
-        model_type = swagger_spec.definitions.get(child_model_name)
-        model_spec = model_type._model_spec
+        child_model_type = swagger_spec.definitions.get(child_model_name, None)
+        if child_model_type and child_model_type != model_type:
+            # The discriminator field does targets a different model, let's unmarshal with it
+            return unmarshal_model(swagger_spec, child_model_type._model_spec, model_value)
 
-    model_as_dict = unmarshal_object(swagger_spec, model_spec, model_value)
+    model_as_dict = unmarshal_object(swagger_spec, model_type._model_spec, model_value)
     model_instance = model_type._from_dict(model_as_dict)
     return model_instance

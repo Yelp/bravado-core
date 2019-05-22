@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import copy
+import datetime
 
 import pytest
+from dateutil.tz import tzutc
 
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.spec import Spec
@@ -371,36 +373,38 @@ def test_recursive_ref_with_depth_1(recursive_swagger_spec):
         {'$ref': '#/definitions/Node'},
         {'name': 'foo'},
     )
-    assert result == {'name': 'foo', 'child': None}
+    assert result == {'name': 'foo', 'date': None, 'child': None}
 
 
 def test_recursive_ref_with_depth_n(recursive_swagger_spec):
-    value = {
-        'name': 'foo',
-        'child': {
-            'name': 'bar',
-            'child': {
-                'name': 'baz',
-            },
-        },
-    }
     result = unmarshal_object(
         recursive_swagger_spec,
         {'$ref': '#/definitions/Node'},
-        value,
+        {
+            'name': 'foo',
+            'date': '2019-05-01',
+            'child': {
+                'name': 'bar',
+                'date': '2019-05-02',
+                'child': {
+                    'name': 'baz',
+                },
+            },
+        },
     )
-
-    expected = {
+    assert result == {
         'name': 'foo',
+        'date': datetime.date(2019, 5, 1),
         'child': {
             'name': 'bar',
+            'date': datetime.date(2019, 5, 2),
             'child': {
                 'name': 'baz',
+                'date': None,
                 'child': None,
             },
         },
     }
-    assert result == expected
 
 
 def nullable_spec_factory(required, nullable, property_type):
@@ -514,4 +518,90 @@ def test_unmarshal_object_polymorphic_specs(polymorphic_spec):
         object_value=list_of_pets_dict,
     )
 
-    assert list_of_pets_dict == pet_list
+    assert pet_list == {
+        'number_of_pets': 2,
+        'list': [
+            {
+                'name': 'a dog name',
+                'type': 'Dog',
+                'birth_date': datetime.date(2017, 3, 9),
+            },
+            {
+                'name': 'a cat name',
+                'type': 'Cat',
+                'color': 'white',
+            },
+        ],
+    }
+
+
+@pytest.mark.parametrize(
+    'additionalProperties, value, expected',
+    [
+        (
+            None,
+            {},
+            {'property': None},
+        ),
+        (
+            None,
+            {'property': '2018-05-21T00:00:00+00:00'},
+            {'property': datetime.datetime(2018, 5, 21, tzinfo=tzutc())},
+        ),
+        (
+            {},
+            {'property': '2018-05-21T00:00:00+00:00', 'other': '2018-05-21'},
+            {'property': datetime.datetime(2018, 5, 21, tzinfo=tzutc()), 'other': '2018-05-21'},
+        ),
+        (
+            True,
+            {'property': '2018-05-21T00:00:00+00:00', 'other': '2018-05-21'},
+            {'property': datetime.datetime(2018, 5, 21, tzinfo=tzutc()), 'other': '2018-05-21'},
+        ),
+        (
+            False,
+            {'property': '2018-05-21T00:00:00+00:00', 'other': '2018-05-21'},
+            # Unmarshaling does not do validation
+            {'property': datetime.datetime(2018, 5, 21, tzinfo=tzutc()), 'other': '2018-05-21'},
+        ),
+        (
+            {'type': 'string', 'format': 'date'},
+            {'property': '2018-05-21T00:00:00+00:00', 'other': '2018-05-21'},
+            {'property': datetime.datetime(2018, 5, 21, tzinfo=tzutc()), 'other': datetime.date(2018, 5, 21)},
+        ),
+    ],
+)
+def test_unmarshal_object_with_additional_properties(minimal_swagger_dict, additionalProperties, value, expected):
+    MyModel_spec = {
+        'properties': {
+            'property': {
+                'type': 'string',
+                'format': 'date-time',
+            },
+        },
+        'type': 'object',
+        'x-model': 'MyModel',
+    }
+    if additionalProperties is not None:
+        MyModel_spec['additionalProperties'] = additionalProperties
+    minimal_swagger_dict['definitions']['MyModel'] = MyModel_spec
+    spec = Spec.from_dict(minimal_swagger_dict)
+    assert unmarshal_object(spec, MyModel_spec, value) == expected
+
+
+def test_default_with_format(empty_swagger_spec):
+    result = unmarshal_object(
+        empty_swagger_spec,
+        {
+            'type': 'object',
+            'properties': {
+                'item': {
+                    'type': 'string',
+                    'format': 'date',
+                },
+            },
+            'default': {'item': '2019-05-22'},
+        },
+        None,
+    )
+    assert {'item': datetime.date(2019, 5, 22)} == result
