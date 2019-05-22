@@ -13,4 +13,5 @@ email_address_format = SwaggerFormat(
     to_wire=lambda x: x,
     to_python=lambda x: x,
     validate=validate_email_address,
-    description='blah')
+    description='blah',
+)

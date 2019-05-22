@@ -36,7 +36,7 @@ def test_visits_refs_only_once():
     spec_dict = {
         'ref_one': {'$ref': '#/bar'},
         'ref_two': {'$ref': '#/bar'},
-        'bar': 'baz'
+        'bar': 'baz',
     }
     swagger_spec = Spec(spec_dict)
 

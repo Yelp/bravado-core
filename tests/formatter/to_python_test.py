@@ -27,19 +27,22 @@ def test_no_format_returns_value(minimal_swagger_spec):
 def test_date(minimal_swagger_spec):
     string_spec = {'type': 'string', 'format': 'date'}
     assert date(2015, 4, 1) == to_python(
-        minimal_swagger_spec, string_spec, '2015-04-01')
+        minimal_swagger_spec, string_spec, '2015-04-01',
+    )
 
 
 def test_datetime(minimal_swagger_spec):
     string_spec = {'type': 'string', 'format': 'date-time'}
     result = to_python(
-        minimal_swagger_spec, string_spec, '2015-03-22T13:19:54')
+        minimal_swagger_spec, string_spec, '2015-03-22T13:19:54',
+    )
     assert datetime(2015, 3, 22, 13, 19, 54) == result
 
 
 @patch('bravado_core.spec.warnings.warn')
 def test_no_registered_format_returns_value_as_is_and_issues_warning(
-        mock_warn, minimal_swagger_spec):
+        mock_warn, minimal_swagger_spec,
+):
     string_spec = {'type': 'string', 'format': 'bar'}
     assert 'baz' == to_python(minimal_swagger_spec, string_spec, 'baz')
     assert mock_warn.call_count == 1
@@ -95,7 +98,7 @@ def test_byte(minimal_swagger_spec):
 
 def test_ref(minimal_swagger_dict):
     minimal_swagger_dict['definitions']['Int32'] = {
-        'type': 'integer', 'format': 'int32'
+        'type': 'integer', 'format': 'int32',
     }
     int_ref_spec = {'$ref': '#/definitions/Int32'}
     swagger_spec = Spec.from_dict(minimal_swagger_dict)
@@ -120,7 +123,7 @@ def test_override(minimal_swagger_dict):
         to_wire=lambda x: str(x),
         to_python=lambda x: Byte(x),
         validate=lambda x: isinstance(x, str),
-        description=None
+        description=None,
     )
 
     number_spec = {'type': 'string', 'format': 'byte'}

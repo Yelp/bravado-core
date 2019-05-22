@@ -78,5 +78,5 @@ def test_build_spec_object_with_recursive_specs_and_fully_dereference(
         origin_url=get_url(multi_file_recursive_abspath),
         config={
             'internally_dereference_refs': True,
-        }
+        },
     ).api_url.startswith('file:')

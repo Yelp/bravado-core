@@ -26,7 +26,7 @@ class SecurityRequirement(object):
                     '{security} not defined in {swagger_path}'.format(
                         swagger_path='/securityDefinitions',
                         security=security_definition,
-                    )
+                    ),
                 )
 
     @property

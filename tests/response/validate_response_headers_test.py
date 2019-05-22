@@ -14,7 +14,8 @@ def op(minimal_swagger_spec):
         minimal_swagger_spec,
         '/foo',
         'get',
-        op_spec={'produces': ['application/json']})
+        op_spec={'produces': ['application/json']},
+    )
 
 
 def test_no_headers(op):
@@ -39,8 +40,8 @@ def test_valid_headers(op):
         'description': 'I have one header',
         'headers': {
             'X-Foo': {
-                'type': 'string'
-            }
+                'type': 'string',
+            },
         },
     }
     response = Mock(spec=OutgoingResponse, headers={'X-Foo': 'bar'})
@@ -53,8 +54,8 @@ def test_invalid_headers(op):
         'description': 'I have one header',
         'headers': {
             'X-Foo': {
-                'type': 'integer'
-            }
+                'type': 'integer',
+            },
         },
     }
     response = Mock(spec=OutgoingResponse, headers={'X-Foo': 'bar'})

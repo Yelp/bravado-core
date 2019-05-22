@@ -62,8 +62,10 @@ def build_resources(swagger_spec):
             if http_method.startswith('x-') or http_method == 'parameters':
                 continue
 
-            op = Operation.from_spec(swagger_spec, path_name, http_method,
-                                     op_spec)
+            op = Operation.from_spec(
+                swagger_spec, path_name, http_method,
+                op_spec,
+            )
             tags = deref(op_spec.get('tags', []))
 
             if not tags:
@@ -104,8 +106,10 @@ class Resource(object):
         """
         op = self.operations.get(item)
         if not op:
-            raise AttributeError(u"Resource '%s' has no operation '%s'" %
-                                 (self.name, item))
+            raise AttributeError(
+                u"Resource '%s' has no operation '%s'" %
+                (self.name, item),
+            )
         return op
 
     def __dir__(self):

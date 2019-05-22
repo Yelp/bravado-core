@@ -19,7 +19,7 @@ def test_security_definition_property_extraction(security_dict, security_spec):
         ('example3', 'get_example3', [{'apiKey1': [], 'apiKey2': []}, {'apiKey3': []}]),
         ('example4', 'get_example4', [{'oauth2': ['write:resource']}]),
         ('example5', 'get_example5', []),
-    ]
+    ],
 )
 def test_security_scopes(security_spec, resource, operation, expected_scopes):
     def _get_operation():

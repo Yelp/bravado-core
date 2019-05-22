@@ -34,7 +34,7 @@ def test_bless_models_short_circuit_if_no_dict_like_container(mock_is_dict_like,
         {'type': 'string'},  # is_object(model_spec)
         {'in': 'body', 'name': 'body', 'type': 'string'},  # determine_object_type(model_spec)
         {'x-model': 'string'},  # deref(model_spec.get('x-model'))
-    )
+    ),
 )
 @mock.patch('bravado_core.model._get_model_name')
 def test_bless_models_gets_out_if_initial_pre_conditions_are_not_met(

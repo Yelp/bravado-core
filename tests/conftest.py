@@ -67,10 +67,12 @@ def composition_dict(composition_abspath):
     return _read_json(composition_abspath)
 
 
-@pytest.fixture(params=[
-    {'include_missing_properties': True},
-    {'include_missing_properties': False},
-])
+@pytest.fixture(
+    params=[
+        {'include_missing_properties': True},
+        {'include_missing_properties': False},
+    ],
+)
 def composition_spec(request, composition_dict, composition_abspath):
     return Spec.from_dict(composition_dict, origin_url=get_url(composition_abspath), config=request.param)
 
@@ -224,13 +226,13 @@ def node_spec():
         'type': 'object',
         'properties': {
             'name': {
-                'type': 'string'
+                'type': 'string',
             },
             'child': {
                 '$ref': '#/definitions/Node',
             },
         },
-        'required': ['name']
+        'required': ['name'],
     }
 
 

@@ -78,7 +78,7 @@ CONFIG_DEFAULTS = {
     # config option is ignored if basePath is present in the spec)
     # If True, use the 'path' element of the URL the spec was retrieved from
     # If False, set basePath to '/' (conforms to Swagger 2.0 specification)
-    'use_spec_url_for_base_path': False
+    'use_spec_url_for_base_path': False,
 }
 
 
@@ -92,8 +92,10 @@ class Spec(object):
     :param config: Configuration dict. See CONFIG_DEFAULTS.
     """
 
-    def __init__(self, spec_dict, origin_url=None, http_client=None,
-                 config=None):
+    def __init__(
+        self, spec_dict, origin_url=None, http_client=None,
+        config=None,
+    ):
         self.spec_dict = spec_dict
         self.origin_url = origin_url
         self.http_client = http_client
@@ -274,7 +276,8 @@ class Spec(object):
         self.user_defined_formats[name] = user_defined_format
         validate = return_true_wrapper(user_defined_format.validate)
         self.format_checker.checks(
-            name, raises=(SwaggerValidationError,))(validate)
+            name, raises=(SwaggerValidationError,),
+        )(validate)
 
     def get_format(self, name):
         """
@@ -452,7 +455,8 @@ def build_api_serving_url(
                 return preferred_scheme
             raise SwaggerSchemaError(
                 "Preferred scheme {0} not supported by API. Available schemes "
-                "include {1}".format(preferred_scheme, schemes))
+                "include {1}".format(preferred_scheme, schemes),
+            )
 
         if origin.scheme in schemes:
             return origin.scheme

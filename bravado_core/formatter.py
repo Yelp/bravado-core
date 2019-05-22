@@ -65,8 +65,12 @@ def to_python(swagger_spec, primitive_spec, value):
     return formatter.to_python(value) if formatter else value
 
 
-class SwaggerFormat(namedtuple('SwaggerFormat',
-                               'format to_python to_wire validate description')):
+class SwaggerFormat(
+    namedtuple(
+        'SwaggerFormat',
+        'format to_python to_wire validate description',
+    ),
+):
     """User-defined format which can be registered with a
     :class:`bravado_core.spec.Spec` to handle marshalling to wire format,
     unmarshalling to a python type, and format specific validation.
@@ -108,43 +112,51 @@ DEFAULT_FORMATS = {
         to_wire=lambda b: b if isinstance(b, str) else str(b),
         to_python=lambda s: s if isinstance(s, str) else str(s),
         validate=NO_OP,  # jsonschema validates string
-        description='Converts [wire]string:byte <=> python byte'),
+        description='Converts [wire]string:byte <=> python byte',
+    ),
     'date': SwaggerFormat(
         format='date',
         to_wire=lambda d: d.isoformat(),
         to_python=lambda d: dateutil.parser.parse(d).date(),
         validate=NO_OP,  # jsonschema validates date
-        description='Converts [wire]string:date <=> python datetime.date'),
+        description='Converts [wire]string:date <=> python datetime.date',
+    ),
     # Python has no double. float is C's double in CPython
     'double': SwaggerFormat(
         format='double',
         to_wire=lambda d: d if isinstance(d, float) else float(d),
         to_python=lambda d: d if isinstance(d, float) else float(d),
         validate=NO_OP,  # jsonschema validates number
-        description='Converts [wire]number:double <=> python float'),
+        description='Converts [wire]number:double <=> python float',
+    ),
     'date-time': SwaggerFormat(
         format='date-time',
         to_wire=lambda dt: (dt if dt.tzinfo else pytz.utc.localize(dt)).isoformat(),
         to_python=lambda dt: dateutil.parser.parse(dt),
         validate=NO_OP,  # jsonschema validates date-time
         description=(
-            'Converts string:date-time <=> python datetime.datetime')),
+            'Converts string:date-time <=> python datetime.datetime'
+        ),
+    ),
     'float': SwaggerFormat(
         format='float',
         to_wire=lambda f: f if isinstance(f, float) else float(f),
         to_python=lambda f: f if isinstance(f, float) else float(f),
         validate=NO_OP,  # jsonschema validates number
-        description='Converts [wire]number:float <=> python float'),
+        description='Converts [wire]number:float <=> python float',
+    ),
     'int32': SwaggerFormat(
         format='int32',
         to_wire=lambda i: i if isinstance(i, int) else int(i),
         to_python=lambda i: i if isinstance(i, int) else int(i),
         validate=NO_OP,  # jsonschema validates integer
-        description='Converts [wire]integer:int32 <=> python int'),
+        description='Converts [wire]integer:int32 <=> python int',
+    ),
     'int64': SwaggerFormat(
         format='int64',
         to_wire=lambda i: i if isinstance(i, long) else long(i),
         to_python=lambda i: i if isinstance(i, long) else long(i),
         validate=NO_OP,  # jsonschema validates integer
-        description='Converts [wire]integer:int64 <=> python long'),
+        description='Converts [wire]integer:int64 <=> python long',
+    ),
 }

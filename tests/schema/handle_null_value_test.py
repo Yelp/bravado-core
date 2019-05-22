@@ -8,7 +8,7 @@ from bravado_core.schema import handle_null_value
 def test_default(empty_swagger_spec):
     spec = {
         'type': 'integer',
-        'default': 42
+        'default': 42,
     }
 
     assert 42 == handle_null_value(empty_swagger_spec, spec)

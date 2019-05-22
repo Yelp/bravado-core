@@ -13,75 +13,75 @@ def definitions_spec():
             "properties": {
                 "id": {
                     "type": "integer",
-                    "format": "int64"
+                    "format": "int64",
                 },
                 "username": {
-                    "type": "string"
+                    "type": "string",
                 },
                 "firstName": {
-                    "type": "string"
+                    "type": "string",
                 },
                 "lastName": {
-                    "type": "string"
+                    "type": "string",
                 },
                 "email": {
-                    "type": "string"
+                    "type": "string",
                 },
                 "password": {
-                    "type": "string"
+                    "type": "string",
                 },
                 "phone": {
-                    "type": "string"
+                    "type": "string",
                 },
                 "userStatus": {
                     "type": "integer",
                     "format": "int32",
-                    "description": "User Status"
-                }
+                    "description": "User Status",
+                },
             },
             "xml": {
-                "name": "User"
-            }
+                "name": "User",
+            },
         },
         "Category": {
             "properties": {
                 "id": {
                     "type": "integer",
-                    "format": "int64"
+                    "format": "int64",
                 },
                 "name": {
-                    "type": "string"
-                }
+                    "type": "string",
+                },
             },
         },
         "Pet": {
             "required": [
                 "name",
-                "photoUrls"
+                "photoUrls",
             ],
             "properties": {
                 "id": {
                     "type": "integer",
-                    "format": "int64"
+                    "format": "int64",
                 },
                 "category": {
-                    "$ref": "#/definitions/Category"
+                    "$ref": "#/definitions/Category",
                 },
                 "name": {
                     "type": "string",
-                    "example": "doggie"
+                    "example": "doggie",
                 },
                 "photoUrls": {
                     "type": "array",
                     "items": {
-                        "type": "string"
-                    }
+                        "type": "string",
+                    },
                 },
                 "tags": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/Tag"
-                    }
+                        "$ref": "#/definitions/Tag",
+                    },
                 },
             },
             "x-model": "Pet",
@@ -97,24 +97,24 @@ def definitions_spec():
                     "properties": {
                         "neutered": {
                             "type": "boolean",
-                        }
-                    }
-                }
-            ]
+                        },
+                    },
+                },
+            ],
         },
         "Tag": {
             "properties": {
                 "id": {
                     "type": "integer",
-                    "format": "int64"
+                    "format": "int64",
                 },
                 "name": {
-                    "type": "string"
-                }
+                    "type": "string",
+                },
             },
             "xml": {
-                "name": "Tag"
-            }
+                "name": "Tag",
+            },
         },
     }
 
@@ -190,8 +190,8 @@ def cat_kwargs():
         'tags': [
             {
                 'id': 1,
-                'name': 'cute'
-            }
+                'name': 'cute',
+            },
         ],
         'neutered': True,
     }

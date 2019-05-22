@@ -37,9 +37,11 @@ class IncomingRequest(object):
         if name in self.__required_attrs__:
             raise NotImplementedError(
                 'This IncomingRequest type {0} forgot to implement an attr '
-                'for `{1}`'.format(type(self), name))
+                'for `{1}`'.format(type(self), name),
+            )
         raise AttributeError(
-            "'{0}' object has no attribute '{1}'".format(type(self), name))
+            "'{0}' object has no attribute '{1}'".format(type(self), name),
+        )
 
     def json(self, **kwargs):
         """

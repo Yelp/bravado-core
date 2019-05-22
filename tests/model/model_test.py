@@ -29,9 +29,11 @@ def test_model_properties_iteration_additionalProperties(definitions_spec, user_
 
 def test_model_properties_iteration_allOf(cat_swagger_spec, cat_type, cat_kwargs):
     cat = cat_type(**cat_kwargs)
-    assert set(cat) == set(collapsed_properties(
-        cat_swagger_spec.spec_dict['definitions']['Cat'], cat_swagger_spec
-    ).keys())
+    assert set(cat) == set(
+        collapsed_properties(
+            cat_swagger_spec.spec_dict['definitions']['Cat'], cat_swagger_spec,
+        ).keys(),
+    )
 
 
 def test_model_delete_property(definitions_spec, user_type, user_kwargs):
@@ -115,7 +117,7 @@ def test_model_deepcopy(user_type, user_kwargs):
     [
         True,
         False,
-    ]
+    ],
 )
 def test_marshal_as_dict_recursive(polymorphic_spec, recursive):
     list_of_pets_dict = {
@@ -131,7 +133,7 @@ def test_marshal_as_dict_recursive(polymorphic_spec, recursive):
                 'type': 'Cat',
                 'color': 'white',
             },
-        ]
+        ],
     }
     pet_list = unmarshal_model(
         swagger_spec=polymorphic_spec,
@@ -152,7 +154,7 @@ def test_marshal_as_dict_recursive(polymorphic_spec, recursive):
     [
         True,
         False,
-    ]
+    ],
 )
 def test_model_as_dict_additional_property(definitions_spec, user_type, user_kwargs, export_additional_properties):
     user_type._model_spec['additionalProperties'] = True
@@ -183,13 +185,13 @@ def test_model_as_dict_additional_property(definitions_spec, user_type, user_kwa
             'Dog',
             ['GenericPet', 'Dog'],
         ],
-    )
+    ),
 )
 def test_model_isinstance(polymorphic_spec, instance_dict, object_type, possible_object_types):
     model = unmarshal_model(
         swagger_spec=polymorphic_spec,
         model_spec=polymorphic_spec.spec_dict['definitions'][object_type],
-        model_value=instance_dict
+        model_value=instance_dict,
     )
     assert any(
         isinstance(model, polymorphic_spec.definitions[possible_object_type])

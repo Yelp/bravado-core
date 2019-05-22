@@ -31,7 +31,7 @@ def test_ref_true(minimal_swagger_dict):
         'Pet': {
             'type': 'object',
             'x-nullable': True,
-        }
+        },
     }
     param_spec = {'$ref': '#/definitions/Pet'}
     swagger_spec = Spec.from_dict(minimal_swagger_dict)
@@ -42,7 +42,7 @@ def test_ref_false(minimal_swagger_dict):
     minimal_swagger_dict['definitions'] = {
         'Pet': {
             'type': 'object',
-        }
+        },
     }
     param_spec = {'$ref': '#/definitions/Pet'}
     swagger_spec = Spec.from_dict(minimal_swagger_dict)

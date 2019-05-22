@@ -10,7 +10,8 @@ def test_success():
         '/pet',
         '/pet/findByStatus',
         '/pet/findByTags',
-        '/pet/{petId}']
+        '/pet/{petId}',
+    ]
     for path_name in path_names:
         assert 'pet' == convert_path_to_resource(path_name)
 

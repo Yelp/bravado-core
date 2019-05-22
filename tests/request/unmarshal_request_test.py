@@ -30,8 +30,10 @@ def test_request_with_no_parameters(petstore_spec):
 
 
 def test_request_with_no_json_and_required_body_parameter(petstore_spec):
-    request = Mock(spec=IncomingRequest, path={'petId': '1234'},
-                   json=Mock(side_effect=ValueError("No json here bub")))
+    request = Mock(
+        spec=IncomingRequest, path={'petId': '1234'},
+        json=Mock(side_effect=ValueError("No json here bub")),
+    )
     op = petstore_spec.resources['pet'].operations['updatePet']
     with pytest.raises(SwaggerMappingError) as excinfo:
         unmarshal_request(request, op)
@@ -39,8 +41,10 @@ def test_request_with_no_json_and_required_body_parameter(petstore_spec):
 
 
 def test_request_with_no_json_and_optional_body_parameter(petstore_spec):
-    request = Mock(spec=IncomingRequest, path={'petId': '1234'},
-                   json=Mock(side_effect=ValueError("No json here bub")))
+    request = Mock(
+        spec=IncomingRequest, path={'petId': '1234'},
+        json=Mock(side_effect=ValueError("No json here bub")),
+    )
     op = petstore_spec.resources['pet'].operations['updatePet']
     op.op_spec['parameters'][0]['required'] = False
     op = Operation.from_spec(

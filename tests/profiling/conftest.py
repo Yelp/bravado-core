@@ -19,7 +19,7 @@ def small_pets(number_of_objects):
     for i in range(number_of_objects):
         pets.append({
             'name': str(uuid.uuid4()),
-            'photoUrls': [str(uuid.uuid4())]
+            'photoUrls': [str(uuid.uuid4())],
         })
     return pets
 
@@ -40,11 +40,11 @@ def large_pets(number_of_objects):
             'tags': [
                 {
                     'id': 99,
-                    'name': 'mini'
+                    'name': 'mini',
                 },
                 {
                     'id': 100,
-                    'name': 'brown'
+                    'name': 'brown',
                 },
             ],
         })

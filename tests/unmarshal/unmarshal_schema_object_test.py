@@ -35,7 +35,8 @@ def test_use_models_true(petstore_dict):
     result = unmarshal_schema_object(
         petstore_spec,
         category_spec,
-        {'id': 200, 'name': 'short-hair'})
+        {'id': 200, 'name': 'short-hair'},
+    )
 
     assert isinstance(result, Category)
 
@@ -47,7 +48,8 @@ def test_use_models_false(petstore_dict):
     result = unmarshal_schema_object(
         petstore_spec,
         category_spec,
-        {'id': 200, 'name': 'short-hair'})
+        {'id': 200, 'name': 'short-hair'},
+    )
 
     assert isinstance(result, dict)
 
@@ -55,7 +57,7 @@ def test_use_models_false(petstore_dict):
 def test_missing_object_spec(petstore_dict):
     petstore_spec = Spec.from_dict(petstore_dict, config={'use_models': False})
     category_spec = copy.deepcopy(
-        petstore_spec.spec_dict['definitions']['Category']
+        petstore_spec.spec_dict['definitions']['Category'],
     )
     # without a type, do no validation
     category_spec['properties']['id'].pop('type')
@@ -64,7 +66,8 @@ def test_missing_object_spec(petstore_dict):
     result = unmarshal_schema_object(
         petstore_spec,
         category_spec,
-        {'id': 'blahblah', 'name': 'short-hair'})
+        {'id': 'blahblah', 'name': 'short-hair'},
+    )
 
     assert result == {'id': 'blahblah', 'name': 'short-hair'}
 
@@ -72,7 +75,8 @@ def test_missing_object_spec(petstore_dict):
     result = unmarshal_schema_object(
         petstore_spec,
         category_spec,
-        {'id': {'foo': 'bar'}, 'name': 'short-hair'})
+        {'id': {'foo': 'bar'}, 'name': 'short-hair'},
+    )
 
     assert result == {'id': {'foo': 'bar'}, 'name': 'short-hair'}
 
@@ -83,7 +87,7 @@ def test_missing_object_spec_defaulting_on(petstore_dict):
     """
     petstore_spec = Spec.from_dict(petstore_dict, config={'use_models': False, 'default_type_to_object': True})
     category_spec = copy.deepcopy(
-        petstore_spec.spec_dict['definitions']['Category']
+        petstore_spec.spec_dict['definitions']['Category'],
     )
 
     # now a missing type will default to object type
@@ -92,7 +96,8 @@ def test_missing_object_spec_defaulting_on(petstore_dict):
     result = unmarshal_schema_object(
         petstore_spec,
         category_spec,
-        {'id': {'foo': 'bar'}, 'name': 'short-hair'})
+        {'id': {'foo': 'bar'}, 'name': 'short-hair'},
+    )
 
     assert result == {'id': {'foo': 'bar'}, 'name': 'short-hair'}
 
@@ -101,13 +106,14 @@ def test_missing_object_spec_defaulting_on(petstore_dict):
         result = unmarshal_schema_object(
             petstore_spec,
             category_spec,
-            {'id': 'blahblah', 'name': 'short-hair'})
+            {'id': 'blahblah', 'name': 'short-hair'},
+        )
 
 
 def test_invalid_type(petstore_dict):
     petstore_spec = Spec.from_dict(petstore_dict, config={'use_models': False})
     category_spec = copy.deepcopy(
-        petstore_spec.spec_dict['definitions']['Category']
+        petstore_spec.spec_dict['definitions']['Category'],
     )
 
     category_spec['properties']['id']['type'] = 'notAValidType'
@@ -116,4 +122,5 @@ def test_invalid_type(petstore_dict):
         unmarshal_schema_object(
             petstore_spec,
             category_spec,
-            {'id': 200, 'name': 'short-hair'})
+            {'id': 200, 'name': 'short-hair'},
+        )

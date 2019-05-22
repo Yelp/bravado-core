@@ -16,7 +16,8 @@ def test_string(minimal_swagger_spec):
     string_spec = {'type': 'string'}
     assert 'foo' == marshal_primitive(minimal_swagger_spec, string_spec, 'foo')
     assert u'Ümlaut' == marshal_primitive(
-        minimal_swagger_spec, string_spec, u'Ümlaut')
+        minimal_swagger_spec, string_spec, u'Ümlaut',
+    )
 
 
 @mock.patch('bravado_core.marshal.formatter.to_wire')

@@ -24,7 +24,7 @@ def test_ref_true(minimal_swagger_dict):
             'name': 'petId',
             'type': 'integer',
             'required': True,
-        }
+        },
     }
     param_spec = {'$ref': '#/parameters/PetId'}
     swagger_spec = Spec.from_dict(minimal_swagger_dict)
@@ -34,8 +34,8 @@ def test_ref_true(minimal_swagger_dict):
 def test_ref_false(minimal_swagger_dict):
     minimal_swagger_dict['responses'] = {
         'InvalidInput': {
-            'description': 'Invalid input'
-        }
+            'description': 'Invalid input',
+        },
     }
     response_spec = {'$ref': '#/responses/InvalidInput'}
     swagger_spec = Spec.from_dict(minimal_swagger_dict)

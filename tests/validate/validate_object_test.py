@@ -15,10 +15,10 @@ def address_spec():
         'type': 'object',
         'properties': {
             'number': {
-                'type': 'number'
+                'type': 'number',
             },
             'street_name': {
-                'type': 'string'
+                'type': 'string',
             },
             'street_type': {
                 'type': 'string',
@@ -26,9 +26,9 @@ def address_spec():
                     'Street',
                     'Avenue',
                     'Boulevard',
-                ]
-            }
-        }
+                ],
+            },
+        },
     }
 
 
@@ -40,13 +40,13 @@ def allOf_spec(address_spec):
                 'type': 'object',
                 'properties': {
                     'business': {
-                        'type': 'string'
+                        'type': 'string',
                     },
                 },
                 'required': ['business'],
             },
             address_spec,
-        ]
+        ],
     }
 
 
@@ -72,7 +72,7 @@ def test_additional_property_OK(minimal_swagger_spec, address_spec):
         'number': 1000,
         'street_name': 'Main',
         'street_type': 'Street',
-        'city': 'Swaggerville'
+        'city': 'Swaggerville',
     }
     validate_object(minimal_swagger_spec, address_spec, address)
 
@@ -107,27 +107,35 @@ def email_address_object_spec():
             'email_address': {
                 'type': 'string',
                 'format': 'email_address',
-            }
-        }
+            },
+        },
     }
 
 
-def test_user_defined_format_success(minimal_swagger_spec,
-                                     email_address_object_spec):
+def test_user_defined_format_success(
+    minimal_swagger_spec,
+    email_address_object_spec,
+):
     request_body = {'email_address': 'foo@bar.com'}
     minimal_swagger_spec.register_format(email_address_format)
     # No exception thrown == success
-    validate_object(minimal_swagger_spec,
-                    email_address_object_spec, request_body)
+    validate_object(
+        minimal_swagger_spec,
+        email_address_object_spec, request_body,
+    )
 
 
-def test_user_defined_format_failure(minimal_swagger_spec,
-                                     email_address_object_spec):
+def test_user_defined_format_failure(
+    minimal_swagger_spec,
+    email_address_object_spec,
+):
     request_body = {'email_address': 'i_am_not_a_valid_email_address'}
     minimal_swagger_spec.register_format(email_address_format)
     with pytest.raises(ValidationError) as excinfo:
-        validate_object(minimal_swagger_spec, email_address_object_spec,
-                        request_body)
+        validate_object(
+            minimal_swagger_spec, email_address_object_spec,
+            request_body,
+        )
     assert "'i_am_not_a_valid_email_address' is not a 'email_address'" in \
         str(excinfo.value)
 
@@ -140,13 +148,16 @@ def test_user_defined_format_sensitive_failure(
     request_body = {'email_address': 'i_am_not_a_valid_email_address'}
     minimal_swagger_spec.register_format(email_address_format)
     with pytest.raises(ValidationError) as excinfo:
-        validate_object(minimal_swagger_spec, email_address_object_spec,
-                        request_body)
+        validate_object(
+            minimal_swagger_spec, email_address_object_spec,
+            request_body,
+        )
     assert "'i_am_not_a_valid_email_address'" not in str(excinfo.value)
 
 
 def test_builtin_format_still_works_when_user_defined_format_used(
-        minimal_swagger_spec):
+        minimal_swagger_spec,
+):
     ipaddress_spec = {
         'type': 'object',
         'required': ['ipaddress'],
@@ -154,8 +165,8 @@ def test_builtin_format_still_works_when_user_defined_format_used(
             'ipaddress': {
                 'type': 'string',
                 'format': 'ipv4',
-            }
-        }
+            },
+        },
     }
     request_body = {'ipaddress': 'not_an_ip_address'}
     minimal_swagger_spec.register_format(email_address_format)
@@ -168,7 +179,8 @@ def test_recursive_ref_depth_1(recursive_swagger_spec):
     validate_object(
         recursive_swagger_spec,
         {'$ref': '#/definitions/Node'},
-        {'name': 'foo'})
+        {'name': 'foo'},
+    )
 
 
 def test_recursive_ref_depth_n(recursive_swagger_spec):
@@ -177,14 +189,15 @@ def test_recursive_ref_depth_n(recursive_swagger_spec):
         'child': {
             'name': 'bar',
             'child': {
-                'name': 'baz'
-            }
-        }
+                'name': 'baz',
+            },
+        },
     }
     validate_object(
         recursive_swagger_spec,
         {'$ref': '#/definitions/Node'},
-        value)
+        value,
+    )
 
 
 def test_recursive_ref_depth_n_failure(recursive_swagger_spec):
@@ -193,15 +206,16 @@ def test_recursive_ref_depth_n_failure(recursive_swagger_spec):
         'child': {
             'name': 'bar',
             'child': {
-                'kaboom': 'baz'  # <-- key should be 'name', not 'kabbom'
-            }
-        }
+                'kaboom': 'baz',  # <-- key should be 'name', not 'kabbom'
+            },
+        },
     }
     with pytest.raises(ValidationError) as excinfo:
         validate_object(
             recursive_swagger_spec,
             {'$ref': '#/definitions/Node'},
-            value)
+            value,
+        )
     assert "'name' is a required property" in str(excinfo.value)
 
 
@@ -232,8 +246,8 @@ def content_spec_factory(required, nullable):
             'x': {
                 'type': 'string',
                 'x-nullable': nullable,
-            }
-        }
+            },
+        },
     }
 
 
@@ -354,7 +368,7 @@ def test_validate_valid_polymorphic_object(polymorphic_spec):
                 'type': 'Cat',
                 'color': 'white',
             },
-        ]
+        ],
     }
     validate_object(
         swagger_spec=polymorphic_spec,
@@ -375,7 +389,7 @@ def test_validate_valid_polymorphic_object(polymorphic_spec):
                         'type': 'Dog',
                         'color': 'white',
                     },
-                ]
+                ],
             },
             '\'birth_date\' is a required property',
         ],
@@ -387,7 +401,7 @@ def test_validate_valid_polymorphic_object(polymorphic_spec):
                         'name': 'any string',
                         'type': 'a not defined type',
                     },
-                ]
+                ],
             },
             '\'a not defined type\' is not a recognized schema',
         ],
@@ -399,7 +413,7 @@ def test_validate_valid_polymorphic_object(polymorphic_spec):
                         'name': 'a bird name',
                         'type': 'Bird',
                     },
-                ]
+                ],
             },
             'discriminated schema \'Bird\' must inherit from \'GenericPet\'',
         ],
@@ -412,11 +426,11 @@ def test_validate_valid_polymorphic_object(polymorphic_spec):
                         'type': 'Whale',
                         'weight': 1000,
                     },
-                ]
+                ],
             },
             'discriminated schema \'Whale\' must inherit from \'GenericPet\'',
         ],
-    )
+    ),
 )
 def test_validate_invalid_polymorphic_object(polymorphic_spec, schema_dict, expected_validation_error):
     with pytest.raises(ValidationError) as e:
@@ -498,7 +512,7 @@ def test_validate_object_raises_ValidationError_if_discriminator_key_is_missing(
             },
             "discriminator": "discriminator_field",
             "required": ["discriminator_field"],
-        }
+        },
     }
 
     spec = Spec.from_dict(minimal_swagger_dict)

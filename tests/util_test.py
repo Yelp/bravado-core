@@ -67,7 +67,7 @@ def test_memoize_by_id_decorator():
 
     assert decorated_function(1) == id(1) + id(None)
     assert decorated_function.cache == {
-        (('a', id(1)), ('b', id(None))): id(1) + id(None)
+        (('a', id(1)), ('b', id(None))): id(1) + id(None),
     }
     assert calls == [[1, None]]
 
@@ -90,20 +90,22 @@ def test_memoize_by_id_decorator():
 
     assert decorated_function(1) == id(1) + id(None)
     assert decorated_function.cache == {
-        (('a', id(1)), ('b', id(None))): id(1) + id(None)
+        (('a', id(1)), ('b', id(None))): id(1) + id(None),
     }
     assert calls == [[1, None], [2, 3], [1, None]]
 
 
-@pytest.mark.parametrize(('input', 'expected'), [
-    ('pet.getBy Id', 'pet_getBy_Id'),      # simple case
-    ('_getPetById_', 'getPetById'),        # leading/trailing underscore
-    ('get__Pet_By__Id', 'get_Pet_By_Id'),  # double underscores
-    ('^&#@!$foo%+++:;"<>?/', 'foo'),       # bunch of illegal chars
-    ('__foo__', 'foo'),                    # make sure we strip multiple underscores
-    ('100percent', 'percent'),             # make sure we remove all digits
-    ('100.0', '_100_0'),                   # a name consisting mostly of digits should keep them
-])
+@pytest.mark.parametrize(
+    ('input', 'expected'), [
+        ('pet.getBy Id', 'pet_getBy_Id'),      # simple case
+        ('_getPetById_', 'getPetById'),        # leading/trailing underscore
+        ('get__Pet_By__Id', 'get_Pet_By_Id'),  # double underscores
+        ('^&#@!$foo%+++:;"<>?/', 'foo'),       # bunch of illegal chars
+        ('__foo__', 'foo'),                    # make sure we strip multiple underscores
+        ('100percent', 'percent'),             # make sure we remove all digits
+        ('100.0', '_100_0'),                   # a name consisting mostly of digits should keep them
+    ],
+)
 def test_sanitize_name(input, expected):
     assert sanitize_name(input) == expected
 
@@ -150,7 +152,7 @@ def test_AliasKeyDict_del():
         [True, {'description': 'response description', 'schema': {'type': 'object'}}, ObjectType.RESPONSE],
         [True, {'description': 'response description', 'parameters': {'param': {'type': 'object'}}}, ObjectType.SCHEMA],
         [False, {'description': 'response description', 'parameters': {'param': {'type': 'object'}}}, ObjectType.UNKNOWN],  # noqa
-    )
+    ),
 )
 def test_determine_object_type(default_type_to_object, object_dict, expected_object_type):
     assert determine_object_type(object_dict, default_type_to_object) == expected_object_type
@@ -166,14 +168,14 @@ def test_contained_in_dict():
             '$ref': '#/definitions/DayHours',
             'x-scope': [
                 'file:///happyhour/api_docs/swagger.json',
-                'file:///happyhour/api_docs/swagger.json#/definitions/WeekHours'
-            ]
-        }
+                'file:///happyhour/api_docs/swagger.json#/definitions/WeekHours',
+            ],
+        },
     }
     expected = {
         'MON': {
             '$ref': '#/definitions/DayHours',
-        }
+        },
     }
     assert expected == strip_xscope(fragment)
     assert 'x-scope' in fragment['MON']
@@ -185,14 +187,14 @@ def test_contained_in_list():
             '$ref': '#/definitions/DayHours',
             'x-scope': [
                 'file:///happyhour/api_docs/swagger.json',
-                'file:///happyhour/api_docs/swagger.json#/definitions/WeekHours'
-            ]
-        }
+                'file:///happyhour/api_docs/swagger.json#/definitions/WeekHours',
+            ],
+        },
     ]
     expected = [
         {
             '$ref': '#/definitions/DayHours',
-        }
+        },
     ]
     assert expected == strip_xscope(fragment)
     assert 'x-scope' in fragment[0]
@@ -202,12 +204,12 @@ def test_no_op():
     fragment = {
         'MON': {
             '$ref': '#/definitions/DayHours',
-        }
+        },
     }
     expected = {
         'MON': {
             '$ref': '#/definitions/DayHours',
-        }
+        },
     }
     assert expected == strip_xscope(fragment)
 

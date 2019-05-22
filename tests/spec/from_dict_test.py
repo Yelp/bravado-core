@@ -66,7 +66,8 @@ def test_ref_to_external_path_with_ref_to_local_model():
 
     swagger_json_path = os.path.join(
         os.path.dirname(os.path.dirname(my_dir)),
-        'test-data', '2.0', 'x-model', 'swagger.json')
+        'test-data', '2.0', 'x-model', 'swagger.json',
+    )
 
     with open(swagger_json_path) as f:
         swagger_json_content = json.loads(f.read())
@@ -105,13 +106,13 @@ def test_spec_with_dereffed_and_tagged_models_works(minimal_swagger_dict):
                         'type': 'object',
                         'properties': {
                             'name': {
-                                'type': 'string'
-                            }
-                        }
-                    }
-                }
-            }
-        }
+                                'type': 'string',
+                            },
+                        },
+                    },
+                },
+            },
+        },
     }
     minimal_swagger_dict['paths']['/pet'] = pet_path_spec
     spec = Spec.from_dict(minimal_swagger_dict)

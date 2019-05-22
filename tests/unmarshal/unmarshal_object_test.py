@@ -14,10 +14,10 @@ def address_spec():
         'type': 'object',
         'properties': {
             'number': {
-                'type': 'number'
+                'type': 'number',
             },
             'street_name': {
-                'type': 'string'
+                'type': 'string',
             },
             'street_type': {
                 'type': 'string',
@@ -27,8 +27,8 @@ def address_spec():
                     'Boulevard',
                 ],
                 'default': 'Street',
-            }
-        }
+            },
+        },
     }
 
 
@@ -37,21 +37,21 @@ def business_address_spec():
     return {
         'allOf': [
             {
-                '$ref': '#/definitions/Address'
+                '$ref': '#/definitions/Address',
             },
             {
                 'type': 'object',
                 'properties': {
                     'name': {
-                        'type': 'string'
+                        'type': 'string',
                     },
                     'floor': {
                         'type': 'integer',
                         'x-nullable': True,
                     },
                 },
-            }
-        ]
+            },
+        ],
     }
 
 
@@ -62,12 +62,12 @@ def location_spec():
         'required': ['longitude', 'latitude'],
         'properties': {
             'longitude': {
-                'type': 'number'
+                'type': 'number',
             },
             'latitude': {
-                'type': 'number'
+                'type': 'number',
             },
-        }
+        },
     }
 
 
@@ -83,19 +83,21 @@ def business_address_swagger_dict(minimal_swagger_dict, address_spec, business_a
                     'description': 'A business address',
                     'schema': {
                         '$ref': '#/definitions/BusinessAddress',
-                    }
-                }
-            }
-        }
+                    },
+                },
+            },
+        },
     }
     minimal_swagger_dict['paths']['/foo'] = business_address_response
     return minimal_swagger_dict
 
 
-@pytest.fixture(params=[
-    {'include_missing_properties': True},
-    {'include_missing_properties': False},
-])
+@pytest.fixture(
+    params=[
+        {'include_missing_properties': True},
+        {'include_missing_properties': False},
+    ],
+)
 def business_address_swagger_spec(request, business_address_swagger_dict):
     return Spec.from_dict(business_address_swagger_dict, config=request.param)
 
@@ -105,7 +107,7 @@ def address():
     return {
         'number': 1600,
         'street_name': u'Ümlaut',
-        'street_type': 'Avenue'
+        'street_type': 'Avenue',
     }
 
 
@@ -114,7 +116,7 @@ def address():
     (
         ('Avenue', 'Avenue'),
         (None, 'Street'),  # make sure the default works
-    )
+    ),
 )
 def test_with_properties(empty_swagger_spec, address_spec, address, street_type, expected_street_type):
     address['street_type'] = street_type
@@ -142,8 +144,8 @@ def test_with_array(empty_swagger_spec, address_spec):
     tags_spec = {
         'type': 'array',
         'items': {
-            'type': 'string'
-        }
+            'type': 'string',
+        },
     }
     address_spec['properties']['tags'] = tags_spec
     address = {
@@ -153,7 +155,7 @@ def test_with_array(empty_swagger_spec, address_spec):
         'tags': [
             'home',
             'best place on earth',
-            'cul de sac'
+            'cul de sac',
         ],
     }
     result = unmarshal_object(empty_swagger_spec, address_spec, address)
@@ -197,7 +199,7 @@ def test_with_model_composition(business_address_swagger_spec, address_spec, bus
         'company': 'n/a',
         'number': 1600,
         'street_name': 'Pennsylvania',
-        'street_type': 'Avenue'
+        'street_type': 'Avenue',
     }
     expected_business_address = {
         'company': 'n/a',
@@ -209,8 +211,10 @@ def test_with_model_composition(business_address_swagger_spec, address_spec, bus
     if business_address_swagger_spec.config['include_missing_properties']:
         expected_business_address.update(floor=None, name=None)
 
-    business_address = unmarshal_object(business_address_swagger_spec, business_address_spec,
-                                        business_address_dict)
+    business_address = unmarshal_object(
+        business_address_swagger_spec, business_address_spec,
+        business_address_dict,
+    )
     assert expected_business_address == business_address
 
 
@@ -227,10 +231,10 @@ def test_with_model(minimal_swagger_dict, address_spec, location_spec):
                     'description': 'A location',
                     'schema': {
                         '$ref': '#/definitions/Location',
-                    }
-                }
-            }
-        }
+                    },
+                },
+            },
+        },
     }
     minimal_swagger_dict['paths']['/foo'] = location_response
 
@@ -296,10 +300,10 @@ def test_self_property_with_model(minimal_swagger_dict):
                     'description': 'A self link.',
                     'schema': {
                         '$ref': '#/definitions/Links',
-                    }
-                }
-            }
-        }
+                    },
+                },
+            },
+        },
     }
     minimal_swagger_dict['paths']['/foo'] = self_link_response
 
@@ -326,19 +330,21 @@ def test_object_not_dict_like_raises_error(empty_swagger_spec, address_spec):
 
 
 def test_mising_properties_set_to_None(
-        empty_swagger_spec, address_spec, address):
+        empty_swagger_spec, address_spec, address,
+):
     del address['street_name']
     expected_address = {
         'number': 1600,
         'street_name': None,
-        'street_type': 'Avenue'
+        'street_type': 'Avenue',
     }
     result = unmarshal_object(empty_swagger_spec, address_spec, address)
     assert expected_address == result
 
 
 def test_pass_through_additionalProperties_with_no_spec(
-        empty_swagger_spec, address_spec, address):
+        empty_swagger_spec, address_spec, address,
+):
     address_spec['additionalProperties'] = True
     address['city'] = 'Swaggerville'
     expected_address = {
@@ -352,7 +358,8 @@ def test_pass_through_additionalProperties_with_no_spec(
 
 
 def test_pass_through_property_with_no_spec(
-        empty_swagger_spec, address_spec, address):
+        empty_swagger_spec, address_spec, address,
+):
     del address_spec['properties']['street_name']['type']
     result = unmarshal_object(empty_swagger_spec, address_spec, address)
     assert result == address
@@ -368,7 +375,8 @@ def test_recursive_ref_with_depth_1(recursive_swagger_spec):
     result = unmarshal_object(
         recursive_swagger_spec,
         {'$ref': '#/definitions/Node'},
-        {'name': 'foo'})
+        {'name': 'foo'},
+    )
     assert result == {'name': 'foo', 'child': None}
 
 
@@ -378,14 +386,15 @@ def test_recursive_ref_with_depth_n(recursive_swagger_spec):
         'child': {
             'name': 'bar',
             'child': {
-                'name': 'baz'
-            }
-        }
+                'name': 'baz',
+            },
+        },
     }
     result = unmarshal_object(
         recursive_swagger_spec,
         {'$ref': '#/definitions/Node'},
-        value)
+        value,
+    )
 
     expected = {
         'name': 'foo',
@@ -393,9 +402,9 @@ def test_recursive_ref_with_depth_n(recursive_swagger_spec):
             'name': 'bar',
             'child': {
                 'name': 'baz',
-                'child': None
-            }
-        }
+                'child': None,
+            },
+        },
     }
     assert result == expected
 
@@ -408,8 +417,8 @@ def nullable_spec_factory(required, nullable, property_type):
             'x': {
                 'type': property_type,
                 'x-nullable': nullable,
-            }
-        }
+            },
+        },
     }
     if property_type == 'array':
         content_spec['properties']['x']['items'] = {'type': 'string'}
@@ -418,12 +427,18 @@ def nullable_spec_factory(required, nullable, property_type):
 
 @pytest.mark.parametrize('nullable', [True, False])
 @pytest.mark.parametrize('required', [True, False])
-@pytest.mark.parametrize('property_type, value',
-                         [('string', 'y'),
-                          ('object', {'y': 'z'}),
-                          ('array', ['one', 'two', 'three'])])
-def test_nullable_with_value(empty_swagger_spec, nullable, required,
-                             property_type, value):
+@pytest.mark.parametrize(
+    'property_type, value',
+    [
+        ('string', 'y'),
+        ('object', {'y': 'z'}),
+        ('array', ['one', 'two', 'three']),
+    ],
+)
+def test_nullable_with_value(
+    empty_swagger_spec, nullable, required,
+    property_type, value,
+):
     content_spec = nullable_spec_factory(required, nullable, property_type)
     obj = {'x': value}
     expected = copy.deepcopy(obj)
@@ -434,9 +449,11 @@ def test_nullable_with_value(empty_swagger_spec, nullable, required,
 @pytest.mark.parametrize('nullable', [True, False])
 @pytest.mark.parametrize('property_type', ['string', 'object', 'array'])
 def test_nullable_no_value(empty_swagger_spec, nullable, property_type):
-    content_spec = nullable_spec_factory(required=False,
-                                         nullable=nullable,
-                                         property_type=property_type)
+    content_spec = nullable_spec_factory(
+        required=False,
+        nullable=nullable,
+        property_type=property_type,
+    )
     value = {}
     result = unmarshal_object(empty_swagger_spec, content_spec, value)
     assert result == {'x': None}  # Missing parameters are re-introduced
@@ -445,9 +462,11 @@ def test_nullable_no_value(empty_swagger_spec, nullable, property_type):
 @pytest.mark.parametrize('required', [True, False])
 @pytest.mark.parametrize('property_type', ['string', 'object', 'array'])
 def test_nullable_none_value(empty_swagger_spec, required, property_type):
-    content_spec = nullable_spec_factory(required=required,
-                                         nullable=True,
-                                         property_type=property_type)
+    content_spec = nullable_spec_factory(
+        required=required,
+        nullable=True,
+        property_type=property_type,
+    )
     value = {'x': None}
     result = unmarshal_object(empty_swagger_spec, content_spec, value)
     assert result == {'x': None}
@@ -455,9 +474,11 @@ def test_nullable_none_value(empty_swagger_spec, required, property_type):
 
 @pytest.mark.parametrize('property_type', ['string', 'object', 'array'])
 def test_non_nullable_none_value(empty_swagger_spec, property_type):
-    content_spec = nullable_spec_factory(required=True,
-                                         nullable=False,
-                                         property_type=property_type)
+    content_spec = nullable_spec_factory(
+        required=True,
+        nullable=False,
+        property_type=property_type,
+    )
     value = {'x': None}
     with pytest.raises(SwaggerMappingError) as excinfo:
         unmarshal_object(empty_swagger_spec, content_spec, value)
@@ -466,9 +487,11 @@ def test_non_nullable_none_value(empty_swagger_spec, property_type):
 
 @pytest.mark.parametrize('property_type', ['string', 'object', 'array'])
 def test_non_required_none_value(empty_swagger_spec, property_type):
-    content_spec = nullable_spec_factory(required=False,
-                                         nullable=False,
-                                         property_type=property_type)
+    content_spec = nullable_spec_factory(
+        required=False,
+        nullable=False,
+        property_type=property_type,
+    )
     value = {'x': None}
     result = unmarshal_object(empty_swagger_spec, content_spec, value)
     assert result == {'x': None}
@@ -488,7 +511,7 @@ def test_unmarshal_object_polymorphic_specs(polymorphic_spec):
                 'type': 'Cat',
                 'color': 'white',
             },
-        ]
+        ],
     }
     polymorphic_spec.config['use_models'] = False
     pet_list = unmarshal_object(

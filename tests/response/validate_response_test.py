@@ -11,7 +11,8 @@ from bravado_core.spec import Spec
 @patch('bravado_core.response.validate_response_headers')
 @patch('bravado_core.response.validate_response_body')
 def test_skip_when_configured_to_not_validate(
-        mock_validate_response_body, mock_validate_response_headers):
+        mock_validate_response_body, mock_validate_response_headers,
+):
     swagger_spec = Mock(spec=Spec, config={'validate_responses': False})
     op = Mock(spec=Operation, swagger_spec=swagger_spec)
     response = Mock(spec=OutgoingResponse)
@@ -23,7 +24,8 @@ def test_skip_when_configured_to_not_validate(
 @patch('bravado_core.response.validate_response_headers')
 @patch('bravado_core.response.validate_response_body')
 def test_validate_when_configured_validate(
-        mock_validate_response_body, mock_validate_response_headers):
+        mock_validate_response_body, mock_validate_response_headers,
+):
     swagger_spec = Mock(spec=Spec, config={'validate_responses': True})
     op = Mock(spec=Operation, swagger_spec=swagger_spec)
     response = Mock(spec=OutgoingResponse)

@@ -52,8 +52,8 @@ def param_in_body_spec():
         "description": "Pet object that needs to be added to the store",
         "required": False,
         "schema": {
-            "$ref": "#/definitions/Pet"
-        }
+            "$ref": "#/definitions/Pet",
+        },
     }
 
 

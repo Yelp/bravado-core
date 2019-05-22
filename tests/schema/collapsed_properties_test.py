@@ -12,37 +12,37 @@ def users_spec():
             "properties": {
                 "id": {
                     "type": "integer",
-                    "format": "int64"
+                    "format": "int64",
                 },
                 "username": {
-                    "type": "string"
+                    "type": "string",
                 },
                 "email": {
-                    "type": "string"
+                    "type": "string",
                 },
                 "password": {
-                    "type": "string"
-                }
-            }
+                    "type": "string",
+                },
+            },
         },
         "VIP": {
             "allOf": [
                 {
-                    "$ref": "#/definitions/User"
+                    "$ref": "#/definitions/User",
                 },
                 {
                     "properties": {
                         "vip_pass_no": {
-                            "type": "string"
-                        }
-                    }
-                }
-            ]
+                            "type": "string",
+                        },
+                    },
+                },
+            ],
         },
         "Admin": {
             "allOf": [
                 {
-                    "$ref": "#/definitions/User"
+                    "$ref": "#/definitions/User",
                 },
                 {
                     "type": "object",
@@ -50,23 +50,23 @@ def users_spec():
                         "permissions": {
                             "type": "array",
                             "items": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            ]
+                                "type": "string",
+                            },
+                        },
+                    },
+                },
+            ],
         },
         "SuperUser": {
             "allOf": [
                 {
-                    "$ref": "#/definitions/Admin"
+                    "$ref": "#/definitions/Admin",
                 },
                 {
-                    "$ref": "#/definitions/VIP"
-                }
-            ]
-        }
+                    "$ref": "#/definitions/VIP",
+                },
+            ],
+        },
     }
 
 
@@ -95,7 +95,7 @@ def test_allOf(users_spec, users_swagger_spec):
         # VIP additional properties
         'vip_pass_no': {'type': 'string'},
         # Admin additional properties
-        'permissions': {'items': {'type': 'string'}, 'type': 'array'}
+        'permissions': {'items': {'type': 'string'}, 'type': 'array'},
     }
     assert props == expected_props
 
@@ -105,6 +105,6 @@ def test_recursive_ref(node_spec, recursive_swagger_spec):
 
     expected_props = {
         'name': {'type': 'string'},
-        'child': {'$ref': '#/definitions/Node'}
+        'child': {'$ref': '#/definitions/Node'},
     }
     assert props == expected_props

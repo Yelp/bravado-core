@@ -72,9 +72,11 @@ def mock_validator(original_scope):
     return validator
 
 
-def test_when_resolve_is_not_None(address_target, address, original_scope,
-                                  annotated_scope, address_ref,
-                                  address_schema, mock_validator):
+def test_when_resolve_is_not_None(
+    address_target, address, original_scope,
+    annotated_scope, address_ref,
+    address_schema, mock_validator,
+):
     # Verify RefResolver._scopes_stack is replaced by the x-scope
     # annotation's scope stack during the call to RefResolver.resolve(...)
 
@@ -83,19 +85,26 @@ def test_when_resolve_is_not_None(address_target, address, original_scope,
         return 'file:///tmp/swagger.json', address_target
 
     mock_validator.resolver.resolve = Mock(
-        side_effect=assert_correct_scope_and_resolve)
+        side_effect=assert_correct_scope_and_resolve,
+    )
 
     # Force iteration over generator function
-    list(ref_validator(mock_validator, ref=address_ref, instance=address,
-                       schema=address_schema))
+    list(
+        ref_validator(
+            mock_validator, ref=address_ref, instance=address,
+            schema=address_schema,
+        ),
+    )
 
     assert mock_validator.resolver.resolve.call_count == 1
     assert mock_validator.resolver._scopes_stack == original_scope
 
 
-def test_when_resolve_is_None(address_target, address, original_scope,
-                              annotated_scope, address_ref, address_schema,
-                              mock_validator):
+def test_when_resolve_is_None(
+    address_target, address, original_scope,
+    annotated_scope, address_ref, address_schema,
+    mock_validator,
+):
     # Verify RefResolver._scopes_stack is replaced by the x-scope
     # annotation's scope stack during the call to RefResolver.resolving(...)
 
@@ -105,10 +114,15 @@ def test_when_resolve_is_None(address_target, address, original_scope,
 
     mock_validator.resolver.resolve = None
     mock_validator.resolver.resolving.return_value = MagicMock(
-        side_effect=assert_correct_scope_and_resolve)
+        side_effect=assert_correct_scope_and_resolve,
+    )
 
     # Force iteration over generator function
-    list(ref_validator(mock_validator, ref=address_ref, instance=address,
-                       schema=address_schema))
+    list(
+        ref_validator(
+            mock_validator, ref=address_ref, instance=address,
+            schema=address_schema,
+        ),
+    )
     assert mock_validator.resolver.resolving.call_count == 1
     assert mock_validator.resolver._scopes_stack == original_scope

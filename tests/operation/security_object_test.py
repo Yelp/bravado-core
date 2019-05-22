@@ -22,18 +22,22 @@ def test_op_with_security_in_op_without_security_defs(
         specs_with_security_obj_in_op_and_no_security_specs,
 ):
     with pytest.raises(SwaggerSchemaError):
-        build_resources(Spec(
-            specs_with_security_obj_in_op_and_no_security_specs,
-        ))
+        build_resources(
+            Spec(
+                specs_with_security_obj_in_op_and_no_security_specs,
+            ),
+        )
 
 
 def test_op_with_security_in_root_without_security_defs(
         specs_with_security_obj_in_root_and_no_security_specs,
 ):
     with pytest.raises(SwaggerSchemaError):
-        build_resources(Spec(
-            specs_with_security_obj_in_root_and_no_security_specs,
-        ))
+        build_resources(
+            Spec(
+                specs_with_security_obj_in_root_and_no_security_specs,
+            ),
+        )
 
 
 def _validate_resources(resources, security_definitions_spec):
@@ -59,9 +63,11 @@ def test_op_with_security_in_op_with_security_defs(
     security_definitions_spec = \
         specs_with_security_obj_in_op_and_security_specs['securityDefinitions']
     _validate_resources(
-        resources=build_resources(Spec(
-            specs_with_security_obj_in_op_and_security_specs,
-        )),
+        resources=build_resources(
+            Spec(
+                specs_with_security_obj_in_op_and_security_specs,
+            ),
+        ),
         security_definitions_spec=security_definitions_spec,
     )
 
@@ -72,9 +78,11 @@ def test_op_with_security_in_root_with_security_defs(
     security_definitions_spec = \
         specs_with_security_obj_in_root_and_security_specs['securityDefinitions']  # noqa
     _validate_resources(
-        resources=build_resources(Spec(
-            specs_with_security_obj_in_root_and_security_specs,
-        )),
+        resources=build_resources(
+            Spec(
+                specs_with_security_obj_in_root_and_security_specs,
+            ),
+        ),
         security_definitions_spec=security_definitions_spec,
     )
 
@@ -82,9 +90,11 @@ def test_op_with_security_in_root_with_security_defs(
 def test_op_with_security_in_root_with_empty_security_spec(
         specs_with_security_obj_in_root_and_empty_security_spec,
 ):
-    resources = build_resources(Spec(
-        specs_with_security_obj_in_root_and_empty_security_spec,
-    ))
+    resources = build_resources(
+        Spec(
+            specs_with_security_obj_in_root_and_empty_security_spec,
+        ),
+    )
 
     resource = resources.get('pet')
     assert resource is not None
@@ -123,7 +133,7 @@ def test_wrong_request_with_apiKey_security(petstore_spec):
         ('example3', 'get_example3', (('apiKey1', 'apiKey2',), ('apiKey3',))),
         ('example4', 'get_example4', (('oauth2',),)),
         ('example5', 'get_example5', ()),
-    ]
+    ],
 )
 def test_security_parameters_selection(
         security_spec,
@@ -169,7 +179,7 @@ def test_security_parameter_cannot_override_path_or_operation_parameter(
         ('example3', 'get_example3', {}, {'apiKey1': 'sec1'}, True),
         # Raises because get_example3 expects (apiKey1, apiKey2) or apiKey3
         ('example3', 'get_example3', {'apiKey3': 'sec3'}, {'apiKey1': 'sec1', 'apiKey2': 'sec2'}, True),
-    ]
+    ],
 )
 def test_only_one_security_definition_in_use_at_time(
     security_spec,

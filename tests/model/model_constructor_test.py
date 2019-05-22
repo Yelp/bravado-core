@@ -25,7 +25,8 @@ def test_empty_kwargs(user_type):
 
 
 def test_additionalProperties_defaults_to_true_when_not_present(
-        user_type, user_kwargs):
+        user_type, user_kwargs,
+):
     # verify exra kwargs are attached to the model as attributes when
     # additionalProperties is not present
     user_kwargs['foo'] = 'bar'
@@ -63,6 +64,8 @@ def test_allOf(cat_swagger_spec, cat_type, cat_kwargs):
     assert cat.photoUrls == ['example.com/img1', 'example.com/img2']
     assert cat.tags == [{'id': 1, 'name': 'cute'}]
     assert cat.neutered is True
-    assert set(cat) == set(collapsed_properties(
-        cat_swagger_spec.spec_dict['definitions']['Cat'], cat_swagger_spec
-    ).keys())
+    assert set(cat) == set(
+        collapsed_properties(
+            cat_swagger_spec.spec_dict['definitions']['Cat'], cat_swagger_spec,
+        ).keys(),
+    )

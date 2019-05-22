@@ -14,7 +14,7 @@ def int_array_spec():
         'type': 'array',
         'items': {
             'type': 'integer',
-        }
+        },
     }
 
 
@@ -41,13 +41,13 @@ def test_array_of_array(empty_swagger_spec):
             'type': 'array',
             'items': {
                 'type': 'string',
-            }
-        }
+            },
+        },
     }
     input = [
         ['one'],
         ['two', 'three'],
-        ['four', 'five', 'six']
+        ['four', 'five', 'six'],
     ]
     expected = copy.deepcopy(input)
     result = unmarshal_array(empty_swagger_spec, array_of_array_spec, input)
@@ -61,36 +61,37 @@ def test_array_of_objects(empty_swagger_spec):
             'type': 'object',
             'properties': {
                 'number': {
-                    'type': 'number'
+                    'type': 'number',
                 },
                 'street_name': {
-                    'type': 'string'
+                    'type': 'string',
                 },
                 'street_type': {
                     'type': 'string',
                     'enum': [
                         'Street',
                         'Avenue',
-                        'Boulevard']
-                }
-            }
-        }
+                        'Boulevard',
+                    ],
+                },
+            },
+        },
     }
     input = [
         {
             'number': 1600,
             'street_name': 'Pennsylvania',
-            'street_type': 'Avenue'
+            'street_type': 'Avenue',
         },
         {
             'number': 1700,
             'street_name': 'Main',
-            'street_type': 'Street'
+            'street_type': 'Street',
         },
         {
             'number': 1800,
             'street_name': 'Yelpy',
-            'street_type': 'Boulevard'
+            'street_type': 'Boulevard',
         },
     ]
     expected = copy.deepcopy(input)
@@ -106,7 +107,7 @@ def test_array_of_models(petstore_dict):
 
     array_of_pets_spec = {
         'type': 'array',
-        'items': petstore_spec.spec_dict['definitions']['Pet']
+        'items': petstore_spec.spec_dict['definitions']['Pet'],
     }
 
     fido_dict = {
@@ -125,8 +126,8 @@ def test_array_of_models(petstore_dict):
             },
             {
                 'id': 100,
-                'name': 'brown'
-            }
+                'name': 'brown',
+            },
         ],
     }
 
