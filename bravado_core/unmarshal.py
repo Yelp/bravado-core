@@ -83,7 +83,10 @@ def unmarshal_primitive(swagger_spec, primitive_spec, value):
     :raises: SwaggerMappingError
     """
     if value is None:
-        return handle_null_value(swagger_spec, primitive_spec)
+        value = handle_null_value(swagger_spec, primitive_spec)
+
+    if value is None:
+        return None
 
     value = formatter.to_python(swagger_spec, primitive_spec, value)
     return value
@@ -99,7 +102,10 @@ def unmarshal_array(swagger_spec, array_spec, array_value):
     :raises: SwaggerMappingError
     """
     if array_value is None:
-        return handle_null_value(swagger_spec, array_spec)
+        array_value = handle_null_value(swagger_spec, array_spec)
+
+    if array_value is None:
+        return None
 
     if not is_list_like(array_value):
         raise SwaggerMappingError(
@@ -127,7 +133,10 @@ def unmarshal_object(swagger_spec, object_spec, object_value):
     deref = swagger_spec.deref
 
     if object_value is None:
-        return handle_null_value(swagger_spec, object_spec)
+        object_value = handle_null_value(swagger_spec, object_spec)
+
+    if object_value is None:
+        return None
 
     if not is_dict_like(object_value):
         raise SwaggerMappingError(

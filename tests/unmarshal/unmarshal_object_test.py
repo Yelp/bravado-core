@@ -589,3 +589,21 @@ def test_unmarshal_object_with_additional_properties(minimal_swagger_dict, addit
     spec = Spec.from_dict(minimal_swagger_dict)
     MyModel = spec.definitions['MyModel']
     assert MyModel._unmarshal(value)._as_dict() == expected
+
+
+def test_default_with_format(empty_swagger_spec):
+    result = unmarshal_object(
+        empty_swagger_spec,
+        {
+            'type': 'object',
+            'properties': {
+                'item': {
+                    'type': 'string',
+                    'format': 'date',
+                },
+            },
+            'default': {'item': '2019-05-22'},
+        },
+        None,
+    )
+    assert {'item': datetime.date(2019, 5, 22)} == result

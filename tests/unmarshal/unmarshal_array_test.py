@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import copy
+import datetime
 
 import pytest
 
@@ -26,6 +27,22 @@ def test_primitive_array(empty_swagger_spec, int_array_spec):
 def test_empty_array(empty_swagger_spec, int_array_spec):
     result = unmarshal_array(empty_swagger_spec, int_array_spec, [])
     assert [] == result
+
+
+def test_default_with_format(empty_swagger_spec):
+    result = unmarshal_array(
+        empty_swagger_spec,
+        {
+            'type': 'array',
+            'items': {
+                'type': 'string',
+                'format': 'date',
+            },
+            'default': ['2019-05-22'],
+        },
+        None,
+    )
+    assert [datetime.date(2019, 5, 22)] == result
 
 
 def test_type_not_array_raises_error(empty_swagger_spec, int_array_spec):

@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import datetime
+
 import pytest
 
 from bravado_core.exception import SwaggerMappingError
@@ -78,6 +80,16 @@ def test_default(minimal_swagger_spec):
     }
 
     assert 42 == unmarshal_primitive(minimal_swagger_spec, integer_spec, None)
+
+
+def test_default_with_format(minimal_swagger_spec):
+    integer_spec = {
+        'type': 'string',
+        'format': 'date',
+        'default': '2019-05-22',
+    }
+
+    assert datetime.date(2019, 5, 22) == unmarshal_primitive(minimal_swagger_spec, integer_spec, None)
 
 
 def test_ref(minimal_swagger_dict):
