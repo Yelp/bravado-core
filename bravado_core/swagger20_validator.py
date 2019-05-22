@@ -33,10 +33,10 @@ def format_validator(swagger_spec, validator, format, instance, schema):
     In all other cases, delegate to the existing Draft4 `format` validator.
 
     """
-    if (
+    if instance is None and (
         is_param_spec(swagger_spec, schema) or
         is_prop_nullable(swagger_spec, schema)
-    ) and instance is None:
+    ):
         return
 
     for error in _DRAFT4_FORMAT_VALIDATOR(validator, format, instance, schema):
@@ -62,10 +62,10 @@ def type_validator(swagger_spec, validator, types, instance, schema):
     :param schema: swagger spec for the object
     :type schema: dict
     """
-    if (
+    if instance is None and (
         is_param_spec(swagger_spec, schema) or
         is_prop_nullable(swagger_spec, schema)
-    ) and instance is None:
+    ):
         return
 
     for error in _DRAFT4_TYPE_VALIDATOR(validator, types, instance, schema):
@@ -111,7 +111,7 @@ def enum_validator(swagger_spec, validator, enums, instance, schema):
     :type schema: dict
     """
 
-    if is_prop_nullable(swagger_spec, schema) and instance is None:
+    if instance is None and is_prop_nullable(swagger_spec, schema):
         return
 
     if schema.get('type') == 'array':
@@ -122,7 +122,7 @@ def enum_validator(swagger_spec, validator, enums, instance, schema):
 
     # Handle optional enum params with no value
     if is_param_spec(swagger_spec, schema):
-        if not is_required(swagger_spec, schema) and instance is None:
+        if instance is None and not is_required(swagger_spec, schema):
             return
 
     for error in _DRAFT4_ENUM_VALIDATOR(validator, enums, instance, schema):
