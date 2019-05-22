@@ -257,9 +257,7 @@ def test_user_defined_format_failure(minimal_swagger_spec, email_address_spec):
         str(excinfo.value)
 
 
-def test_builtin_format_still_works_when_user_defined_format_used(
-        minimal_swagger_spec,
-):
+def test_builtin_format_still_works_when_user_defined_format_used(minimal_swagger_spec):
     ipaddress_spec = {
         'type': 'string',
         'format': 'ipv4',

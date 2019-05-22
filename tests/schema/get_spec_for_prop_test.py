@@ -75,10 +75,7 @@ def test_declared_property(minimal_swagger_spec, address_spec, address):
     assert expected_spec == result
 
 
-def test_properties_and_additionalProperties_not_present(
-    minimal_swagger_spec,
-    address,
-):
+def test_properties_and_additionalProperties_not_present(minimal_swagger_spec, address):
     object_spec = {'type': 'object'}
     result = get_spec_for_prop(
         minimal_swagger_spec, object_spec, address, 'street_name',
@@ -86,9 +83,7 @@ def test_properties_and_additionalProperties_not_present(
     assert result is None
 
 
-def test_properties_not_present_and_additionalProperties_True(
-        minimal_swagger_spec, address,
-):
+def test_properties_not_present_and_additionalProperties_True(minimal_swagger_spec, address):
     object_spec = {
         'type': 'object',
         'additionalProperties': True,
@@ -99,9 +94,7 @@ def test_properties_not_present_and_additionalProperties_True(
     assert result is None
 
 
-def test_properties_not_present_and_additionalProperties_False(
-        minimal_swagger_spec, address,
-):
+def test_properties_not_present_and_additionalProperties_False(minimal_swagger_spec, address):
     object_spec = {
         'type': 'object',
         'additionalProperties': False,
@@ -112,10 +105,7 @@ def test_properties_not_present_and_additionalProperties_False(
     assert result is None
 
 
-def test_additionalProperties_with_spec(
-    minimal_swagger_spec, address_spec,
-    address,
-):
+def test_additionalProperties_with_spec(minimal_swagger_spec, address_spec, address):
     address_spec['additionalProperties'] = {'type': 'string'}
     expected_spec = {'type': 'string'}
     # 'city' is not a declared property so it gets classified under
@@ -126,20 +116,14 @@ def test_additionalProperties_with_spec(
     assert expected_spec == result
 
 
-def test_additionalProperties_not_dict_like(
-    minimal_swagger_spec, address_spec,
-    address,
-):
+def test_additionalProperties_not_dict_like(minimal_swagger_spec, address_spec, address):
     address_spec['additionalProperties'] = 'i am not a dict'
     with pytest.raises(SwaggerMappingError) as excinfo:
         get_spec_for_prop(minimal_swagger_spec, address_spec, address, 'city')
     assert "Don't know what to do" in str(excinfo.value)
 
 
-def test_composition(
-    minimal_swagger_dict, address_spec, address,
-    business_address_spec, business_address,
-):
+def test_composition(minimal_swagger_dict, address_spec, address, business_address_spec, business_address):
     minimal_swagger_dict['definitions']['Address'] = address_spec
     minimal_swagger_dict['definitions']['BusinessAddress'] = business_address_spec
     swagger_spec = Spec.from_dict(minimal_swagger_dict)

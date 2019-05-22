@@ -106,10 +106,7 @@ class Resource(object):
         """
         op = self.operations.get(item)
         if not op:
-            raise AttributeError(
-                u"Resource '%s' has no operation '%s'" %
-                (self.name, item),
-            )
+            raise AttributeError(u"Resource '{0}' has no operation '{1}'".format(self.name, item))
         return op
 
     def __dir__(self):

@@ -78,20 +78,14 @@ def email_address_array_spec():
     }
 
 
-def test_user_defined_format_success(
-    minimal_swagger_spec,
-    email_address_array_spec,
-):
+def test_user_defined_format_success(minimal_swagger_spec, email_address_array_spec):
     request_body = ['foo@bar.com']
     minimal_swagger_spec.register_format(email_address_format)
     # No exception thrown == success
     validate_array(minimal_swagger_spec, email_address_array_spec, request_body)
 
 
-def test_user_defined_format_failure(
-    minimal_swagger_spec,
-    email_address_array_spec,
-):
+def test_user_defined_format_failure(minimal_swagger_spec, email_address_array_spec):
     request_body = ['i_am_not_a_valid_email_address']
     minimal_swagger_spec.register_format(email_address_format)
     with pytest.raises(ValidationError) as excinfo:
@@ -103,9 +97,7 @@ def test_user_defined_format_failure(
         str(excinfo.value)
 
 
-def test_builtin_format_still_works_when_user_defined_format_used(
-        minimal_swagger_spec,
-):
+def test_builtin_format_still_works_when_user_defined_format_used(minimal_swagger_spec):
     ipaddress_array_spec = {
         'type': 'array',
         'items': {

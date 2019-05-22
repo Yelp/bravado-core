@@ -18,9 +18,7 @@ def test_security_object_and_definition_constants():
     assert SECURITY_OBJECTS.keys() == SECURITY_DEFINITIONS.keys()
 
 
-def test_op_with_security_in_op_without_security_defs(
-        specs_with_security_obj_in_op_and_no_security_specs,
-):
+def test_op_with_security_in_op_without_security_defs(specs_with_security_obj_in_op_and_no_security_specs):
     with pytest.raises(SwaggerSchemaError):
         build_resources(
             Spec(
@@ -29,9 +27,7 @@ def test_op_with_security_in_op_without_security_defs(
         )
 
 
-def test_op_with_security_in_root_without_security_defs(
-        specs_with_security_obj_in_root_and_no_security_specs,
-):
+def test_op_with_security_in_root_without_security_defs(specs_with_security_obj_in_root_and_no_security_specs):
     with pytest.raises(SwaggerSchemaError):
         build_resources(
             Spec(
@@ -57,9 +53,7 @@ def _validate_resources(resources, security_definitions_spec):
             assert len(operation.security_parameters) == 0
 
 
-def test_op_with_security_in_op_with_security_defs(
-        specs_with_security_obj_in_op_and_security_specs,
-):
+def test_op_with_security_in_op_with_security_defs(specs_with_security_obj_in_op_and_security_specs):
     security_definitions_spec = \
         specs_with_security_obj_in_op_and_security_specs['securityDefinitions']
     _validate_resources(
@@ -72,9 +66,7 @@ def test_op_with_security_in_op_with_security_defs(
     )
 
 
-def test_op_with_security_in_root_with_security_defs(
-        specs_with_security_obj_in_root_and_security_specs,
-):
+def test_op_with_security_in_root_with_security_defs(specs_with_security_obj_in_root_and_security_specs):
     security_definitions_spec = \
         specs_with_security_obj_in_root_and_security_specs['securityDefinitions']  # noqa
     _validate_resources(
@@ -87,9 +79,7 @@ def test_op_with_security_in_root_with_security_defs(
     )
 
 
-def test_op_with_security_in_root_with_empty_security_spec(
-        specs_with_security_obj_in_root_and_empty_security_spec,
-):
+def test_op_with_security_in_root_with_empty_security_spec(specs_with_security_obj_in_root_and_empty_security_spec):
     resources = build_resources(
         Spec(
             specs_with_security_obj_in_root_and_empty_security_spec,
@@ -135,19 +125,12 @@ def test_wrong_request_with_apiKey_security(petstore_spec):
         ('example5', 'get_example5', ()),
     ],
 )
-def test_security_parameters_selection(
-        security_spec,
-        resource,
-        operation,
-        expected_combinations,
-):
+def test_security_parameters_selection(security_spec, resource, operation, expected_combinations):
     op = security_spec.resources[resource].operations[operation]
     assert set(map(tuple, op.acceptable_security_definition_combinations)) == set(expected_combinations)
 
 
-def test_security_parameter_cannot_override_path_or_operation_parameter(
-        security_dict,
-):
+def test_security_parameter_cannot_override_path_or_operation_parameter(security_dict):
     security_dict['paths']['/example1']['get']['parameters'] = [{
         'description': 'sec1 as query parameter',
         'required': True,

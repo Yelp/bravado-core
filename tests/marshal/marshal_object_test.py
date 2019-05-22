@@ -148,7 +148,7 @@ def test_model(minimal_swagger_dict, address_spec):
 
 
 def test_object_not_dict_like_raises_error(
-        empty_swagger_spec, address_spec,
+    empty_swagger_spec, address_spec,
 ):
     i_am_not_dict_like = 34
     with pytest.raises(SwaggerMappingError) as excinfo:
@@ -157,7 +157,7 @@ def test_object_not_dict_like_raises_error(
 
 
 def test_missing_properties_not_marshaled(
-        empty_swagger_spec, address_spec, address,
+    empty_swagger_spec, address_spec, address,
 ):
     del address['number']
     expected_address = {
@@ -169,7 +169,7 @@ def test_missing_properties_not_marshaled(
 
 
 def test_property_set_to_None_not_marshaled(
-        empty_swagger_spec, address_spec, address,
+    empty_swagger_spec, address_spec, address,
 ):
     address['number'] = None
     expected_address = {
@@ -181,7 +181,7 @@ def test_property_set_to_None_not_marshaled(
 
 
 def test_pass_through_additionalProperties_with_no_spec(
-        empty_swagger_spec, address_spec, address,
+    empty_swagger_spec, address_spec, address,
 ):
     address_spec['additionalProperties'] = True
     address['city'] = 'Swaggerville'
@@ -196,7 +196,7 @@ def test_pass_through_additionalProperties_with_no_spec(
 
 
 def test_pass_through_property_with_no_spec(
-        empty_swagger_spec, address_spec, address,
+    empty_swagger_spec, address_spec, address,
 ):
     del address_spec['properties']['street_name']['type']
     # add a field with a None value and no spec

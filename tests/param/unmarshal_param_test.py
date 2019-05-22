@@ -84,9 +84,7 @@ def test_query_string(empty_swagger_spec, string_param_spec):
     assert 'darwin' == unmarshal_param(param, request)
 
 
-def test_optional_query_string_with_default(
-        empty_swagger_spec, string_param_spec,
-):
+def test_optional_query_string_with_default(empty_swagger_spec, string_param_spec):
     string_param_spec['required'] = False
     string_param_spec['default'] = 'bozo'
     param = Param(empty_swagger_spec, Mock(spec=Operation), string_param_spec)
@@ -94,18 +92,14 @@ def test_optional_query_string_with_default(
     assert 'bozo' == unmarshal_param(param, request)
 
 
-def test_optional_query_string_with_no_default_and_value_is_None(
-        empty_swagger_spec, string_param_spec,
-):
+def test_optional_query_string_with_no_default_and_value_is_None(empty_swagger_spec, string_param_spec):
     string_param_spec['required'] = False
     param = Param(empty_swagger_spec, Mock(spec=Operation), string_param_spec)
     request = Mock(spec=IncomingRequest, query={})
     assert unmarshal_param(param, request) is None
 
 
-def test_optional_query_string_enum_with_no_default_and_value_is_None(
-        empty_swagger_spec, string_param_spec,
-):
+def test_optional_query_string_enum_with_no_default_and_value_is_None(empty_swagger_spec, string_param_spec):
     string_param_spec['required'] = False
     string_param_spec['enum'] = ['encrypted', 'plaintext']
     param = Param(empty_swagger_spec, Mock(spec=Operation), string_param_spec)
@@ -122,10 +116,7 @@ def test_query_array(empty_swagger_spec, array_param_spec):
     assert ['cat', 'dog', 'mouse'] == unmarshal_param(param, request)
 
 
-def test_optional_query_array_with_no_default(
-    empty_swagger_spec,
-    array_param_spec,
-):
+def test_optional_query_array_with_no_default(empty_swagger_spec, array_param_spec):
     array_param_spec['required'] = False
     # Set to something other than 'multi' because 'multi' is a no-op in
     # unmarshal_collection_format()
@@ -135,9 +126,7 @@ def test_optional_query_array_with_no_default(
     assert unmarshal_param(param, request) is None
 
 
-def test_optional_query_array_with_default(
-        empty_swagger_spec, array_param_spec,
-):
+def test_optional_query_array_with_default(empty_swagger_spec, array_param_spec):
     array_param_spec['required'] = False
     array_param_spec['default'] = ['bird', 'fish']
     array_param_spec.pop('collectionFormat')
@@ -146,9 +135,7 @@ def test_optional_query_array_with_default(
     assert ['bird', 'fish'] == unmarshal_param(param, request)
 
 
-def test_optional_query_array_with_default_empty(
-        empty_swagger_spec, array_param_spec,
-):
+def test_optional_query_array_with_default_empty(empty_swagger_spec, array_param_spec):
     array_param_spec['required'] = False
     array_param_spec['default'] = []
     array_param_spec.pop('collectionFormat')
@@ -164,12 +151,7 @@ def test_optional_query_array_with_default_empty(
         (None, None),
     ],
 )
-def test_query_int_array(
-        test_input,
-        expected,
-        empty_swagger_spec,
-        int_array_param_spec,
-):
+def test_query_int_array(test_input, expected, empty_swagger_spec, int_array_param_spec):
     param = Param(
         empty_swagger_spec,
         Mock(spec=Operation),

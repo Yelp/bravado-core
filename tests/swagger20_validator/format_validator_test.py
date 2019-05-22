@@ -125,7 +125,7 @@ DummyFormat = SwaggerFormat(
     ),
 )
 def test_validate_object_with_different_format_configurations(
-        minimal_swagger_spec, value, format_, x_nullable, expect_exception,
+    minimal_swagger_spec, value, format_, x_nullable, expect_exception,
 ):
     minimal_swagger_spec.spec_dict['definitions']['obj'] = {
         'properties': {

@@ -11,7 +11,7 @@ def test_returns_produces_from_op(minimal_swagger_dict):
 
 
 def test_returns_produces_from_swagger_spec_when_not_present_on_op(
-        minimal_swagger_dict,
+    minimal_swagger_dict,
 ):
     op_spec = {
         # 'produces' left out intentionally
@@ -23,7 +23,7 @@ def test_returns_produces_from_swagger_spec_when_not_present_on_op(
 
 
 def test_produces_on_op_overrides_produces_from_swagger_spec(
-        minimal_swagger_dict,
+    minimal_swagger_dict,
 ):
     op_spec = {'produces': ['application/xml']}
     minimal_swagger_dict['produces'] = ['application/json']
@@ -33,7 +33,7 @@ def test_produces_on_op_overrides_produces_from_swagger_spec(
 
 
 def test_produces_not_present_on_swagger_spec_returns_empty_array(
-        minimal_swagger_dict,
+    minimal_swagger_dict,
 ):
     # The point being, None should never be returned
     op_spec = {

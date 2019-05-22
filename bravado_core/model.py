@@ -352,8 +352,9 @@ class Model(object):
 
         if additional and self._deny_additional_properties:
             raise AttributeError(
-                "Model {0} does not have attributes for: {1}"
-                .format(type(self), list(additional)),
+                "Model {0} does not have attributes for: {1}".format(
+                    type(self), list(additional),
+                ),
             )
 
         # Assign properties in model_spec, filling in None if missing from dct
@@ -407,8 +408,9 @@ class Model(object):
             return self[attr_name]
         except KeyError:
             raise AttributeError(
-                'type object {0!r} has no attribute {1!r}'
-                .format(type(self).__name__, attr_name),
+                'type object {0!r} has no attribute {1!r}'.format(
+                    type(self).__name__, attr_name,
+                ),
             )
 
     def __setattr__(self, attr_name, val):

@@ -24,9 +24,7 @@ def test_empty_kwargs(user_type):
     assert user.password is None
 
 
-def test_additionalProperties_defaults_to_true_when_not_present(
-        user_type, user_kwargs,
-):
+def test_additionalProperties_defaults_to_true_when_not_present(user_type, user_kwargs):
     # verify exra kwargs are attached to the model as attributes when
     # additionalProperties is not present
     user_kwargs['foo'] = 'bar'

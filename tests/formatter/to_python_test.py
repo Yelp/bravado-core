@@ -40,9 +40,7 @@ def test_datetime(minimal_swagger_spec):
 
 
 @patch('bravado_core.spec.warnings.warn')
-def test_no_registered_format_returns_value_as_is_and_issues_warning(
-        mock_warn, minimal_swagger_spec,
-):
+def test_no_registered_format_returns_value_as_is_and_issues_warning(mock_warn, minimal_swagger_spec):
     string_spec = {'type': 'string', 'format': 'bar'}
     assert 'baz' == to_python(minimal_swagger_spec, string_spec, 'baz')
     assert mock_warn.call_count == 1

@@ -329,9 +329,7 @@ def test_object_not_dict_like_raises_error(empty_swagger_spec, address_spec):
     assert 'Expected dict' in str(excinfo.value)
 
 
-def test_mising_properties_set_to_None(
-        empty_swagger_spec, address_spec, address,
-):
+def test_mising_properties_set_to_None(empty_swagger_spec, address_spec, address):
     del address['street_name']
     expected_address = {
         'number': 1600,
@@ -342,9 +340,7 @@ def test_mising_properties_set_to_None(
     assert expected_address == result
 
 
-def test_pass_through_additionalProperties_with_no_spec(
-        empty_swagger_spec, address_spec, address,
-):
+def test_pass_through_additionalProperties_with_no_spec(empty_swagger_spec, address_spec, address):
     address_spec['additionalProperties'] = True
     address['city'] = 'Swaggerville'
     expected_address = {
@@ -357,9 +353,7 @@ def test_pass_through_additionalProperties_with_no_spec(
     assert expected_address == result
 
 
-def test_pass_through_property_with_no_spec(
-        empty_swagger_spec, address_spec, address,
-):
+def test_pass_through_property_with_no_spec(empty_swagger_spec, address_spec, address):
     del address_spec['properties']['street_name']['type']
     result = unmarshal_object(empty_swagger_spec, address_spec, address)
     assert result == address

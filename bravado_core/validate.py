@@ -63,9 +63,7 @@ def validate_schema_object(swagger_spec, schema_object_spec, value):
 
     else:
         raise SwaggerMappingError(
-            'Unknown type {0} for value {1}'.format(
-                obj_type, value,
-            ),
+            'Unknown type {0} for value {1}'.format(obj_type, value),
         )
 
 
@@ -152,7 +150,9 @@ def validate_security_object(op, request_data):
                     set(security)
                     for index, security in enumerate(op.acceptable_security_definition_combinations)
                     if index in matched_security_indexes
-                ), key=len, reverse=True,
+                ),
+                key=len,
+                reverse=True,
             )
 
             # have all the security definition the same length?

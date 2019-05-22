@@ -13,7 +13,7 @@ def test_returns_consumes_from_op(minimal_swagger_dict):
 
 
 def test_returns_consumes_from_swagger_spec_when_not_present_on_op(
-        minimal_swagger_dict,
+    minimal_swagger_dict,
 ):
     op_spec = {
         # 'consumes' left out intentionally
@@ -25,7 +25,7 @@ def test_returns_consumes_from_swagger_spec_when_not_present_on_op(
 
 
 def test_consumes_on_op_overrides_consumes_from_swagger_spec(
-        minimal_swagger_dict,
+    minimal_swagger_dict,
 ):
     op_spec = {
         'consumes': ['application/x-www-form-urlencoded'],
@@ -37,7 +37,7 @@ def test_consumes_on_op_overrides_consumes_from_swagger_spec(
 
 
 def test_consumes_not_present_on_swagger_spec_returns_empty_array(
-        minimal_swagger_dict,
+    minimal_swagger_dict,
 ):
     # The point being, None should never be returned
     op_spec = {

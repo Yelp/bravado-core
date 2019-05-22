@@ -199,8 +199,9 @@ def validate_response_body(op, response_spec, response):
     if response.content_type not in op.produces:
         raise SwaggerMappingError(
             "Response content-type '{0}' is not supported by the Swagger "
-            "specification's content-types '{1}"
-            .format(response.content_type, op.produces),
+            "specification's content-types '{1}".format(
+                response.content_type, op.produces,
+            ),
         )
 
     if response.content_type == APP_JSON or response.content_type == APP_MSGPACK:
@@ -218,8 +219,7 @@ def validate_response_body(op, response_spec, response):
     else:
         # TODO: Expand content-type support for non-json types
         raise SwaggerMappingError(
-            "Unsupported content-type in response: {0}"
-            .format(response.content_type),
+            "Unsupported content-type in response: {0}".format(response.content_type),
         )
 
 

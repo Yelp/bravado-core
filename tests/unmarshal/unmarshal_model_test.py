@@ -95,9 +95,7 @@ def test_pet(petstore_dict, pet_dict):
     assert 'brown' == pet.tags[1].name
 
 
-def test_Nones_are_reintroduced_for_declared_properties_that_are_not_present(
-        petstore_dict, pet_dict,
-):
+def test_Nones_are_reintroduced_for_declared_properties_that_are_not_present(petstore_dict, pet_dict):
     petstore_spec = Spec.from_dict(petstore_dict)
     Pet = petstore_spec.definitions['Pet']
     Tag = petstore_spec.definitions['Tag']

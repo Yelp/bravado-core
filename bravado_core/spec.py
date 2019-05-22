@@ -275,9 +275,7 @@ class Spec(object):
         name = user_defined_format.format
         self.user_defined_formats[name] = user_defined_format
         validate = return_true_wrapper(user_defined_format.validate)
-        self.format_checker.checks(
-            name, raises=(SwaggerValidationError,),
-        )(validate)
+        self.format_checker.checks(name, raises=(SwaggerValidationError,))(validate)
 
     def get_format(self, name):
         """

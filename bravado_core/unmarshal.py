@@ -64,8 +64,7 @@ def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
         return value
 
     raise SwaggerMappingError(
-        "Don't know how to unmarshal value {0} with a type of {1}"
-        .format(value, obj_type),
+        "Don't know how to unmarshal value {0} with a type of {1}".format(value, obj_type),
     )
 
 
@@ -178,8 +177,7 @@ def unmarshal_model(swagger_spec, model_spec, model_value):
 
     if model_type is None:
         raise SwaggerMappingError(
-            'Unknown model {0} when trying to unmarshal {1}'
-            .format(model_name, model_value),
+            'Unknown model {0} when trying to unmarshal {1}'.format(model_name, model_value),
         )
 
     if model_value is None:
@@ -188,8 +186,7 @@ def unmarshal_model(swagger_spec, model_spec, model_value):
     if not is_dict_like(model_value):
         raise SwaggerMappingError(
             "Expected type to be dict for value {0} to unmarshal to a {1}."
-            "Was {2} instead."
-            .format(model_value, model_type, type(model_value)),
+            "Was {2} instead.".format(model_value, model_type, type(model_value)),
         )
 
     # Check if model is polymorphic
@@ -199,8 +196,9 @@ def unmarshal_model(swagger_spec, model_spec, model_value):
         if child_model_name not in swagger_spec.definitions:
             raise SwaggerMappingError(
                 'Unknown model {0} when trying to unmarshal {1}. '
-                'Value of {2}\'s discriminator {3} did not match any definitions.'
-                .format(child_model_name, model_value, model_name, discriminator),
+                'Value of {2}\'s discriminator {3} did not match any definitions.'.format(
+                    child_model_name, model_value, model_name, discriminator,
+                ),
             )
         model_type = swagger_spec.definitions.get(child_model_name)
         model_spec = model_type._model_spec

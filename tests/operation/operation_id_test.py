@@ -51,9 +51,7 @@ def test_returns_generated_operation_id_with_path_parameters():
         ('_', 'get_pet_petId'),                 # crazy corner case 3
     ],
 )
-def test_returns_sanitized_operation_id_when_using_illegal_chars(
-        input, expected,
-):
+def test_returns_sanitized_operation_id_when_using_illegal_chars(input, expected):
     spec = Spec(spec_dict={})
     operation_spec = {'operationId': input}
     operation = Operation(spec, '/pet/{petId}', 'get', operation_spec)
