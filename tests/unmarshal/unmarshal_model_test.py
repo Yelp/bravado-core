@@ -134,6 +134,7 @@ def test_value_is_not_dict_like_raises_error(petstore_dict):
     assert 'Expected type to be dict' in str(excinfo.value)
 
 
+@pytest.mark.filterwarnings("ignore:.*with siblings that will be overwritten")
 def test_nullable_object_properties(petstore_dict, pet_dict):
     pet_spec_dict = petstore_dict['definitions']['Pet']
     pet_spec_dict['required'].append('category')

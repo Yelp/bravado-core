@@ -7,6 +7,7 @@ import yaml
 from six.moves.urllib import parse as urlparse
 from six.moves.urllib.request import pathname2url
 from six.moves.urllib.request import url2pathname
+from swagger_spec_validator.common import SwaggerValidationWarning
 
 from bravado_core.spec import Spec
 
@@ -205,7 +206,8 @@ def specs_with_none_in_ref_dict(specs_with_none_in_ref_abspath):
 
 @pytest.fixture
 def specs_with_none_in_ref_spec(specs_with_none_in_ref_dict, specs_with_none_in_ref_abspath):
-    return Spec.from_dict(specs_with_none_in_ref_dict, origin_url=get_url(specs_with_none_in_ref_abspath))
+    with pytest.warns(SwaggerValidationWarning):
+        return Spec.from_dict(specs_with_none_in_ref_dict, origin_url=get_url(specs_with_none_in_ref_abspath))
 
 
 @pytest.fixture
