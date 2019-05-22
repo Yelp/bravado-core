@@ -225,6 +225,10 @@ def node_spec():
     return {
         'type': 'object',
         'properties': {
+            'date': {
+                'type': 'string',
+                'format': 'date',
+            },
             'name': {
                 'type': 'string',
             },

@@ -105,6 +105,7 @@ def test_recursive_ref(node_spec, recursive_swagger_spec):
 
     expected_props = {
         'name': {'type': 'string'},
+        'date': {'type': 'string', 'format': 'date'},
         'child': {'$ref': '#/definitions/Node'},
     }
     assert props == expected_props

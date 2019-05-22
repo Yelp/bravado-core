@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import datetime
 from copy import deepcopy
 
 import pytest
@@ -206,7 +207,6 @@ def test_ensure_polymorphic_objects_are_correctly_build_in_case_of_fully_derefer
     polymorphic_dict, validate_responses, use_models, internally_dereference_refs,
 ):
     raw_response = [{'name': 'name', 'type': 'Dog', 'birth_date': '2017-11-02'}]
-
     spec = Spec.from_dict(
         spec_dict=polymorphic_dict,
         config={
@@ -223,12 +223,11 @@ def test_ensure_polymorphic_objects_are_correctly_build_in_case_of_fully_derefer
         headers={'content-type': APP_JSON},
         json=Mock(return_value=raw_response),
     )
-
     unmarshaled_response = unmarshal_response(response, spec.resources['pets'].get_pets)
-    if use_models:
-        assert repr(unmarshaled_response) == "[Dog(birth_date=datetime.date(2017, 11, 2), name='name', type='Dog')]"
-    else:
-        assert unmarshaled_response == raw_response
+
+    model_type = spec.definitions['Dog'] if use_models else dict
+    expected_response = [model_type(birth_date=datetime.date(2017, 11, 2), name='name', type='Dog')]
+    assert expected_response == unmarshaled_response
 
 
 def test_ensure_model_spec_contains_reference_if_fully_dereference_is_not_enabled(polymorphic_dict):

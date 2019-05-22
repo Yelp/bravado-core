@@ -14,6 +14,9 @@ from bravado_core.schema import is_list_like
 from bravado_core.schema import SWAGGER_PRIMITIVES
 
 
+_NOT_FOUND = object()
+
+
 def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
     """Unmarshal the value using the given schema object specification.
 
@@ -136,6 +139,22 @@ def unmarshal_object(swagger_spec, object_spec, object_value):
     object_spec = deref(object_spec)
     required_fields = object_spec.get('required', [])
     properties = collapsed_properties(object_spec, swagger_spec)
+
+    # Check if object_spec is polymorphic
+    discriminator = object_spec.get('discriminator')
+    if discriminator is not None:
+        child_model_name = object_value.get(discriminator, None)
+        child_model_type = swagger_spec.definitions.get(child_model_name, _NOT_FOUND)
+        if child_model_type is _NOT_FOUND:
+            # TODO: should this be here? not think so
+            raise SwaggerMappingError(
+                'Unknown model {0} when trying to unmarshal {1}. '
+                'Value of discriminator {2} did not match any definitions.'
+                .format(child_model_name, object_value, discriminator)
+            )
+        elif child_model_type._model_spec != object_spec:
+            # The discriminator field does targets a different model, let's unmarshal it
+            return unmarshal_schema_object(swagger_spec, child_model_type._model_spec, object_value)
 
     result = {}
     for k, v in iteritems(object_value):
