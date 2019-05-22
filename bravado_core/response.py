@@ -41,9 +41,11 @@ class IncomingResponse(object):
         if name in self.__required_attrs__:
             raise NotImplementedError(
                 'This IncomingResponse type {0} forgot to implement an attr '
-                'for `{1}`'.format(type(self), name))
+                'for `{1}`'.format(type(self), name),
+            )
         raise AttributeError(
-            "'{0}' object has no attribute '{1}'".format(type(self), name))
+            "'{0}' object has no attribute '{1}'".format(type(self), name),
+        )
 
     def json(self, **kwargs):
         """
@@ -75,9 +77,11 @@ class OutgoingResponse(object):
         if name in self.__required_attrs__:
             raise NotImplementedError(
                 'This OutgoingResponse type {0} forgot to implement an attr'
-                ' for `{1}`'.format(type(self), name))
+                ' for `{1}`'.format(type(self), name),
+            )
         raise AttributeError(
-            "'{0}' object has no attribute '{1}'".format(type(self), name))
+            "'{0}' object has no attribute '{1}'".format(type(self), name),
+        )
 
     def json(self, **kwargs):
         """
@@ -145,13 +149,15 @@ def get_response_spec(status_code, op):
     default_response_spec = deref(response_specs.get('default', None))
 
     response_spec = deref(
-        response_specs.get(str(status_code), default_response_spec))
+        response_specs.get(str(status_code), default_response_spec),
+    )
 
     if response_spec is None:
         raise MatchingResponseNotFound(
             "Response specification matching http status_code {0} not found "
             "for operation {1}. Either add a response specification for the "
-            "status_code or use a `default` response.".format(status_code, op))
+            "status_code or use a `default` response.".format(status_code, op),
+        )
     return response_spec
 
 
@@ -187,13 +193,16 @@ def validate_response_body(op, response_spec, response):
         if response.text in EMPTY_BODIES:
             return
         raise SwaggerMappingError(
-            "Response body should be empty: {0}".format(response.text))
+            "Response body should be empty: {0}".format(response.text),
+        )
 
     if response.content_type not in op.produces:
         raise SwaggerMappingError(
             "Response content-type '{0}' is not supported by the Swagger "
-            "specification's content-types '{1}"
-            .format(response.content_type, op.produces))
+            "specification's content-types '{1}".format(
+                response.content_type, op.produces,
+            ),
+        )
 
     if response.content_type == APP_JSON or response.content_type == APP_MSGPACK:
         if response.content_type == APP_JSON:
@@ -201,7 +210,8 @@ def validate_response_body(op, response_spec, response):
         else:
             response_value = msgpack.loads(response.raw_bytes, raw=False)
         validate_schema_object(
-            op.swagger_spec, response_body_spec, response_value)
+            op.swagger_spec, response_body_spec, response_value,
+        )
     elif response.content_type.startswith("text/"):
         # TODO: support some kind of validation for text/* responses
         # TODO: but in the meantime don't raise errors for them
@@ -209,8 +219,8 @@ def validate_response_body(op, response_spec, response):
     else:
         # TODO: Expand content-type support for non-json types
         raise SwaggerMappingError(
-            "Unsupported content-type in response: {0}"
-            .format(response.content_type))
+            "Unsupported content-type in response: {0}".format(response.content_type),
+        )
 
 
 def validate_response_headers(op, response_spec, response):
@@ -230,4 +240,5 @@ def validate_response_headers(op, response_spec, response):
     for header_name, header_spec in iteritems(headers_spec):
         header_spec = deref(header_spec)
         validate_schema_object(
-            op.swagger_spec, header_spec, response.headers.get(header_name))
+            op.swagger_spec, header_spec, response.headers.get(header_name),
+        )

@@ -15,12 +15,12 @@ def test_single_file(empty_swagger_spec):
     param_spec = {
         'type': 'file',
         'in': 'formData',
-        'name': 'photo'
+        'name': 'photo',
     }
     param = Param(empty_swagger_spec, op, param_spec)
     add_file(param, file_contents, request)
     expected_request = {
-        'files': [('photo', ('photo', 'I am the contents of a file'))]
+        'files': [('photo', ('photo', 'I am the contents of a file'))],
     }
     assert expected_request == request
 
@@ -33,12 +33,12 @@ def test_single_named_file(empty_swagger_spec):
     param_spec = {
         'type': 'file',
         'in': 'formData',
-        'name': 'photo'
+        'name': 'photo',
     }
     param = Param(empty_swagger_spec, op, param_spec)
     add_file(param, (file_name, file_contents), request)
     expected_request = {
-        'files': [('photo', (file_name, 'I am the contents of a file'))]
+        'files': [('photo', (file_name, 'I am the contents of a file'))],
     }
     assert expected_request == request
 
@@ -51,12 +51,12 @@ def test_multiple_files(empty_swagger_spec):
     param1_spec = {
         'type': 'file',
         'in': 'formData',
-        'name': 'photo'
+        'name': 'photo',
     }
     param2_spec = {
         'type': 'file',
         'in': 'formData',
-        'name': 'headshot'
+        'name': 'headshot',
     }
 
     param1 = Param(empty_swagger_spec, op, param1_spec)
@@ -67,7 +67,7 @@ def test_multiple_files(empty_swagger_spec):
         'files': [
             ('photo', ('photo', 'I am the contents of a file1')),
             ('headshot', ('headshot', 'I am the contents of a file2')),
-        ]
+        ],
     }
     assert expected_request == request
 
@@ -79,7 +79,7 @@ def test_mime_type_not_found_in_consumes(empty_swagger_spec):
     param_spec = {
         'type': 'file',
         'in': 'formData',
-        'name': 'photo'
+        'name': 'photo',
     }
     param = Param(empty_swagger_spec, op, param_spec)
     with pytest.raises(SwaggerMappingError) as excinfo:

@@ -10,11 +10,11 @@ def test_no_params(minimal_swagger_dict):
         # op params would go here
         'responses': {
             '200': {
-            }
-        }
+            },
+        },
     }
     path_spec = {
-        'get': op_spec
+        'get': op_spec,
         # path params would go here
     }
     minimal_swagger_dict['paths']['/pets'] = path_spec
@@ -33,12 +33,12 @@ def test_op_param_only(minimal_swagger_dict):
                 'in': 'query',
                 'required': 'true',
                 'type': 'integer',
-            }
+            },
         ],
         'responses': {
             '200': {
-            }
-        }
+            },
+        },
     }
     path_spec = {
         'get': op_spec,
@@ -58,8 +58,8 @@ def test_path_param_only(minimal_swagger_dict):
         # op params would go here
         'responses': {
             '200': {
-            }
-        }
+            },
+        },
     }
     path_spec = {
         'get': op_spec,
@@ -69,7 +69,7 @@ def test_path_param_only(minimal_swagger_dict):
                 'in': 'query',
                 'required': 'true',
                 'type': 'integer',
-            }
+            },
         ],
     }
     minimal_swagger_dict['paths']['/pets'] = path_spec
@@ -89,12 +89,12 @@ def test_path_param_and_op_param(minimal_swagger_dict):
                 'in': 'query',
                 'required': True,
                 'type': 'integer',
-            }
+            },
         ],
         'responses': {
             '200': {
-            }
-        }
+            },
+        },
     }
     path_spec = {
         'get': op_spec,
@@ -104,7 +104,7 @@ def test_path_param_and_op_param(minimal_swagger_dict):
                 'in': 'query',
                 'required': False,
                 'type': 'string',
-            }
+            },
         ],
     }
     minimal_swagger_dict['paths']['/pets'] = path_spec
@@ -126,12 +126,12 @@ def test_op_param_overrides_path_param(minimal_swagger_dict):
                 'in': 'query',
                 'required': True,
                 'type': 'string',
-            }
+            },
         ],
         'responses': {
             '200': {
-            }
-        }
+            },
+        },
     }
     path_spec = {
         'get': op_spec,
@@ -141,7 +141,7 @@ def test_op_param_overrides_path_param(minimal_swagger_dict):
                 'in': 'query',
                 'required': False,
                 'type': 'string',
-            }
+            },
         ],
     }
     minimal_swagger_dict['paths']['/pets'] = path_spec
@@ -177,8 +177,8 @@ def test_path_param_and_op_param_refs(minimal_swagger_dict):
         ],
         'responses': {
             '200': {
-            }
-        }
+            },
+        },
     }
     path_spec = {
         'get': op_spec,
@@ -202,8 +202,8 @@ def test_sanitized_param(minimal_swagger_dict):
         # op params would go here
         'responses': {
             '200': {
-            }
-        }
+            },
+        },
     }
     path_spec = {
         'get': op_spec,
@@ -213,7 +213,7 @@ def test_sanitized_param(minimal_swagger_dict):
                 'in': 'headers',
                 'required': 'true',
                 'type': 'integer',
-            }
+            },
         ],
     }
     minimal_swagger_dict['paths']['/pets'] = path_spec

@@ -40,17 +40,18 @@ def test_returns_generated_operation_id_with_path_parameters():
     assert 'get_pet_petId' == operation.operation_id
 
 
-@pytest.mark.parametrize(('input', 'expected'), [
-    ('pet.getBy Id', 'pet_getBy_Id'),      # simple case
-    ('_getPetById_', 'getPetById'),        # leading/trailing underscore
-    ('get__Pet_By__Id', 'get_Pet_By_Id'),  # double underscores
-    ('^&#@!$foo%+++:;"<>?/', 'foo'),       # bunch of illegal chars
-    ('', 'get_pet_petId'),                 # crazy corner case 1
-    (' ', 'get_pet_petId'),                # crazy corner case 2
-    ('_', 'get_pet_petId')                 # crazy corner case 3
-])
-def test_returns_sanitized_operation_id_when_using_illegal_chars(
-        input, expected):
+@pytest.mark.parametrize(
+    ('input', 'expected'), [
+        ('pet.getBy Id', 'pet_getBy_Id'),      # simple case
+        ('_getPetById_', 'getPetById'),        # leading/trailing underscore
+        ('get__Pet_By__Id', 'get_Pet_By_Id'),  # double underscores
+        ('^&#@!$foo%+++:;"<>?/', 'foo'),       # bunch of illegal chars
+        ('', 'get_pet_petId'),                 # crazy corner case 1
+        (' ', 'get_pet_petId'),                # crazy corner case 2
+        ('_', 'get_pet_petId'),                 # crazy corner case 3
+    ],
+)
+def test_returns_sanitized_operation_id_when_using_illegal_chars(input, expected):
     spec = Spec(spec_dict={})
     operation_spec = {'operationId': input}
     operation = Operation(spec, '/pet/{petId}', 'get', operation_spec)

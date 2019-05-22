@@ -188,7 +188,7 @@ def build_params(op):
             raise SwaggerSchemaError(
                 "'{0}' security parameter is overriding a parameter defined in operation or path object".format(
                     parameter.name,
-                )
+                ),
             )
         else:
             # not directly in params because different security requirements could share parameters

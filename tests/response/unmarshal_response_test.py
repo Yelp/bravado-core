@@ -16,7 +16,7 @@ def response_spec():
         'description': "Day of the week",
         'schema': {
             'type': 'string',
-        }
+        },
     }
 
 
@@ -38,7 +38,8 @@ def test_json_content(empty_swagger_spec, response_spec):
         spec=IncomingResponse,
         status_code=200,
         headers={'content-type': APP_JSON},
-        json=Mock(return_value='Monday'))
+        json=Mock(return_value='Monday'),
+    )
 
     with patch('bravado_core.response.get_response_spec') as m:
         m.return_value = response_spec
@@ -52,7 +53,8 @@ def test_msgpack_content(empty_swagger_spec, response_spec):
         spec=IncomingResponse,
         status_code=200,
         headers={'content-type': APP_MSGPACK},
-        raw_bytes=msgpack.dumps(message, use_bin_type=True))
+        raw_bytes=msgpack.dumps(message, use_bin_type=True),
+    )
 
     with patch(
         'bravado_core.response.get_response_spec',
@@ -67,7 +69,8 @@ def test_text_content(empty_swagger_spec, response_spec):
         spec=IncomingResponse,
         status_code=200,
         headers={'content-type': 'text/plain'},
-        text='Monday')
+        text='Monday',
+    )
 
     with patch('bravado_core.response.get_response_spec') as m:
         m.return_value = response_spec
@@ -81,7 +84,8 @@ def test_skips_validation(empty_swagger_spec, response_spec):
         spec=IncomingResponse,
         status_code=200,
         headers={'content-type': APP_JSON},
-        json=Mock(return_value='Monday'))
+        json=Mock(return_value='Monday'),
+    )
 
     with patch('bravado_core.response.validate_schema_object') as val_schem:
         with patch('bravado_core.response.get_response_spec') as get_resp:
@@ -97,7 +101,8 @@ def test_performs_validation(empty_swagger_spec, response_spec):
         spec=IncomingResponse,
         status_code=200,
         headers={'content-type': APP_JSON},
-        json=Mock(return_value='Monday'))
+        json=Mock(return_value='Monday'),
+    )
 
     with patch('bravado_core.response.validate_schema_object') as val_schem:
         with patch('bravado_core.response.get_response_spec') as get_resp:

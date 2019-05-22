@@ -30,7 +30,7 @@ def array_param_spec():
         'description': 'List of animals',
         'type': 'array',
         'items': {
-            'type': 'string'
+            'type': 'string',
         },
         'collectionFormat': 'multi',
     }
@@ -45,7 +45,7 @@ def int_array_param_spec():
         'type': 'array',
         'items': {
             'type': 'integer',
-            'format': 'int64'
+            'format': 'int64',
         },
         'collectionFormat': 'multi',
     }
@@ -84,8 +84,7 @@ def test_query_string(empty_swagger_spec, string_param_spec):
     assert 'darwin' == unmarshal_param(param, request)
 
 
-def test_optional_query_string_with_default(
-        empty_swagger_spec, string_param_spec):
+def test_optional_query_string_with_default(empty_swagger_spec, string_param_spec):
     string_param_spec['required'] = False
     string_param_spec['default'] = 'bozo'
     param = Param(empty_swagger_spec, Mock(spec=Operation), string_param_spec)
@@ -93,16 +92,14 @@ def test_optional_query_string_with_default(
     assert 'bozo' == unmarshal_param(param, request)
 
 
-def test_optional_query_string_with_no_default_and_value_is_None(
-        empty_swagger_spec, string_param_spec):
+def test_optional_query_string_with_no_default_and_value_is_None(empty_swagger_spec, string_param_spec):
     string_param_spec['required'] = False
     param = Param(empty_swagger_spec, Mock(spec=Operation), string_param_spec)
     request = Mock(spec=IncomingRequest, query={})
     assert unmarshal_param(param, request) is None
 
 
-def test_optional_query_string_enum_with_no_default_and_value_is_None(
-        empty_swagger_spec, string_param_spec):
+def test_optional_query_string_enum_with_no_default_and_value_is_None(empty_swagger_spec, string_param_spec):
     string_param_spec['required'] = False
     string_param_spec['enum'] = ['encrypted', 'plaintext']
     param = Param(empty_swagger_spec, Mock(spec=Operation), string_param_spec)
@@ -114,12 +111,12 @@ def test_query_array(empty_swagger_spec, array_param_spec):
     param = Param(empty_swagger_spec, Mock(spec=Operation), array_param_spec)
     request = Mock(
         spec=IncomingRequest,
-        query={'animals': ['cat', 'dog', 'mouse']})
+        query={'animals': ['cat', 'dog', 'mouse']},
+    )
     assert ['cat', 'dog', 'mouse'] == unmarshal_param(param, request)
 
 
-def test_optional_query_array_with_no_default(empty_swagger_spec,
-                                              array_param_spec):
+def test_optional_query_array_with_no_default(empty_swagger_spec, array_param_spec):
     array_param_spec['required'] = False
     # Set to something other than 'multi' because 'multi' is a no-op in
     # unmarshal_collection_format()
@@ -129,8 +126,7 @@ def test_optional_query_array_with_no_default(empty_swagger_spec,
     assert unmarshal_param(param, request) is None
 
 
-def test_optional_query_array_with_default(
-        empty_swagger_spec, array_param_spec):
+def test_optional_query_array_with_default(empty_swagger_spec, array_param_spec):
     array_param_spec['required'] = False
     array_param_spec['default'] = ['bird', 'fish']
     array_param_spec.pop('collectionFormat')
@@ -139,8 +135,7 @@ def test_optional_query_array_with_default(
     assert ['bird', 'fish'] == unmarshal_param(param, request)
 
 
-def test_optional_query_array_with_default_empty(
-        empty_swagger_spec, array_param_spec):
+def test_optional_query_array_with_default_empty(empty_swagger_spec, array_param_spec):
     array_param_spec['required'] = False
     array_param_spec['default'] = []
     array_param_spec.pop('collectionFormat')
@@ -149,23 +144,23 @@ def test_optional_query_array_with_default_empty(
     assert [] == unmarshal_param(param, request)
 
 
-@pytest.mark.parametrize("test_input,expected", [
-    (["4", "2", "3"], [4, 2, 3]),
-    ("23", [23]),
-    (None, None)
-])
-def test_query_int_array(
-        test_input,
-        expected,
+@pytest.mark.parametrize(
+    "test_input,expected", [
+        (["4", "2", "3"], [4, 2, 3]),
+        ("23", [23]),
+        (None, None),
+    ],
+)
+def test_query_int_array(test_input, expected, empty_swagger_spec, int_array_param_spec):
+    param = Param(
         empty_swagger_spec,
+        Mock(spec=Operation),
         int_array_param_spec,
-):
-    param = Param(empty_swagger_spec,
-                  Mock(spec=Operation),
-                  int_array_param_spec)
+    )
     request = Mock(
         spec=IncomingRequest,
-        query={'numbers': test_input})
+        query={'numbers': test_input},
+    )
     assert expected == unmarshal_param(param, request)
 
 
@@ -220,16 +215,19 @@ def test_formData_file(empty_swagger_spec, param_spec):
     param = Param(
         empty_swagger_spec,
         Mock(spec=Operation, consumes=['multipart/form-data']),
-        param_spec)
-    request = Mock(spec=IncomingRequest,
-                   files={'selfie': '<imagine binary data>'})
+        param_spec,
+    )
+    request = Mock(
+        spec=IncomingRequest,
+        files={'selfie': '<imagine binary data>'},
+    )
     assert '<imagine binary data>' == unmarshal_param(param, request)
 
 
 def test_body(empty_swagger_spec, param_spec):
     param_spec['in'] = 'body'
     param_spec['schema'] = {
-        'type': 'integer'
+        'type': 'integer',
     }
     del param_spec['type']
     del param_spec['format']
@@ -260,7 +258,7 @@ def test_validate_requests(petstore_dict):
 def test_ref(minimal_swagger_dict, array_param_spec):
     ref_spec = {'$ref': '#/refs/ArrayParam'}
     minimal_swagger_dict['refs'] = {
-        'ArrayParam': array_param_spec
+        'ArrayParam': array_param_spec,
     }
     swagger_spec = Spec(minimal_swagger_dict)
     param = Param(swagger_spec, Mock(spec=Operation), ref_spec)

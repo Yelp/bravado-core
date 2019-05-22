@@ -64,8 +64,8 @@ def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
         return value
 
     raise SwaggerMappingError(
-        "Don't know how to unmarshal value {0} with a type of {1}"
-        .format(value, obj_type))
+        "Don't know how to unmarshal value {0} with a type of {1}".format(value, obj_type),
+    )
 
 
 def unmarshal_primitive(swagger_spec, primitive_spec, value):
@@ -99,8 +99,11 @@ def unmarshal_array(swagger_spec, array_spec, array_value):
         return handle_null_value(swagger_spec, array_spec)
 
     if not is_list_like(array_value):
-        raise SwaggerMappingError('Expected list like type for {0}:{1}'.format(
-            type(array_value), array_value))
+        raise SwaggerMappingError(
+            'Expected list like type for {0}:{1}'.format(
+                type(array_value), array_value,
+            ),
+        )
 
     item_spec = swagger_spec.deref(array_spec).get('items')
     return [
@@ -124,8 +127,11 @@ def unmarshal_object(swagger_spec, object_spec, object_value):
         return handle_null_value(swagger_spec, object_spec)
 
     if not is_dict_like(object_value):
-        raise SwaggerMappingError('Expected dict like type for {0}:{1}'.format(
-            type(object_value), object_value))
+        raise SwaggerMappingError(
+            'Expected dict like type for {0}:{1}'.format(
+                type(object_value), object_value,
+            ),
+        )
 
     object_spec = deref(object_spec)
     required_fields = object_spec.get('required', [])
@@ -134,7 +140,8 @@ def unmarshal_object(swagger_spec, object_spec, object_value):
     result = {}
     for k, v in iteritems(object_value):
         prop_spec = get_spec_for_prop(
-            swagger_spec, object_spec, object_value, k, properties)
+            swagger_spec, object_spec, object_value, k, properties,
+        )
         if v is None and k not in required_fields and prop_spec:
             if schema.has_default(swagger_spec, prop_spec):
                 result[k] = schema.get_default(swagger_spec, prop_spec)
@@ -170,8 +177,8 @@ def unmarshal_model(swagger_spec, model_spec, model_value):
 
     if model_type is None:
         raise SwaggerMappingError(
-            'Unknown model {0} when trying to unmarshal {1}'
-            .format(model_name, model_value))
+            'Unknown model {0} when trying to unmarshal {1}'.format(model_name, model_value),
+        )
 
     if model_value is None:
         return handle_null_value(swagger_spec, model_spec)
@@ -179,8 +186,8 @@ def unmarshal_model(swagger_spec, model_spec, model_value):
     if not is_dict_like(model_value):
         raise SwaggerMappingError(
             "Expected type to be dict for value {0} to unmarshal to a {1}."
-            "Was {2} instead."
-            .format(model_value, model_type, type(model_value)))
+            "Was {2} instead.".format(model_value, model_type, type(model_value)),
+        )
 
     # Check if model is polymorphic
     discriminator = model_spec.get('discriminator')
@@ -189,8 +196,9 @@ def unmarshal_model(swagger_spec, model_spec, model_value):
         if child_model_name not in swagger_spec.definitions:
             raise SwaggerMappingError(
                 'Unknown model {0} when trying to unmarshal {1}. '
-                'Value of {2}\'s discriminator {3} did not match any definitions.'
-                .format(child_model_name, model_value, model_name, discriminator)
+                'Value of {2}\'s discriminator {3} did not match any definitions.'.format(
+                    child_model_name, model_value, model_name, discriminator,
+                ),
             )
         model_type = swagger_spec.definitions.get(child_model_name)
         model_spec = model_type._model_spec

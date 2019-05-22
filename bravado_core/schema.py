@@ -133,7 +133,8 @@ def get_spec_for_prop(swagger_spec, object_spec, object_value, prop_name, proper
 
     raise SwaggerMappingError(
         "Don't know what to do with `additionalProperties` in spec {0} "
-        "when inspecting value {1}".format(object_spec, object_value))
+        "when inspecting value {1}".format(object_spec, object_value),
+    )
 
 
 def handle_null_value(swagger_spec, schema_object_spec):
@@ -154,7 +155,8 @@ def handle_null_value(swagger_spec, schema_object_spec):
         return None
 
     raise SwaggerMappingError(
-        'Spec {0} is a required value'.format(schema_object_spec))
+        'Spec {0} is a required value'.format(schema_object_spec),
+    )
 
 
 def collapsed_properties(model_spec, swagger_spec):

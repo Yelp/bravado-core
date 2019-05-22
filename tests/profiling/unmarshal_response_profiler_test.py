@@ -10,7 +10,7 @@ class FakeJsonResponse(IncomingResponse):
         text,
         status_code=200,
         reason='OK',
-        headers=None
+        headers=None,
     ):
         self.text = text
         self.status_code = 200

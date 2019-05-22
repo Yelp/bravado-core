@@ -8,11 +8,11 @@ def pet_spec():
     return {
         'properties': {
             'name': {
-                'type': 'string'
+                'type': 'string',
             },
         },
         'required': [
-            'name'
+            'name',
         ],
         'type': 'object',
     }
@@ -25,14 +25,14 @@ def paths_spec():
         "/pet/findByStatus": {
             "get": {
                 "tags": [
-                    "pet"
+                    "pet",
                 ],
                 "summary": "Finds Pets by status",
                 "description": "Multiple status values can be provided with comma seperated strings",  # noqa
                 "operationId": "findPetsByStatus",
                 "produces": [
                     "application/json",
-                    "application/xml"
+                    "application/xml",
                 ],
                 "parameters": [
                     {
@@ -42,11 +42,11 @@ def paths_spec():
                         "required": False,
                         "type": "array",
                         "items": {
-                            "type": "string"
+                            "type": "string",
                         },
                         "collectionFormat": "multi",
-                        "default": "available"
-                    }
+                        "default": "available",
+                    },
                 ],
                 "responses": {
                     "200": {
@@ -54,14 +54,14 @@ def paths_spec():
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/Pet"
-                            }
-                        }
+                                "$ref": "#/definitions/Pet",
+                            },
+                        },
                     },
                     "400": {
-                        "description": "Invalid status value"
-                    }
-                }
-            }
+                        "description": "Invalid status value",
+                    },
+                },
+            },
         },
     }

@@ -62,8 +62,9 @@ def validate_schema_object(swagger_spec, schema_object_spec, value):
         pass
 
     else:
-        raise SwaggerMappingError('Unknown type {0} for value {1}'.format(
-            obj_type, value))
+        raise SwaggerMappingError(
+            'Unknown type {0} for value {1}'.format(obj_type, value),
+        )
 
 
 @scrub_sensitive_value
@@ -76,7 +77,8 @@ def validate_primitive(swagger_spec, primitive_spec, value):
     get_validator_type(swagger_spec)(
         primitive_spec,
         format_checker=swagger_spec.format_checker,
-        resolver=swagger_spec.resolver).validate(value)
+        resolver=swagger_spec.resolver,
+    ).validate(value)
 
 
 @scrub_sensitive_value
@@ -89,7 +91,8 @@ def validate_array(swagger_spec, array_spec, value):
     get_validator_type(swagger_spec)(
         array_spec,
         format_checker=swagger_spec.format_checker,
-        resolver=swagger_spec.resolver).validate(value)
+        resolver=swagger_spec.resolver,
+    ).validate(value)
 
 
 @scrub_sensitive_value
@@ -102,7 +105,8 @@ def validate_object(swagger_spec, object_spec, value):
     get_validator_type(swagger_spec)(
         object_spec,
         format_checker=swagger_spec.format_checker,
-        resolver=swagger_spec.resolver).validate(value)
+        resolver=swagger_spec.resolver,
+    ).validate(value)
 
 
 def validate_security_object(op, request_data):
@@ -146,7 +150,9 @@ def validate_security_object(op, request_data):
                     set(security)
                     for index, security in enumerate(op.acceptable_security_definition_combinations)
                     if index in matched_security_indexes
-                ), key=len, reverse=True
+                ),
+                key=len,
+                reverse=True,
             )
 
             # have all the security definition the same length?
@@ -167,6 +173,6 @@ def validate_security_object(op, request_data):
                             str(security)
                             for index, security in enumerate(op.acceptable_security_definition_combinations)
                             if index in matched_security_indexes
-                        )
-                    )
+                        ),
+                    ),
                 )

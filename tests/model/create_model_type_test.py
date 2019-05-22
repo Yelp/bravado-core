@@ -95,7 +95,7 @@ def test_create_model_type_properly_extracts_model_name(deref_value, expected_in
             'title': 'Dog',
             'allOf': [
                 {
-                    '$ref': '#/definitions/GenericPet'
+                    '$ref': '#/definitions/GenericPet',
                 },
                 {
                     'properties': {
@@ -107,6 +107,6 @@ def test_create_model_type_properly_extracts_model_name(deref_value, expected_in
                     'required': ['birth_date'],
                 },
             ],
-        }
+        },
     )
     assert model_type._inherits_from == expected_inherits

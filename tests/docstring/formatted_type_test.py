@@ -22,7 +22,7 @@ def test_array():
         'type': 'array',
         'items': {
             'type': 'string',
-        }
+        },
     }
     assert 'array:string' == formatted_type(schema_obj)
 

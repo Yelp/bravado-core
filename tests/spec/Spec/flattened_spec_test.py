@@ -59,7 +59,7 @@ def test_warning_for_clashed_uris(mock_warnings, spec_flattener):
     [
         '',
         'xhttps://host/file',
-    ]
+    ],
 )
 def test_marshal_url_exceptions(target):
     with pytest.raises(ValueError) as excinfo:
@@ -82,7 +82,7 @@ def test_marshal_url_exceptions(target):
         ('https://www.service.domain/swagger/specs.json', 'https:....www.service.domain..swagger..specs.json'),
         ('/api_docs/file.json#/definitions/object', 'file:......api_docs..file.json|..definitions..object'),
         ('http://host/file.json#/definitions/wired|name', 'http:....host..file.json|..definitions..wired|name'),
-    ]
+    ],
 )
 def test_marshal_url_no_origin_uri(target, expected_marshaled_uri):
     marshaled_uri = _marshal_uri(
@@ -103,7 +103,7 @@ def test_marshal_url_no_origin_uri(target, expected_marshaled_uri):
         ('https://www.service.domain/swagger/specs.json', 'https:....www.service.domain..swagger..specs.json'),
         ('/api_docs/file.json#/definitions/object', 'lfile:file.json|..definitions..object'),
         ('http://host/file.json#/definitions/wired|name', 'http:....host..file.json|..definitions..wired|name'),
-    ]
+    ],
 )
 def test_marshal_url(target, expected_marshaled_uri):
     origin_url = '/api_docs/swagger.json'
@@ -127,7 +127,7 @@ def test_flattened_spec_warns_if_configured_to_not_validate_swagger_specs(
 
 
 @pytest.mark.parametrize(
-    'has_origin_url', [True, False]
+    'has_origin_url', [True, False],
 )
 @mock.patch('bravado_core.spec_flattening.warnings')
 @mock.patch('bravado_core.spec.build_http_handlers')
@@ -254,8 +254,8 @@ def test_flattened_specs_with_no_xmodel_tags(multi_file_with_no_xmodel_spec, fla
                         'type': 'object',
                         'properties': {
                             'mod': {
-                                '$ref': '#/definitions/model'
-                            }
+                                '$ref': '#/definitions/model',
+                            },
                         },
                         'x-model': 'different-model',
                     },
@@ -267,8 +267,8 @@ def test_flattened_specs_with_no_xmodel_tags(multi_file_with_no_xmodel_spec, fla
                         'type': 'object',
                         'properties': {
                             'mod': {
-                                '$ref': '#/definitions/different-model'
-                            }
+                                '$ref': '#/definitions/different-model',
+                            },
                         },
                         'x-model': 'different-model',
                     },
@@ -282,8 +282,8 @@ def test_flattened_specs_with_no_xmodel_tags(multi_file_with_no_xmodel_spec, fla
                         'type': 'object',
                         'properties': {
                             'mod': {
-                                '$ref': '#/definitions/second-model'
-                            }
+                                '$ref': '#/definitions/second-model',
+                            },
                         },
                         'x-model': 'different-model',
                     },
@@ -291,8 +291,8 @@ def test_flattened_specs_with_no_xmodel_tags(multi_file_with_no_xmodel_spec, fla
                         'type': 'object',
                         'properties': {
                             'mod': {
-                                '$ref': '#/definitions/model'
-                            }
+                                '$ref': '#/definitions/model',
+                            },
                         },
                         'x-model': 'second-model',
                     },
@@ -304,8 +304,8 @@ def test_flattened_specs_with_no_xmodel_tags(multi_file_with_no_xmodel_spec, fla
                         'type': 'object',
                         'properties': {
                             'mod': {
-                                '$ref': '#/definitions/second-model'
-                            }
+                                '$ref': '#/definitions/second-model',
+                            },
                         },
                         'x-model': 'different-model',
                     },
@@ -313,15 +313,15 @@ def test_flattened_specs_with_no_xmodel_tags(multi_file_with_no_xmodel_spec, fla
                         'type': 'object',
                         'properties': {
                             'mod': {
-                                '$ref': '#/definitions/different-model'
-                            }
+                                '$ref': '#/definitions/different-model',
+                            },
                         },
                         'x-model': 'second-model',
                     },
                 },
             },
         ],
-    ]
+    ],
 )
 def test_rename_definition_references(spec_flattener, spec_dict, expected_spec_dict):
     assert spec_flattener.rename_definition_references(spec_dict) == expected_spec_dict
@@ -388,7 +388,7 @@ def test_include_discriminated_models(minimal_swagger_dict, minimal_swagger_absp
         urlparse(not_used_extend_base_fragment_uri): {
             'allOf': [
                 mock.ANY,  # not checking the exact content as it contains a marshaled reference and x-scope
-                minimal_swagger_dict['definitions']['not_used_extend_base']['allOf'][1]
+                minimal_swagger_dict['definitions']['not_used_extend_base']['allOf'][1],
             ],
             'x-model': 'not_used_extend_base',
         },

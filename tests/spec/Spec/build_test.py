@@ -58,13 +58,13 @@ def test_build_with_custom_format(petstore_dict):
     [
         True,
         False,
-    ]
+    ],
 )
 def test_build_with_internally_dereference_refs(petstore_abspath, petstore_dict, internally_dereference_refs):
     spec = Spec(
         petstore_dict,
         origin_url=get_url(petstore_abspath),
-        config={'internally_dereference_refs': internally_dereference_refs}
+        config={'internally_dereference_refs': internally_dereference_refs},
     )
     assert spec.deref == spec._force_deref
     spec.build()
@@ -76,7 +76,7 @@ def test_build_with_internally_dereference_refs(petstore_abspath, petstore_dict,
     [
         True,
         False,
-    ]
+    ],
 )
 def test_build_using_spec_url_for_base_path(petstore_abspath, petstore_dict, use_spec_url_for_base_path):
     # use_spec_url_for_base_path is only effective when basePath is not present
@@ -87,7 +87,7 @@ def test_build_using_spec_url_for_base_path(petstore_abspath, petstore_dict, use
     spec = Spec(
         petstore_dict,
         origin_url=origin_url,
-        config={'use_spec_url_for_base_path': use_spec_url_for_base_path}
+        config={'use_spec_url_for_base_path': use_spec_url_for_base_path},
     )
 
     spec.build()
@@ -104,9 +104,9 @@ def test_not_object_x_models_are_not_generating_models(minimal_swagger_dict):
     minimal_swagger_dict['definitions']['Pets'] = {
         'type': 'array',
         'items': {
-            'type': 'string'
+            'type': 'string',
         },
-        'x-model': 'Pets'
+        'x-model': 'Pets',
     }
     swagger_spec = Spec(minimal_swagger_dict)
     swagger_spec.build()
@@ -120,8 +120,8 @@ def test_not_object_x_models_are_not_generating_models(minimal_swagger_dict):
             {
                 'model1': {
                     'type': 'object',
-                    'x-model': 'x-model_model1'
-                }
+                    'x-model': 'x-model_model1',
+                },
             },
             {'x-model_model1'},
         ),
@@ -129,8 +129,8 @@ def test_not_object_x_models_are_not_generating_models(minimal_swagger_dict):
             {
                 'model1': {
                     'type': 'object',
-                    'title': 'title_model1'
-                }
+                    'title': 'title_model1',
+                },
             },
             {'title_model1'},
         ),
@@ -138,11 +138,11 @@ def test_not_object_x_models_are_not_generating_models(minimal_swagger_dict):
             {
                 'model1': {
                     'type': 'object',
-                }
+                },
             },
             {'model1'},
         ),
-    )
+    ),
 )
 def test_model_naming_takes_in_account_xmodel_title_key(minimal_swagger_dict, definitions, expected_models):
     minimal_swagger_dict['definitions'] = definitions
@@ -288,7 +288,7 @@ def test_build_raises_in_case_of_duplicated_models_between_paths_and_definitions
             mod_name=model_name,
             MODEL_MARKER='x-model',
             new_model=response_model,
-            json_reference='#/paths//endpoint/get/responses/200/schema/x-model'
+            json_reference='#/paths//endpoint/get/responses/200/schema/x-model',
         )
     )
 

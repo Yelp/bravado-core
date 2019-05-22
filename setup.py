@@ -27,8 +27,12 @@ setup(
     version=bravado_core.version,
     license="BSD 3-Clause License",
     description="Library for adding Swagger support to clients and servers",
-    long_description=open(os.path.join(os.path.dirname(__file__),
-                                       "README.rst")).read(),
+    long_description=open(
+        os.path.join(
+            os.path.dirname(__file__),
+            "README.rst",
+        ),
+    ).read(),
     author="Digium, Inc. and Yelp, Inc.",
     author_email="opensource+bravado-core@yelp.com",
     url="https://github.com/Yelp/bravado-core",

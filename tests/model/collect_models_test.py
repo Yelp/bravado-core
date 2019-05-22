@@ -13,9 +13,9 @@ def pet_model_spec():
         'type': 'object',
         'properties': {
             'name': {
-                'type': 'string'
-            }
-        }
+                'type': 'string',
+            },
+        },
     }
 
 
@@ -51,9 +51,9 @@ def test_no_model_type_generation_for_not_object_type(minimal_swagger_dict):
     minimal_swagger_dict['definitions']['Pets'] = {
         'type': 'array',
         'items': {
-            '$ref': '#/definitions/Pet'
+            '$ref': '#/definitions/Pet',
         },
-        'x-model': 'Pets'
+        'x-model': 'Pets',
     }
     swagger_spec = Spec(minimal_swagger_dict)
     models = {}
@@ -75,7 +75,7 @@ def test_raise_error_if_duplicate_models_are_identified(minimal_swagger_dict, pe
             swagger_spec=swagger_spec,
             model_name=model_name,
             model_spec={},
-        )
+        ),
     }
 
     json_reference = '#/definitions/{model_name}/x-model'.format(model_name=model_name)

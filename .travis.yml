@@ -1,14 +1,18 @@
 language: python
 matrix:
   include:
-  - env: TOXENV=py27
+  - python: "2.7"
+    env: TOXENV=py27
   - python: "3.5"
     env: TOXENV=py35
   - python: "3.6"
     env: TOXENV=py36
-  - env: TOXENV=cover
-  - env: TOXENV=docs
-  - env: TOXENV=pre-commit
+  - python: "2.7"
+    env: TOXENV=cover
+  - python: "2.7"
+    env: TOXENV=docs
+  - python: "2.7"
+    env: TOXENV=pre-commit
   - python: "3.6"
     env: TOXENV=benchmark
   allow_failures:

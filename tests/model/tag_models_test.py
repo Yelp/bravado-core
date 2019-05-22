@@ -15,9 +15,9 @@ def pet_model_spec():
         'type': 'object',
         'properties': {
             'name': {
-                'type': 'string'
-            }
-        }
+                'type': 'string',
+            },
+        },
     }
 
 
@@ -50,7 +50,7 @@ def test_model_not_object(minimal_swagger_dict):
     minimal_swagger_dict['definitions']['Pet'] = {
         'type': 'array',
         'items': {
-            'type': 'string'
+            'type': 'string',
         },
     }
     swagger_spec = Spec(minimal_swagger_dict)

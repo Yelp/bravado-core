@@ -20,12 +20,12 @@ def pet_dict():
         'tags': [
             {
                 'id': 99,
-                'name': 'mini'
+                'name': 'mini',
             },
             {
                 'id': 100,
-                'name': 'brown'
-            }
+                'name': 'brown',
+            },
         ],
     }
 
@@ -34,8 +34,8 @@ def pet_dict():
     'releaseDate',
     (
         '1981',
-        None
-    )
+        None,
+    ),
 )
 def test_definitions_with_ref(composition_spec, releaseDate):
     PongClone = composition_spec.definitions['pongClone']
@@ -48,8 +48,10 @@ def test_definitions_with_ref(composition_spec, releaseDate):
     if releaseDate:
         pong_clone_dict['releaseDate'] = releaseDate
 
-    pong_clone = unmarshal_model(composition_spec, pong_clone_spec,
-                                 pong_clone_dict)
+    pong_clone = unmarshal_model(
+        composition_spec, pong_clone_spec,
+        pong_clone_dict,
+    )
 
     assert isinstance(pong_clone, PongClone)
     assert 'hello' == pong_clone.pang
@@ -93,8 +95,7 @@ def test_pet(petstore_dict, pet_dict):
     assert 'brown' == pet.tags[1].name
 
 
-def test_Nones_are_reintroduced_for_declared_properties_that_are_not_present(
-        petstore_dict, pet_dict):
+def test_Nones_are_reintroduced_for_declared_properties_that_are_not_present(petstore_dict, pet_dict):
     petstore_spec = Spec.from_dict(petstore_dict)
     Pet = petstore_spec.definitions['Pet']
     Tag = petstore_spec.definitions['Tag']
@@ -208,7 +209,7 @@ def test_unmarshal_model_polymorphic_specs(polymorphic_spec):
                 'type': 'Cat',
                 'color': 'white',
             },
-        ]
+        ],
     }
     pet_list = unmarshal_model(
         swagger_spec=polymorphic_spec,

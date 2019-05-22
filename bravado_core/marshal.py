@@ -59,8 +59,9 @@ def marshal_schema_object(swagger_spec, schema_object_spec, value):
     if obj_type == 'file':
         return value
 
-    raise SwaggerMappingError('Unknown type {0} for value {1}'.format(
-        obj_type, value))
+    raise SwaggerMappingError(
+        'Unknown type {0} for value {1}'.format(obj_type, value),
+    )
 
 
 def marshal_primitive(swagger_spec, primitive_spec, value):
@@ -102,8 +103,11 @@ def marshal_array(swagger_spec, array_spec, array_value):
         return handle_null_value(swagger_spec, array_spec)
 
     if not is_list_like(array_value):
-        raise SwaggerMappingError('Expected list like type for {0}: {1}'
-                                  .format(type(array_value), array_value))
+        raise SwaggerMappingError(
+            'Expected list like type for {0}: {1}'.format(
+                type(array_value), array_value,
+            ),
+        )
 
     items_spec = swagger_spec.deref(array_spec).get('items')
 
@@ -111,7 +115,8 @@ def marshal_array(swagger_spec, array_spec, array_value):
         marshal_schema_object(
             swagger_spec,
             items_spec,
-            element)
+            element,
+        )
         for element in array_value
     ]
 
@@ -132,8 +137,11 @@ def marshal_object(swagger_spec, object_spec, object_value):
         return handle_null_value(swagger_spec, object_spec)
 
     if not is_dict_like(object_value):
-        raise SwaggerMappingError('Expected dict like type for {0}:{1}'.format(
-            type(object_value), object_value))
+        raise SwaggerMappingError(
+            'Expected dict like type for {0}:{1}'.format(
+                type(object_value), object_value,
+            ),
+        )
 
     object_spec = deref(object_spec)
     required_fields = object_spec.get('required', [])
@@ -143,7 +151,8 @@ def marshal_object(swagger_spec, object_spec, object_value):
     for k, v in iteritems(object_value):
 
         prop_spec = get_spec_for_prop(
-            swagger_spec, object_spec, object_value, k, properties)
+            swagger_spec, object_spec, object_value, k, properties,
+        )
 
         if not prop_spec:
             # Don't marshal when a spec is not available - just pass through

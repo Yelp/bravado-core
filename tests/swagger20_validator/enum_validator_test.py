@@ -15,13 +15,17 @@ def test_multiple_jsonschema_calls_if_enum_items_present_as_array():
     param_schema = {
         'type': 'array',
         'items': {
-            'type': 'string'
+            'type': 'string',
         },
-        'enum': enums
+        'enum': enums,
     }
     # list() forces iteration over the generator
-    errors = list(enum_validator(swagger_spec, None, enums, ['a1', 'd4'],
-                                 param_schema))
+    errors = list(
+        enum_validator(
+            swagger_spec, None, enums, ['a1', 'd4'],
+            param_schema,
+        ),
+    )
     assert len(errors) == 1
     assert "'d4' is not one of ['a1', 'b2', 'c3']" in str(errors[0])
 
@@ -30,13 +34,14 @@ def test_multiple_jsonschema_calls_if_enum_items_present_as_array():
 def test_single_jsonschema_call_if_enum_instance_not_array(jsonschema_enum_validator):
     enums = ['a1', 'b2', 'c3']
     param_schema = {
-        'enum': enums
+        'enum': enums,
     }
     swagger_spec = Mock(spec=Spec, deref=Mock(return_value=param_schema))
     # list() forces iteration over the generator
     list(enum_validator(swagger_spec, None, enums, ['a1', 'd4'], param_schema))
     jsonschema_enum_validator.assert_called_once_with(
-        None, enums, ['a1', 'd4'], param_schema)
+        None, enums, ['a1', 'd4'], param_schema,
+    )
 
 
 @patch('bravado_core.swagger20_validator._DRAFT4_ENUM_VALIDATOR')
@@ -46,7 +51,7 @@ def test_skip_validation_for_optional_enum_with_None_value(jsonschema_enum_valid
         'type': 'string',
         'in': 'query',
         'required': False,
-        'enum': enums
+        'enum': enums,
     }
     swagger_spec = Mock(spec=Spec, deref=Mock(return_value=param_schema))
     param_value = None
@@ -60,7 +65,7 @@ def test_skip_validation_for_optional_enum_with_None_value(jsonschema_enum_valid
         [{'prop': 'VAL'}, ['VAL'], False],
         [{'prop': None}, ['VAL'], False],
         [{'prop': 'In-Valid Value'}, ['VAL'], True],
-    )
+    ),
 )
 def test_validate_object_with_different_enum_configurations(minimal_swagger_spec, value, enum_values, expect_exception):
     minimal_swagger_spec.spec_dict['definitions']['obj'] = {
@@ -68,9 +73,9 @@ def test_validate_object_with_different_enum_configurations(minimal_swagger_spec
             'prop': {
                 'type': 'string',
                 'enum': enum_values,
-                'x-nullable': True
-            }
-        }
+                'x-nullable': True,
+            },
+        },
     }
     captured_exception = None
     try:

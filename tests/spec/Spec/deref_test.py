@@ -19,7 +19,7 @@ def test_is_dict_but_not_ref(minimal_swagger_spec):
 
 def test_ref(minimal_swagger_dict):
     foo_spec = {
-        'type': 'object'
+        'type': 'object',
     }
     minimal_swagger_dict['definitions']['Foo'] = foo_spec
     swagger_spec = Spec.from_dict(minimal_swagger_dict)

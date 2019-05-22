@@ -83,7 +83,8 @@ def test_resource_with_shared_parameters(paths_spec):
     resources = build_resources(Spec(spec_dict))
     # verify shared param associated with operation
     assert isinstance(
-        resources['pet'].findPetsByStatus.params['filter'], Param)
+        resources['pet'].findPetsByStatus.params['filter'], Param,
+    )
 
 
 def test_resource_with_vendor_extension(paths_spec):

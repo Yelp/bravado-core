@@ -12,19 +12,20 @@ def address_spec():
         'type': 'object',
         'properties': {
             'number': {
-                'type': 'number'
+                'type': 'number',
             },
             'street_name': {
-                'type': 'string'
+                'type': 'string',
             },
             'street_type': {
                 'type': 'string',
                 'enum': [
                     'Street',
                     'Avenue',
-                    'Boulevard']
-            }
-        }
+                    'Boulevard',
+                ],
+            },
+        },
     }
 
 
@@ -33,7 +34,7 @@ def address():
     return {
         'number': 1600,
         'street_name': u'Ümlaut',
-        'street_type': 'Avenue'
+        'street_type': 'Avenue',
     }
 
 
@@ -46,8 +47,8 @@ def test_array(empty_swagger_spec, address_spec):
     tags_spec = {
         'type': 'array',
         'items': {
-            'type': 'string'
-        }
+            'type': 'string',
+        },
     }
     address_spec['properties']['tags'] = tags_spec
     address = {
@@ -57,7 +58,7 @@ def test_array(empty_swagger_spec, address_spec):
         'tags': [
             'home',
             'best place on earth',
-            'cul de sac'
+            'cul de sac',
         ],
     }
     result = marshal_object(empty_swagger_spec, address_spec, address)
@@ -69,12 +70,12 @@ def test_nested_object(empty_swagger_spec, address_spec):
         'type': 'object',
         'properties': {
             'longitude': {
-                'type': 'number'
+                'type': 'number',
             },
             'latitude': {
-                'type': 'number'
+                'type': 'number',
             },
-        }
+        },
     }
     address_spec['properties']['location'] = location_spec
     address = {
@@ -95,12 +96,12 @@ def test_model(minimal_swagger_dict, address_spec):
         'type': 'object',
         'properties': {
             'longitude': {
-                'type': 'number'
+                'type': 'number',
             },
             'latitude': {
-                'type': 'number'
+                'type': 'number',
             },
-        }
+        },
     }
     minimal_swagger_dict['definitions']['Location'] = location_spec
 
@@ -114,10 +115,10 @@ def test_model(minimal_swagger_dict, address_spec):
                     'description': 'A location',
                     'schema': {
                         '$ref': '#/definitions/Location',
-                    }
-                }
-            }
-        }
+                    },
+                },
+            },
+        },
     }
     minimal_swagger_dict['paths']['/foo'] = location_response
 
@@ -139,7 +140,7 @@ def test_model(minimal_swagger_dict, address_spec):
         'location': {
             'longitude': 100.1,
             'latitude': 99.9,
-        }
+        },
     }
 
     result = marshal_object(swagger_spec, address_spec, address)
@@ -147,7 +148,8 @@ def test_model(minimal_swagger_dict, address_spec):
 
 
 def test_object_not_dict_like_raises_error(
-        empty_swagger_spec, address_spec):
+    empty_swagger_spec, address_spec,
+):
     i_am_not_dict_like = 34
     with pytest.raises(SwaggerMappingError) as excinfo:
         marshal_object(empty_swagger_spec, address_spec, i_am_not_dict_like)
@@ -155,29 +157,32 @@ def test_object_not_dict_like_raises_error(
 
 
 def test_missing_properties_not_marshaled(
-        empty_swagger_spec, address_spec, address):
+    empty_swagger_spec, address_spec, address,
+):
     del address['number']
     expected_address = {
         'street_name': u'Ümlaut',
-        'street_type': 'Avenue'
+        'street_type': 'Avenue',
     }
     result = marshal_object(empty_swagger_spec, address_spec, address)
     assert expected_address == result
 
 
 def test_property_set_to_None_not_marshaled(
-        empty_swagger_spec, address_spec, address):
+    empty_swagger_spec, address_spec, address,
+):
     address['number'] = None
     expected_address = {
         'street_name': u'Ümlaut',
-        'street_type': 'Avenue'
+        'street_type': 'Avenue',
     }
     result = marshal_object(empty_swagger_spec, address_spec, address)
     assert expected_address == result
 
 
 def test_pass_through_additionalProperties_with_no_spec(
-        empty_swagger_spec, address_spec, address):
+    empty_swagger_spec, address_spec, address,
+):
     address_spec['additionalProperties'] = True
     address['city'] = 'Swaggerville'
     expected_address = {
@@ -191,7 +196,8 @@ def test_pass_through_additionalProperties_with_no_spec(
 
 
 def test_pass_through_property_with_no_spec(
-        empty_swagger_spec, address_spec, address):
+    empty_swagger_spec, address_spec, address,
+):
     del address_spec['properties']['street_name']['type']
     # add a field with a None value and no spec
     address['none_field'] = None
@@ -211,7 +217,8 @@ def test_recursive_ref_with_depth_1(recursive_swagger_spec):
     result = marshal_object(
         recursive_swagger_spec,
         {'$ref': '#/definitions/Node'},
-        {'name': 'foo', 'child': None})
+        {'name': 'foo', 'child': None},
+    )
     assert result == {'name': 'foo'}
 
 
@@ -223,13 +230,14 @@ def test_recursive_ref_with_depth_n(recursive_swagger_spec):
             'child': {
                 'name': 'baz',
                 'child': None,
-            }
-        }
+            },
+        },
     }
     result = marshal_object(
         recursive_swagger_spec,
         {'$ref': '#/definitions/Node'},
-        value)
+        value,
+    )
 
     expected = {
         'name': 'foo',
@@ -237,8 +245,8 @@ def test_recursive_ref_with_depth_n(recursive_swagger_spec):
             'name': 'bar',
             'child': {
                 'name': 'baz',
-            }
-        }
+            },
+        },
     }
     assert result == expected
 
@@ -251,8 +259,8 @@ def test_marshal_with_nullable_required_property(empty_swagger_spec):
             'x': {
                 'type': 'string',
                 'x-nullable': True,
-            }
-        }
+            },
+        },
     }
     value = {'x': None}
     result = marshal_object(empty_swagger_spec, object_spec, value)
@@ -265,9 +273,9 @@ def test_marshal_with_non_nullable_required_property(empty_swagger_spec):
         'required': ['x'],
         'properties': {
             'x': {
-                'type': 'string'
-            }
-        }
+                'type': 'string',
+            },
+        },
     }
     value = {'x': None}
     with pytest.raises(SwaggerMappingError) as excinfo:
@@ -282,8 +290,8 @@ def test_marshal_with_nullable_non_required_property(empty_swagger_spec):
             'x': {
                 'type': 'string',
                 'x-nullable': True,
-            }
-        }
+            },
+        },
     }
     value = {'x': None}
     result = marshal_object(empty_swagger_spec, object_spec, value)
@@ -295,9 +303,9 @@ def test_marshal_with_non_nullable_non_required_property(empty_swagger_spec):
         'type': 'object',
         'properties': {
             'x': {
-                'type': 'string'
-            }
-        }
+                'type': 'string',
+            },
+        },
     }
     value = {'x': None}
     result = marshal_object(empty_swagger_spec, object_spec, value)

@@ -23,8 +23,8 @@ def test_pet(petstore_dict):
         category=Category(id=200, name='friendly'),
         tags=[
             Tag(id=99, name='mini'),
-            Tag(id=100, name='brown')
-        ]
+            Tag(id=100, name='brown'),
+        ],
     )
     result = marshal_model(petstore_spec, pet_spec, pet)
 
@@ -49,7 +49,7 @@ def test_pet(petstore_dict):
                 'id': 100,
                 'name': 'brown',
             },
-        ]
+        ],
 
     }
     assert expected == result
@@ -66,7 +66,7 @@ def test_attrs_set_to_None_are_absent_from_result(petstore_dict):
         status=None,
         photoUrls=['wagtail.png', 'bark.png'],
         category=None,
-        tags=None
+        tags=None,
     )
     result = marshal_model(petstore_spec, pet_spec, pet)
 
@@ -118,7 +118,7 @@ def test_marshal_model_with_with_different_specs(petstore_dict, petstore_spec):
         status=None,
         photoUrls=['wagtail.png', 'bark.png'],
         category=None,
-        tags=None
+        tags=None,
     )
 
     assert marshal_model(petstore_spec, pet_spec, model) == {

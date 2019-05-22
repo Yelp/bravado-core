@@ -219,7 +219,7 @@ def _collect_models(container, json_reference, models, swagger_spec):
                     model_name=model_name,
                     model_type=model_type,
                     model_spec=model_spec,
-                    MODEL_MARKER=MODEL_MARKER
+                    MODEL_MARKER=MODEL_MARKER,
                 ),
             )
 
@@ -352,8 +352,9 @@ class Model(object):
 
         if additional and self._deny_additional_properties:
             raise AttributeError(
-                "Model {0} does not have attributes for: {1}"
-                .format(type(self), list(additional))
+                "Model {0} does not have attributes for: {1}".format(
+                    type(self), list(additional),
+                ),
             )
 
         # Assign properties in model_spec, filling in None if missing from dct
@@ -407,8 +408,9 @@ class Model(object):
             return self[attr_name]
         except KeyError:
             raise AttributeError(
-                'type object {0!r} has no attribute {1!r}'
-                .format(type(self).__name__, attr_name)
+                'type object {0!r} has no attribute {1!r}'.format(
+                    type(self).__name__, attr_name,
+                ),
             )
 
     def __setattr__(self, attr_name, val):
@@ -617,8 +619,10 @@ class ModelDocstring(object):
 
     def __get__(self, obj, cls):
         if not hasattr(cls, '__docstring__'):
-            cls.__docstring__ = create_model_docstring(cls._swagger_spec,
-                                                       cls._model_spec)
+            cls.__docstring__ = create_model_docstring(
+                cls._swagger_spec,
+                cls._model_spec,
+            )
 
         return cls.__docstring__
 
@@ -642,12 +646,14 @@ def create_model_type(swagger_spec, model_name, model_spec, bases=(Model,), json
     :rtype: type
     """
 
-    return type(str(model_name), bases, dict(
-        __doc__=ModelDocstring(),
-        _swagger_spec=swagger_spec,
-        _model_spec=model_spec,
-        _json_reference=json_reference,
-    ))
+    return type(
+        str(model_name), bases, dict(
+            __doc__=ModelDocstring(),
+            _swagger_spec=swagger_spec,
+            _model_spec=model_spec,
+            _json_reference=json_reference,
+        ),
+    )
 
 
 def is_model(swagger_spec, schema_object_spec):

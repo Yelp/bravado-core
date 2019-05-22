@@ -249,14 +249,15 @@ def test_user_defined_format_failure(minimal_swagger_spec, email_address_spec):
     request_body = 'i_am_not_a_valid_email_address'
     minimal_swagger_spec.register_format(email_address_format)
     with pytest.raises(ValidationError) as excinfo:
-        validate_primitive(minimal_swagger_spec, email_address_spec,
-                           request_body)
+        validate_primitive(
+            minimal_swagger_spec, email_address_spec,
+            request_body,
+        )
     assert "'i_am_not_a_valid_email_address' is not a 'email_address'" in \
         str(excinfo.value)
 
 
-def test_builtin_format_still_works_when_user_defined_format_used(
-        minimal_swagger_spec):
+def test_builtin_format_still_works_when_user_defined_format_used(minimal_swagger_spec):
     ipaddress_spec = {
         'type': 'string',
         'format': 'ipv4',
@@ -282,8 +283,10 @@ def test_builtin_format_still_works_when_user_defined_format_used(
 # +---------------------+------------------+
 
 
-@pytest.mark.parametrize(['nullable', 'value'],
-                         [(False, 'x'), (True, 'x'), (True, None)])
+@pytest.mark.parametrize(
+    ['nullable', 'value'],
+    [(False, 'x'), (True, 'x'), (True, None)],
+)
 def test_nullable_pass(minimal_swagger_spec, string_spec, value, nullable):
     """Test scenarios in which validation should pass: (1), (3), (4)"""
     string_spec['x-nullable'] = nullable

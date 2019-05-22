@@ -33,8 +33,10 @@ def format_validator(swagger_spec, validator, format, instance, schema):
     In all other cases, delegate to the existing Draft4 `format` validator.
 
     """
-    if (is_param_spec(swagger_spec, schema) or
-            is_prop_nullable(swagger_spec, schema)) and instance is None:
+    if instance is None and (
+        is_param_spec(swagger_spec, schema) or
+        is_prop_nullable(swagger_spec, schema)
+    ):
         return
 
     for error in _DRAFT4_FORMAT_VALIDATOR(validator, format, instance, schema):
@@ -60,8 +62,10 @@ def type_validator(swagger_spec, validator, types, instance, schema):
     :param schema: swagger spec for the object
     :type schema: dict
     """
-    if (is_param_spec(swagger_spec, schema) or
-            is_prop_nullable(swagger_spec, schema)) and instance is None:
+    if instance is None and (
+        is_param_spec(swagger_spec, schema) or
+        is_prop_nullable(swagger_spec, schema)
+    ):
         return
 
     for error in _DRAFT4_TYPE_VALIDATOR(validator, types, instance, schema):
@@ -107,7 +111,7 @@ def enum_validator(swagger_spec, validator, enums, instance, schema):
     :type schema: dict
     """
 
-    if is_prop_nullable(swagger_spec, schema) and instance is None:
+    if instance is None and is_prop_nullable(swagger_spec, schema):
         return
 
     if schema.get('type') == 'array':
@@ -118,7 +122,7 @@ def enum_validator(swagger_spec, validator, enums, instance, schema):
 
     # Handle optional enum params with no value
     if is_param_spec(swagger_spec, schema):
-        if not is_required(swagger_spec, schema) and instance is None:
+        if instance is None and not is_required(swagger_spec, schema):
             return
 
     for error in _DRAFT4_ENUM_VALIDATOR(validator, enums, instance, schema):
@@ -154,7 +158,7 @@ def discriminator_validator(swagger_spec, validator, discriminator_attribute, in
 
     if discriminator_value not in swagger_spec.definitions:
         raise ValidationError(
-            message='\'{}\' is not a recognized schema'.format(discriminator_value)
+            message='\'{}\' is not a recognized schema'.format(discriminator_value),
         )
 
     if discriminator_value == schema[MODEL_MARKER]:
@@ -164,8 +168,8 @@ def discriminator_validator(swagger_spec, validator, discriminator_attribute, in
     if 'allOf' not in discriminated_schema:
         raise ValidationError(
             message='discriminated schema \'{}\' must inherit from \'{}\''.format(
-                discriminator_value, schema[MODEL_MARKER]
-            )
+                discriminator_value, schema[MODEL_MARKER],
+            ),
         )
 
     schemas_to_remove = [s for s in discriminated_schema['allOf'] if swagger_spec.deref(s) == schema]
@@ -173,8 +177,8 @@ def discriminator_validator(swagger_spec, validator, discriminator_attribute, in
         # Not checking against len(schemas_to_remove) > 1 because it should be prevented by swagger spec validation
         raise ValidationError(
             message='discriminated schema \'{}\' must inherit from \'{}\''.format(
-                discriminator_value, schema[MODEL_MARKER]
-            )
+                discriminator_value, schema[MODEL_MARKER],
+            ),
         )
 
     # Remove the current schema from the allOf list in order to avoid unbounded recursion
@@ -245,4 +249,5 @@ def get_validator_type(swagger_spec):
             'type': functools.partial(type_validator, swagger_spec),
             'format': functools.partial(format_validator, swagger_spec),
             'discriminator': functools.partial(discriminator_validator, swagger_spec),
-        })
+        },
+    )

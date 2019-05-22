@@ -17,8 +17,8 @@ def body_param_spec():
         'description': 'pet id',
         'required': True,
         'schema': {
-            'type': 'string'
-        }
+            'type': 'string',
+        },
     }
 
 
@@ -51,7 +51,7 @@ def test_location_invalid(empty_swagger_spec, body_param_spec):
 
 def test_ref(minimal_swagger_dict, body_param_spec):
     minimal_swagger_dict['parameters'] = {
-        'PetIdParam': body_param_spec
+        'PetIdParam': body_param_spec,
     }
     param_ref_spec = {'$ref': '#/parameters/PetIdParam'}
     swagger_spec = Spec(minimal_swagger_dict)

@@ -53,6 +53,7 @@ def wrap_exception(exception_class):
                 six.reraise(
                     exception_class,
                     exception_class(str(e)),
-                    sys.exc_info()[2])
+                    sys.exc_info()[2],
+                )
         return wrapper
     return generic_exception

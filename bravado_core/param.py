@@ -20,7 +20,7 @@ COLLECTION_FORMATS = {
     'csv': ',',
     'ssv': ' ',
     'tsv': '\t',
-    'pipes': '|'
+    'pipes': '|',
 }
 
 
@@ -88,8 +88,8 @@ def get_param_type_spec(param):
     if location == 'body':
         return param.swagger_spec.deref(param.param_spec).get('schema')
     raise SwaggerMappingError(
-        "Don't know how to handle location {0} in parameter {1}"
-        .format(location, param))
+        "Don't know how to handle location {0} in parameter {1}".format(location, param),
+    )
 
 
 def marshal_param(param, value, request):
@@ -146,8 +146,8 @@ def marshal_param(param, value, request):
         request['data'] = json.dumps(value)
     else:
         raise SwaggerMappingError(
-            "Don't know how to marshal_param with location {0}".
-            format(location))
+            "Don't know how to marshal_param with location {0}".format(location),
+        )
 
 
 def unmarshal_param(param, request):
@@ -193,15 +193,17 @@ def unmarshal_param(param, request):
                 raw_value = default_value
     else:
         raise SwaggerMappingError(
-            "Don't know how to unmarshal_param with location {0}".
-            format(location))
+            "Don't know how to unmarshal_param with location {0}".format(location),
+        )
 
     if raw_value is None and not param.required:
         return None
 
     if param_type == 'array' and location != 'body':
-        raw_value = unmarshal_collection_format(swagger_spec, param_spec,
-                                                raw_value)
+        raw_value = unmarshal_collection_format(
+            swagger_spec, param_spec,
+            raw_value,
+        )
 
     if swagger_spec.config['validate_requests']:
         validate_schema_object(swagger_spec, param_spec, raw_value)
@@ -236,7 +238,7 @@ CAST_TYPE_TO_FUNC = {
     # cast them to the right type
     'integer': int,
     'number': float,
-    'boolean': string_to_boolean
+    'boolean': string_to_boolean,
 }
 
 
@@ -323,14 +325,15 @@ def add_file(param, value, request):
 
         # TODO: Remove after https://github.com/Yelp/swagger_spec_validator/issues/22 is implemented  # noqa
         if expected_mime_type not in param.op.consumes:
-            raise SwaggerMappingError((
+            raise SwaggerMappingError(
                 "Mime-type '{0}' not found in list of supported mime-types for "
-                "parameter '{1}' on operation '{2}': {3}").format(
+                "parameter '{1}' on operation '{2}': {3}".format(
                     expected_mime_type,
                     param.name,
                     param.op.operation_id,
-                    param.op.consumes
-            ))
+                    param.op.consumes,
+                ),
+            )
 
     if isinstance(value, tuple):
         filename, val = value
@@ -350,8 +353,7 @@ def marshal_collection_format(swagger_spec, param_spec, value):
 
     :return: transformed value as a string
     """
-    collection_format = swagger_spec.deref(
-        param_spec).get('collectionFormat', 'csv')
+    collection_format = swagger_spec.deref(param_spec).get('collectionFormat', 'csv')
 
     if collection_format == 'multi':
         # http client lib should handle this
