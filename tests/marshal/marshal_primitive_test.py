@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-import mock
+import datetime
+
 import pytest
 
 from bravado_core.exception import SwaggerMappingError
@@ -20,24 +21,22 @@ def test_string(minimal_swagger_spec):
     )
 
 
-@mock.patch('bravado_core.marshal.formatter.to_wire')
-def test_uses_default_and_skips_formatting(mock_to_wire, minimal_swagger_spec):
-    integer_spec = {
-        'type': 'integer',
-        'default': 10,
+@pytest.mark.parametrize(
+    'value, expected_value',
+    [
+        (None, '2019-05-23'),
+        (datetime.date(2019, 5, 24), '2019-05-24'),
+    ],
+)
+def test_skips_default(minimal_swagger_spec, value, expected_value):
+    date_spec = {
+        'type': 'string',
+        'format': 'date',
+        'default': '2019-05-23',
     }
-    assert 10 == marshal_primitive(minimal_swagger_spec, integer_spec, None)
-    assert mock_to_wire.call_count == 0
-
-
-@mock.patch('bravado_core.marshal.formatter.to_wire', return_value=99)
-def test_skips_default(mock_to_wire, minimal_swagger_spec):
-    integer_spec = {
-        'type': 'integer',
-        'default': 10,
-    }
-    assert 99 == marshal_primitive(minimal_swagger_spec, integer_spec, 99)
-    assert mock_to_wire.call_count == 1
+    assert marshal_primitive(
+        minimal_swagger_spec, date_spec, value,
+    ) == expected_value
 
 
 def test_ref(minimal_swagger_dict):

@@ -153,7 +153,10 @@ def test_object_not_dict_like_raises_error(
     i_am_not_dict_like = 34
     with pytest.raises(SwaggerMappingError) as excinfo:
         marshal_object(empty_swagger_spec, address_spec, i_am_not_dict_like)
-    assert 'Expected dict' in str(excinfo.value)
+
+    assert "Expected dict like type for {1}:{0}".format(
+        i_am_not_dict_like, type(i_am_not_dict_like),
+    ) in str(excinfo.value)
 
 
 def test_missing_properties_not_marshaled(
