@@ -37,6 +37,11 @@ def test_model_properties_iteration_allOf(cat_swagger_spec, cat_type, cat_kwargs
     )
 
 
+def test_Model__from_dict(cat_swagger_spec, cat_type, cat_kwargs):
+    cat = cat_type._from_dict(cat_kwargs)
+    assert cat._as_dict() == cat_kwargs
+
+
 def test_model_delete_property(definitions_spec, user_type, user_kwargs):
     user = user_type(**user_kwargs)
 
