@@ -15,8 +15,8 @@ if getattr(typing, 'TYPE_CHECKING', False):
 
 
 @memoize_by_id
-def handle_null_value(swagger_spec, object_schema, is_nullable=False):
-    # type: (Spec, JSONDict, bool) -> typing.Callable[[FuncType], FuncType]
+def handle_null_value(swagger_spec, object_schema, is_nullable=False, is_marshaling_operation=False):
+    # type: (Spec, JSONDict, bool, bool) -> typing.Callable[[FuncType], FuncType]
     # TODO: remove is_nullable support once https://github.com/Yelp/bravado-core/issues/335 is addressed
     """
     Function wrapper that performs some check to the wrapped function parameter.
@@ -31,9 +31,6 @@ def handle_null_value(swagger_spec, object_schema, is_nullable=False):
      * nullable parameter is needed to ensure that x-nullable is propagated in the case it is defined
        as sibling in a reference object (ie. `{'x-nullable': True, '$ref': '#/definitions/something'}`)
 
-    :type swagger_spec: :class:`bravado_core.spec.Spec`
-    :type object_schema: dict
-    :type is_nullable: bool
     """
     default_value = schema.get_default(swagger_spec, object_schema)
     is_nullable = is_nullable or schema.is_prop_nullable(swagger_spec, object_schema)
@@ -53,7 +50,8 @@ def handle_null_value(swagger_spec, object_schema, is_nullable=False):
                         raise SwaggerMappingError(
                             'Spec {0} is a required value'.format(object_schema),
                         )
-
+                elif is_marshaling_operation:
+                    return value
             return func(value)
 
         return wrapper

@@ -154,7 +154,7 @@ def test_object_not_dict_like_raises_error(
     with pytest.raises(SwaggerMappingError) as excinfo:
         marshal_object(empty_swagger_spec, address_spec, i_am_not_dict_like)
 
-    assert "Expected dict like type for {1}:{0}".format(
+    assert "Expected type to be dict to marshal value '{}' to a dict. Was {} instead.".format(
         i_am_not_dict_like, type(i_am_not_dict_like),
     ) in str(excinfo.value)
 
@@ -270,27 +270,15 @@ def test_marshal_with_nullable_required_property(empty_swagger_spec):
     assert result == value
 
 
-def test_marshal_with_non_nullable_required_property(empty_swagger_spec):
-    object_spec = {
-        'type': 'object',
-        'required': ['x'],
-        'properties': {
-            'x': {
-                'type': 'string',
-            },
-        },
-    }
-    value = {'x': None}
-    with pytest.raises(SwaggerMappingError) as excinfo:
-        marshal_object(empty_swagger_spec, object_spec, value)
-    assert 'is a required value' in str(excinfo.value)
-
-
 def test_marshal_with_nullable_non_required_property(empty_swagger_spec):
     object_spec = {
         'type': 'object',
         'properties': {
             'x': {
+                'type': 'string',
+                'x-nullable': True,
+            },
+            'y': {
                 'type': 'string',
                 'x-nullable': True,
             },

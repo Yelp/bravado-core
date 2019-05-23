@@ -542,8 +542,8 @@ class Model(object):
 
         :rtype: dict
         """
-        from bravado_core.marshal import marshal_model
-        return marshal_model(self._swagger_spec, self._model_spec, self)
+        from bravado_core.marshal import marshal_schema_object
+        return marshal_schema_object(self._swagger_spec, self._model_spec, self)
 
     @classmethod
     def unmarshal(cls, val):

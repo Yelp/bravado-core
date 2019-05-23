@@ -5,7 +5,6 @@ import pytest
 
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.marshal import marshal_model
-from bravado_core.model import Model
 from bravado_core.spec import Spec
 
 
@@ -87,8 +86,8 @@ def test_value_is_not_dict_like_raises_error(petstore_dict):
     value = 'i am not a dict'
     with pytest.raises(SwaggerMappingError) as excinfo:
         marshal_model(petstore_spec, pet_spec, value)
-    assert 'Expected {0.__module__}.{0.__name__} object but got {1.__module__}.{1.__name__}'.format(
-        Model, str,
+    assert "Expected type to be dict or Model to marshal value '{}' to a dict. Was {} instead.".format(
+        value, type(value),
     ) in str(excinfo.value)
 
 
