@@ -36,16 +36,19 @@ def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
     deref = swagger_spec.deref
     schema_object_spec = deref(schema_object_spec)
 
-    obj_type = schema_object_spec.get('type')
+    obj_type = None
+    if is_dict_like(schema_object_spec):
+        obj_type = schema_object_spec.get('type')
 
-    if 'allOf' in schema_object_spec:
-        obj_type = 'object'
-
-    if not obj_type:
-        if swagger_spec.config['default_type_to_object']:
+        if 'allOf' in schema_object_spec:
             obj_type = 'object'
-        else:
-            return value
+
+        if obj_type is None:
+            if swagger_spec.config['default_type_to_object']:
+                obj_type = 'object'
+
+    if obj_type is None:
+        return value
 
     if obj_type in SWAGGER_PRIMITIVES:
         return unmarshal_primitive(swagger_spec, schema_object_spec, value)
