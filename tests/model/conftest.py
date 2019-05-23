@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import pytest
-from mock import Mock
 
 from bravado_core.model import create_model_type
 from bravado_core.spec import Spec
@@ -125,11 +124,11 @@ def user_spec(definitions_spec):
 
 
 @pytest.fixture
-def user_type(user_spec):
+def user_type(mock_spec, user_spec):
     """
     :rtype: User
     """
-    return create_model_type(Mock(spec=Spec), 'User', user_spec)
+    return create_model_type(mock_spec, 'User', user_spec)
 
 
 @pytest.fixture
@@ -141,9 +140,9 @@ def user(user_type):
 
 
 @pytest.fixture
-def tag_model(definitions_spec):
+def tag_model(mock_spec, definitions_spec):
     tag_spec = definitions_spec['Tag']
-    return create_model_type(Mock(spec=Spec), 'Tag', tag_spec)
+    return create_model_type(mock_spec, 'Tag', tag_spec)
 
 
 @pytest.fixture

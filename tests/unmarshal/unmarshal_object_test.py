@@ -214,8 +214,7 @@ def test_with_model_composition(business_address_swagger_spec, address_spec, bus
         expected_business_address.update(floor=None, name=None)
 
     business_address = unmarshal_object(
-        business_address_swagger_spec, business_address_spec,
-        business_address_dict,
+        business_address_swagger_spec, business_address_spec, business_address_dict,
     )
     assert expected_business_address == business_address
 
@@ -486,9 +485,7 @@ def test_non_nullable_none_value(empty_swagger_spec, property_type):
 @pytest.mark.parametrize('property_type', ['string', 'object', 'array'])
 def test_non_required_none_value(empty_swagger_spec, property_type):
     content_spec = nullable_spec_factory(
-        required=False,
-        nullable=False,
-        property_type=property_type,
+        required=False, nullable=False, property_type=property_type,
     )
     value = {'x': None}
     result = unmarshal_object(empty_swagger_spec, content_spec, value)

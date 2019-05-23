@@ -1,15 +1,25 @@
 # -*- coding: utf-8 -*-
 import os
+from copy import deepcopy
 
 import pytest
 import simplejson as json
 import yaml
+from mock import Mock
 from six.moves.urllib import parse as urlparse
 from six.moves.urllib.request import pathname2url
 from six.moves.urllib.request import url2pathname
 from swagger_spec_validator.common import SwaggerValidationWarning
 
+from bravado_core.spec import CONFIG_DEFAULTS
 from bravado_core.spec import Spec
+
+
+@pytest.fixture
+def mock_spec():
+    m = Mock(spec=Spec)
+    m.config = deepcopy(CONFIG_DEFAULTS)
+    return m
 
 
 @pytest.fixture
