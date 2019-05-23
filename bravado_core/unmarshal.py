@@ -229,8 +229,6 @@ def _unmarshal_model(
             "Was {2} instead.".format(model_value, model_type, type(model_value)),
         )
 
-    unamarshaled_value = model_type()
-
     if discriminator_property:
         discriminated_model_unsmarhaling_function = model_to_unmarshaling_function_mapping.get(
             model_value[discriminator_property],
@@ -238,18 +236,19 @@ def _unmarshal_model(
         if discriminated_model_unsmarhaling_function:
             return discriminated_model_unsmarhaling_function(model_value)
 
+    unmarshaled_value = model_type()
     for property_name, property_value in iteritems(model_value):
         unmarshaling_function = properties_to_unmarshaling_function.get(
             property_name, additional_properties_unmarshaling_function,
         )
-        unamarshaled_value[property_name] = unmarshaling_function(property_value)
+        unmarshaled_value[property_name] = unmarshaling_function(property_value)
 
     if include_missing_properties:
         for property_name, unmarshaling_function in iteritems(properties_to_unmarshaling_function):
-            if property_name not in unamarshaled_value:
-                unamarshaled_value[property_name] = properties_to_default_value.get(property_name)
+            if property_name not in unmarshaled_value:
+                unmarshaled_value[property_name] = properties_to_default_value.get(property_name)
 
-    return unamarshaled_value
+    return unmarshaled_value
 
 
 def _unmarshaling_method_object(swagger_spec, object_schema, use_models=True):
