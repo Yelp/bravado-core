@@ -14,6 +14,16 @@ def test_simple(user_type, user_kwargs):
     assert user.password is None
 
 
+def test_init_from_dict(user_type, user_kwargs):
+    user = user_type._from_dict(user_kwargs)
+    assert user.firstName == 'Darwin'
+    assert user.userStatus == 9
+    assert user.id == 999
+    assert user.lastName is None
+    assert user.email is None
+    assert user.password is None
+
+
 def test_empty_kwargs(user_type):
     user = user_type()
     assert user.firstName is None
