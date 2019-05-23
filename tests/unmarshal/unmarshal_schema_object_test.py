@@ -104,6 +104,29 @@ def test_missing_object_spec_defaulting_on(petstore_dict):
         )
 
 
+@pytest.mark.parametrize(
+    'value',
+    [
+        {'id': {'foo': 'bar'}, 'name': 'short-hair'},
+        {'id': 'blahblah', 'name': 'short-hair'},
+    ],
+)
+def test_missing_object_spec_defaulting_off(petstore_dict, value):
+    """When default_type_to_object config option is set to True,
+    then missing types default to object
+    """
+    category_spec = petstore_dict['definitions']['Category']
+    category_spec['properties']['id'].pop('type')
+    petstore_spec = Spec.from_dict(petstore_dict, config={'use_models': False, 'default_type_to_object': False})
+
+    # In case of missing type the unmarshaling is equivalent no a no-op
+    assert value == unmarshal_schema_object(
+        petstore_spec,
+        category_spec,
+        value,
+    )
+
+
 def test_invalid_type(petstore_dict):
     category_spec = petstore_dict['definitions']['Category']
     category_spec['properties']['id']['type'] = 'notAValidType'
