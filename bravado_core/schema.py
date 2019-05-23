@@ -104,6 +104,7 @@ def get_spec_for_prop(swagger_spec, object_spec, object_value, prop_name, proper
         properties = collapsed_properties(deref(object_spec), swagger_spec)
     prop_spec = properties.get(prop_name)
 
+    # TODO: remove is_nullable support once https://github.com/Yelp/bravado-core/issues/335 is addressed
     if prop_spec is not None:
         result_spec = deref(prop_spec)
         # If the de-referenced specification is for a x-nullable property
