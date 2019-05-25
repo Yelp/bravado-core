@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import typing
+
 from bravado_core import schema
 from bravado_core._compat import wraps
 from bravado_core.exception import SwaggerMappingError
@@ -6,8 +8,15 @@ from bravado_core.util import memoize_by_id
 from bravado_core.util import RecursiveCallException
 
 
+if getattr(typing, 'TYPE_CHECKING', False):
+    from bravado_core.spec import Spec
+    from bravado_core._compat_typing import JSONDict
+    from bravado_core._compat_typing import FuncType
+
+
 @memoize_by_id
 def handle_null_value(swagger_spec, object_schema, is_nullable=False):
+    # type: (Spec, JSONDict, bool) -> typing.Callable[[FuncType], FuncType]
     # TODO: remove is_nullable support once https://github.com/Yelp/bravado-core/issues/335 is addressed
     """
     Function wrapper that performs some check to the wrapped function parameter.
@@ -30,8 +39,10 @@ def handle_null_value(swagger_spec, object_schema, is_nullable=False):
     is_nullable = is_nullable or schema.is_prop_nullable(swagger_spec, object_schema)
 
     def external_wrapper(func):
+        # type: (FuncType) -> FuncType
         @wraps(func)
         def wrapper(value):
+            # type: (typing.Any) -> typing.Any
             if value is None:
                 value = default_value
 
@@ -51,6 +62,7 @@ def handle_null_value(swagger_spec, object_schema, is_nullable=False):
 
 
 def wrap_recursive_call_exception(func):
+    # type: (FuncType) -> FuncType
     """
     The bravado_core.marshaling and bravado_core.unmarshaling modules might
     take advantage of caching the return value of determined function calls.
@@ -66,6 +78,7 @@ def wrap_recursive_call_exception(func):
     """
     @wraps(func)
     def wrapper(*args, **kwargs):
+        # type: (typing.Any, typing.Any) -> typing.Any
         try:
             return func(*args, **kwargs)
         except RecursiveCallException:
