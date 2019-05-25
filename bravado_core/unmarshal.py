@@ -19,9 +19,6 @@ from bravado_core.util import memoize_by_id
 _NOT_FOUND = object()
 
 
-_NOT_FOUND = object()
-
-
 def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
     """
     Unmarshal the value using the given schema object specification.
@@ -141,6 +138,7 @@ def get_unmarshaling_method(swagger_spec, object_schema, is_nullable=True):
     if object_type == 'array':
         return null_decorator(_unmarshaling_method_array(swagger_spec, object_schema))
     elif object_type == 'file':
+        # TODO: Type file is not a valid type. It is present to support parameter unmarshaling (move to bravado_core.param)  # noqa: E501
         return null_decorator(_unmarshaling_method_file(swagger_spec, object_schema))
     elif object_type == 'object':
         return null_decorator(_unmarshaling_method_object(swagger_spec, object_schema))
@@ -201,7 +199,7 @@ def _unmarshaling_method_file(swagger_spec, object_schema):
     return _no_op_unmarshaling
 
 
-def _unmarshal_model(
+def _unmarshal_object(
     properties_to_unmarshaling_function,
     discriminator_property,
     model_to_unmarshaling_function_mapping,
@@ -311,7 +309,7 @@ def _unmarshaling_method_object(swagger_spec, object_schema, use_models=True):
     }
 
     return partial(
-        _unmarshal_model,
+        _unmarshal_object,
         properties_to_unmarshaling_function,
         discriminator_property,
         model_to_unmarshaling_function_mapping,

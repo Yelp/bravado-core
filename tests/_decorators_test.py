@@ -13,7 +13,6 @@ from bravado_core.util import memoize_by_id
     'object_schema, value, expected_value',
     [
         ({'type': 'integer'}, 1, 1),
-        ({'type': 'integer'}, None, SwaggerMappingError),
         ({'type': 'integer', 'default': 42}, 1, 1),
         ({'type': 'integer', 'default': 42}, None, 42),
         ({'type': 'integer', 'x-nullable': True}, 1, 1),
@@ -26,11 +25,22 @@ def test_handle_null_value(minimal_swagger_spec, object_schema, value, expected_
     def foo(param1):
         return param1
 
-    if isinstance(expected_value, type) and issubclass(expected_value, Exception):
-        with pytest.raises(expected_value):
-            foo(value)
-    else:
-        assert foo(value) == expected_value
+    assert foo(value) == expected_value
+
+
+@pytest.mark.parametrize(
+    'object_schema, value',
+    [
+        ({'type': 'integer'}, None),
+    ],
+)
+def test_handle_null_value_raises(minimal_swagger_spec, object_schema, value):
+    @handle_null_value(minimal_swagger_spec, object_schema)
+    def foo(param1):
+        return param1
+
+    with pytest.raises(SwaggerMappingError):
+        foo(value)
 
 
 def test_wrap_recursive_call_exception_for_non_recursive_functions():

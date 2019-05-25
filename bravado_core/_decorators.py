@@ -1,11 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-The module defines useful decorators for the marshaling and unmarshaling process
-
-NOTE: The module has been marked as PRIVATE., so we are required to preserve
-      This is done to allow future modification to the defined decorators
-      without worrying about backward incompatible changes.
-"""
 from bravado_core import schema
 from bravado_core._compat import wraps
 from bravado_core.exception import SwaggerMappingError
