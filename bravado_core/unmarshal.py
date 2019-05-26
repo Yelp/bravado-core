@@ -166,7 +166,7 @@ def _get_unmarshaling_method(swagger_spec, object_schema, is_nullable=True):
         @wraps(_unknown_type_unmarhsaling)
         def wrapper_unknown(value):
             # type: (typing.Any) -> typing.Any
-            return _unknown_type_unmarhsaling(object_type, value)
+            return _unknown_type_unmarhsaling(object_type=object_type, value=value)
 
         return wrapper_unknown
 
@@ -219,8 +219,8 @@ def _unmarshaling_method_array(swagger_spec, object_schema):
     def wrapper_array(value):
         # type: (typing.Any) -> typing.Any
         return _unmarshal_array(
-            _get_unmarshaling_method(swagger_spec, item_schema),
-            value,
+            unmarshal_array_item_function=_get_unmarshaling_method(swagger_spec, item_schema),
+            value=value,
         )
 
     return wrapper_array
@@ -232,13 +232,13 @@ def _unmarshaling_method_file(swagger_spec, object_schema):
 
 
 def _unmarshal_object(
-    properties_to_unmarshaling_function,  # type: typing.Dict[typing.Text, UnmarshalingMethod]
-    discriminator_property,  # type: typing.Optional[typing.Text]
-    model_to_unmarshaling_function_mapping,  # type: typing.Optional[typing.Dict[typing.Text, UnmarshalingMethod]]
+    swagger_spec,  # type: Spec
     model_type,  # type: typing.Union[typing.Type[JSONDict], typing.Type[Model]]
-    include_missing_properties,  # type: bool
-    properties_to_default_value,  # type: JSONDict
+    properties_to_unmarshaling_function,  # type: typing.Dict[typing.Text, UnmarshalingMethod]
     additional_properties_unmarshaling_function,  # type: UnmarshalingMethod
+    properties_to_default_value,  # type: JSONDict
+    discriminator_property,  # type: typing.Optional[typing.Text]
+    possible_discriminated_type_name_to_model,  # type: typing.Dict[typing.Text, Model]
     model_value,  # type: typing.Any
 ):
     # type: (...) -> typing.Any
@@ -258,12 +258,11 @@ def _unmarshal_object(
             "Was {2} instead.".format(model_value, model_type, type(model_value)),
         )
 
-    if discriminator_property and model_to_unmarshaling_function_mapping:
-        discriminated_model_unsmarhaling_function = model_to_unmarshaling_function_mapping.get(
-            model_value[discriminator_property],
-        )
-        if discriminated_model_unsmarhaling_function:
-            return discriminated_model_unsmarhaling_function(model_value)
+    if discriminator_property:
+        discriminator_value = model_value[discriminator_property]
+        discriminated_model = possible_discriminated_type_name_to_model.get(discriminator_value)
+        if discriminated_model is not None:
+            return _get_unmarshaling_method(swagger_spec, discriminated_model._model_spec)(model_value)
 
     unmarshaled_value = model_type()
     for property_name, property_value in iteritems(model_value):
@@ -272,7 +271,7 @@ def _unmarshal_object(
         )
         unmarshaled_value[property_name] = unmarshaling_function(property_value)
 
-    if include_missing_properties:
+    if swagger_spec.config['include_missing_properties']:
         for property_name, unmarshaling_function in iteritems(properties_to_unmarshaling_function):
             if property_name not in unmarshaled_value:
                 unmarshaled_value[property_name] = properties_to_default_value.get(property_name)
@@ -292,64 +291,64 @@ def _unmarshaling_method_object(swagger_spec, object_schema, use_models=True):
             @wraps(_raise_unknown_model)
             def wrapper_raise(value):
                 # type: (typing.Any) -> typing.Any
-                return _raise_unknown_model(model_name, value)
+                return _raise_unknown_model(model_name=model_name, value=value)
 
             return wrapper_raise
         if not use_models:
             model_type = None
 
-    additional_properties_unmarshaling_function = _no_op_unmarshaling
     properties = collapsed_properties(object_schema, swagger_spec)
     required_properties = object_schema.get('required', [])
-    if object_schema.get('additionalProperties') is not False:
-        additional_properties_schema = object_schema.get('additionalProperties', {})
-        if additional_properties_schema in ({}, True):
-            additional_properties_unmarshaling_function = _no_op_unmarshaling
-        else:
-            additional_properties_unmarshaling_function = _get_unmarshaling_method(
-                swagger_spec, additional_properties_schema,
-            )
-
     properties_to_unmarshaling_function = {
         prop_name: _get_unmarshaling_method(
-            swagger_spec,
-            prop_schema,
-            prop_schema.get('x-nullable', False) or prop_name not in required_properties,
+            swagger_spec=swagger_spec,
+            object_schema=prop_schema,
+            is_nullable=prop_schema.get('x-nullable', False) or prop_name not in required_properties,
         )
         for prop_name, prop_schema in iteritems(properties)
     }
 
-    discriminator_property = object_schema.get('discriminator') if model_type is not None else None
-
-    model_to_unmarshaling_function_mapping = None  # type: typing.Optional[typing.Dict[typing.Text, UnmarshalingMethod]]
-    if model_type is not None and discriminator_property is not None:  # model type check kept to have mypy happy
-        model_to_unmarshaling_function_mapping = {
-            k: _get_unmarshaling_method(
-                swagger_spec,
-                v._model_spec,
+    additional_properties_unmarshaling_function = _no_op_unmarshaling
+    if object_schema.get('additionalProperties') is not False:
+        additional_properties_schema = object_schema.get('additionalProperties', {})
+        if additional_properties_schema not in ({}, True):
+            additional_properties_unmarshaling_function = _get_unmarshaling_method(
+                swagger_spec=swagger_spec,
+                object_schema=additional_properties_schema,
+                is_nullable=False,
             )
-            for k, v in iteritems(swagger_spec.definitions)
-            if model_type.__name__ in v._inherits_from
-        }
 
     properties_to_default_value = {
-        prop_name: schema.get_default(swagger_spec, prop_schema)
+        prop_name: unmarshal_schema_object(
+            swagger_spec=swagger_spec,
+            schema_object_spec=prop_schema,
+            value=schema.get_default(swagger_spec, prop_schema),
+        )
         for prop_name, prop_schema in iteritems(properties)
         if schema.has_default(swagger_spec, prop_schema)
     }
+
+    discriminator_property = object_schema.get('discriminator')
+    possible_discriminated_type_name_to_model = {}
+    if model_type and object_schema.get('discriminator'):
+        possible_discriminated_type_name_to_model.update({
+            k: v
+            for k, v in iteritems(swagger_spec.definitions)
+            if model_type and model_type.__name__ in v._inherits_from
+        })
 
     @wraps(_unmarshal_object)
     def wrapper_unmarsha(value):
         # type: (typing.Any) -> typing.Any
         return _unmarshal_object(
-            properties_to_unmarshaling_function,
-            discriminator_property,
-            model_to_unmarshaling_function_mapping,
-            model_type if model_type and swagger_spec.config['use_models'] else dict,
-            swagger_spec.config['include_missing_properties'],
-            properties_to_default_value,
-            additional_properties_unmarshaling_function,
-            value,
+            swagger_spec=swagger_spec,
+            model_type=model_type if model_type and swagger_spec.config['use_models'] else dict,
+            properties_to_unmarshaling_function=properties_to_unmarshaling_function,
+            additional_properties_unmarshaling_function=additional_properties_unmarshaling_function,
+            properties_to_default_value=properties_to_default_value,
+            discriminator_property=discriminator_property,
+            possible_discriminated_type_name_to_model=possible_discriminated_type_name_to_model,
+            model_value=value,
         )
     return wrapper_unmarsha
 

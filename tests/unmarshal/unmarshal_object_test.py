@@ -602,3 +602,30 @@ def test_default_with_format(empty_swagger_spec):
         None,
     )
     assert {'item': datetime.date(2019, 5, 22)} == result
+
+
+@pytest.mark.parametrize(
+    'include_missing_properties, expected_value',
+    [
+        (True, {'item': datetime.date(2019, 5, 22)}),
+        (False, {}),
+    ],
+)
+def test_missing_property_with_default_value(empty_swagger_spec, include_missing_properties, expected_value):
+    empty_swagger_spec.config['include_missing_properties'] = include_missing_properties
+    result = unmarshal_object(
+        empty_swagger_spec,
+        {
+            'type': 'object',
+            'properties': {
+                'item': {
+                    'type': 'string',
+                    'format': 'date',
+                    'default': '2019-05-22',
+                },
+            },
+        },
+        {},
+    )
+
+    assert expected_value == result

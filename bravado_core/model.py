@@ -370,16 +370,6 @@ class Model(object):
             if inherits_from is not None
         ]
 
-    @lazy_class_attribute
-    def _additional_properties_schema(cls):
-        if cls._deny_additional_properties:
-            return None
-        additional_properties_schema = cls._model_spec.get('additionalProperties', {})
-        if additional_properties_schema is True:
-            return {}
-        else:
-            return cls._swagger_spec.deref(additional_properties_schema)
-
     def __contains__(self, obj):
         """Has a property set (including additional)."""
         return obj in self.__dict
