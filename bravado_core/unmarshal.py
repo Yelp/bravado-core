@@ -46,7 +46,7 @@ def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
     :rtype: int, float, long, string, unicode, boolean, list, dict, object (in
         the case of a 'format' conversion', or Model type
     """
-    unmarshaling_method = get_unmarshaling_method(swagger_spec, schema_object_spec)
+    unmarshaling_method = _get_unmarshaling_method(swagger_spec, schema_object_spec)
     return unmarshaling_method(value)
 
 
@@ -136,7 +136,7 @@ def unmarshal_model(swagger_spec, model_spec, model_value):
 
 @_decorators.wrap_recursive_call_exception
 @memoize_by_id
-def get_unmarshaling_method(swagger_spec, object_schema, is_nullable=True):
+def _get_unmarshaling_method(swagger_spec, object_schema, is_nullable=True):
     # type: (Spec, JSONDict, bool) -> UnmarshalingMethod
     # TODO: remove is_nullable support once https://github.com/Yelp/bravado-core/issues/335 is addressed
     """
@@ -219,7 +219,7 @@ def _unmarshaling_method_array(swagger_spec, object_schema):
     def wrapper_array(value):
         # type: (typing.Any) -> typing.Any
         return _unmarshal_array(
-            get_unmarshaling_method(swagger_spec, item_schema),
+            _get_unmarshaling_method(swagger_spec, item_schema),
             value,
         )
 
@@ -306,12 +306,12 @@ def _unmarshaling_method_object(swagger_spec, object_schema, use_models=True):
         if additional_properties_schema in ({}, True):
             additional_properties_unmarshaling_function = _no_op_unmarshaling
         else:
-            additional_properties_unmarshaling_function = get_unmarshaling_method(
+            additional_properties_unmarshaling_function = _get_unmarshaling_method(
                 swagger_spec, additional_properties_schema,
             )
 
     properties_to_unmarshaling_function = {
-        prop_name: get_unmarshaling_method(
+        prop_name: _get_unmarshaling_method(
             swagger_spec,
             prop_schema,
             prop_schema.get('x-nullable', False) or prop_name not in required_properties,
@@ -324,7 +324,7 @@ def _unmarshaling_method_object(swagger_spec, object_schema, use_models=True):
     model_to_unmarshaling_function_mapping = None  # type: typing.Optional[typing.Dict[typing.Text, UnmarshalingMethod]]
     if model_type is not None and discriminator_property is not None:  # model type check kept to have mypy happy
         model_to_unmarshaling_function_mapping = {
-            k: get_unmarshaling_method(
+            k: _get_unmarshaling_method(
                 swagger_spec,
                 v._model_spec,
             )
