@@ -299,23 +299,15 @@ def _unmarshaling_method_object(swagger_spec, object_schema, use_models=True):
             model_type = None
 
     additional_properties_unmarshaling_function = _no_op_unmarshaling
-    if model_type is None:
-        properties = collapsed_properties(object_schema, swagger_spec)
-        required_properties = object_schema.get('required', [])
-        if not object_schema.get('additionalProperties') is False:
-            additional_properties_schema = object_schema.get('additionalProperties', {})
-            if additional_properties_schema in ({}, True):
-                additional_properties_unmarshaling_function = _no_op_unmarshaling
-            else:
-                additional_properties_unmarshaling_function = get_unmarshaling_method(
-                    swagger_spec, additional_properties_schema,
-                )
-    else:
-        properties = model_type._properties
-        required_properties = model_type._required_properties
-        if not model_type._deny_additional_properties:
+    properties = collapsed_properties(object_schema, swagger_spec)
+    required_properties = object_schema.get('required', [])
+    if object_schema.get('additionalProperties') is not False:
+        additional_properties_schema = object_schema.get('additionalProperties', {})
+        if additional_properties_schema in ({}, True):
+            additional_properties_unmarshaling_function = _no_op_unmarshaling
+        else:
             additional_properties_unmarshaling_function = get_unmarshaling_method(
-                swagger_spec, model_type._additional_properties_schema,
+                swagger_spec, additional_properties_schema,
             )
 
     properties_to_unmarshaling_function = {
@@ -353,8 +345,8 @@ def _unmarshaling_method_object(swagger_spec, object_schema, use_models=True):
             properties_to_unmarshaling_function,
             discriminator_property,
             model_to_unmarshaling_function_mapping,
-            model_type if model_type and model_type._use_models else dict,
-            model_type._include_missing_properties if model_type else swagger_spec.config['include_missing_properties'],
+            model_type if model_type and swagger_spec.config['use_models'] else dict,
+            swagger_spec.config['include_missing_properties'],
             properties_to_default_value,
             additional_properties_unmarshaling_function,
             value,

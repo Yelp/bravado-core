@@ -296,21 +296,6 @@ class Model(object):
         List of the models from which the current model inherits from.
         The list will be non-empty only for schemas with allOf
 
-
-    .. attribute:: _deny_additional_properties
-
-        Class attribute that must be assigned on subclasses.
-        Flag that specifies if the model does or does not allow additional
-        properties. NOTE: If _deny_additional_properties is set to True
-        then any operation (get, set or delete) of undefined properties
-        will raise an AttributeError or a KeyError
-
-    .. attribute:: _include_missing_properties
-
-        Class attribute that must be assigned on subclasses.
-        Flag that specified if the model will hold the content of all the
-        parameters even if not explicitly passed. NOTE: the automatically
-        added parameters will be added with `None` value.
     """
 
     # Implementation details:
@@ -341,9 +326,8 @@ class Model(object):
         :param dict dct: Dictionary of property values by name. They need not
             actually exist in :attr:`_properties`.
         """
-
         if include_missing_properties is None:
-            include_missing_properties = self._include_missing_properties
+            include_missing_properties = self._swagger_spec.config['include_missing_properties']
 
         # Create the attribute value dictionary
         # We need bypass the overloaded __setattr__ method
@@ -353,7 +337,7 @@ class Model(object):
         # Additional property names in dct
         additional = set(dct).difference(self._properties)
 
-        if additional and self._deny_additional_properties:
+        if additional and self._model_spec.get('additionalProperties') is False:
             raise AttributeError(
                 "Model {0} does not have attributes for: {1}".format(
                     type(self), list(additional),
@@ -368,10 +352,6 @@ class Model(object):
         # we've got additionalProperties to set on the model
         for attr_name in additional:
             self.__dict[attr_name] = dct[attr_name]
-
-    @lazy_class_attribute
-    def _required_properties(self):
-        return self._model_spec.get('required', [])
 
     @lazy_class_attribute
     def _properties(self):
@@ -391,18 +371,6 @@ class Model(object):
         ]
 
     @lazy_class_attribute
-    def _deny_additional_properties(self):
-        return self._model_spec.get('additionalProperties') is False
-
-    @lazy_class_attribute
-    def _include_missing_properties(self):
-        return self._swagger_spec.config['include_missing_properties']
-
-    @lazy_class_attribute
-    def _use_models(cls):
-        return cls._swagger_spec.config['use_models']
-
-    @lazy_class_attribute
     def _additional_properties_schema(cls):
         if cls._deny_additional_properties:
             return None
@@ -410,7 +378,7 @@ class Model(object):
         if additional_properties_schema is True:
             return {}
         else:
-            return additional_properties_schema
+            return cls._swagger_spec.deref(additional_properties_schema)
 
     def __contains__(self, obj):
         """Has a property set (including additional)."""
@@ -568,7 +536,7 @@ class Model(object):
         model = object.__new__(cls)
         model.__init_from_dict(
             dct=dct,
-            include_missing_properties=cls._include_missing_properties,
+            include_missing_properties=cls._swagger_spec.config['include_missing_properties'],
         )
         return model
 
