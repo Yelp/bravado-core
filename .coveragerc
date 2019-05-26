@@ -1,5 +1,5 @@
 [run]
-branch = True
+# branch = True # TODO: Enable branch coverage
 source =
     .
 
@@ -7,6 +7,8 @@ source =
 show_missing = True
 skip_covered = True
 omit =
+    # Omit _compat_typing as it is only used during type checking
+    ^bravado_core/_compat_typing\.py$
     .tox/*
     venv/*
     /usr/*
