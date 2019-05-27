@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from inspect import getcallargs
+
 import mock
 import pytest
 
@@ -108,6 +110,31 @@ def test_memoize_by_id_decorator():
         (('a', id(1)), ('b', id(None))): id(1) + id(None),
     }
     assert calls == [[1, None], [2, 3], [1, None]]
+
+
+@mock.patch('bravado_core.util.inspect.getcallargs', wraps=getcallargs)
+def test_memoize_by_id_do_not_use_inspect_if_only_kwargs_are_provided(mock_getcallargs):
+    calls = []
+
+    def function(a, b=None):
+        calls.append([a, b])
+        return id(a) + id(b)
+
+    decorated_function = memoize_by_id(function)
+
+    assert decorated_function(1) == id(1) + id(None)
+    mock_getcallargs.assert_called_once_with(function, 1)
+    assert calls == [[1, None]]
+    assert decorated_function.cache == {
+        (('a', id(1)), ('b', id(None))): id(1) + id(None),
+    }
+    mock_getcallargs.reset_mock()
+
+    assert decorated_function(a=1) == id(1) + id(None)
+    assert not mock_getcallargs.called
+    assert decorated_function.cache == {
+        (('a', id(1)), ('b', id(None))): id(1) + id(None),
+    }
 
 
 @pytest.mark.parametrize(
