@@ -1,5 +1,7 @@
 # Unit test dependencies
 mock
+mypy-extensions; python_version>='3.5'
+mypy; python_version>='3.5'
 pre-commit
 pytest
 pytest-benchmark[histogram]

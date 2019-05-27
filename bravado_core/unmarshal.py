@@ -1,24 +1,43 @@
 # -*- coding: utf-8 -*-
+"""
+The module exposes unmarshaling capabilities.
+
+Unmarshaling is the operation that converts a "JSON" object into its python representation.
+The operation should also take care of converting types accordingly to the defined :class:`bravado_core.formatter.SwaggerFormat`s.
+"""
+import warnings
+
+import typing
 from six import iteritems
 
-from bravado_core import formatter
+from bravado_core import _decorators
 from bravado_core import schema
+from bravado_core._compat import wraps
 from bravado_core.exception import SwaggerMappingError
-from bravado_core.model import is_model
 from bravado_core.model import MODEL_MARKER
 from bravado_core.schema import collapsed_properties
-from bravado_core.schema import get_spec_for_prop
-from bravado_core.schema import handle_null_value
+from bravado_core.schema import get_type_from_schema
 from bravado_core.schema import is_dict_like
 from bravado_core.schema import is_list_like
 from bravado_core.schema import SWAGGER_PRIMITIVES
+from bravado_core.util import memoize_by_id
+
+
+if getattr(typing, 'TYPE_CHECKING', False):
+    from bravado_core._compat_typing import JSONDict
+    from bravado_core._compat_typing import NoReturn
+    from bravado_core._compat_typing import UnmarshalingMethod
+    from bravado_core.model import Model
+    from bravado_core.spec import Spec
 
 
 _NOT_FOUND = object()
 
 
 def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
-    """Unmarshal the value using the given schema object specification.
+    # type: (Spec, JSONDict, typing.Any) -> typing.Any
+    """
+    Unmarshal the value using the given schema object specification.
 
     Unmarshalling includes:
     - transform the value according to 'format' if available
@@ -33,45 +52,12 @@ def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
     :rtype: int, float, long, string, unicode, boolean, list, dict, object (in
         the case of a 'format' conversion', or Model type
     """
-    deref = swagger_spec.deref
-    schema_object_spec = deref(schema_object_spec)
-
-    obj_type = schema_object_spec.get('type')
-
-    if 'allOf' in schema_object_spec:
-        obj_type = 'object'
-
-    if not obj_type:
-        if swagger_spec.config['default_type_to_object']:
-            obj_type = 'object'
-        else:
-            return value
-
-    if obj_type in SWAGGER_PRIMITIVES:
-        return unmarshal_primitive(swagger_spec, schema_object_spec, value)
-
-    if obj_type == 'array':
-        return unmarshal_array(swagger_spec, schema_object_spec, value)
-
-    if swagger_spec.config['use_models'] and \
-            is_model(swagger_spec, schema_object_spec):
-        # It is important that the 'model' check comes before 'object' check.
-        # Model specs also have type 'object' but also have the additional
-        # MODEL_MARKER key for identification.
-        return unmarshal_model(swagger_spec, schema_object_spec, value)
-
-    if obj_type == 'object':
-        return unmarshal_object(swagger_spec, schema_object_spec, value)
-
-    if obj_type == 'file':
-        return value
-
-    raise SwaggerMappingError(
-        "Don't know how to unmarshal value {0} with a type of {1}".format(value, obj_type),
-    )
+    unmarshaling_method = _get_unmarshaling_method(swagger_spec, schema_object_spec)
+    return unmarshaling_method(value)
 
 
 def unmarshal_primitive(swagger_spec, primitive_spec, value):
+    # type: (Spec, JSONDict, typing.Any) -> typing.Any
     """Unmarshal a jsonschema primitive type into a python primitive.
 
     :type swagger_spec: :class:`bravado_core.spec.Spec`
@@ -82,17 +68,19 @@ def unmarshal_primitive(swagger_spec, primitive_spec, value):
         based on 'format'
     :raises: SwaggerMappingError
     """
-    if value is None:
-        value = handle_null_value(swagger_spec, primitive_spec)
+    warnings.warn(
+        'unmarshal_primitive will be deprecated in the next major release. '
+        'Please use the more general entry-point offered in unmarshal_schema_object',
+        DeprecationWarning,
+    )
+    null_decorator = _decorators.handle_null_value(swagger_spec, primitive_spec)
+    unmarshal_function = _unmarshaling_method_primitive_type(swagger_spec, primitive_spec)
 
-    if value is None:
-        return None
-
-    value = formatter.to_python(swagger_spec, primitive_spec, value)
-    return value
+    return null_decorator(unmarshal_function)(value)
 
 
 def unmarshal_array(swagger_spec, array_spec, array_value):
+    # type: (Spec, JSONDict, typing.Any) -> typing.Any
     """Unmarshal a jsonschema type of 'array' into a python list.
 
     :type swagger_spec: :class:`bravado_core.spec.Spec`
@@ -101,27 +89,18 @@ def unmarshal_array(swagger_spec, array_spec, array_value):
     :rtype: list
     :raises: SwaggerMappingError
     """
-    if array_value is None:
-        array_value = handle_null_value(swagger_spec, array_spec)
-
-    if array_value is None:
-        return None
-
-    if not is_list_like(array_value):
-        raise SwaggerMappingError(
-            'Expected list like type for {0}:{1}'.format(
-                type(array_value), array_value,
-            ),
-        )
-
-    item_spec = swagger_spec.deref(array_spec).get('items')
-    return [
-        unmarshal_schema_object(swagger_spec, item_spec, item)
-        for item in array_value
-    ]
+    warnings.warn(
+        'unmarshal_array will be deprecated in the next major release. '
+        'Please use the more general entry-point offered in unmarshal_schema_object',
+        DeprecationWarning,
+    )
+    null_decorator = _decorators.handle_null_value(swagger_spec, array_spec)
+    unmarshal_function = _unmarshaling_method_array(swagger_spec, array_spec)
+    return null_decorator(unmarshal_function)(array_value)
 
 
 def unmarshal_object(swagger_spec, object_spec, object_value):
+    # type: (Spec, JSONDict, typing.Any) -> typing.Any
     """Unmarshal a jsonschema type of 'object' into a python dict.
 
     :type swagger_spec: :class:`bravado_core.spec.Spec`
@@ -130,60 +109,18 @@ def unmarshal_object(swagger_spec, object_spec, object_value):
     :rtype: dict
     :raises: SwaggerMappingError
     """
-    deref = swagger_spec.deref
-
-    if object_value is None:
-        object_value = handle_null_value(swagger_spec, object_spec)
-
-    if object_value is None:
-        return None
-
-    if not is_dict_like(object_value):
-        raise SwaggerMappingError(
-            'Expected dict like type for {0}:{1}'.format(
-                type(object_value), object_value,
-            ),
-        )
-
-    object_spec = deref(object_spec)
-    required_fields = object_spec.get('required', [])
-    properties = collapsed_properties(object_spec, swagger_spec)
-
-    # Check if object_spec is polymorphic
-    discriminator = object_spec.get('discriminator')
-    if discriminator is not None:
-        child_model_name = object_value.get(discriminator, None)
-        child_model_type = swagger_spec.definitions.get(child_model_name, None)
-        if child_model_type and child_model_type._model_spec != object_spec:
-            # The discriminator field does targets a different model, let's unmarshal with it
-            return unmarshal_schema_object(swagger_spec, child_model_type._model_spec, object_value)
-
-    result = {}
-    for k, v in iteritems(object_value):
-        prop_spec = get_spec_for_prop(
-            swagger_spec, object_spec, object_value, k, properties,
-        )
-        if v is None and k not in required_fields and prop_spec:
-            if schema.has_default(swagger_spec, prop_spec):
-                result[k] = schema.get_default(swagger_spec, prop_spec)
-            else:
-                result[k] = None
-        elif prop_spec:
-            result[k] = unmarshal_schema_object(swagger_spec, prop_spec, v)
-        else:
-            # Don't marshal when a spec is not available - just pass through
-            result[k] = v
-
-    for prop_name, prop_spec in iteritems(properties):
-        if prop_name not in result and swagger_spec.config['include_missing_properties']:
-            result[prop_name] = None
-            if schema.has_default(swagger_spec, prop_spec):
-                result[prop_name] = schema.get_default(swagger_spec, prop_spec)
-
-    return result
+    warnings.warn(
+        'unmarshal_object will be deprecated in the next major release. '
+        'Please use the more general entry-point offered in unmarshal_schema_object',
+        DeprecationWarning,
+    )
+    null_decorator = _decorators.handle_null_value(swagger_spec, object_spec)
+    unmarshal_function = _unmarshaling_method_object(swagger_spec, object_spec, use_models=False)
+    return null_decorator(unmarshal_function)(object_value)
 
 
 def unmarshal_model(swagger_spec, model_spec, model_value):
+    # type: (Spec, JSONDict, typing.Any) -> typing.Any
     """Unmarshal a dict into a Model instance.
 
     :type swagger_spec: :class:`bravado_core.spec.Spec`
@@ -192,33 +129,280 @@ def unmarshal_model(swagger_spec, model_spec, model_value):
     :rtype: Model instance
     :raises: SwaggerMappingError
     """
-    deref = swagger_spec.deref
-    model_name = deref(model_spec).get(MODEL_MARKER)
-    model_type = swagger_spec.definitions.get(model_name, None)
+    warnings.warn(
+        'unmarshal_model will be deprecated in the next major release. '
+        'Please use the more general entry-point offered in unmarshal_schema_object',
+        DeprecationWarning,
+    )
 
-    if model_type is None:
-        raise SwaggerMappingError(
-            'Unknown model {0} when trying to unmarshal {1}'.format(model_name, model_value),
+    null_decorator = _decorators.handle_null_value(swagger_spec, model_spec)
+    unmarshal_function = _unmarshaling_method_object(swagger_spec, model_spec, use_models=True)
+    return null_decorator(unmarshal_function)(model_value)
+
+
+@_decorators.wrap_recursive_call_exception
+@memoize_by_id
+def _get_unmarshaling_method(swagger_spec, object_schema, is_nullable=True):
+    # type: (Spec, JSONDict, bool) -> UnmarshalingMethod
+    """
+    Determine the method needed to unmarshal values of a defined object_schema
+    The returned method will accept a single positional parameter that represent the value
+    to be unmarshaled.
+
+    :param swagger_spec: Spec object
+    :param object_schema: Schema of the object type
+    # TODO: remove is_nullable support once https://github.com/Yelp/bravado-core/issues/335 is addressed
+    :param is_nullable: Flag set to `True` if the current schema is nullable.
+                        The flag will be set to `True` if the schema is not required or `x-nullable`
+                        attribute is set to true by the "parent" schema
+    """
+    object_schema = swagger_spec.deref(object_schema)
+    null_decorator = _decorators.handle_null_value(swagger_spec, object_schema, is_nullable)
+    object_type = get_type_from_schema(swagger_spec, object_schema)
+
+    if object_type == 'array':
+        return null_decorator(_unmarshaling_method_array(swagger_spec, object_schema))
+    elif object_type == 'file':
+        # TODO: Type file is not a valid type. It is present to support parameter unmarshaling (move to bravado_core.param)  # noqa: E501
+        return null_decorator(_unmarshaling_method_file(swagger_spec, object_schema))
+    elif object_type == 'object':
+        return null_decorator(_unmarshaling_method_object(swagger_spec, object_schema))
+    elif object_type in SWAGGER_PRIMITIVES:
+        return null_decorator(_unmarshaling_method_primitive_type(swagger_spec, object_schema))
+    elif object_type is None:
+        return _no_op_unmarshaling
+    else:
+        @wraps(_unknown_type_unmarhsaling)
+        def wrapper_unknown(value):
+            # type: (typing.Any) -> typing.Any
+            return _unknown_type_unmarhsaling(object_type=object_type, value=value)
+
+        return wrapper_unknown
+
+
+def _no_op_unmarshaling(value):
+    # type: (typing.Any) -> typing.Any
+    return value
+
+
+def _unknown_type_unmarhsaling(object_type, value):
+    # type: (typing.Union[typing.Type[dict], typing.Type[Model]], typing.Any) -> NoReturn
+    raise SwaggerMappingError(
+        "Don't know how to unmarshal value {0} with a type of {1}".format(
+            value, object_type,
+        ),
+    )
+
+
+def _raise_unknown_model(model_name, value):
+    # type: (typing.Text, typing.Any) -> NoReturn
+    raise SwaggerMappingError('Unknown model {0} when trying to unmarshal {1}'.format(model_name, value))
+
+
+def _unmarshal_array(unmarshal_array_item_function, value):
+    # type: (UnmarshalingMethod, typing.Any) -> typing.Any
+    """
+    Unmarshal a JSON list to its python representation.
+
+    :param unmarshal_array_item_function: Unmarshaling function for each array item
+    :param value: JSON value to unmarshal
+
+    :raises: SwaggerMappingError
+    """
+    if not is_list_like(value):
+        raise SwaggerMappingError('Expected list like type for {0}:{1}'.format(type(value), value))
+
+    return [
+        unmarshal_array_item_function(item)
+        for item in value
+    ]
+
+
+def _unmarshaling_method_array(swagger_spec, object_schema):
+    # type: (Spec, JSONDict) -> UnmarshalingMethod
+    """
+    Determine the unmarshaling method needed for a schema of a type array.
+
+    The method will be responsible for the identification of the unmarshaling method of the array items.
+
+    :param swagger_spec: Spec object
+    :param object_schema: Schema of the object type
+    """
+    item_schema = swagger_spec.deref(swagger_spec.deref(object_schema).get('items', _NOT_FOUND))
+    if item_schema is _NOT_FOUND:
+        return _no_op_unmarshaling
+
+    @wraps(_unmarshal_array)
+    def wrapper_array(value):
+        # type: (typing.Any) -> typing.Any
+        return _unmarshal_array(
+            unmarshal_array_item_function=_get_unmarshaling_method(swagger_spec, item_schema),
+            value=value,
         )
 
-    if model_value is None:
-        return handle_null_value(swagger_spec, model_spec)
+    return wrapper_array
 
+
+def _unmarshaling_method_file(swagger_spec, object_schema):
+    # type: (Spec, JSONDict) -> UnmarshalingMethod
+    # TODO: Type file is not a valid type. It is present to support parameter unmarshaling (move to bravado_core.param)  # noqa: E501
+    return _no_op_unmarshaling
+
+
+def _unmarshal_object(
+    swagger_spec,  # type: Spec
+    model_type,  # type: typing.Union[typing.Type[JSONDict], typing.Type[Model]]
+    properties_to_unmarshaling_function,  # type: typing.Dict[typing.Text, UnmarshalingMethod]
+    additional_properties_unmarshaling_function,  # type: UnmarshalingMethod
+    properties_to_default_value,  # type: JSONDict
+    discriminator_property,  # type: typing.Optional[typing.Text]
+    possible_discriminated_type_name_to_model,  # type: typing.Dict[typing.Text, Model]
+    model_value,  # type: typing.Any
+):
+    # type: (...) -> typing.Any
+    """
+    Unmarshal a dict into a Model instance or a dictionary (according to the 'use_models' swagger_spec configuration).
+
+    :param swagger_spec: Spec object
+    :param model_type: Type of the return value (:class:`dict` or a subclass of :class:`bravado_core.model.Model`)
+    :param properties_to_unmarshaling_function: Mapping between property name and associated unmarshaling method
+    :param additional_properties_unmarshaling_function: Unmarshaling function of eventual additional properties
+    :param properties_to_default_value: Mapping between property name and the associated unmarshaled default value
+    :param discriminator_property: Discriminator property name. It will be `None` if the schema is not a polymorphic schema
+    :param possible_discriminated_type_name_to_model: Mapping of the possible dereferenced Model names and Model instances.
+    :param model_value: JSON value to unmarshal
+
+    :raises: SwaggerMappingError
+    """
     if not is_dict_like(model_value):
         raise SwaggerMappingError(
             "Expected type to be dict for value {0} to unmarshal to a {1}."
             "Was {2} instead.".format(model_value, model_type, type(model_value)),
         )
 
-    # Check if model is polymorphic
-    discriminator = model_spec.get('discriminator')
-    if discriminator is not None:
-        child_model_name = model_value.get(discriminator, None)
-        child_model_type = swagger_spec.definitions.get(child_model_name, None)
-        if child_model_type and child_model_type != model_type:
-            # The discriminator field does targets a different model, let's unmarshal with it
-            return unmarshal_model(swagger_spec, child_model_type._model_spec, model_value)
+    if discriminator_property:
+        discriminator_value = model_value[discriminator_property]
+        discriminated_model = possible_discriminated_type_name_to_model.get(discriminator_value)
+        if discriminated_model is not None:
+            return _get_unmarshaling_method(swagger_spec, discriminated_model._model_spec)(model_value)
 
-    model_as_dict = unmarshal_object(swagger_spec, model_type._model_spec, model_value)
-    model_instance = model_type._from_dict(model_as_dict)
-    return model_instance
+    unmarshaled_value = model_type()
+    for property_name, property_value in iteritems(model_value):
+        unmarshaling_function = properties_to_unmarshaling_function.get(
+            property_name, additional_properties_unmarshaling_function,
+        )
+        unmarshaled_value[property_name] = unmarshaling_function(property_value)
+
+    if swagger_spec.config['include_missing_properties']:
+        for property_name, unmarshaling_function in iteritems(properties_to_unmarshaling_function):
+            if property_name not in unmarshaled_value:
+                unmarshaled_value[property_name] = properties_to_default_value.get(property_name)
+
+    return unmarshaled_value
+
+
+def _unmarshaling_method_object(swagger_spec, object_schema, use_models=True):
+    # type: (Spec, JSONDict, bool) -> UnmarshalingMethod
+    """
+    Determine the unmarshaling method needed for a schema of a type object.
+
+    The method will be responsible for the identification of:
+     * required, nullable and default value for the all properties
+     * unmarshaling methods of all the properties
+     * unmarshaling method of the eventual additional properties
+     * polymorphic nature of the object (`discriminator` attribute) and related unmarshaling methods
+     * default values for
+
+    :param swagger_spec: Spec object
+    :param object_schema: Schema of the object type
+    # TODO: use_models parameter should be removed once unmarshal_model function is removed
+    :param use_models: Flag that enables or disables the usage of Models
+    """
+
+    model_type = None  # type: typing.Optional[typing.Type[Model]]
+    object_schema = swagger_spec.deref(object_schema)
+    if MODEL_MARKER in object_schema:
+        model_name = object_schema[MODEL_MARKER]
+        model_type = swagger_spec.definitions.get(model_name)
+        if use_models and model_type is None:
+            @wraps(_raise_unknown_model)
+            def wrapper_raise(value):
+                # type: (typing.Any) -> typing.Any
+                return _raise_unknown_model(model_name=model_name, value=value)
+
+            return wrapper_raise
+        if not use_models:
+            model_type = None
+
+    properties = collapsed_properties(object_schema, swagger_spec)
+    required_properties = object_schema.get('required', [])
+    properties_to_unmarshaling_function = {
+        prop_name: _get_unmarshaling_method(
+            swagger_spec=swagger_spec,
+            object_schema=prop_schema,
+            is_nullable=prop_schema.get('x-nullable', False) or prop_name not in required_properties,
+        )
+        for prop_name, prop_schema in iteritems(properties)
+    }
+
+    additional_properties_unmarshaling_function = _no_op_unmarshaling
+    if object_schema.get('additionalProperties') is not False:
+        additional_properties_schema = object_schema.get('additionalProperties', {})
+        if additional_properties_schema not in ({}, True):
+            additional_properties_unmarshaling_function = _get_unmarshaling_method(
+                swagger_spec=swagger_spec,
+                object_schema=additional_properties_schema,
+                is_nullable=False,
+            )
+
+    properties_to_default_value = {
+        prop_name: unmarshal_schema_object(
+            swagger_spec=swagger_spec,
+            schema_object_spec=prop_schema,
+            value=schema.get_default(swagger_spec, prop_schema),
+        )
+        for prop_name, prop_schema in iteritems(properties)
+        if schema.has_default(swagger_spec, prop_schema)
+    }
+
+    discriminator_property = object_schema.get('discriminator')
+    possible_discriminated_type_name_to_model = {}
+    if model_type and object_schema.get('discriminator'):
+        possible_discriminated_type_name_to_model.update({
+            k: v
+            for k, v in iteritems(swagger_spec.definitions)
+            if model_type and model_type.__name__ in v._inherits_from
+        })
+
+    @wraps(_unmarshal_object)
+    def wrapper_unmarsha(value):
+        # type: (typing.Any) -> typing.Any
+        return _unmarshal_object(
+            swagger_spec=swagger_spec,
+            model_type=model_type if model_type and swagger_spec.config['use_models'] else dict,
+            properties_to_unmarshaling_function=properties_to_unmarshaling_function,
+            additional_properties_unmarshaling_function=additional_properties_unmarshaling_function,
+            properties_to_default_value=properties_to_default_value,
+            discriminator_property=discriminator_property,
+            possible_discriminated_type_name_to_model=possible_discriminated_type_name_to_model,
+            model_value=value,
+        )
+    return wrapper_unmarsha
+
+
+def _unmarshaling_method_primitive_type(swagger_spec, object_schema):
+    # type: (Spec, JSONDict) -> UnmarshalingMethod
+    """
+    Determine the unmarshaling method needed for a schema of a primitive type.
+
+    The method will be responsible for the identification of the eventual :class:`bravado_core.formatter.SwaggerFormat`
+    transformation to apply.
+
+    :param swagger_spec: Spec object
+    :param object_schema: Schema of the primitive type
+    """
+    swagger_format = schema.get_format(swagger_spec, object_schema)
+    if swagger_format is not None:
+        return swagger_spec.get_format(swagger_format).to_python
+    else:
+        return _no_op_unmarshaling

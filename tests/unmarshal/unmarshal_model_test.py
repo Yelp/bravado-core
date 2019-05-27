@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
+import datetime
+
 import pytest
+from dateutil.tz import tzutc
 
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.spec import Spec
@@ -226,3 +229,57 @@ def test_unmarshal_model_polymorphic_specs(polymorphic_spec):
     for list_item_model, list_item_dict in zip(pet_list.list, list_of_pets_dict['list']):
         assert isinstance(list_item_model, polymorphic_spec.definitions[list_item_dict['type']])
         assert list_item_model._marshal() == list_item_dict
+
+
+@pytest.mark.parametrize(
+    'additionalProperties, value, expected',
+    [
+        (
+            None,
+            {},
+            {'property': None},
+        ),
+        (
+            None,
+            {'property': '2018-05-21T00:00:00+00:00'},
+            {'property': datetime.datetime(2018, 5, 21, tzinfo=tzutc())},
+        ),
+        (
+            {},
+            {'property': '2018-05-21T00:00:00+00:00', 'other': '2018-05-21'},
+            {'property': datetime.datetime(2018, 5, 21, tzinfo=tzutc()), 'other': '2018-05-21'},
+        ),
+        (
+            True,
+            {'property': '2018-05-21T00:00:00+00:00', 'other': '2018-05-21'},
+            {'property': datetime.datetime(2018, 5, 21, tzinfo=tzutc()), 'other': '2018-05-21'},
+        ),
+        (
+            False,
+            {'property': '2018-05-21T00:00:00+00:00', 'other': '2018-05-21'},
+            # Unmarshaling does not do validation
+            {'property': datetime.datetime(2018, 5, 21, tzinfo=tzutc()), 'other': '2018-05-21'},
+        ),
+        (
+            {'type': 'string', 'format': 'date'},
+            {'property': '2018-05-21T00:00:00+00:00', 'other': '2018-05-21'},
+            {'property': datetime.datetime(2018, 5, 21, tzinfo=tzutc()), 'other': datetime.date(2018, 5, 21)},
+        ),
+    ],
+)
+def test_unmarshal_model_with_additional_properties(minimal_swagger_dict, additionalProperties, value, expected):
+    MyModel_spec = {
+        'properties': {
+            'property': {
+                'type': 'string',
+                'format': 'date-time',
+            },
+        },
+        'type': 'object',
+        'x-model': 'MyModel',
+    }
+    if additionalProperties is not None:
+        MyModel_spec['additionalProperties'] = additionalProperties
+    minimal_swagger_dict['definitions']['MyModel'] = MyModel_spec
+    spec = Spec.from_dict(minimal_swagger_dict)
+    assert unmarshal_model(spec, MyModel_spec, value)._as_dict() == expected

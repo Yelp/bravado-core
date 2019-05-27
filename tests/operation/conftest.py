@@ -27,7 +27,7 @@ SECURITY_DEFINITIONS = {
         },
     },
 }
-SECURITY_OBJECTS = {
+SECURITY_OBJECTS = {  # type: ignore
     'basic': [{'basic': []}],
     'apiKey': [{'apiKey': []}],
     'oauth2': [{'oauth2': []}],

@@ -123,6 +123,32 @@ def test_additionalProperties_not_dict_like(minimal_swagger_spec, address_spec, 
     assert "Don't know what to do" in str(excinfo.value)
 
 
+@pytest.mark.filterwarnings("ignore:.*with siblings that will be overwritten")
+def test_get_spec_for_prop_with_x_nullable_and_reference(minimal_swagger_dict):
+    # TODO: remove is_nullable support once https://github.com/Yelp/bravado-core/issues/335 is addressed
+    minimal_swagger_dict['definitions'] = {
+        'referenced': {
+            'type': 'string',
+        },
+        'model': {
+            'type': 'object',
+            'properties': {
+                'property': {
+                    'x-nullable': True,
+                    '$ref': '#/definitions/referenced',
+                },
+            },
+        },
+    }
+    swagger_spec = Spec.from_dict(minimal_swagger_dict)
+    assert {'x-nullable': True, 'type': 'string'} == get_spec_for_prop(
+        swagger_spec,
+        minimal_swagger_dict['definitions']['model'],
+        None,
+        'property',
+    )
+
+
 def test_composition(minimal_swagger_dict, address_spec, address, business_address_spec, business_address):
     minimal_swagger_dict['definitions']['Address'] = address_spec
     minimal_swagger_dict['definitions']['BusinessAddress'] = business_address_spec

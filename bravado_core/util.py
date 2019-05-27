@@ -3,6 +3,7 @@ import copy
 import inspect
 import re
 
+import typing
 from enum import Enum
 from six import iteritems
 from six import iterkeys
@@ -10,6 +11,10 @@ from six import iterkeys
 from bravado_core._compat import wraps
 from bravado_core.schema import is_dict_like
 from bravado_core.schema import is_list_like
+
+if getattr(typing, 'TYPE_CHECKING', False):
+    from bravado_core._compat_typing import FuncType
+    CacheKey = typing.Tuple[typing.Tuple[typing.Text, int], ...]
 
 
 SANITIZE_RULES = [
@@ -75,15 +80,18 @@ class RecursiveCallException(Exception):
 
 
 def memoize_by_id(func):
-    cache = func.cache = {}
-    key_in_progress_set = set()
+    # type: (FuncType) -> FuncType
+    cache = func.cache = {}  # type: ignore  # It's not worth to modify the signature to include handling of cache attribute  # noqa: E501
+    key_in_progress_set = set()  # type: typing.Set[CacheKey]
     _CACHE_MISS = object()
 
     def make_key(*args, **kwargs):
+        # type: (typing.Any, typing.Any) -> CacheKey
         return tuple((key, id(value)) for key, value in sorted(iteritems(inspect.getcallargs(func, *args, **kwargs))))
 
     @wraps(func)
     def wrapper(*args, **kwargs):
+        # type: (typing.Any, typing.Any) -> typing.Any
         cache_key = make_key(*args, **kwargs)
         cached_value = cache.get(cache_key, _CACHE_MISS)
         if cached_value is _CACHE_MISS:

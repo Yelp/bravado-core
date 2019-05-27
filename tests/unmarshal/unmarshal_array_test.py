@@ -45,6 +45,18 @@ def test_default_with_format(empty_swagger_spec):
     assert [datetime.date(2019, 5, 22)] == result
 
 
+def test_with_no_items_schema_defined(empty_swagger_spec):
+    value = [1, 2.3, '4', ['5'], {'6': 7}]
+    result = unmarshal_array(
+        empty_swagger_spec,
+        {
+            'type': 'array',
+        },
+        value,
+    )
+    assert result == value
+
+
 def test_type_not_array_raises_error(empty_swagger_spec, int_array_spec):
     with pytest.raises(SwaggerMappingError) as excinfo:
         unmarshal_array(empty_swagger_spec, int_array_spec, 'not a list')

@@ -1,7 +1,22 @@
+[run]
+# branch = True # TODO: Enable branch coverage
+source =
+    .
+
 [report]
+show_missing = True
+skip_covered = True
+omit =
+    # Omit _compat_typing as it is only used during type checking
+    ^bravado_core/_compat_typing\.py$
+    .tox/*
+    venv/*
+    /usr/*
+    setup.py
 exclude_lines =
     def __repr__
     raise AssertionError
     raise NotImplementedError
+    if getattr\(typing, 'TYPE_CHECKING', False\):
     if __name__ == .__main__.:
     pragma: no cover

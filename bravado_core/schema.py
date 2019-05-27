@@ -1,13 +1,10 @@
 # -*- coding: utf-8 -*-
 import copy
-try:
-    from collections.abc import Mapping
-except ImportError:  # Python 3.2 or older
-    from collections import Mapping
 
 from six import iteritems
 from six import string_types
 
+from bravado_core._compat import Mapping
 from bravado_core.exception import SwaggerMappingError
 
 
@@ -107,6 +104,7 @@ def get_spec_for_prop(swagger_spec, object_spec, object_value, prop_name, proper
         properties = collapsed_properties(deref(object_spec), swagger_spec)
     prop_spec = properties.get(prop_name)
 
+    # TODO: remove is_nullable support once https://github.com/Yelp/bravado-core/issues/335 is addressed
     if prop_spec is not None:
         result_spec = deref(prop_spec)
         # If the de-referenced specification is for a x-nullable property
@@ -188,3 +186,12 @@ def collapsed_properties(model_spec, swagger_spec):
             properties.update(more_properties)
 
     return properties
+
+
+def get_type_from_schema(swagger_spec, schema_object_spec):
+    try:
+        return schema_object_spec['type']
+    except KeyError:
+        if swagger_spec.config['default_type_to_object'] or 'allOf' in schema_object_spec:
+            return 'object'
+        return None
