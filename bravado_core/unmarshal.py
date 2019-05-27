@@ -24,11 +24,10 @@ from bravado_core.util import memoize_by_id
 
 
 if getattr(typing, 'TYPE_CHECKING', False):
-    from bravado_core.spec import Spec
-    from bravado_core.model import Model
     from bravado_core._compat_typing import JSONDict
     from bravado_core._compat_typing import UnmarshalingMethod
-    from bravado_core._compat_typing import NoReturn
+    from bravado_core.model import Model
+    from bravado_core.spec import Spec
 
 
 _NOT_FOUND = object()
@@ -186,7 +185,7 @@ def _no_op_unmarshaling(value):
 
 
 def _unknown_type_unmarhsaling(object_type, value):
-    # type: (typing.Union[typing.Type[dict], typing.Type[Model]], typing.Any) -> NoReturn
+    # type: (typing.Union[typing.Type[dict], typing.Type[Model]], typing.Any) -> None
     raise SwaggerMappingError(
         "Don't know how to unmarshal value {0} with a type of {1}".format(
             value, object_type,
@@ -195,7 +194,7 @@ def _unknown_type_unmarhsaling(object_type, value):
 
 
 def _raise_unknown_model(model_name, value):
-    # type: (typing.Text, typing.Any) -> NoReturn
+    # type: (typing.Text, typing.Any) -> None
     raise SwaggerMappingError('Unknown model {0} when trying to unmarshal {1}'.format(model_name, value))
 
 

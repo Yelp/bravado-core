@@ -47,7 +47,7 @@ setup(
         "msgpack-python>=0.5.2",
     ],
     package_data={
-        'bravado': ['py.typed'],
+        'bravado-core': ['py.typed'],
     },
     extras_require={
         ':python_version<"3.5"': ['typing'],
