@@ -74,7 +74,7 @@ def validate_primitive(swagger_spec, primitive_spec, value):
     :param primitive_spec: spec for a swagger primitive type in dict form
     :type value: int, string, float, long, etc
     """
-    get_validator_type(swagger_spec)(
+    get_validator_type(swagger_spec=swagger_spec)(
         primitive_spec,
         format_checker=swagger_spec.format_checker,
         resolver=swagger_spec.resolver,
@@ -88,7 +88,7 @@ def validate_array(swagger_spec, array_spec, value):
     :param array_spec: spec for an 'array' type in dict form
     :type value: list
     """
-    get_validator_type(swagger_spec)(
+    get_validator_type(swagger_spec=swagger_spec)(
         array_spec,
         format_checker=swagger_spec.format_checker,
         resolver=swagger_spec.resolver,
@@ -102,7 +102,7 @@ def validate_object(swagger_spec, object_spec, value):
     :param object_spec: spec for an 'object' type in dict form
     :type value: dict
     """
-    get_validator_type(swagger_spec)(
+    get_validator_type(swagger_spec=swagger_spec)(
         object_spec,
         format_checker=swagger_spec.format_checker,
         resolver=swagger_spec.resolver,

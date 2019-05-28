@@ -52,7 +52,7 @@ def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
     :rtype: int, float, long, string, unicode, boolean, list, dict, object (in
         the case of a 'format' conversion', or Model type
     """
-    unmarshaling_method = _get_unmarshaling_method(swagger_spec, schema_object_spec)
+    unmarshaling_method = _get_unmarshaling_method(swagger_spec=swagger_spec, object_schema=schema_object_spec)
     return unmarshaling_method(value)
 
 
@@ -73,7 +73,7 @@ def unmarshal_primitive(swagger_spec, primitive_spec, value):
         'Please use the more general entry-point offered in unmarshal_schema_object',
         DeprecationWarning,
     )
-    null_decorator = _decorators.handle_null_value(swagger_spec, primitive_spec)
+    null_decorator = _decorators.handle_null_value(swagger_spec=swagger_spec, object_schema=primitive_spec)
     unmarshal_function = _unmarshaling_method_primitive_type(swagger_spec, primitive_spec)
 
     return null_decorator(unmarshal_function)(value)
@@ -94,7 +94,7 @@ def unmarshal_array(swagger_spec, array_spec, array_value):
         'Please use the more general entry-point offered in unmarshal_schema_object',
         DeprecationWarning,
     )
-    null_decorator = _decorators.handle_null_value(swagger_spec, array_spec)
+    null_decorator = _decorators.handle_null_value(swagger_spec=swagger_spec, object_schema=array_spec)
     unmarshal_function = _unmarshaling_method_array(swagger_spec, array_spec)
     return null_decorator(unmarshal_function)(array_value)
 
@@ -114,7 +114,7 @@ def unmarshal_object(swagger_spec, object_spec, object_value):
         'Please use the more general entry-point offered in unmarshal_schema_object',
         DeprecationWarning,
     )
-    null_decorator = _decorators.handle_null_value(swagger_spec, object_spec)
+    null_decorator = _decorators.handle_null_value(swagger_spec=swagger_spec, object_schema=object_spec)
     unmarshal_function = _unmarshaling_method_object(swagger_spec, object_spec, use_models=False)
     return null_decorator(unmarshal_function)(object_value)
 
@@ -135,7 +135,7 @@ def unmarshal_model(swagger_spec, model_spec, model_value):
         DeprecationWarning,
     )
 
-    null_decorator = _decorators.handle_null_value(swagger_spec, model_spec)
+    null_decorator = _decorators.handle_null_value(swagger_spec=swagger_spec, object_schema=model_spec)
     unmarshal_function = _unmarshaling_method_object(swagger_spec, model_spec, use_models=True)
     return null_decorator(unmarshal_function)(model_value)
 
@@ -157,7 +157,11 @@ def _get_unmarshaling_method(swagger_spec, object_schema, is_nullable=True):
                         attribute is set to true by the "parent" schema
     """
     object_schema = swagger_spec.deref(object_schema)
-    null_decorator = _decorators.handle_null_value(swagger_spec, object_schema, is_nullable)
+    null_decorator = _decorators.handle_null_value(
+        swagger_spec=swagger_spec,
+        object_schema=object_schema,
+        is_nullable=is_nullable,
+    )
     object_type = get_type_from_schema(swagger_spec, object_schema)
 
     if object_type == 'array':
@@ -277,7 +281,11 @@ def _unmarshal_object(
         discriminator_value = model_value[discriminator_property]
         discriminated_model = possible_discriminated_type_name_to_model.get(discriminator_value)
         if discriminated_model is not None:
-            return _get_unmarshaling_method(swagger_spec, discriminated_model._model_spec)(model_value)
+            unmarshal_func = _get_unmarshaling_method(
+                swagger_spec=swagger_spec,
+                object_schema=discriminated_model._model_spec,
+            )
+            return unmarshal_func(model_value)
 
     unmarshaled_value = model_type()
     for property_name, property_value in iteritems(model_value):
