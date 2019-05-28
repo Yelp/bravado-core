@@ -4,7 +4,6 @@ from functools import partial
 
 import typing
 from six import iteritems
-from six import iterkeys
 
 from bravado_core import _decorators
 from bravado_core import schema
@@ -252,7 +251,7 @@ def _marshaling_method_file(swagger_spec, object_schema):
     return _no_op_marshaling
 
 
-def _marshal_model(
+def _marshal_object(
     swagger_spec,  # type: Spec
     model_type,  # type: typing.Union[typing.Type[JSONDict], typing.Type[Model]]
     properties_to_marshaling_function,  # type: typing.Dict[typing.Text, MarshalingMethod]
@@ -294,35 +293,21 @@ def _marshal_model(
             return marshaling_function(model_value)
 
     marshaled_value = dict()
-    properties_to_marshal = set(iterkeys(properties_to_marshaling_function))
-    if additional_properties_marshaling_function is not None:
-        if isinstance(model_value, Model):
-            properties_to_marshal.update(model_value._additional_props)
-        else:
-            properties_to_marshal.update(iterkeys(model_value))
-
-    for property_name in properties_to_marshal:
+    for property_name in model_value:
+        property_value = model_value[property_name]
         property_marshaling_function = properties_to_marshaling_function.get(
             property_name, additional_properties_marshaling_function,
         )
-        try:
-            property_value = model_value[property_name]
-        except KeyError:
-            property_value = _NOT_FOUND
-
-        if property_value not in (_NOT_FOUND, None):
-            marshaled_value[property_name] = property_marshaling_function(property_value)
-        elif (
-            property_name in required_properties or
-            (
-                property_value is None and property_name in nullable_properties
-            )
+        if (
+            property_value is None
+            and property_name not in required_properties
+            and property_name not in nullable_properties
+            and property_name in properties_to_marshaling_function
         ):
-            marshaled_value[property_name] = None
-        elif property_name in properties_to_marshaling_function:
-            pass
-        elif additional_properties_marshaling_function:
-            marshaled_value[property_name] = additional_properties_marshaling_function(property_value)
+            continue
+
+        marshaled_value[property_name] = property_marshaling_function(property_value)
+
     return marshaled_value
 
 
@@ -388,7 +373,7 @@ def _marshaling_method_object(swagger_spec, object_schema):
     }
 
     return partial(
-        _marshal_model,
+        _marshal_object,
         swagger_spec,
         model_type if model_type and swagger_spec.config['use_models'] else dict,
         properties_to_marshaling_function,
