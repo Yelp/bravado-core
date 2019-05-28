@@ -396,8 +396,9 @@ def _unmarshaling_method_primitive_type(swagger_spec, object_schema):
     :param swagger_spec: Spec object
     :param object_schema: Schema of the primitive type
     """
-    swagger_format = schema.get_format(swagger_spec, object_schema)
+    format_name = schema.get_format(swagger_spec, object_schema)
+    swagger_format = swagger_spec.get_format(format_name) if format_name is not None else None
     if swagger_format is not None:
-        return swagger_spec.get_format(swagger_format).to_python
+        return swagger_format.to_python
     else:
         return _no_op_unmarshaling

@@ -40,7 +40,6 @@ def test_number(minimal_swagger_spec):
 
 
 def test_datetime_string(minimal_swagger_spec):
-    from datetime import datetime
     date_spec = {
         'type': 'string',
         'format': 'date-time',
@@ -48,10 +47,22 @@ def test_datetime_string(minimal_swagger_spec):
     # the validator requires a time zone, but that's a pain to scaffold:
     # this just tests that naive date parsing happens as expected
     input_date = "2016-06-07T20:59:00.480"
-    expected_date = datetime(2016, 6, 7, 20, 59, 0, 480000)
+    expected_date = datetime.datetime(2016, 6, 7, 20, 59, 0, 480000)
     assert expected_date == unmarshal_primitive(
         minimal_swagger_spec,
         date_spec, input_date,
+    )
+
+
+def test_unmarshaling_unknown_format(minimal_swagger_spec):
+    value = 'some text'
+    assert value == unmarshal_primitive(
+        minimal_swagger_spec,
+        {
+            'type': 'string',
+            'format': 'a-not-existing-format',
+        },
+        value,
     )
 
 
