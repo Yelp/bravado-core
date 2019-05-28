@@ -177,7 +177,7 @@ def _get_unmarshaling_method(swagger_spec, object_schema, is_nullable=True):
         return _no_op_unmarshaling
     else:
         return partial(
-            _unknown_type_unmarhsaling,
+            _unknown_type_unmarshaling,
             object_type,
         )
 
@@ -187,7 +187,7 @@ def _no_op_unmarshaling(value):
     return value
 
 
-def _unknown_type_unmarhsaling(object_type, value):
+def _unknown_type_unmarshaling(object_type, value):
     # type: (typing.Union[typing.Type[dict], typing.Type[Model]], typing.Any) -> NoReturn
     raise SwaggerMappingError(
         "Don't know how to unmarshal value {0} with a type of {1}".format(
