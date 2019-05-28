@@ -6,13 +6,13 @@ Unmarshaling is the operation that converts a "JSON" object into its python repr
 The operation should also take care of converting types accordingly to the defined :class:`bravado_core.formatter.SwaggerFormat`s.
 """
 import warnings
+from functools import partial
 
 import typing
 from six import iteritems
 
 from bravado_core import _decorators
 from bravado_core import schema
-from bravado_core._compat import wraps
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.model import MODEL_MARKER
 from bravado_core.schema import collapsed_properties
@@ -176,12 +176,10 @@ def _get_unmarshaling_method(swagger_spec, object_schema, is_nullable=True):
     elif object_type is None:
         return _no_op_unmarshaling
     else:
-        @wraps(_unknown_type_unmarhsaling)
-        def wrapper_unknown(value):
-            # type: (typing.Any) -> typing.Any
-            return _unknown_type_unmarhsaling(object_type=object_type, value=value)
-
-        return wrapper_unknown
+        return partial(
+            _unknown_type_unmarshaling,
+            object_type,
+        )
 
 
 def _no_op_unmarshaling(value):
@@ -189,7 +187,7 @@ def _no_op_unmarshaling(value):
     return value
 
 
-def _unknown_type_unmarhsaling(object_type, value):
+def _unknown_type_unmarshaling(object_type, value):
     # type: (typing.Union[typing.Type[dict], typing.Type[Model]], typing.Any) -> NoReturn
     raise SwaggerMappingError(
         "Don't know how to unmarshal value {0} with a type of {1}".format(
@@ -236,15 +234,10 @@ def _unmarshaling_method_array(swagger_spec, object_schema):
     if item_schema is _NOT_FOUND:
         return _no_op_unmarshaling
 
-    @wraps(_unmarshal_array)
-    def wrapper_array(value):
-        # type: (typing.Any) -> typing.Any
-        return _unmarshal_array(
-            unmarshal_array_item_function=_get_unmarshaling_method(swagger_spec=swagger_spec, object_schema=item_schema),
-            value=value,
-        )
-
-    return wrapper_array
+    return partial(
+        _unmarshal_array,
+        _get_unmarshaling_method(swagger_spec=swagger_spec, object_schema=item_schema),
+    )
 
 
 def _unmarshaling_method_file(swagger_spec, object_schema):
@@ -333,12 +326,10 @@ def _unmarshaling_method_object(swagger_spec, object_schema, use_models=True):
         model_name = object_schema[MODEL_MARKER]
         model_type = swagger_spec.definitions.get(model_name)
         if use_models and model_type is None:
-            @wraps(_raise_unknown_model)
-            def wrapper_raise(value):
-                # type: (typing.Any) -> typing.Any
-                return _raise_unknown_model(model_name=model_name, value=value)
-
-            return wrapper_raise
+            return partial(
+                _raise_unknown_model,
+                model_name,
+            )
         if not use_models:
             model_type = None
 
@@ -382,20 +373,16 @@ def _unmarshaling_method_object(swagger_spec, object_schema, use_models=True):
             if model_type and model_type.__name__ in v._inherits_from
         })
 
-    @wraps(_unmarshal_object)
-    def wrapper_unmarsha(value):
-        # type: (typing.Any) -> typing.Any
-        return _unmarshal_object(
-            swagger_spec=swagger_spec,
-            model_type=model_type if model_type and swagger_spec.config['use_models'] else dict,
-            properties_to_unmarshaling_function=properties_to_unmarshaling_function,
-            additional_properties_unmarshaling_function=additional_properties_unmarshaling_function,
-            properties_to_default_value=properties_to_default_value,
-            discriminator_property=discriminator_property,
-            possible_discriminated_type_name_to_model=possible_discriminated_type_name_to_model,
-            model_value=value,
-        )
-    return wrapper_unmarsha
+    return partial(
+        _unmarshal_object,
+        swagger_spec,
+        model_type if model_type and swagger_spec.config['use_models'] else dict,
+        properties_to_unmarshaling_function,
+        additional_properties_unmarshaling_function,
+        properties_to_default_value,
+        discriminator_property,
+        possible_discriminated_type_name_to_model,
+    )
 
 
 def _unmarshaling_method_primitive_type(swagger_spec, object_schema):
