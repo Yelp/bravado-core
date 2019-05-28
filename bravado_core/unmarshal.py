@@ -236,7 +236,7 @@ def _unmarshaling_method_array(swagger_spec, object_schema):
 
     return partial(
         _unmarshal_array,
-        _get_unmarshaling_method(swagger_spec, item_schema),
+        _get_unmarshaling_method(swagger_spec=swagger_spec, object_schema=item_schema),
     )
 
 
