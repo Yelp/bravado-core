@@ -8,6 +8,7 @@ from enum import Enum
 from six import iteritems
 from six import iterkeys
 
+from bravado_core._compat import get_function_spec
 from bravado_core._compat import wraps
 from bravado_core.schema import is_dict_like
 from bravado_core.schema import is_list_like
@@ -85,9 +86,25 @@ def memoize_by_id(func):
     key_in_progress_set = set()  # type: typing.Set[CacheKey]
     _CACHE_MISS = object()
 
+    spec = get_function_spec(func)
+    default_mapping = dict(zip(reversed(spec.args), reversed(spec.defaults or [])))
+
     def make_key(*args, **kwargs):
         # type: (typing.Any, typing.Any) -> CacheKey
-        return tuple((key, id(value)) for key, value in sorted(iteritems(inspect.getcallargs(func, *args, **kwargs))))
+        """
+        Create a cache key starting from *args and **kwargs.
+        The cache key is an ordered tuple containing parameter name and related id as in (name, id(value)).
+        """
+        if args:
+            param_name_to_value_mapping = sorted(iteritems(inspect.getcallargs(func, *args, **kwargs)))
+        else:
+            # Use the default values while determining the parameter name to value to be used for the cache key
+            param_name_to_value_mapping = sorted(iteritems(dict(default_mapping, **kwargs)))
+
+        return tuple(
+            (param_name, id(param_value))
+            for param_name, param_value in param_name_to_value_mapping
+        )
 
     @wraps(func)
     def wrapper(*args, **kwargs):

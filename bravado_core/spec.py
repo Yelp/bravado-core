@@ -332,17 +332,17 @@ class Spec(object):
                 return obj.__subject__
             if is_dict_like(obj):
                 for key in list(iterkeys(obj)):
-                    obj[key] = descend(obj[key])
+                    obj[key] = descend(obj=obj[key])
             elif is_list_like(obj):
                 # obj is list like object provided from flattened_spec specs.
                 # This guarantees that it cannot be a tuple instance and
                 # inline object modification are allowed
                 for index in range(len(obj)):
-                    obj[index] = descend(obj[index])
+                    obj[index] = descend(obj=obj[index])
             return obj
 
         try:
-            return descend(deref_spec_dict)
+            return descend(obj=deref_spec_dict)
         finally:
             # Make sure that all memory allocated, for caching, could be released
             descend.cache.clear()
