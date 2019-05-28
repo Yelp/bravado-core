@@ -117,7 +117,11 @@ def marshal_object(swagger_spec, object_spec, object_value):
         'Please use the more general entry-point offered in marshal_schema_object',
         DeprecationWarning,
     )
-    null_decorator = _decorators.handle_null_value(swagger_spec=swagger_spec, object_schema=object_spec)
+    null_decorator = _decorators.handle_null_value(
+        swagger_spec=swagger_spec,
+        object_schema=object_spec,
+        is_marshaling_operation=True,
+    )
     marshal_function = _marshaling_method_object(swagger_spec=swagger_spec, object_schema=object_spec)
     return null_decorator(marshal_function)(object_value)
 
@@ -137,7 +141,11 @@ def marshal_model(swagger_spec, model_spec, model_value):
         'Please use the more general entry-point offered in marshal_schema_object',
         DeprecationWarning,
     )
-    null_decorator = _decorators.handle_null_value(swagger_spec=swagger_spec, object_schema=model_spec)
+    null_decorator = _decorators.handle_null_value(
+        swagger_spec=swagger_spec,
+        object_schema=model_spec,
+        is_marshaling_operation=True,
+    )
     marshal_function = _marshaling_method_object(swagger_spec=swagger_spec, object_schema=model_spec)
     return null_decorator(marshal_function)(model_value)
 
