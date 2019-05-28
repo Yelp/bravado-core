@@ -400,24 +400,21 @@ def _marshaling_method_object(swagger_spec, object_schema):
     )
 
 
-def _low_level_to_wire(swagger_spec, object_schema, swagger_format, value):
-    # type: (Spec, JSONDict, SwaggerFormat, typing.Any) -> typing.Any
+def _marshal_primitive_type(primitive_type, swagger_format, value):
+    # type: (typing.Text, SwaggerFormat, typing.Any) -> typing.Any
     """
     Marshal a python representation of a primitive type to its JSON representation.
 
-    :param swagger_spec: Spec object
-    :param object_schema: Schema of the primitive type
+    :param primitive_type: Primitive type of the schema to marshal
     :param swagger_format: Swagger format to apply during marshaling
     :param value: value to marshal
     """
     try:
-        return swagger_spec.get_format(swagger_format).to_wire(value)
+        return swagger_format.to_wire(value)
     except Exception as e:
         raise SwaggerMappingError(
-            'Error while marshalling value={} to type={}{}{}.'.format(
-                value, object_schema['type'],
-                '/' if 'format' in object_schema else '',
-                object_schema['format'] if 'format' in object_schema else '',
+            'Error while marshalling value={} to type={}/{}.'.format(
+                value, primitive_type, swagger_format.format,
             ),
             e,
         )
@@ -434,12 +431,12 @@ def _marshaling_method_primitive_type(swagger_spec, object_schema):
     :param swagger_spec: Spec object
     :param object_schema: Schema of the primitive type
     """
-    swagger_format = schema.get_format(swagger_spec, object_schema)
+    format_name = schema.get_format(swagger_spec, object_schema)
+    swagger_format = swagger_spec.get_format(format_name) if format_name is not None else None
     if swagger_format is not None:
         return partial(
-            _low_level_to_wire,
-            swagger_spec,
-            object_schema,
+            _marshal_primitive_type,
+            get_type_from_schema(swagger_spec, object_schema),
             swagger_format,
         )
     else:
