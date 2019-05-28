@@ -202,11 +202,11 @@ def _raise_unknown_model(model_name, value):
 def _marshal_array(marshal_array_item_function, value):
     # type: (MarshalingMethod, typing.Any) -> typing.Any
     """
-    marshal a jsonschema type of 'array' into a python list.
+    Marshal a python list to its JSON list representation.
 
-    :type marshal_array_item_function: callable
-    :type value: list
-    :rtype: list
+    :param marshal_array_item_function: Marshaling function for each array item
+    :param value: JSON value to marshal
+
     :raises: SwaggerMappingError
     """
     if not is_list_like(value):
@@ -220,6 +220,14 @@ def _marshal_array(marshal_array_item_function, value):
 
 def _marshaling_method_array(swagger_spec, object_schema):
     # type: (Spec, JSONDict) -> MarshalingMethod
+    """
+    Determine the marshaling method needed for a schema of a type array.
+
+    The method will be responsible for the identification of the marshaling method of the array items.
+
+    :param swagger_spec: Spec object
+    :param object_schema: Schema of the object type
+    """
     item_schema = swagger_spec.deref(swagger_spec.deref(object_schema).get('items', _NOT_FOUND))
     if item_schema is _NOT_FOUND:
         return _no_op_marshaling
@@ -249,12 +257,18 @@ def _marshal_model(
 ):
     # type: (...) -> typing.Any
     """
-    marshal a dict into a Model instance or a dictionary (according to the 'use_models' swagger_spec configuration).
+    Marshal a dict or Model instance into its JSON Object representation.
 
-    :type model_type: Model
-    :type model_value: dict
+    :param swagger_spec: Spec object
+    :param model_type: Type of the return value (:class:`dict` or a subclass of :class:`bravado_core.model.Model`)
+    :param properties_to_marshaling_function: Mapping between property name and associated unmarshaling method
+    :param additional_properties_marshaling_function: Unmarshaling function of eventual additional properties
+    :param discriminator_property: Discriminator property name. It will be `None` if the schema is not a polymorphic schema
+    :param possible_discriminated_type_name_to_model: Mapping of the possible dereferenced Model names and Model instances.
+    :param required_properties: Set of required properties of the object schema
+    :param nullable_properties: Set of nullable properties of the object schema
+    :param model_value: JSON value to marshal
 
-    :rtype: Model instance
     :raises: SwaggerMappingError
     """
     if not is_dict_like(model_value) and not isinstance(model_value, Model):
@@ -306,6 +320,18 @@ def _marshal_model(
 
 def _marshaling_method_object(swagger_spec, object_schema):
     # type: (Spec, JSONDict) -> MarshalingMethod
+    """
+    Determine the marshaling method needed for a schema of a type object.
+
+    The method will be responsible for the identification of:
+     * required and nullable value for the all properties
+     * marshaling methods of all the properties
+     * marshaling method of the eventual additional properties
+     * polymorphic nature of the object (`discriminator` attribute) and list of the associated models
+
+    :param swagger_spec: Spec object
+    :param object_schema: Schema of the object type
+    """
 
     model_type = None  # type: typing.Optional[typing.Type[Model]]
     object_schema = swagger_spec.deref(object_schema)
@@ -368,6 +394,14 @@ def _marshaling_method_object(swagger_spec, object_schema):
 
 def _low_level_to_wire(swagger_spec, object_schema, swagger_format, value):
     # type: (Spec, JSONDict, SwaggerFormat, typing.Any) -> typing.Any
+    """
+    Marshal a python representation of a primitive type to its JSON representation.
+
+    :param swagger_spec: Spec object
+    :param object_schema: Schema of the primitive type
+    :param swagger_format: Swagger format to apply during marshaling
+    :param value: value to marshal
+    """
     try:
         return swagger_spec.get_format(swagger_format).to_wire(value)
     except Exception as e:
@@ -383,6 +417,15 @@ def _low_level_to_wire(swagger_spec, object_schema, swagger_format, value):
 
 def _marshaling_method_primitive_type(swagger_spec, object_schema):
     # type: (Spec, JSONDict) -> MarshalingMethod
+    """
+    Determine the marshaling method needed for a schema of a primitive type.
+
+    The method will be responsible for the identification of the eventual :class:`bravado_core.formatter.SwaggerFormat`
+    transformation to apply.
+
+    :param swagger_spec: Spec object
+    :param object_schema: Schema of the primitive type
+    """
     swagger_format = schema.get_format(swagger_spec, object_schema)
     if swagger_format is not None:
         return partial(
