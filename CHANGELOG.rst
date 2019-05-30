@@ -2,6 +2,17 @@ Changelog
 =========
 .. Make sure to link Issue and PR information as `(PR|Issue) #xxx`_ and with a link at the bottom of the document
 
+5.13.0 (2019-xx-xx)
+-------------------
+| The release is mainly based on performance improvements of marshalling and unmarshalling processes.
+
+- ``Model`` instances use ``__slots__`` and ``@lazy_class_attribute`` to reduce ``Model`` class footprint - `PR #330`_
+- ``unmarshal_schema_object`` honours the additional properties and default values - `PR #333`_
+- ``unmarshal_model``/``unmarshal_object`` do not raise ``SwaggerMappingError`` in case of unknown polymorphic objects (better distinction between unmarshalling and validating processes) - `PR #333`_
+- Refactor ``bravado_core.unmarshal`` module to enhance runtime performances - `PR #336`_
+- ``@memoize_by_id`` performance improvements when used with ``kwargs`` only - `PR #337`_
+- Refactor ``bravado_core.marshal`` module to enhance runtime performances - `PR #339`_
+
 5.12.1 (2019-05-07)
 -------------------
 - Prevent ``DeprecationWarning`` in Python 3.7 - `PR #326`_
@@ -505,6 +516,12 @@ Changelog
 .. _PR #326: https://github.com/Yelp/bravado-core/pull/326
 .. _PR #327: https://github.com/Yelp/bravado-core/pull/327
 .. _PR #328: https://github.com/Yelp/bravado-core/pull/328
+.. _PR #330: https://github.com/Yelp/bravado-core/pull/330
+.. _PR #333: https://github.com/Yelp/bravado-core/pull/333
+.. _PR #336: https://github.com/Yelp/bravado-core/pull/336
+.. _PR #337: https://github.com/Yelp/bravado-core/pull/337
+.. _PR #339: https://github.com/Yelp/bravado-core/pull/339
+
 
 .. Link To Documentation pages
 .. _Configure: https://bravado-core.readthedocs.org/en/latest/config.html
