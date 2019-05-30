@@ -59,7 +59,7 @@ Changelog
 
 5.0.2 (2018-06-04)
 ------------------
-- Fix regression if `internally_dereference_refs` is used. `Issue #275`_, `PR #276`_
+- Fix regression if ``internally_dereference_refs`` is used. `Issue #275`_, `PR #276`_
 
 5.0.1 (2018-05-30)
 ------------------
@@ -70,7 +70,7 @@ Changelog
 - Refactor: model discovery is now handled in ``bravado_core.model`` - `PR #270`_
 - Remove deprecated methods from Model type - `PR #270`_
 - Remove deprecated parameters from ``bravado_core.spec_flattening.flattened_spec`` - `PR #269`_
-- Ensure that models in `#/definitions` of referenced files are discovered - `PR #273`_
+- Ensure that models in ``#/definitions`` of referenced files are discovered - `PR #273`_
 
 .. warning::
     This release contains breaking changes!
@@ -79,7 +79,7 @@ Changelog
 
 4.13.4 (2018-05-24)
 -------------------
-- Fix marsharling and unmarshaling of optional body parameters. `PR #268`_
+- Fix marshalling and unmarshalling of optional body parameters. `PR #268`_
 
 4.13.3 (2018-05-16)
 -------------------
@@ -133,7 +133,7 @@ Changelog
 4.11.1 (2017-12-18)
 -------------------
 - Speed up marshalling and unmarshalling of objects - `PR #226`_.
-- Use msgpack-python instead of u-msgpack-python for performance improvements - `Issue #227`_, `PR #228`_.
+- Use ``msgpack-python`` instead of ``u-msgpack-python`` for performance improvements - `Issue #227`_, `PR #228`_.
 
 4.11.0 (2017-11-09)
 -------------------
@@ -278,7 +278,7 @@ Changelog
 - Fix boolean query params to support case-insensetive true/false and 0/1 - `Issue #70`_
 - Support for Swagger specs in yaml format - `Issue #42`_
 - Fix validation of server side request parameters when collectionFormat=multi and item type is not string - `Issue #66`_
-- Fix unmarshaling of server side request parameters when collectionFormat=multi and cardinality is one - `PR #75`_
+- Fix unmarshalling of server side request parameters when collectionFormat=multi and cardinality is one - `PR #75`_
 
 4.0.1 (2016-01-11)
 ------------------
@@ -320,7 +320,7 @@ Changelog
 ------------------
 - User-defined formats are now scoped to a Swagger spec - `Issue #50`_ (this is a non-backwards compatible change)
 - Deprecated bravado_core.request.RequestLike and renamed to bravado_core.request.IncomingRequest
-- Added `make docs` target and updated docs (still needs a lot of work though)
+- Added ``make docs`` target and updated docs (still needs a lot of work though)
 
 2.4.1 (2015-09-30)
 ------------------
@@ -357,7 +357,7 @@ Changelog
 
 1.0.0-rc2 (2015-06-01)
 ----------------------
-- Fixed file uploads when marshaling a request
+- Fixed file uploads when marshalling a request
 - Renamed ResponseLike to IncomingResponse
 - Fixed repr of a model when it has an attr with a unicode value
 
