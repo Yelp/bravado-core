@@ -147,7 +147,7 @@ Changelog
 4.10.0 (2017-11-03)
 -------------------
 - New config ``internally_dereference_refs`` that can significantly speed up unmarshalling. Currently disabled by default - `PR #204`_.
-- Added support for new extension ``x-sensitive`` to scrub sensitive values from validation errors. Please check the `documentation <http://bravado-core.readthedocs.io/en/latest/models.html#sensitive-data>`_ for further details - `PR #213`_.
+- Added support for new extension ``x-sensitive`` to scrub sensitive values from validation errors. Please check the `Sensitive Data`_ documentation for further details - `PR #213`_.
 - Fixed an issue that would cause validation errors if ``obj_type`` was ``None`` - `PR #196`_.
 - Fixed handling of defaults for array parameters - `PR #199`_.
 - Performance improvements - `PR #207`_.
@@ -295,8 +295,7 @@ Changelog
 - Automatic tagging of models is only supported in the root swagger spec file.
   If you have models defined in $ref targets that are in other files, you must
   manually tag them with 'x-model' for them to be available as python types.
-  See `Model Discovery <http://bravado-core.readthedocs.org/en/latest/models.html#model-discovery>`_
-  for more info.
+  See `Model Discovery`_ for more info.
 
 3.1.1 (2015-10-19)
 ------------------
@@ -308,13 +307,14 @@ Changelog
 
 3.0.2 (2015-10-12)
 ------------------
-- Added docs on how to use `user-defined formats <http://bravado-core.readthedocs.org/en/latest/formats.html>`_.
-- Added docs on how to `configure <http://bravado-core.readthedocs.org/en/latest/config.html>`_ bravado-core.
-- `formats` added as a config option
+- Added docs on how to use `User-Defined Formats`_.
+- Added docs on how to `Configure`_ bravado-core.
+- formats added as a config option
+
 
 3.0.1 (2015-10-09)
 ------------------
-- Automatically tag models in external $refs - `Issue #45`_ - see `Model Discovery <http://bravado-core.readthedocs.org/en/latest/models.html#model-discovery>`_ for more info.
+- Automatically tag models in external $refs - `Issue #45`_ - see `Model Discovery`_ for more info.
 
 3.0.0 (2015-10-07)
 ------------------
@@ -505,3 +505,9 @@ Changelog
 .. _PR #326: https://github.com/Yelp/bravado-core/pull/326
 .. _PR #327: https://github.com/Yelp/bravado-core/pull/327
 .. _PR #328: https://github.com/Yelp/bravado-core/pull/328
+
+.. Link To Documentation pages
+.. _Configure: https://bravado-core.readthedocs.org/en/latest/config.html
+.. _Model Discovery: https://bravado-core.readthedocs.org/en/latest/models.html#model-discovery
+.. _User-Defined Formats: https://bravado-core.readthedocs.org/en/latest/formats.html
+.. _Sensitive Data: https://bravado-core.readthedocs.io/en/latest/models.html#sensitive-data
