@@ -253,7 +253,6 @@ def _marshaling_method_file(swagger_spec, object_schema):
 
 def _marshal_object(
     swagger_spec,  # type: Spec
-    model_type,  # type: typing.Union[typing.Type[JSONDict], typing.Type[Model]]
     properties_to_marshaling_function,  # type: typing.Dict[typing.Text, MarshalingMethod]
     additional_properties_marshaling_function,  # type: MarshalingMethod
     discriminator_property,  # type: typing.Optional[typing.Text]
@@ -267,7 +266,6 @@ def _marshal_object(
     Marshal a dict or Model instance into its JSON Object representation.
 
     :param swagger_spec: Spec object
-    :param model_type: Type of the return value (:class:`dict` or a subclass of :class:`bravado_core.model.Model`)
     :param properties_to_marshaling_function: Mapping between property name and associated unmarshaling method
     :param additional_properties_marshaling_function: Unmarshaling function of eventual additional properties
     :param discriminator_property: Discriminator property name. It will be `None` if the schema is not a polymorphic schema
@@ -280,8 +278,8 @@ def _marshal_object(
     """
     if not is_dict_like(model_value) and not isinstance(model_value, Model):
         raise SwaggerMappingError(
-            "Expected type to be {0} to marshal value '{1}' to a dict. Was {2} instead.".format(
-                'dict' if model_type is dict else 'dict or Model', model_value, type(model_value),
+            "Expected type to be dict or Model to marshal value '{0}' to a dict. Was {1} instead.".format(
+                model_value, type(model_value),
             ),
         )
 
@@ -375,7 +373,6 @@ def _marshaling_method_object(swagger_spec, object_schema):
     return partial(
         _marshal_object,
         swagger_spec,
-        model_type if model_type and swagger_spec.config['use_models'] else dict,
         properties_to_marshaling_function,
         additional_properties_marshaling_function,
         discriminator_property,
