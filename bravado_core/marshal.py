@@ -212,7 +212,7 @@ def _marshal_array(marshal_array_item_function, value):
     Marshal a python list to its JSON list representation.
 
     :param marshal_array_item_function: Marshaling function for each array item
-    :param value: JSON value to marshal
+    :param value: Python list/tuple to marshal as JSON Array
 
     :raises: SwaggerMappingError
     """
@@ -272,7 +272,7 @@ def _marshal_object(
     :param possible_discriminated_type_name_to_model: Mapping of the possible dereferenced Model names and Model instances.
     :param required_properties: Set of required properties of the object schema
     :param nullable_properties: Set of nullable properties of the object schema
-    :param model_value: JSON value to marshal
+    :param model_value: Python dictionary or Model to marshal as JSON Object
 
     :raises: SwaggerMappingError
     """
@@ -389,7 +389,7 @@ def _marshal_primitive_type(primitive_type, swagger_format, value):
 
     :param primitive_type: Primitive type of the schema to marshal
     :param swagger_format: Swagger format to apply during marshaling
-    :param value: value to marshal
+    :param value: Python primitive value to marshal
     """
     try:
         return swagger_format.to_wire(value)
