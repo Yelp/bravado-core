@@ -11,7 +11,7 @@ Changelog
 - ``unmarshal_model``/``unmarshal_object`` do not raise ``SwaggerMappingError`` in case of unknown polymorphic objects (better distinction between unmarshalling and validating processes) - `PR #333`_
 - Refactor ``bravado_core.unmarshal`` module to enhance runtime performances - `PR #336`_
 - ``@memoize_by_id`` performance improvements when used with ``kwargs`` only - `PR #337`_
-- Refactor ``bravado_core.marshal`` module to enhance runtime performances - `PR #339`_
+- Refactor ``bravado_core.marshal`` module to enhance runtime performance - `PR #339`_
 
 5.12.1 (2019-05-07)
 -------------------
