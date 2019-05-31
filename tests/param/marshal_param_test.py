@@ -4,11 +4,11 @@ import datetime
 from json import loads
 
 import pytest
+from jsonschema import ValidationError
 from mock import Mock
 from mock import patch
 
 from bravado_core.content_type import APP_JSON
-from bravado_core.exception import SwaggerMappingError
 from bravado_core.operation import Operation
 from bravado_core.param import encode_request_param
 from bravado_core.param import marshal_param
@@ -92,9 +92,9 @@ def test_required_query_array_with_no_value(
 ):
     array_param_spec['required'] = True
     param = Param(empty_swagger_spec, Mock(spec=Operation), array_param_spec)
-    with pytest.raises(SwaggerMappingError) as excinfo:
+    with pytest.raises(ValidationError) as excinfo:
         marshal_param(param, value=None, request=request_dict)
-    assert 'is a required value' in str(excinfo.value)
+    assert 'is a required parameter' in str(excinfo.value)
 
 
 def test_path_integer(empty_swagger_spec, param_spec):
@@ -250,9 +250,9 @@ def test_required_param_failure(
             spec=Operation,
         ), string_param_spec,
     )
-    with pytest.raises(SwaggerMappingError) as excinfo:
+    with pytest.raises(ValidationError) as excinfo:
         marshal_param(param, value, request_dict)
-    assert 'is a required value' in str(excinfo.value)
+    assert 'is a required parameter' in str(excinfo.value)
 
 
 @pytest.mark.parametrize(

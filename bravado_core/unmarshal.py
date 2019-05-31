@@ -311,8 +311,7 @@ def _unmarshaling_method_object(swagger_spec, object_schema, use_models=True):
      * required, nullable and default value for the all properties
      * unmarshaling methods of all the properties
      * unmarshaling method of the eventual additional properties
-     * polymorphic nature of the object (`discriminator` attribute) and related unmarshaling methods
-     * default values for
+     * polymorphic nature of the object (`discriminator` attribute) and list of the associated models
 
     :param swagger_spec: Spec object
     :param object_schema: Schema of the object type
