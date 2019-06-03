@@ -46,11 +46,12 @@ def test_model_delete_property(definitions_spec, user_type, user_kwargs):
     # deleting a property defined in the spec should set the value to None
     assert user.id is None
 
-    assert all(
-        user[property] == user_kwargs.get(property)
-        for property in definitions_spec['User']['properties']
-        if property != 'id'
-    )
+    properties_with_not_matching_values = {
+        prop_name
+        for prop_name in definitions_spec['User']['properties']
+        if prop_name != 'id' and user[prop_name] != user_kwargs.get(prop_name)
+    }
+    assert not properties_with_not_matching_values
 
 
 def test_model_delete_not_existing_property(user_type, user_kwargs):
