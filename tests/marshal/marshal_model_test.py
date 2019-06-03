@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import copy
+import datetime
 
 import pytest
 
@@ -125,4 +126,47 @@ def test_marshal_model_with_with_different_specs(petstore_dict, petstore_spec):
 
     assert marshal_model(petstore_spec, pet_spec, model) == {
         'id': 1, 'name': 'Fido', 'photoUrls': ['wagtail.png', 'bark.png'],
+    }
+
+
+def test_marshal_model_polymorphic_specs(polymorphic_spec):
+    PetList = polymorphic_spec.definitions['PetList']
+    Dog = polymorphic_spec.definitions['Dog']
+    Cat = polymorphic_spec.definitions['Cat']
+    list_of_pets_model = PetList(
+        number_of_pets=2,
+        list=[
+            Dog(
+                name='a dog name',
+                type='Dog',
+                birth_date=datetime.date(2017, 3, 9),
+            ),
+            Cat(
+                name='a cat name',
+                type='Cat',
+                color='white',
+            ),
+        ],
+    )
+    polymorphic_spec.config['use_models'] = True
+    pet_list = marshal_model(
+        swagger_spec=polymorphic_spec,
+        model_spec=polymorphic_spec.spec_dict['definitions']['PetList'],
+        model_value=list_of_pets_model,
+    )
+
+    assert pet_list == {
+        'number_of_pets': 2,
+        'list': [
+            {
+                'name': 'a dog name',
+                'type': 'Dog',
+                'birth_date': '2017-03-09',
+            },
+            {
+                'name': 'a cat name',
+                'type': 'Cat',
+                'color': 'white',
+            },
+        ],
     }

@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
+import datetime
+
 import pytest
+from dateutil.tz import tzutc
 
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.marshal import marshal_object
@@ -301,3 +304,97 @@ def test_marshal_with_non_nullable_non_required_property(empty_swagger_spec):
     value = {'x': None}
     result = marshal_object(empty_swagger_spec, object_spec, value)
     assert result == {}
+
+
+def test_marshal_object_polymorphic_specs(polymorphic_spec):
+    list_of_pets_dict = {
+        'number_of_pets': 2,
+        'list': [
+            {
+                'name': 'a dog name',
+                'type': 'Dog',
+                'birth_date': datetime.date(2017, 3, 9),
+            },
+            {
+                'name': 'a cat name',
+                'type': 'Cat',
+                'color': 'white',
+            },
+        ],
+    }
+    polymorphic_spec.config['use_models'] = False
+    pet_list = marshal_object(
+        swagger_spec=polymorphic_spec,
+        object_spec=polymorphic_spec.spec_dict['definitions']['PetList'],
+        object_value=list_of_pets_dict,
+    )
+
+    assert pet_list == {
+        'number_of_pets': 2,
+        'list': [
+            {
+                'name': 'a dog name',
+                'type': 'Dog',
+                'birth_date': '2017-03-09',
+            },
+            {
+                'name': 'a cat name',
+                'type': 'Cat',
+                'color': 'white',
+            },
+        ],
+    }
+
+
+@pytest.mark.parametrize(
+    'additionalProperties, value, expected',
+    [
+        (
+            None,
+            {'property': None},
+            {},
+        ),
+        (
+            None,
+            {'property': datetime.datetime(2018, 5, 21, tzinfo=tzutc())},
+            {'property': '2018-05-21T00:00:00+00:00'},
+        ),
+        (
+            {},
+            {'property': datetime.datetime(2018, 5, 21, tzinfo=tzutc()), 'other': '2018-05-21'},
+            {'property': '2018-05-21T00:00:00+00:00', 'other': '2018-05-21'},
+        ),
+        (
+            True,
+            {'property': datetime.datetime(2018, 5, 21, tzinfo=tzutc()), 'other': '2018-05-21'},
+            {'property': '2018-05-21T00:00:00+00:00', 'other': '2018-05-21'},
+        ),
+        (
+            False,
+            # Mmarshaling does not do validation
+            {'property': datetime.datetime(2018, 5, 21, tzinfo=tzutc()), 'other': '2018-05-21'},
+            {'property': '2018-05-21T00:00:00+00:00', 'other': '2018-05-21'},
+        ),
+        (
+            {'type': 'string', 'format': 'date'},
+            {'property': datetime.datetime(2018, 5, 21, tzinfo=tzutc()), 'other': datetime.date(2018, 5, 21)},
+            {'property': '2018-05-21T00:00:00+00:00', 'other': '2018-05-21'},
+        ),
+    ],
+)
+def test_marshal_object_with_additional_properties(minimal_swagger_dict, additionalProperties, value, expected):
+    MyModel_spec = {
+        'properties': {
+            'property': {
+                'type': 'string',
+                'format': 'date-time',
+            },
+        },
+        'type': 'object',
+        'x-model': 'MyModel',
+    }
+    if additionalProperties is not None:
+        MyModel_spec['additionalProperties'] = additionalProperties
+    minimal_swagger_dict['definitions']['MyModel'] = MyModel_spec
+    spec = Spec.from_dict(minimal_swagger_dict)
+    assert marshal_object(spec, MyModel_spec, value) == expected
