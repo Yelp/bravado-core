@@ -27,6 +27,10 @@ if getattr(typing, 'TYPE_CHECKING', False):
 
 
 _NOT_FOUND = object()
+_handle_null_value = partial(
+    _decorators.handle_null_value,
+    is_marshaling_operation=True,
+)
 
 
 def marshal_schema_object(swagger_spec, schema_object_spec, value):
@@ -67,10 +71,9 @@ def marshal_primitive(swagger_spec, primitive_spec, value):
         DeprecationWarning,
     )
 
-    null_decorator = _decorators.handle_null_value(
+    null_decorator = _handle_null_value(
         swagger_spec=swagger_spec,
         object_schema=primitive_spec,
-        is_marshaling_operation=True,
     )
     marshal_function = _marshaling_method_primitive_type(swagger_spec=swagger_spec, object_schema=primitive_spec)
     return null_decorator(marshal_function)(value)
@@ -91,10 +94,9 @@ def marshal_array(swagger_spec, array_spec, array_value):
         'Please use the more general entry-point offered in marshal_schema_object',
         DeprecationWarning,
     )
-    null_decorator = _decorators.handle_null_value(
+    null_decorator = _handle_null_value(
         swagger_spec=swagger_spec,
         object_schema=array_spec,
-        is_marshaling_operation=True,
     )
     marshal_function = _marshaling_method_array(swagger_spec=swagger_spec, object_schema=array_spec)
     return null_decorator(marshal_function)(array_value)
@@ -116,10 +118,9 @@ def marshal_object(swagger_spec, object_spec, object_value):
         'Please use the more general entry-point offered in marshal_schema_object',
         DeprecationWarning,
     )
-    null_decorator = _decorators.handle_null_value(
+    null_decorator = _handle_null_value(
         swagger_spec=swagger_spec,
         object_schema=object_spec,
-        is_marshaling_operation=True,
     )
     marshal_function = _marshaling_method_object(swagger_spec=swagger_spec, object_schema=object_spec)
     return null_decorator(marshal_function)(object_value)
@@ -140,10 +141,9 @@ def marshal_model(swagger_spec, model_spec, model_value):
         'Please use the more general entry-point offered in marshal_schema_object',
         DeprecationWarning,
     )
-    null_decorator = _decorators.handle_null_value(
+    null_decorator = _handle_null_value(
         swagger_spec=swagger_spec,
         object_schema=model_spec,
-        is_marshaling_operation=True,
     )
     marshal_function = _marshaling_method_object(swagger_spec=swagger_spec, object_schema=model_spec)
     return null_decorator(marshal_function)(model_value)
@@ -162,11 +162,10 @@ def _get_marshaling_method(swagger_spec, object_schema, required=False):
     :type object_schema: dict
     """
     object_schema = swagger_spec.deref(object_schema)
-    null_decorator = _decorators.handle_null_value(
+    null_decorator = _handle_null_value(
         swagger_spec=swagger_spec,
         object_schema=object_schema,
         is_nullable=not required,
-        is_marshaling_operation=True,
     )
     object_type = get_type_from_schema(swagger_spec, object_schema)
 
