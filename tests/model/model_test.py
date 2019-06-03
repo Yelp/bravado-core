@@ -7,7 +7,6 @@ from mock import Mock
 from six import add_metaclass
 
 from bravado_core.content_type import APP_JSON
-from bravado_core.model import create_model_type
 from bravado_core.model import Model
 from bravado_core.model import ModelMeta
 from bravado_core.response import IncomingResponse
@@ -105,20 +104,35 @@ def test_model_as_dict(definitions_spec, user_type, user_kwargs):
 
 
 @pytest.mark.filterwarnings('ignore:_isinstance is deprecated')
-def test_model_is_instance_same_class(user_type, user_kwargs):
+def test_model_isinstance_same_class(user_type, user_kwargs):
     user = user_type(**user_kwargs)
     assert user_type._isinstance(user)
+    assert user_type.isinstance(user)
     assert isinstance(user, user_type)
 
 
+def test_model_issubclass_same_class(user_type):
+    assert issubclass(user_type, user_type)
+    assert issubclass(user_type, Model)
+
+
 @pytest.mark.filterwarnings('ignore:_isinstance is deprecated')
-def test_model_is_instance_inherits_from(cat_swagger_spec, pet_type, pet_spec, cat_type, cat_kwargs):
+def test_model_isinstance_inherits_from(cat_swagger_spec, pet_type, pet_spec, cat_type, cat_kwargs):
     cat = cat_type(**cat_kwargs)
-    new_pet_type = create_model_type(cat_swagger_spec, 'Pet', pet_spec, json_reference=pet_type._json_reference)
     assert pet_type._isinstance(cat)
+    assert pet_type.isinstance(cat)
     assert isinstance(cat, cat_type)
     assert isinstance(cat, pet_type)
-    assert isinstance(cat, new_pet_type)
+
+
+def test_model_issubclass_inherits_from(pet_type, cat_type):
+    assert issubclass(cat_type, pet_type)
+
+
+def test_model_isinstance_model_class_generate_by_different_Spec_object(cat_swagger_spec, cat_type, cat_kwargs):
+    cat = cat_type(**cat_kwargs)
+    new_cat_spec = Spec.from_dict(cat_swagger_spec.client_spec_dict)
+    assert isinstance(cat, new_cat_spec.definitions['Cat'])
 
 
 def test_model_deepcopy(user_type, user_kwargs):
@@ -298,3 +312,13 @@ def test_isinstance_works_in_case_of_inheritance(polymorphic_spec):
     assert isinstance(dog, polymorphic_spec.definitions['Dog']) is True
     assert isinstance(dog, polymorphic_spec.definitions['Cat']) is False
     assert isinstance(dog, polymorphic_spec.definitions['GenericPet']) is True
+
+
+def test_ensure_that_tricking_abc_attributes_do_not_alter_results(polymorphic_spec):
+    Cat = polymorphic_spec.definitions['Cat']
+    Dog = polymorphic_spec.definitions['Dog']
+    dog = Dog._unmarshal({'name': 'name', 'type': 'Dog', 'birth_date': '2017-11-02'})
+    assert isinstance(dog, Dog)
+    assert isinstance(dog, Dog)
+    assert isinstance(dog, Cat) is False
+    assert isinstance(dog, Cat) is False
