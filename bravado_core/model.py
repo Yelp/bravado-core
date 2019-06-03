@@ -8,6 +8,7 @@ from warnings import warn
 
 from six import add_metaclass
 from six import iteritems
+from six import string_types
 from swagger_spec_validator.ref_validators import attach_scope
 
 from bravado_core.schema import collapsed_properties
@@ -645,7 +646,7 @@ def is_model(swagger_spec, schema_object_spec):
     """
     deref = swagger_spec.deref
     schema_object_spec = deref(schema_object_spec)
-    return deref(schema_object_spec.get(MODEL_MARKER)) is not None
+    return isinstance(deref(schema_object_spec.get(MODEL_MARKER)), string_types)
 
 
 def is_object(swagger_spec, object_spec, no_default_type=False):
@@ -661,7 +662,8 @@ def is_object(swagger_spec, object_spec, no_default_type=False):
     """
     deref = swagger_spec.deref
     default_type = 'object' if not no_default_type and swagger_spec.config['default_type_to_object'] else None
-    return deref(object_spec.get('type', default_type)) == 'object' or 'allOf' in object_spec
+    object_type = deref(deref(object_spec).get('type', default_type))
+    return object_type == 'object' or (object_type is None and 'allOf' in object_spec)
 
 
 def create_model_docstring(swagger_spec, model_spec):
