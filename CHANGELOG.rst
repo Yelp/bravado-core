@@ -2,7 +2,7 @@ Changelog
 =========
 .. Make sure to link Issue and PR information as `(PR|Issue) #xxx`_ and with a link at the bottom of the document
 
-5.13.0 (2019-xx-xx)
+5.13.0 (2019-06-03)
 -------------------
 | The release is mainly based on performance improvements of marshalling and unmarshalling processes.
 
