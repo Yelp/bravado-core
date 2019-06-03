@@ -195,8 +195,8 @@ def test_model_isinstance(polymorphic_spec, instance_dict, object_type, possible
         model_spec=polymorphic_spec.spec_dict['definitions'][object_type],
         model_value=instance_dict,
     )
-    assert any(
-        isinstance(model, polymorphic_spec.definitions[possible_object_type])
+    assert not any(
+        not isinstance(model, polymorphic_spec.definitions[possible_object_type])
         for possible_object_type in possible_object_types
     )
 
