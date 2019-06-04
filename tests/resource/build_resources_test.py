@@ -69,6 +69,16 @@ def test_many_resources_with_the_same_operation_cuz_multiple_tags(paths_spec):
         assert resources[tag].findPetsByStatus
 
 
+def test_get_undefined_operation(paths_spec):
+    paths_spec['/pet/findByStatus']['get']['tags'] = ['tag']
+    spec_dict = {'paths': paths_spec}
+    resources = build_resources(Spec(spec_dict))
+    resource = resources['tag']
+    with pytest.raises(AttributeError) as excinfo:
+        resource.undefined_operation
+    assert "Resource 'tag' has no operation 'undefined_operation'" in str(excinfo.value)
+
+
 def test_resource_with_shared_parameters(paths_spec):
     # insert a shared parameter into the spec
     shared_parameter = {
@@ -110,3 +120,10 @@ def test_refs(minimal_swagger_dict, paths_spec, pet_spec, internally_dereference
     resources = build_resources(swagger_spec)
     assert len(resources) == 1
     assert 'pet' in resources
+
+
+def test_get_operations(paths_spec):
+    spec_dict = {'paths': paths_spec}
+    resources = build_resources(Spec(spec_dict))
+    resource = resources['pet']
+    assert list(dir(resource)) == [paths_spec['/pet/findByStatus']['get']['operationId']]

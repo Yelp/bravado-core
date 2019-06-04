@@ -25,6 +25,8 @@ def test_cached_property():
             self.calls += 1
             return self.calls
 
+    assert isinstance(Class.property_1, cached_property)
+
     class_instance = Class()
     assert class_instance.calls == 0
 

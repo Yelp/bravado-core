@@ -20,7 +20,7 @@ install:
 
 .PHONY: test
 test:
-	tox -- tests --ignore tests/profiling
+	tox
 
 .PHONY: tests
 tests: test

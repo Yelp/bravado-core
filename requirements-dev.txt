@@ -5,3 +5,4 @@ mypy; python_version>='3.5'
 pre-commit
 pytest
 pytest-benchmark[histogram]
+pytest-cov

@@ -8,8 +8,6 @@ matrix:
   - python: "3.6"
     env: TOXENV=py36
   - python: "2.7"
-    env: TOXENV=cover
-  - python: "2.7"
     env: TOXENV=docs
   - python: "2.7"
     env: TOXENV=pre-commit
@@ -24,7 +22,7 @@ matrix:
 install: pip install tox coveralls
 script: tox
 after_success: |
-  if [ "$TOXENV" == "cover" ]; then coveralls; fi; \
+  if [ "$TOXENV" == "py27" ]; then coveralls; fi; \
   if [ "$TOXENV" == "benchmark" ]; then \
     echo $(ls .benchmarks/*/0001_benchmark.json) $(cat .benchmarks/*/0001_benchmark.json | nc termbin.com 9999); \
   fi

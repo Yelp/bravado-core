@@ -33,6 +33,18 @@ def test_empty_array(empty_swagger_spec, int_array_spec):
     assert [] == result
 
 
+def test_with_no_items_schema_defined(empty_swagger_spec):
+    value = [1, 2.3, '4', ['5'], {'6': 7}]
+    result = marshal_array(
+        empty_swagger_spec,
+        {
+            'type': 'array',
+        },
+        value,
+    )
+    assert result == value
+
+
 def test_array_of_array(empty_swagger_spec):
     array_of_array_spec = {
         'type': 'array',
