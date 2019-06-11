@@ -83,6 +83,7 @@ def definitions_spec():
                     },
                 },
             },
+            "type": "object",
             "x-model": "Pet",
         },
         "Cat": {
@@ -100,6 +101,7 @@ def definitions_spec():
                     },
                 },
             ],
+            "type": "object",
         },
         "Tag": {
             "properties": {
@@ -152,7 +154,7 @@ def pet_spec(definitions_spec):
 
 @pytest.fixture
 def pet_type(cat_swagger_spec, pet_spec):
-    return create_model_type(cat_swagger_spec, 'Pet', pet_spec)
+    return cat_swagger_spec.definitions['Pet']
 
 
 @pytest.fixture
@@ -168,7 +170,7 @@ def cat_swagger_spec(minimal_swagger_dict, definitions_spec):
 
 @pytest.fixture
 def cat_type(cat_swagger_spec, cat_spec):
-    return create_model_type(cat_swagger_spec, 'Cat', cat_spec)
+    return cat_swagger_spec.definitions['Cat']
 
 
 @pytest.fixture
