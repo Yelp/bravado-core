@@ -2,6 +2,10 @@ Changelog
 =========
 .. Make sure to link Issue and PR information as `(PR|Issue) #xxx`_ and with a link at the bottom of the document
 
+5.13.1 (2019-06-12)
+-------------------
+- Fix ``isinstance`` regression - `PR #345`_
+
 5.13.0 (2019-06-03)
 -------------------
 | The release is mainly based on performance improvements of marshalling and unmarshalling processes.
@@ -521,6 +525,7 @@ Changelog
 .. _PR #336: https://github.com/Yelp/bravado-core/pull/336
 .. _PR #337: https://github.com/Yelp/bravado-core/pull/337
 .. _PR #339: https://github.com/Yelp/bravado-core/pull/339
+.. _PR #345: https://github.com/Yelp/bravado-core/pull/345
 
 
 .. Link To Documentation pages
