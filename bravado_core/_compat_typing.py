@@ -5,7 +5,7 @@ from mypy_extensions import Arg
 try:
     from typing import NoReturn
 except ImportError:
-    NoReturn = None
+    NoReturn = None  # type: ignore
 
 
 Func = typing.Callable[..., typing.Any]
