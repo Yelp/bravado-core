@@ -62,3 +62,4 @@ def test_invalid_headers(op):
     with pytest.raises(ValidationError) as excinfo:
         validate_response_headers(op, response_spec, response)
     assert "is not of type 'integer'" in str(excinfo.value)
+    assert "X-Foo" in str(excinfo.value)

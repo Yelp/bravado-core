@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import msgpack
+from jsonschema import ValidationError
 from six import iteritems
 
 from bravado_core.content_type import APP_JSON
@@ -239,6 +240,10 @@ def validate_response_headers(op, response_spec, response):
 
     for header_name, header_spec in iteritems(headers_spec):
         header_spec = deref(header_spec)
-        validate_schema_object(
-            op.swagger_spec, header_spec, response.headers.get(header_name),
-        )
+        try:
+            validate_schema_object(
+                op.swagger_spec, header_spec, response.headers.get(header_name),
+            )
+        except ValidationError as e:
+            e.message = "{0} for header '{1}'".format(e.message, header_name)
+            raise e
