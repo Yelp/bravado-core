@@ -46,7 +46,7 @@ def test_location_invalid(empty_swagger_spec, body_param_spec):
 
     with pytest.raises(SwaggerMappingError) as excinfo:
         get_param_type_spec(param)
-    assert 'location foo' in str(excinfo)
+    assert 'location foo' in str(excinfo.value)
 
 
 def test_ref(minimal_swagger_dict, body_param_spec):

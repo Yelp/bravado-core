@@ -25,7 +25,7 @@ def test_minItems_failure(minimal_swagger_spec, int_array_spec):
     int_array_spec['minItems'] = 2
     with pytest.raises(ValidationError) as excinfo:
         validate_array(minimal_swagger_spec, int_array_spec, [1])
-    assert 'is too short' in str(excinfo)
+    assert 'is too short' in str(excinfo.value)
 
 
 def test_sensitive_minItems_failure(minimal_swagger_spec, int_array_spec):
@@ -33,8 +33,8 @@ def test_sensitive_minItems_failure(minimal_swagger_spec, int_array_spec):
     int_array_spec['x-sensitive'] = True
     with pytest.raises(ValidationError) as excinfo:
         validate_array(minimal_swagger_spec, int_array_spec, [1])
-    assert 'is too short' in str(excinfo)
-    assert '[1]' not in str(excinfo)
+    assert 'is too short' in str(excinfo.value)
+    assert '[1]' not in str(excinfo.value)
 
 
 def test_maxItems_success(minimal_swagger_spec, int_array_spec):
@@ -46,7 +46,7 @@ def test_maxItems_failure(minimal_swagger_spec, int_array_spec):
     int_array_spec['maxItems'] = 2
     with pytest.raises(ValidationError) as excinfo:
         validate_array(minimal_swagger_spec, int_array_spec, [1, 2, 3, 4])
-    assert 'is too long' in str(excinfo)
+    assert 'is too long' in str(excinfo.value)
 
 
 def test_unqiueItems_true_success(minimal_swagger_spec, int_array_spec):
@@ -58,7 +58,7 @@ def test_uniqueItems_true_failure(minimal_swagger_spec, int_array_spec):
     int_array_spec['uniqueItems'] = True
     with pytest.raises(ValidationError) as excinfo:
         validate_array(minimal_swagger_spec, int_array_spec, [1, 2, 1, 4])
-    assert 'has non-unique elements' in str(excinfo)
+    assert 'has non-unique elements' in str(excinfo.value)
 
 
 def test_uniqueItems_false(minimal_swagger_spec, int_array_spec):
