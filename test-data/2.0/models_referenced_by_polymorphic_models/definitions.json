@@ -1,0 +1,76 @@
+{
+  "definitions": {
+    "GenericContainer": {
+      "x-model": "GenericContainer",
+      "type": "object",
+      "discriminator": "container_discriminator",
+      "properties": {
+        "container_discriminator": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "container_discriminator"
+      ]
+    },
+    "Container1": {
+      "x-model": "Container1",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/GenericContainer"
+        },
+        {
+          "properties": {
+            "referenced_polymorphic_object": {
+              "$ref": "#/definitions/GenericContent"
+            },
+            "other": {
+              "$ref": "#/definitions/ReferencedFromContainer1"
+            }
+          }
+        }
+      ]
+    },
+    "GenericContent": {
+      "x-model": "GenericContent",
+      "type": "object",
+      "discriminator": "content_discriminator",
+      "properties": {
+        "content_discriminator": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "content_discriminator"
+      ]
+    },
+    "ReferencedFromContent1": {
+      "type": "object",
+      "x-model": "ReferencedFromContent1"
+    },
+    "ReferencedFromContainer1": {
+      "type": "object",
+      "x-model": "ReferencedFromContainer1"
+    },
+    "Content1": {
+      "x-model": "Content1",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/GenericContent"
+        },
+        {
+          "properties": {
+            "field": {
+              "type": "string"
+            },
+            "other": {
+              "$ref": "#/definitions/ReferencedFromContent1"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

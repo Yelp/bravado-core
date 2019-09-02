@@ -1,0 +1,21 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "0.0.0",
+    "title": ""
+  },
+  "paths": {
+    "/endpoint": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "definitions.json#/definitions/GenericContainer"
+            }
+          }
+        }
+      }
+    }
+  }
+}
