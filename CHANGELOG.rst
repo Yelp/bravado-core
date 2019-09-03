@@ -2,6 +2,12 @@ Changelog
 =========
 .. Make sure to link Issue and PR information as `(PR|Issue) #xxx`_ and with a link at the bottom of the document
 
+5.13.2 (2019-09-04)
+-------------------
+- Improve header validation error message - `PR #347`_ Thanks brycedrennan for your contribution!
+- Fix Spec flattening regression  - `PR #350`_
+
+
 5.13.1 (2019-06-12)
 -------------------
 - Fix ``isinstance`` regression - `PR #345`_
@@ -526,6 +532,8 @@ Changelog
 .. _PR #337: https://github.com/Yelp/bravado-core/pull/337
 .. _PR #339: https://github.com/Yelp/bravado-core/pull/339
 .. _PR #345: https://github.com/Yelp/bravado-core/pull/345
+.. _PR #347: https://github.com/Yelp/bravado-core/pull/347
+.. _PR #350: https://github.com/Yelp/bravado-core/pull/350
 
 
 .. Link To Documentation pages
