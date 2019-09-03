@@ -330,15 +330,10 @@ class _SpecFlattener(object):
         NOTE: The method re-run model_discovery in case additional models have been added to
               the flattened models
         """
-        flatten_models = {
-            # schema objects might not have a "type" set so they won't be tagged as models
-            definition.get(MODEL_MARKER)
-            for definition in itervalues(self.known_mappings['definitions'])
-        }
 
-        def unflattened_models():
+        def unflattened_models(flattened_models):
             for m_name, m_type in iteritems(self.swagger_spec.definitions):
-                if m_name not in flatten_models:
+                if m_name not in flattened_models:
                     yield m_name, m_type
 
         def register_unflattened_models():
@@ -346,17 +341,23 @@ class _SpecFlattener(object):
             :return: True if new models have been added
             """
             initial_number_of_models = len(self.known_mappings['definitions'])
-
             modified = True
+
+            flattened_models = {
+                # schema objects might not have a "type" set so they won't be tagged as models
+                definition.get(MODEL_MARKER)
+                for definition in itervalues(self.known_mappings['definitions'])
+            }
+
             while modified:
                 modified = False
-                for model_name, model_type in unflattened_models():
+                for model_name, model_type in unflattened_models(flattened_models):
                     if any(
-                        parent in flatten_models
+                        parent in flattened_models
                         for parent in model_type._inherits_from
                     ):
                         model_url = urlparse(model_type._json_reference)
-                        flatten_models.add(model_name)
+                        flattened_models.add(model_name)
                         self.known_mappings['definitions'][model_url] = self.descend(
                             value=model_type._model_spec,
                         )

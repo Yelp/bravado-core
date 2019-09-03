@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import copy
 import functools
+import os
 
 import mock
 import pytest
@@ -12,6 +13,7 @@ from bravado_core.spec import CONFIG_DEFAULTS
 from bravado_core.spec import Spec
 from bravado_core.spec_flattening import _marshal_uri
 from bravado_core.spec_flattening import _SpecFlattener
+from tests.conftest import _read_json
 from tests.conftest import get_url
 
 
@@ -392,4 +394,33 @@ def test_include_discriminated_models(minimal_swagger_dict, minimal_swagger_absp
             ],
             'x-model': 'not_used_extend_base',
         },
+    }
+
+
+@pytest.fixture
+def models_referenced_by_polymorphic_models_abspath(my_dir):
+    return os.path.join(
+        os.path.dirname(my_dir),
+        'test-data', '2.0', 'models_referenced_by_polymorphic_models', 'swagger.json',
+    )
+
+
+@pytest.fixture
+def models_referenced_by_polymorphic_models_dict(models_referenced_by_polymorphic_models_abspath):
+    return _read_json(models_referenced_by_polymorphic_models_abspath)
+
+
+def test_include_discriminated_models_does_recursively_add_new_models(
+    models_referenced_by_polymorphic_models_abspath,
+    models_referenced_by_polymorphic_models_dict,
+):
+    spec = Spec.from_dict(
+        models_referenced_by_polymorphic_models_dict,
+        origin_url=get_url(models_referenced_by_polymorphic_models_abspath),
+        config={'internally_dereference_refs': True},
+    )
+    assert set(spec.definitions) == {
+        'Container1', 'Content1',
+        'GenericContainer', 'GenericContent',
+        'ReferencedFromContainer1', 'ReferencedFromContent1',
     }
