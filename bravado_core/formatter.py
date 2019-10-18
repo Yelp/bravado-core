@@ -3,6 +3,7 @@
 Support for the 'format' key in the swagger spec as outlined in
 https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#dataTypeFormat
 """
+import base64
 import functools
 from collections import namedtuple
 
@@ -105,6 +106,16 @@ def return_true_wrapper(validate_func):
 
     return wrapper
 
+
+BASE64_BYTE_FORMAT = SwaggerFormat(
+    format='byte',
+    # Note: In Python 3, this requires a bytes-like object as input
+    to_wire=lambda b: six.ensure_str(base64.b64encode(b), encoding='ascii'),
+    to_python=lambda s: base64.b64decode(
+        six.ensure_binary(s, encoding='ascii')),
+    validate=NO_OP,  # jsonschema validates string
+    description='Converts [wire]string:byte <=> python bytes',
+)
 
 DEFAULT_FORMATS = {
     'byte': SwaggerFormat(

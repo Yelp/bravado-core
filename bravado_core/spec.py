@@ -79,6 +79,10 @@ CONFIG_DEFAULTS = {
     # If True, use the 'path' element of the URL the spec was retrieved from
     # If False, set basePath to '/' (conforms to Swagger 2.0 specification)
     'use_spec_url_for_base_path': False,
+
+    # If False, use str() function for 'byte' format
+    # If True, encode/decode base64 data for 'byte' format
+    'use_base64_for_byte_format': False,
 }
 
 
@@ -285,6 +289,8 @@ class Spec(object):
         user_defined_format = self.user_defined_formats.get(name)
         if user_defined_format is None:
             user_defined_format = formatter.DEFAULT_FORMATS.get(name)
+            if name == 'byte' and self.config['use_base64_for_byte_format']:
+                user_defined_format = formatter.BASE64_BYTE_FORMAT
 
         if user_defined_format is None:
             warnings.warn(

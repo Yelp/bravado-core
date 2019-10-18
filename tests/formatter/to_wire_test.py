@@ -114,6 +114,15 @@ def test_byte_unicode(minimal_swagger_spec):
     assert isinstance(result, str)
 
 
+def test_byte_base64(minimal_swagger_dict):
+    swagger_spec = Spec.from_dict(
+        minimal_swagger_dict, config={'use_base64_for_byte_format': True})
+    schema = {'type': 'string', 'format': 'byte'}
+    result = to_wire(swagger_spec, schema, b'abc\xff')
+    assert 'YWJj/w==' == result
+    assert isinstance(result, str)
+
+
 def test_ref(minimal_swagger_dict):
     minimal_swagger_dict['definitions']['Int32'] = {
         'type': 'integer', 'format': 'int32',
