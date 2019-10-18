@@ -112,7 +112,8 @@ BASE64_BYTE_FORMAT = SwaggerFormat(
     # Note: In Python 3, this requires a bytes-like object as input
     to_wire=lambda b: six.ensure_str(base64.b64encode(b), encoding='ascii'),
     to_python=lambda s: base64.b64decode(
-        six.ensure_binary(s, encoding='ascii')),
+        six.ensure_binary(s, encoding='ascii'),
+    ),
     validate=NO_OP,  # jsonschema validates string
     description='Converts [wire]string:byte <=> python bytes',
 )
