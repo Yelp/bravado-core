@@ -47,8 +47,10 @@ setup(
         "msgpack-python>=0.5.2",
     ],
     package_data={
-        'bravado-core': ['py.typed'],
+        'bravado_core': ['py.typed'],
     },
+    # https://mypy.readthedocs.io/en/latest/installed_packages.html
+    zip_safe=False,
     extras_require={
         ':python_version<"3.5"': ['typing'],
         ':python_version<"3.4"': ['enum34'],
