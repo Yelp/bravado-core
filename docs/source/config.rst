@@ -55,4 +55,7 @@ Config key                    Type            Default   Description
                                                         | spec was retrieved from.
                                                         | If disabled, set `basePath` to `/` (conforms to
                                                         | the Swagger 2.0 specification)
+----------------------------- --------------- --------- ----------------------------------------------------
+*use_base64_for_byte_format*  boolean         False     | If true, base64-encode binary data to wire and
+                                                        | base64-decode from wire for data with byte format.
 ============================= =============== ========= ====================================================
