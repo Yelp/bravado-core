@@ -54,6 +54,7 @@ def test_datetime_string(minimal_swagger_spec):
     )
 
 
+@pytest.mark.filterwarnings('ignore:a-not-existing-format format is not registered')
 def test_unmarshaling_unknown_format(minimal_swagger_spec):
     value = 'some text'
     assert value == unmarshal_primitive(
