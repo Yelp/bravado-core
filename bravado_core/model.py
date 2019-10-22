@@ -330,9 +330,6 @@ class Model(object):
 
     # Use slots to reduce memory footprint of the Model instance
     __slots__ = (
-        '_json_reference',
-        '_swagger_spec',
-        '_model_spec',
         '_Model__dict',  # Note the name mangling!
     )
 
@@ -650,6 +647,7 @@ def create_model_type(swagger_spec, model_name, model_spec, bases=(Model,), json
 
     return type(
         str(model_name), bases, dict(
+            __slots__=(),  # More memory-efficient
             __doc__=ModelDocstring(),
             _swagger_spec=swagger_spec,
             _model_spec=model_spec,
