@@ -131,10 +131,18 @@ def test_model_issubclass_inherits_from(pet_type, cat_type):
     assert issubclass(cat_type, pet_type)
 
 
-def test_model_isinstance_model_class_generate_by_different_Spec_object(cat_swagger_spec, cat_type, cat_kwargs):
+def test_model_isinstance_model_class_generated_by_different_Spec_object(cat_swagger_spec, cat_type, cat_kwargs):
     cat = cat_type(**cat_kwargs)
     new_cat_spec = Spec.from_dict(cat_swagger_spec.client_spec_dict)
     assert isinstance(cat, new_cat_spec.definitions['Cat'])
+
+
+def test_model_equality_if_model_class_generated_by_different_Spec_object(cat_swagger_spec, cat_type, cat_kwargs):
+    cat = cat_type(**cat_kwargs)
+    new_cat_spec = Spec.from_dict(cat_swagger_spec.client_spec_dict)
+    new_cat_type = new_cat_spec.definitions['Cat']
+    new_cat = new_cat_type(**cat_kwargs)
+    assert cat == new_cat
 
 
 def test_model_deepcopy(user_type, user_kwargs):
