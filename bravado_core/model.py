@@ -6,6 +6,7 @@ import re
 from copy import deepcopy
 from warnings import warn
 
+import typing
 from six import add_metaclass
 from six import iteritems
 from six import string_types
@@ -20,6 +21,10 @@ from bravado_core.util import determine_object_type
 from bravado_core.util import lazy_class_attribute
 from bravado_core.util import ObjectType
 from bravado_core.util import strip_xscope
+
+if getattr(typing, 'TYPE_CHECKING', False):
+    from bravado_core._compat_typing import JSONDict
+    from bravado_core.spec import Spec
 
 log = logging.getLogger(__name__)
 
@@ -332,6 +337,10 @@ class Model(object):
     __slots__ = (
         '_Model__dict',  # Note the name mangling!
     )
+
+    _swagger_spec = None  # type: Spec
+    _model_spec = None  # type: JSONDict
+    _json_reference = None  # type: str
 
     def __init__(self, **kwargs):
         """Initialize from property values in keyword arguments.
