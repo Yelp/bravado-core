@@ -6,6 +6,7 @@ import re
 from copy import deepcopy
 from warnings import warn
 
+import typing
 from six import add_metaclass
 from six import iteritems
 from six import string_types
@@ -20,6 +21,10 @@ from bravado_core.util import determine_object_type
 from bravado_core.util import lazy_class_attribute
 from bravado_core.util import ObjectType
 from bravado_core.util import strip_xscope
+
+if getattr(typing, 'TYPE_CHECKING', False):
+    from bravado_core._compat_typing import JSONDict
+    from bravado_core.spec import Spec
 
 log = logging.getLogger(__name__)
 
@@ -302,6 +307,11 @@ class Model(object):
         Class attribute that must be assigned on subclasses.
         JSON-like dict that describes the model.
 
+    .. attribute:: _json_reference
+
+        Class attribute that must be assigned on subclasses.
+        JSON Uri where model spec could be found
+
     .. attribute:: _properties
 
         Class attribute that must be assigned on subclasses.
@@ -325,11 +335,12 @@ class Model(object):
 
     # Use slots to reduce memory footprint of the Model instance
     __slots__ = (
-        '_json_reference',
-        '_swagger_spec',
-        '_model_spec',
         '_Model__dict',  # Note the name mangling!
     )
+
+    _swagger_spec = None  # type: Spec
+    _model_spec = None  # type: JSONDict
+    _json_reference = None  # type: str
 
     def __init__(self, **kwargs):
         """Initialize from property values in keyword arguments.
@@ -645,6 +656,7 @@ def create_model_type(swagger_spec, model_name, model_spec, bases=(Model,), json
 
     return type(
         str(model_name), bases, dict(
+            __slots__=(),  # More memory-efficient
             __doc__=ModelDocstring(),
             _swagger_spec=swagger_spec,
             _model_spec=model_spec,
