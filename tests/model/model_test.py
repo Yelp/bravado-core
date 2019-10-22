@@ -104,6 +104,7 @@ def test_model_as_dict(definitions_spec, user_type, user_kwargs):
 
 
 @pytest.mark.filterwarnings('ignore:_isinstance is deprecated')
+@pytest.mark.filterwarnings('ignore:Model object methods are now prefixed')
 def test_model_isinstance_same_class(user_type, user_kwargs):
     user = user_type(**user_kwargs)
     assert user_type._isinstance(user)
@@ -117,6 +118,7 @@ def test_model_issubclass_same_class(user_type):
 
 
 @pytest.mark.filterwarnings('ignore:_isinstance is deprecated')
+@pytest.mark.filterwarnings('ignore:Model object methods are now prefixed')
 def test_model_isinstance_inherits_from(cat_swagger_spec, pet_type, pet_spec, cat_type, cat_kwargs):
     cat = cat_type(**cat_kwargs)
     assert pet_type._isinstance(cat)
