@@ -302,6 +302,11 @@ class Model(object):
         Class attribute that must be assigned on subclasses.
         JSON-like dict that describes the model.
 
+    .. attribute:: _json_reference
+
+        Class attribute that must be assigned on subclasses.
+        JSON Uri where model spec could be found
+
     .. attribute:: _properties
 
         Class attribute that must be assigned on subclasses.
