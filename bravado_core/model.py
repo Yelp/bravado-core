@@ -471,8 +471,7 @@ class Model(object):
         Two model instances are equal if they have the same type and the same
         properties and values (including additional properties).
         """
-        # Check same type as self
-        if type(self) is not type(other):
+        if not isinstance(other, self.__class__):
             return False
 
         # Ignore any '_raw' keys
