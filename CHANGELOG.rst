@@ -2,7 +2,12 @@ Changelog
 =========
 .. Make sure to link Issue and PR information as `(PR|Issue) #xxx`_ and with a link at the bottom of the document
 
-- Add option to automatically base64-encode/decode strings with byte format - `PR #351`_
+5.14.0 (2019-10-23)
+-------------------
+- Add option to automatically base64-encode/decode strings with byte format - `PR #351`_ Thanks nickgaya for your contribution!
+- Ensure `PEP-561`_ compatibility - `PR #352`_ Thanks nickgaya for your contribution!
+- Enhance documentation, typing of ``bravado_core.model.Model`` - `PR #354`_ Thanks nickgaya for your contribution!
+- Update Model equality method - `PR #355`_
 
 5.13.2 (2019-09-04)
 -------------------
@@ -537,6 +542,9 @@ Changelog
 .. _PR #347: https://github.com/Yelp/bravado-core/pull/347
 .. _PR #350: https://github.com/Yelp/bravado-core/pull/350
 .. _PR #351: https://github.com/Yelp/bravado-core/pull/351
+.. _PR #352: https://github.com/Yelp/bravado-core/pull/352
+.. _PR #354: https://github.com/Yelp/bravado-core/pull/354
+.. _PR #355: https://github.com/Yelp/bravado-core/pull/355
 
 
 .. Link To Documentation pages
@@ -544,3 +552,4 @@ Changelog
 .. _Model Discovery: https://bravado-core.readthedocs.org/en/latest/models.html#model-discovery
 .. _User-Defined Formats: https://bravado-core.readthedocs.org/en/latest/formats.html
 .. _Sensitive Data: https://bravado-core.readthedocs.io/en/latest/models.html#sensitive-data
+.. _PEP-561: https://www.python.org/dev/peps/pep-0561/
