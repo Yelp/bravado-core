@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import copy
 
+import typing
 from six import iteritems
 from six import string_types
 
@@ -47,7 +48,7 @@ def is_prop_nullable(swagger_spec, schema_object_spec):
     return swagger_spec.deref(schema_object_spec).get('x-nullable', False)
 
 
-def is_ref(spec):
+def is_ref(spec):  # type: (typing.Any) -> bool
     """ Check if the given spec is a Mapping and contains a $ref.
 
     FYI: This function gets called A LOT during unmarshalling and is_dict_like
@@ -63,7 +64,7 @@ def is_ref(spec):
         return False
 
 
-def is_dict_like(spec):
+def is_dict_like(spec):  # type: (typing.Any) -> bool
     """
     :param spec: swagger object specification in dict form
     :rtype: boolean
@@ -75,7 +76,7 @@ def is_dict_like(spec):
     return isinstance(spec, (dict, Mapping))
 
 
-def is_list_like(spec):
+def is_list_like(spec):  # type: (typing.Any) -> bool
     """
     :param spec: swagger object specification in dict form
     :rtype: boolean
