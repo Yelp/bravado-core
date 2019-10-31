@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from six import iterkeys
 from six import itervalues
+from typing import Any
 
 from bravado_core.schema import is_dict_like
 from bravado_core.schema import is_list_like
@@ -15,6 +16,7 @@ def _get_model(spec_dict, model_name):
 
 
 def _equivalent(spec, obj1, obj2):
+    # type: (Spec, Any, Any) -> bool
     if is_dict_like(obj1) != is_dict_like(obj2) or is_list_like(obj1) != is_list_like(obj2):
         return False
 
