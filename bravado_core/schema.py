@@ -188,6 +188,29 @@ def collapsed_properties(model_spec, swagger_spec):
     return properties
 
 
+def collapsed_required(model_spec, swagger_spec):
+    """
+    Processes model spec and outputs a set of required properties for the model.
+
+    This handles traversing any polymorphic models and the hierarchy
+    of properties properly.
+
+    :param model_spec: model specification (must be dereferenced already)
+    :type model_spec: dict
+    :param swagger_spec: :class:`bravado_core.spec.Spec`
+    :returns: Set of required properties.
+    """
+    required = set(model_spec.get('required', []))
+
+    if 'allOf' in model_spec:
+        deref = swagger_spec.deref
+        for item_spec in model_spec['allOf']:
+            item_spec = deref(item_spec)
+            required.update(collapsed_required(item_spec, swagger_spec))
+
+    return required
+
+
 def get_type_from_schema(swagger_spec, schema_object_spec):
     try:
         return schema_object_spec['type']

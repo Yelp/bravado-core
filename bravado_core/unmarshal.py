@@ -16,6 +16,7 @@ from bravado_core import schema
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.model import MODEL_MARKER
 from bravado_core.schema import collapsed_properties
+from bravado_core.schema import collapsed_required
 from bravado_core.schema import get_type_from_schema
 from bravado_core.schema import is_dict_like
 from bravado_core.schema import is_list_like
@@ -337,7 +338,7 @@ def _unmarshaling_method_object(swagger_spec, object_schema, use_models=True):
             model_type = None
 
     properties = collapsed_properties(object_schema, swagger_spec)
-    required_properties = object_schema.get('required', [])
+    required_properties = collapsed_required(object_schema, swagger_spec)
     properties_to_unmarshaling_function = {
         prop_name: _get_unmarshaling_method(
             swagger_spec=swagger_spec,
