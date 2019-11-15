@@ -2,11 +2,16 @@ Changelog
 =========
 .. Make sure to link Issue and PR information as `(PR|Issue) #xxx`_ and with a link at the bottom of the document
 
+5.15.0 (2019-11-15)
+-------------------
+- Properly build the list of required properties for a schema with ``allOf`` from the sub-schemas - `PR #358`_ - Thanks nickgaya for your contribution!
+- Add type annotations to ``is_ref``, ``is_list_like`` and ``is_dict_like`` - `PR #356`_
+
 5.14.0 (2019-10-23)
 -------------------
-- Add option to automatically base64-encode/decode strings with byte format - `PR #351`_ Thanks nickgaya for your contribution!
+- Add option to automatically base64-encode/decode strings with byte format - `PR #351`_ - Thanks nickgaya for your contribution!
 - Ensure `PEP-561`_ compatibility - `PR #352`_ Thanks nickgaya for your contribution!
-- Enhance documentation, typing of ``bravado_core.model.Model`` - `PR #354`_ Thanks nickgaya for your contribution!
+- Enhance documentation, typing of ``bravado_core.model.Model`` - `PR #354`_ - Thanks nickgaya for your contribution!
 - Update Model equality method - `PR #355`_
 
 5.13.2 (2019-09-04)
@@ -545,6 +550,8 @@ Changelog
 .. _PR #352: https://github.com/Yelp/bravado-core/pull/352
 .. _PR #354: https://github.com/Yelp/bravado-core/pull/354
 .. _PR #355: https://github.com/Yelp/bravado-core/pull/355
+.. _PR #356: https://github.com/Yelp/bravado-core/pull/356
+.. _PR #358: https://github.com/Yelp/bravado-core/pull/358
 
 
 .. Link To Documentation pages
