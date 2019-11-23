@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 from collections import defaultdict
+from copy import deepcopy
 
 from six import iteritems
 
@@ -95,6 +96,14 @@ class Resource(object):
         log.debug(u"Building resource '%s'", name)
         self.name = name
         self.operations = ops
+
+    def __deepcopy__(self, memo=None):
+        if memo is None:
+            memo = {}
+        return self.__class__(
+            name=deepcopy(self.name, memo=memo),
+            ops=deepcopy(self.operations, memo=memo),
+        )
 
     def __repr__(self):
         return u"%s(%s)" % (self.__class__.__name__, self.name)
