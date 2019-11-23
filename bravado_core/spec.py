@@ -151,17 +151,12 @@ class Spec(object):
         if memo is None:
             memo = {}
 
-        copied_self = self.__class__(
-            spec_dict=deepcopy(self.spec_dict, memo=memo),
-            origin_url=deepcopy(self.origin_url, memo=memo),
-            http_client=deepcopy(self.http_client, memo=memo),
-            config=deepcopy(self.config, memo=memo),
-        )
+        copied_self = self.__class__(spec_dict=None)
+        memo[id(self)] = copied_self
 
         # Copy the attributes that are built via Spec.build
         for attr_name, attr_value in iteritems(self.__dict__):
-            if attr_value != copied_self.__dict__.get(attr_name):
-                setattr(copied_self, attr_name, deepcopy(attr_value, memo=memo))
+            setattr(copied_self, attr_name, deepcopy(attr_value, memo=memo))
 
         return copied_self
 

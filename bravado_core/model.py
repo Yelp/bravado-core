@@ -493,9 +493,11 @@ class Model(object):
         ]
         return "{0}({1})".format(self.__class__.__name__, ', '.join(s))
 
-    def __deepcopy__(self, memodict={}):
+    def __deepcopy__(self, memo=None):
         """Deep copy all properties, but not metadata like the Swagger or Model spec attributes."""
-        return self.__class__(**deepcopy(self.__dict))
+        if memo is None:
+            memo = {}
+        return self.__class__(**deepcopy(self.__dict, memo=memo))
 
     @property
     def _additional_props(self):
