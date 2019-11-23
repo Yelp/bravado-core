@@ -123,3 +123,10 @@ class Resource(object):
         :return: list of operation names
         """
         return self.operations.keys()
+
+    def __eq__(self, other):
+        return (
+            isinstance(other, self.__class__) and
+            self.name == other.name and
+            self.operations == other.operations
+        )

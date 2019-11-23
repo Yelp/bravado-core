@@ -136,6 +136,17 @@ class Spec(object):
         # it will be overridden by the dereferenced specs (by build method). More context in PR#263
         self._internal_spec_dict = spec_dict
 
+    def __eq__(self, other):
+        return (
+            isinstance(other, self.__class__) and
+            self.spec_dict == other.spec_dict and
+            self.origin_url == other.origin_url and
+            self.http_client == other.http_client and
+            self.config == other.config and
+            self.api_url == other.api_url and
+            self.definitions == other.definitions
+        )
+
     def __deepcopy__(self, memo=None):
         if memo is None:
             memo = {}
