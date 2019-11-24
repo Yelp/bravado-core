@@ -94,25 +94,23 @@ def test_op_with_security_in_root_with_empty_security_spec(specs_with_security_o
     assert len(operation.security_requirements) == 0
 
 
-def test_correct_request_with_apiKey_security(petstore_spec):
+def test_correct_request_with_apiKey_security(getPetByIdPetstoreOperation):
     request = Mock(
         spec=IncomingRequest,
         path={'petId': '1234'},
         headers={'api-key': 'key1'},
     )
-    op = petstore_spec.resources['pet'].operations['getPetById']
-    unmarshal_request(request, op)
+    unmarshal_request(request, getPetByIdPetstoreOperation)
 
 
-def test_wrong_request_with_apiKey_security(petstore_spec):
+def test_wrong_request_with_apiKey_security(getPetByIdPetstoreOperation):
     request = Mock(
         spec=IncomingRequest,
         path={'petId': '1234'},
         headers={},
     )
-    op = petstore_spec.resources['pet'].operations['getPetById']
     with pytest.raises(SwaggerSecurityValidationError):
-        unmarshal_request(request, op)
+        unmarshal_request(request, getPetByIdPetstoreOperation)
 
 
 @pytest.mark.parametrize(

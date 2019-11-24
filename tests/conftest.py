@@ -135,6 +135,11 @@ def petstore_spec(petstore_dict, petstore_abspath):
 
 
 @pytest.fixture
+def getPetByIdPetstoreOperation(petstore_spec):
+    return petstore_spec.resources['pet'].operations['getPetById']
+
+
+@pytest.fixture
 def polymorphic_abspath(my_dir):
     return os.path.join(os.path.dirname(my_dir), 'test-data', '2.0', 'polymorphic_specs', 'swagger.json')
 

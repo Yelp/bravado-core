@@ -8,15 +8,14 @@ from bravado_core.request import IncomingRequest
 from bravado_core.request import unmarshal_request
 
 
-def test_request_with_path_parameter(petstore_spec):
+def test_request_with_path_parameter(getPetByIdPetstoreOperation):
     request = Mock(
         spec=IncomingRequest,
         path={'petId': '1234'},
         headers={'api-key': 'key1'},
     )
     # /pet/{pet_id} fits the bill
-    op = petstore_spec.resources['pet'].operations['getPetById']
-    request_data = unmarshal_request(request, op)
+    request_data = unmarshal_request(request, getPetByIdPetstoreOperation)
     assert request_data['petId'] == 1234
     assert request_data['api-key'] == 'key1'
 

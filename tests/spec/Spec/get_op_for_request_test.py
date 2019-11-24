@@ -16,9 +16,9 @@ def test_not_found_with_no_basepath(petstore_dict):
     assert op is None
 
 
-def test_found_with_basepath(petstore_spec):
+def test_found_with_basepath(petstore_spec, getPetByIdPetstoreOperation):
     op = petstore_spec.get_op_for_request('GET', '/v2/pet/{petId}')
-    assert op == petstore_spec.resources['pet'].operations['getPetById']
+    assert op == getPetByIdPetstoreOperation
 
 
 def test_found_with_basepath_containing_trailing_slash(petstore_dict):
