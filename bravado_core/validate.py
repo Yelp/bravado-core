@@ -7,6 +7,7 @@ customize the behavior.
 import sys
 
 import jsonschema
+import typing
 from six import itervalues
 from six import reraise
 
@@ -18,9 +19,18 @@ from bravado_core.schema import SWAGGER_PRIMITIVES
 from bravado_core.swagger20_validator import get_validator_type
 
 
+if getattr(typing, 'TYPE_CHECKING', False):
+    from bravado_core._compat_typing import JSONDict
+    from bravado_core._compat_typing import FuncType
+    from bravado_core.operation import Operation
+    from bravado_core.spec import Spec
+
+
 def scrub_sensitive_value(func):
+    # type: (FuncType) -> FuncType
     @wraps(func)
     def scrubbed(*args, **kwargs):
+        # type: (typing.Any, typing.Any) -> typing.Any
         try:
             return func(*args, **kwargs)
         except jsonschema.ValidationError as e:
@@ -32,10 +42,15 @@ def scrub_sensitive_value(func):
                 e.instance = '***'
             reraise(*sys.exc_info())
 
-    return scrubbed
+    return scrubbed  # type: ignore  # ignoring type to avoiding typing.cast call
 
 
-def validate_schema_object(swagger_spec, schema_object_spec, value):
+def validate_schema_object(
+    swagger_spec,  # type: Spec
+    schema_object_spec,  # type: JSONDict
+    value,  # type: typing.Any
+):
+    # type: (...) -> None
     """
     :raises ValidationError: when jsonschema validation fails.
     :raises SwaggerMappingError: on invalid Swagger `type`.
@@ -68,7 +83,12 @@ def validate_schema_object(swagger_spec, schema_object_spec, value):
 
 
 @scrub_sensitive_value
-def validate_primitive(swagger_spec, primitive_spec, value):
+def validate_primitive(
+    swagger_spec,  # type: Spec
+    primitive_spec,  # type: JSONDict
+    value,  # type: typing.Any
+):
+    # type: (...) -> None
     """
     :type swagger_spec: :class:`bravado_core.spec.Spec`
     :param primitive_spec: spec for a swagger primitive type in dict form
@@ -82,7 +102,12 @@ def validate_primitive(swagger_spec, primitive_spec, value):
 
 
 @scrub_sensitive_value
-def validate_array(swagger_spec, array_spec, value):
+def validate_array(
+    swagger_spec,  # type: Spec
+    array_spec,  # type: JSONDict
+    value,  # type: typing.Any
+):
+    # type: (...) -> None
     """
     :type swagger_spec: :class:`bravado_core.spec.Spec`
     :param array_spec: spec for an 'array' type in dict form
@@ -96,7 +121,12 @@ def validate_array(swagger_spec, array_spec, value):
 
 
 @scrub_sensitive_value
-def validate_object(swagger_spec, object_spec, value):
+def validate_object(
+    swagger_spec,  # type: Spec
+    object_spec,  # type: JSONDict
+    value,  # type: typing.Any
+):
+    # type: (...) -> None
     """
     :type swagger_spec: :class:`bravado_core.spec.Spec`
     :param object_spec: spec for an 'object' type in dict form
@@ -109,7 +139,11 @@ def validate_object(swagger_spec, object_spec, value):
     ).validate(value)
 
 
-def validate_security_object(op, request_data):
+def validate_security_object(
+    op,  # type: Operation
+    request_data,  # type: JSONDict
+):
+    # type: (...) -> None
     """
     Checks that one security option is used at time.
 
