@@ -59,8 +59,13 @@ class Operation(object):
         self.params = {}
 
     def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+
+        if id(self) == id(other):
+            return True
+
         return (
-            isinstance(other, self.__class__) and
             self.path_name == other.path_name and
             self.http_method == other.http_method and
             self.op_spec == other.op_spec and

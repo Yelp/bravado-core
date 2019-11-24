@@ -125,8 +125,13 @@ class Resource(object):
         return self.operations.keys()
 
     def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+
+        if id(self) == id(other):
+            return True
+
         return (
-            isinstance(other, self.__class__) and
             self.name == other.name and
             self.operations == other.operations
         )

@@ -4,6 +4,7 @@ import logging
 import os.path
 import warnings
 from copy import deepcopy
+from itertools import chain
 
 import yaml
 from jsonref import JsonRef
@@ -137,14 +138,30 @@ class Spec(object):
         self._internal_spec_dict = spec_dict
 
     def __eq__(self, other):
-        return (
-            isinstance(other, self.__class__) and
-            self.spec_dict == other.spec_dict and
-            self.origin_url == other.origin_url and
-            self.http_client == other.http_client and
-            self.config == other.config and
-            self.api_url == other.api_url and
-            self.definitions == other.definitions
+        if not isinstance(other, self.__class__):
+            return False
+
+        if id(self) == id(other):
+            return True
+
+        # If self and other are of the same type but not pointing to the same memory location then we're going to inspect
+        # all the attributes.
+        # NOTE: Few attributes have recursive references to Spec or do not define an equality method we're going to blacklist them
+        return all(
+            getattr(self, attr_name, None) == getattr(other, attr_name, None)
+            for attr_name in set(
+                chain(
+                    iterkeys(self.__dict__),
+                    iterkeys(other.__dict__),
+                ),
+            )
+            if attr_name not in {
+                'definitions',  # Recursively point back to self (Spec instance). It is built via Spec.build so we're ignoring it
+                'format_checker',  # jsonschema.FormatChecker does not define an equality method
+                'resolver',  # jsonschema.validators.RefResolver does not define an equality method
+                'resources',  # Recursively point back to self (Spec instance). It is built via Spec.build so we're ignoring it
+                'security_definitions',  # Recursively point back to self (Spec instance). It is a cached property so ignore it
+            }
         )
 
     def __deepcopy__(self, memo=None):
