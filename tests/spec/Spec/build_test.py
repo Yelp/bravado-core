@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from copy import deepcopy
-
 import pytest
 from mock import Mock
 from mock import patch
@@ -295,7 +293,3 @@ def test_build_raises_in_case_of_duplicated_models_between_paths_and_definitions
     )
 
     assert expected_exception_string == str(exinfo.value)
-
-
-def test_spec_instance_is_deep_copaible(petstore_spec):
-    assert petstore_spec == deepcopy(petstore_spec)

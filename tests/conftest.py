@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 import os
 from copy import deepcopy
+from itertools import chain
 
 import pytest
 import simplejson as json
 import yaml
 from mock import Mock
+from six import iteritems
+from six import iterkeys
 from six.moves.urllib import parse as urlparse
 from six.moves.urllib.request import pathname2url
 from six.moves.urllib.request import url2pathname
@@ -260,3 +263,46 @@ def recursive_swagger_spec(minimal_swagger_dict, node_spec):
     """
     minimal_swagger_dict['definitions']['Node'] = node_spec
     return Spec(minimal_swagger_dict)
+
+
+def check_object_deepcopy(obj):
+    """
+    This is an helper method that ensures that the deepcopy of the input object does actually returns
+    an equivalent instance (via equality, __eq__) and that the copied object and related properties are
+    pointing to different objects (different ids).
+
+    NOTE: This method does work not really work well for all the possible types (ie. passing `str` in here would cause issue)
+          but it's good enough to check deep-copyability of custom object types (ie. class Something(object): ...)
+
+    :returns: deepcopy ob obj
+    """
+
+    obj_copy = deepcopy(obj)
+
+    assert isinstance(obj_copy, obj.__class__)
+    assert obj == obj_copy
+
+    # Ideally, if we deep copied properly an object we should have
+    # * different memory allocation of the object
+    # * different memory allocation of all the object attributes
+    # NOTE: A deep copy can map to the same memory location in case the type is immutable (ie. NoneType, str, tuple)
+    assert id(obj) != id(obj_copy)
+    attributes_with_same_id = {
+        attr_name: getattr(obj_copy, attr_name, None)
+        for attr_name in set(
+            chain(
+                iterkeys(obj.__dict__),
+                iterkeys(obj_copy.__dict__),
+            ),
+        )
+        if id(getattr(obj, attr_name, None)) == id(getattr(obj_copy, attr_name, None))
+    }
+    assert not any(
+        # If `attr_name: attr_value` is in attributes_with_same_id then attr_value id did not change
+        # after deepcopy. As immutable types do not create new instances for deepcopy we need to ensure
+        # that all the occurrences of "same-id" are related to immutable types.
+        not isinstance(attr_value, (type(None), str, tuple))
+        for attr_name, attr_value in iteritems(attributes_with_same_id)
+    )
+
+    return obj_copy
