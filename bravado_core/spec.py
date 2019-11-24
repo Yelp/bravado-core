@@ -6,6 +6,7 @@ import warnings
 from copy import deepcopy
 from itertools import chain
 
+import typing
 import yaml
 from jsonref import JsonRef
 from jsonschema import FormatChecker
@@ -33,6 +34,10 @@ from bravado_core.spec_flattening import flattened_spec
 from bravado_core.util import cached_property
 from bravado_core.util import memoize_by_id
 from bravado_core.util import strip_xscope
+
+
+if getattr(typing, 'TYPE_CHECKING', False):
+    from bravado_core.formatter import SwaggerFormat
 
 
 log = logging.getLogger(__name__)
@@ -273,6 +278,7 @@ class Spec(object):
         return build_http_handlers(self.http_client)
 
     def _force_deref(self, ref_dict):
+        # type: (typing.Any) -> typing.Any
         """Dereference ref_dict (if it is indeed a ref) and return what the
         ref points to.
 
@@ -329,6 +335,7 @@ class Spec(object):
         self.format_checker.checks(name, raises=(SwaggerValidationError,))(validate)
 
     def get_format(self, name):
+        # type: (typing.Text) -> SwaggerFormat
         """
         :param name: Name of the format to retrieve
         :rtype: :class:`bravado_core.formatter.SwaggerFormat`
