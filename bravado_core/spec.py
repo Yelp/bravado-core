@@ -146,23 +146,28 @@ class Spec(object):
 
         # If self and other are of the same type but not pointing to the same memory location then we're going to inspect
         # all the attributes.
-        # NOTE: Few attributes have recursive references to Spec or do not define an equality method we're going to blacklist them
-        return all(
-            getattr(self, attr_name, None) == getattr(other, attr_name, None)
-            for attr_name in set(
-                chain(
-                    iterkeys(self.__dict__),
-                    iterkeys(other.__dict__),
-                ),
-            )
-            if attr_name not in {
+        for attr_name in set(
+            chain(
+                iterkeys(self.__dict__),
+                iterkeys(other.__dict__),
+            ),
+        ):
+            # Few attributes have recursive references to Spec or do not define an equality method we're going to ignore them
+            if attr_name in {
                 'definitions',  # Recursively point back to self (Spec instance). It is built via Spec.build so we're ignoring it
                 'format_checker',  # jsonschema.FormatChecker does not define an equality method
                 'resolver',  # jsonschema.validators.RefResolver does not define an equality method
                 'resources',  # Recursively point back to self (Spec instance). It is built via Spec.build so we're ignoring it
                 'security_definitions',  # Recursively point back to self (Spec instance). It is a cached property so ignore it
-            }
-        )
+            }:
+                continue
+            try:
+                if getattr(self, attr_name) != getattr(other, attr_name):
+                    return False
+            except AttributeError:
+                return False
+
+        return True
 
     def __deepcopy__(self, memo=None):
         if memo is None:
