@@ -138,11 +138,11 @@ class Spec(object):
         self._internal_spec_dict = spec_dict
 
     def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            return False
-
         if id(self) == id(other):
             return True
+
+        if not isinstance(other, self.__class__):
+            return False
 
         # If self and other are of the same type but not pointing to the same memory location then we're going to inspect
         # all the attributes.
