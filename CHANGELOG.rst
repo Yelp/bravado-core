@@ -2,6 +2,10 @@ Changelog
 =========
 .. Make sure to link Issue and PR information as `(PR|Issue) #xxx`_ and with a link at the bottom of the document
 
+5.16.0 (2019-11-26)
+-------------------
+- Add equality and deepcopy support for Spec objects - `PR #360`_
+
 5.15.0 (2019-11-15)
 -------------------
 - Properly build the list of required properties for a schema with ``allOf`` from the sub-schemas - `PR #358`_ - Thanks nickgaya for your contribution!
@@ -552,7 +556,7 @@ Changelog
 .. _PR #355: https://github.com/Yelp/bravado-core/pull/355
 .. _PR #356: https://github.com/Yelp/bravado-core/pull/356
 .. _PR #358: https://github.com/Yelp/bravado-core/pull/358
-
+.. _PR #360: https://github.com/Yelp/bravado-core/pull/360
 
 .. Link To Documentation pages
 .. _Configure: https://bravado-core.readthedocs.org/en/latest/config.html
