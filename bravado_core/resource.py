@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 from collections import defaultdict
+from copy import deepcopy
 
 from six import iteritems
 
@@ -96,6 +97,14 @@ class Resource(object):
         self.name = name
         self.operations = ops
 
+    def __deepcopy__(self, memo=None):
+        if memo is None:
+            memo = {}
+        return self.__class__(
+            name=deepcopy(self.name, memo=memo),
+            ops=deepcopy(self.operations, memo=memo),
+        )
+
     def __repr__(self):
         return u"%s(%s)" % (self.__class__.__name__, self.name)
 
@@ -114,3 +123,15 @@ class Resource(object):
         :return: list of operation names
         """
         return self.operations.keys()
+
+    def __eq__(self, other):
+        if id(self) == id(other):
+            return True
+
+        if not isinstance(other, self.__class__):
+            return False
+
+        return (
+            self.name == other.name and
+            self.operations == other.operations
+        )

@@ -58,6 +58,20 @@ class Operation(object):
         # (key, value) = (param name, Param)
         self.params = {}
 
+    def __eq__(self, other):
+        if id(self) == id(other):
+            return True
+
+        if not isinstance(other, self.__class__):
+            return False
+
+        return (
+            self.path_name == other.path_name and
+            self.http_method == other.http_method and
+            self.op_spec == other.op_spec and
+            self.swagger_spec == other.swagger_spec
+        )
+
     @cached_property
     def consumes(self):
         """Note that the operation can override the value defined globally

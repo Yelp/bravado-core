@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
+from copy import deepcopy
 
 log = logging.getLogger(__name__)
 
@@ -15,6 +16,14 @@ class SecurityDefinition(object):
     def __init__(self, swagger_spec, security_definition_spec):
         self.swagger_spec = swagger_spec
         self.security_definition_spec = swagger_spec.deref(security_definition_spec)
+
+    def __deepcopy__(self, memo=None):
+        if memo is None:
+            memo = {}
+        return self.__class__(
+            swagger_spec=deepcopy(self.swagger_spec, memo=memo),
+            security_definition_spec=deepcopy(self.security_definition_spec, memo=memo),
+        )
 
     @property
     def location(self):

@@ -3,6 +3,8 @@ import json
 import logging
 import os.path
 import warnings
+from copy import deepcopy
+from itertools import chain
 
 import yaml
 from jsonref import JsonRef
@@ -134,6 +136,51 @@ class Spec(object):
         # spec dict used to build resources, in case internally_dereference_refs config is enabled
         # it will be overridden by the dereferenced specs (by build method). More context in PR#263
         self._internal_spec_dict = spec_dict
+
+    def __eq__(self, other):
+        if id(self) == id(other):
+            return True
+
+        if not isinstance(other, self.__class__):
+            return False
+
+        # If self and other are of the same type but not pointing to the same memory location then we're going to inspect
+        # all the attributes.
+        for attr_name in set(
+            chain(
+                iterkeys(self.__dict__),
+                iterkeys(other.__dict__),
+            ),
+        ):
+            # Few attributes have recursive references to Spec or do not define an equality method we're going to ignore them
+            if attr_name in {
+                'definitions',  # Recursively point back to self (Spec instance). It is built via Spec.build so we're ignoring it
+                'format_checker',  # jsonschema.FormatChecker does not define an equality method
+                'resolver',  # jsonschema.validators.RefResolver does not define an equality method
+                'resources',  # Recursively point back to self (Spec instance). It is built via Spec.build so we're ignoring it
+                'security_definitions',  # Recursively point back to self (Spec instance). It is a cached property so ignore it
+            }:
+                continue
+            try:
+                if getattr(self, attr_name) != getattr(other, attr_name):
+                    return False
+            except AttributeError:
+                return False
+
+        return True
+
+    def __deepcopy__(self, memo=None):
+        if memo is None:
+            memo = {}
+
+        copied_self = self.__class__(spec_dict=None)
+        memo[id(self)] = copied_self
+
+        # Copy the attributes that are built via Spec.build
+        for attr_name, attr_value in iteritems(self.__dict__):
+            setattr(copied_self, attr_name, deepcopy(attr_value, memo=memo))
+
+        return copied_self
 
     @cached_property
     def client_spec_dict(self):
