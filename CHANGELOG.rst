@@ -6,6 +6,8 @@ Changelog
 -------------------
 - Add equality and deepcopy support for Spec objects - `PR #360`_
 
+**WARNING**: Deep Copy might not work properly on CPython 3.5.0. More details on `PR #362`_ and `Issue25447 <https://bugs.python.org/issue25447>`_
+
 5.15.0 (2019-11-15)
 -------------------
 - Properly build the list of required properties for a schema with ``allOf`` from the sub-schemas - `PR #358`_ - Thanks nickgaya for your contribution!
@@ -557,6 +559,7 @@ Changelog
 .. _PR #356: https://github.com/Yelp/bravado-core/pull/356
 .. _PR #358: https://github.com/Yelp/bravado-core/pull/358
 .. _PR #360: https://github.com/Yelp/bravado-core/pull/360
+.. _PR #362: https://github.com/Yelp/bravado-core/pull/362
 
 .. Link To Documentation pages
 .. _Configure: https://bravado-core.readthedocs.org/en/latest/config.html
