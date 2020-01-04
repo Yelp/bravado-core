@@ -137,6 +137,9 @@ class Spec(object):
         # it will be overridden by the dereferenced specs (by build method). More context in PR#263
         self._internal_spec_dict = spec_dict
 
+    def __hash__(self):
+        return id(self)
+
     def __eq__(self, other):
         if id(self) == id(other):
             return True

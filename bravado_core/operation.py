@@ -58,6 +58,9 @@ class Operation(object):
         # (key, value) = (param name, Param)
         self.params = {}
 
+    def __hash__(self):
+        return id(self)
+
     def __eq__(self, other):
         if id(self) == id(other):
             return True

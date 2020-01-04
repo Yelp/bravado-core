@@ -465,6 +465,9 @@ class Model(object):
         else:
             del self.__dict[property_name]
 
+    def __hash__(self):
+        return id(self)
+
     def __eq__(self, other):
         """Check for equality with another instance.
 

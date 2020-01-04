@@ -124,6 +124,9 @@ class Resource(object):
         """
         return self.operations.keys()
 
+    def __hash__(self):
+        return id(self)
+
     def __eq__(self, other):
         if id(self) == id(other):
             return True
