@@ -11,7 +11,7 @@ def petPetstoreResource(petstore_spec):
 
 
 def test_equality_of_the_same_object_returns_True(petPetstoreResource):
-    assert petPetstoreResource == petPetstoreResource
+    assert petPetstoreResource.is_equal(petPetstoreResource)
 
 
 def test_equality_of_different_instances_returns_True_if_the_specs_are_the_same(
@@ -19,8 +19,8 @@ def test_equality_of_different_instances_returns_True_if_the_specs_are_the_same(
 ):
     other_petstore_spec = Spec.from_dict(petstore_dict, origin_url=get_url(petstore_abspath))
     other_petPetstoreResource = other_petstore_spec.resources['pet']
-    assert petPetstoreResource == other_petPetstoreResource
+    assert petPetstoreResource.is_equal(other_petPetstoreResource)
 
 
 def test_equality_of_different_instances_returns_False_if_the_specs_are_the_different(petstore_spec, petPetstoreResource):
-    assert petPetstoreResource != petstore_spec.resources['user']
+    assert not petPetstoreResource.is_equal(petstore_spec.resources['user'])

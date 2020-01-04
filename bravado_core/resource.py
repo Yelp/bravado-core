@@ -2,8 +2,10 @@
 import logging
 from collections import defaultdict
 from copy import deepcopy
+from itertools import chain
 
 from six import iteritems
+from six import iterkeys
 
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.operation import Operation
@@ -124,7 +126,9 @@ class Resource(object):
         """
         return self.operations.keys()
 
-    def __eq__(self, other):
+    def is_equal(self, other):
+        # Not implemented as __eq__ otherwise we would need to implement __hash__ to preserve
+        # hashability of the class and it would not necessarily be performance effective
         if id(self) == id(other):
             return True
 
@@ -133,5 +137,8 @@ class Resource(object):
 
         return (
             self.name == other.name and
-            self.operations == other.operations
+            all(
+                operation_id in self.operations and self.operations.get(operation_id).is_equal(other.operations.get(operation_id))
+                for operation_id in set(chain(iterkeys(self.operations), iterkeys(other.operations)))
+            )
         )

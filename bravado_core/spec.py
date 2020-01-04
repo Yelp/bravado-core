@@ -137,7 +137,9 @@ class Spec(object):
         # it will be overridden by the dereferenced specs (by build method). More context in PR#263
         self._internal_spec_dict = spec_dict
 
-    def __eq__(self, other):
+    def is_equal(self, other):
+        # Not implemented as __eq__ otherwise we would need to implement __hash__ to preserve
+        # hashability of the class and it would not necessarily be performance effective
         if id(self) == id(other):
             return True
 
