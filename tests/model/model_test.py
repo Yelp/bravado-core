@@ -145,6 +145,12 @@ def test_model_equality_if_model_class_generated_by_different_Spec_object(cat_sw
     assert cat == new_cat
 
 
+def test_model_hashability(cat_type, cat_kwargs):
+    # The test wants to ensure that a Model instance is hashable.
+    # If calling hash does not throw an exception than we've validated the assumption
+    hash(cat_type(**cat_kwargs))
+
+
 def test_model_deepcopy(user_type, user_kwargs):
     user = user_type(**user_kwargs)
     user_copy = deepcopy(user)

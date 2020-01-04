@@ -24,3 +24,9 @@ def test_equality_of_different_instances_returns_True_if_the_specs_are_the_same(
 
 def test_equality_of_different_instances_returns_False_if_the_specs_are_the_different(petstore_spec, petPetstoreResource):
     assert petPetstoreResource != petstore_spec.resources['user']
+
+
+def test_resource_hashability(petPetstoreResource):
+    # The test wants to ensure that a Resource instance is hashable.
+    # If calling hash does not throw an exception than we've validated the assumption
+    hash(petPetstoreResource)

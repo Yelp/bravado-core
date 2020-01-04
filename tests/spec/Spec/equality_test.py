@@ -25,3 +25,9 @@ def test_equality_of_different_instances_returns_False_if_attributes_are_not_mat
 
 def test_equality_of_different_instances_returns_False_if_the_specs_are_the_different(petstore_spec, polymorphic_spec):
     assert petstore_spec != polymorphic_spec
+
+
+def test_spec_hashability(petstore_spec):
+    # The test wants to ensure that a Spec instance is hashable.
+    # If calling hash does not throw an exception than we've validated the assumption
+    hash(petstore_spec)
