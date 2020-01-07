@@ -17,3 +17,9 @@ def test_equality_of_different_instances_returns_True_if_the_specs_are_the_same(
 
 def test_equality_of_different_instances_returns_False_if_the_specs_are_the_different(petstore_spec, getPetByIdPetstoreOperation):
     assert not getPetByIdPetstoreOperation.is_equal(petstore_spec.resources['pet'].operations['addPet'])
+
+
+def test_operation_hashability(getPetByIdPetstoreOperation):
+    # The test wants to ensure that a Operation instance is hashable.
+    # If calling hash does not throw an exception than we've validated the assumption
+    hash(getPetByIdPetstoreOperation)
