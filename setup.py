@@ -31,9 +31,9 @@ setup(
         "License :: OSI Approved :: BSD License",
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3.4",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
     ],
     install_requires=[
         "jsonref",
@@ -56,4 +56,5 @@ setup(
         ':python_version<"3.4"': ['enum34'],
         ':python_version<"3.2"': ['functools32'],
     },
+    python_requires='!=3.0,!=3.1,!=3.2,!=3.3,!=3.4,!=3.5.0',
 )
