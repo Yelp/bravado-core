@@ -285,7 +285,7 @@ def check_object_deepcopy(obj):
     obj_copy = deepcopy(obj)
 
     assert isinstance(obj_copy, obj.__class__)
-    assert obj == obj_copy
+    assert obj.is_equal(obj_copy)
 
     # Ideally, if we deep copied properly an object we should have
     # * different memory allocation of the object
