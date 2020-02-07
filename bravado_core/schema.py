@@ -9,6 +9,11 @@ from bravado_core._compat import Mapping
 from bravado_core.exception import SwaggerMappingError
 
 
+if getattr(typing, 'TYPE_CHECKING', False):
+    from bravado_core.spec import Spec
+    from bravado_core._compat_typing import JSONDict
+
+
 # 'object' and 'array' are omitted since this should really be read as
 # "Swagger types that map to python primitives"
 SWAGGER_PRIMITIVES = (
@@ -21,34 +26,42 @@ SWAGGER_PRIMITIVES = (
 
 
 def has_default(swagger_spec, schema_object_spec):
+    # type: (Spec, JSONDict) -> bool
     return 'default' in swagger_spec.deref(schema_object_spec)
 
 
 def get_default(swagger_spec, schema_object_spec):
+    # type: (Spec, JSONDict) -> typing.Any
     return swagger_spec.deref(schema_object_spec).get('default')
 
 
 def is_required(swagger_spec, schema_object_spec):
+    # type: (Spec, JSONDict) -> bool
     return swagger_spec.deref(schema_object_spec).get('required', False)
 
 
 def has_format(swagger_spec, schema_object_spec):
+    # type: (Spec, JSONDict) -> bool
     return 'format' in swagger_spec.deref(schema_object_spec)
 
 
 def get_format(swagger_spec, schema_object_spec):
+    # type: (Spec, JSONDict) -> typing.Any
     return swagger_spec.deref(schema_object_spec).get('format')
 
 
 def is_param_spec(swagger_spec, schema_object_spec):
+    # type: (Spec, JSONDict) -> bool
     return 'in' in swagger_spec.deref(schema_object_spec)
 
 
 def is_prop_nullable(swagger_spec, schema_object_spec):
+    # type: (Spec, JSONDict) -> bool
     return swagger_spec.deref(schema_object_spec).get('x-nullable', False)
 
 
-def is_ref(spec):  # type: (typing.Any) -> bool
+def is_ref(spec):
+    # type: (typing.Any) -> bool
     """ Check if the given spec is a Mapping and contains a $ref.
 
     FYI: This function gets called A LOT during unmarshalling and is_dict_like
@@ -64,7 +77,8 @@ def is_ref(spec):  # type: (typing.Any) -> bool
         return False
 
 
-def is_dict_like(spec):  # type: (typing.Any) -> bool
+def is_dict_like(spec):
+    # type: (typing.Any) -> bool
     """
     :param spec: swagger object specification in dict form
     :rtype: boolean
@@ -76,7 +90,8 @@ def is_dict_like(spec):  # type: (typing.Any) -> bool
     return isinstance(spec, (dict, Mapping))
 
 
-def is_list_like(spec):  # type: (typing.Any) -> bool
+def is_list_like(spec):
+    # type: (typing.Any) -> bool
     """
     :param spec: swagger object specification in dict form
     :rtype: boolean
@@ -84,7 +99,14 @@ def is_list_like(spec):  # type: (typing.Any) -> bool
     return isinstance(spec, (list, tuple))
 
 
-def get_spec_for_prop(swagger_spec, object_spec, object_value, prop_name, properties=None):
+def get_spec_for_prop(
+    swagger_spec,  # type: Spec
+    object_spec,  # type: JSONDict
+    object_value,  # type: typing.Any
+    prop_name,  # type: typing.Text
+    properties=None,  # type: typing.Optional[typing.Mapping[typing.Text, JSONDict]]
+):
+    # type: (...) -> typing.Optional[JSONDict]
     """Given a jsonschema object spec and value, retrieve the spec for the
      given property taking 'additionalProperties' into consideration.
 
@@ -137,6 +159,7 @@ def get_spec_for_prop(swagger_spec, object_spec, object_value, prop_name, proper
 
 
 def handle_null_value(swagger_spec, schema_object_spec):
+    # type: (Spec, JSONDict) -> typing.Any
     """Handle a null value for the associated schema object spec. Checks the
      x-nullable attribute in the spec to see if it is allowed and returns None
      if so and raises an exception otherwise.
@@ -159,6 +182,7 @@ def handle_null_value(swagger_spec, schema_object_spec):
 
 
 def collapsed_properties(model_spec, swagger_spec):
+    # type: (JSONDict, Spec) -> typing.Mapping[typing.Text, JSONDict]
     """Processes model spec and outputs dictionary with attributes
     as the keys and attribute spec as the value for the model.
 
@@ -190,6 +214,7 @@ def collapsed_properties(model_spec, swagger_spec):
 
 
 def collapsed_required(model_spec, swagger_spec):
+    # type: (JSONDict, Spec) -> typing.Set[typing.Text]
     """
     Processes model spec and outputs a set of required properties for the model.
 
@@ -213,6 +238,7 @@ def collapsed_required(model_spec, swagger_spec):
 
 
 def get_type_from_schema(swagger_spec, schema_object_spec):
+    # type: (Spec, JSONDict) -> typing.Optional[typing.Text]
     try:
         return schema_object_spec['type']
     except KeyError:

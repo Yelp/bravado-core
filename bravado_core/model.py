@@ -26,6 +26,7 @@ if getattr(typing, 'TYPE_CHECKING', False):
     from bravado_core._compat_typing import JSONDict
     from bravado_core.spec import Spec
 
+
 log = logging.getLogger(__name__)
 
 # Models in #/definitions are tagged with this key so that they can be
@@ -679,7 +680,12 @@ def is_model(swagger_spec, schema_object_spec):
     return isinstance(deref(schema_object_spec.get(MODEL_MARKER)), string_types)
 
 
-def is_object(swagger_spec, object_spec, no_default_type=False):
+def is_object(
+    swagger_spec,  # type: Spec
+    object_spec,  # type: JSONDict
+    no_default_type=False,  # type: bool
+):
+    # type: (...) -> bool
     """
     A schema definition is of type object if its type is object or if it uses
     model composition (i.e. it has an allOf property).

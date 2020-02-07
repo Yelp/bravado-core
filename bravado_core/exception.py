@@ -2,6 +2,11 @@
 import sys
 
 import six
+import typing
+
+
+if getattr(typing, 'TYPE_CHECKING', False):
+    from bravado_core._compat_typing import FuncType
 
 
 class SwaggerError(Exception):
@@ -40,13 +45,16 @@ class SwaggerSecurityValidationError(SwaggerValidationError):
 
 
 def wrap_exception(exception_class):
+    # type: (typing.Type[BaseException]) -> typing.Callable[[FuncType], FuncType]
     """Helper decorator method to modify the raised exception class to
     `exception_class` but keeps the message and trace intact.
 
     :param exception_class: class to wrap raised exception with
     """
     def generic_exception(method):
+        # type: (FuncType) -> FuncType
         def wrapper(*args, **kwargs):
+            # type: (typing.Any, typing.Any) -> typing.Any
             try:
                 return method(*args, **kwargs)
             except Exception as e:
@@ -55,5 +63,6 @@ def wrap_exception(exception_class):
                     exception_class(str(e)),
                     sys.exc_info()[2],
                 )
-        return wrapper
+        return wrapper  # type: ignore  # ignoring type to avoiding typing.cast call
+
     return generic_exception
