@@ -41,7 +41,7 @@ class SecurityRequirement(object):
 
     @property
     def security_definitions(self):
-        # type: () -> typing.Mapping[typing.Text, SecurityDefinition]
+        # type: () -> typing.Dict[typing.Text, SecurityDefinition]
         return {
             security_name: self.swagger_spec.security_definitions[security_name]
             for security_name in six.iterkeys(self.security_requirement_spec)
@@ -49,7 +49,7 @@ class SecurityRequirement(object):
 
     @property
     def security_scopes(self):
-        # type: () -> typing.Mapping[typing.Text, typing.Mapping[typing.Text, typing.List[typing.Text]]]
+        # type: () -> typing.Dict[typing.Text, typing.Mapping[typing.Text, typing.List[typing.Text]]]
         return {
             security_name: self.security_requirement_spec[security_name]
             for security_name in six.iterkeys(self.security_requirement_spec)

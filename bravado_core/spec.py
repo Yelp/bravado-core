@@ -39,6 +39,8 @@ from bravado_core.util import strip_xscope
 if getattr(typing, 'TYPE_CHECKING', False):
     from bravado_core.formatter import SwaggerFormat
 
+    T = typing.TypeVar('T')
+
 
 log = logging.getLogger(__name__)
 
@@ -278,7 +280,7 @@ class Spec(object):
         return build_http_handlers(self.http_client)
 
     def _force_deref(self, ref_dict):
-        # type: (typing.Any) -> typing.Any
+        # type: (T) -> T
         """Dereference ref_dict (if it is indeed a ref) and return what the
         ref points to.
 
@@ -293,7 +295,8 @@ class Spec(object):
         # resolver doesn't have a traversal history (accumulated scope_stack)
         # when asked to resolve.
         with in_scope(self.resolver, ref_dict):
-            _, target = self.resolver.resolve(ref_dict['$ref'])
+            reference_value = ref_dict['$ref']  # type: ignore
+            _, target = self.resolver.resolve(reference_value)
             return target
 
     # NOTE: deref gets overridden, if internally_dereference_refs is enabled, after calling build
