@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import pytest
-from jsonschema.validators import Draft4Validator
 from jsonschema.validators import RefResolver
 from mock import MagicMock
 from mock import Mock
@@ -64,7 +63,7 @@ def annotated_scope():
 
 @pytest.fixture
 def mock_validator(original_scope):
-    validator = Mock(spec=Draft4Validator)
+    validator = Mock()
     validator.resolver = Mock(spec=RefResolver)
     validator.resolver._scopes_stack = original_scope
     # Make descend() return an empty list to StopIteration.
