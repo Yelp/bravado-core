@@ -247,7 +247,10 @@ def test_model_isinstance(polymorphic_spec, instance_dict, object_type, possible
 def test_ensure_polymorphic_objects_are_correctly_build_in_case_of_fully_dereferenced_specs(
     polymorphic_dict, validate_responses, use_models, internally_dereference_refs,
 ):
-    raw_response = [{'name': 'name', 'type': 'Dog', 'birth_date': '2017-11-02'}]
+    raw_response = {
+        'number_of_pets': 1,
+        'list': [{'name': 'name', 'type': 'Dog', 'birth_date': '2017-11-02'}],
+    }
     spec = Spec.from_dict(
         spec_dict=polymorphic_dict,
         config={
@@ -266,8 +269,14 @@ def test_ensure_polymorphic_objects_are_correctly_build_in_case_of_fully_derefer
     )
     unmarshaled_response = unmarshal_response(response, spec.resources['pets'].get_pets)
 
-    model_type = spec.definitions['Dog'] if use_models else dict
-    expected_response = [model_type(birth_date=datetime.date(2017, 11, 2), name='name', type='Dog')]
+    pet_list_model_type = spec.definitions['PetList'] if use_models else dict
+    dog_model_type = spec.definitions['Dog'] if use_models else dict
+    expected_response = pet_list_model_type(
+        number_of_pets=1,
+        list=[
+            dog_model_type(birth_date=datetime.date(2017, 11, 2), name='name', type='Dog'),
+        ],
+    )
     assert expected_response == unmarshaled_response
 
 

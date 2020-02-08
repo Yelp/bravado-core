@@ -131,14 +131,19 @@ def test_unmarshal_model_polymorphic_specs(polymorphic_spec):
             spec=IncomingResponse,
             status_code=200,
             headers={'content-type': APP_JSON},
-            json=Mock(return_value=pet_list_dicts),
+            json=Mock(
+                return_value={
+                    'number_of_pets': len(pet_list_dicts),
+                    'list': pet_list_dicts,
+                },
+            ),
         ),
         op=polymorphic_spec.resources['pets'].operations['get_pets'],
     )
 
-    assert len(pet_list_dicts) == len(pet_list_models)
+    assert len(pet_list_dicts) == len(pet_list_models.list)
 
-    for list_item_model, list_item_dict in zip(pet_list_models, pet_list_dicts):
+    for list_item_model, list_item_dict in zip(pet_list_models.list, pet_list_dicts):
         assert isinstance(list_item_model, polymorphic_spec.definitions['GenericPet'])
         assert isinstance(list_item_model, polymorphic_spec.definitions[list_item_dict['type']])
         assert list_item_model._marshal() == list_item_dict

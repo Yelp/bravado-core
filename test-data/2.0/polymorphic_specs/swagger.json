@@ -15,10 +15,7 @@
           "200": {
             "description": "Pet List",
             "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/GenericPet"
-              }
+              "$ref": "#/definitions/PetList"
             }
           }
         }
