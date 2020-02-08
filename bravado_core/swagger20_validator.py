@@ -210,6 +210,9 @@ def discriminator_validator(
     :type schema: dict
     """
 
+    if instance is None and is_prop_nullable(swagger_spec, schema):
+        return
+
     try:
         discriminator_value = instance[discriminator_attribute]
     except KeyError:
