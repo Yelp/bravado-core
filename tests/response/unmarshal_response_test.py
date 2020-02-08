@@ -9,6 +9,7 @@ from bravado_core.content_type import APP_JSON
 from bravado_core.content_type import APP_MSGPACK
 from bravado_core.response import IncomingResponse
 from bravado_core.response import unmarshal_response
+from bravado_core.spec import Spec
 
 
 @pytest.fixture
@@ -168,3 +169,27 @@ def test_unmarshal_model_polymorphic_specs_with_invalid_discriminator(polymorphi
             ),
             op=polymorphic_spec.resources['pets'].operations['get_pets'],
         )
+
+
+def test_unmarshal_model_polymorphic_specs_with_xnullable_field(polymorphic_dict):
+    # Test case to ensure no further regressions on issue #359
+    polymorphic_dict['definitions']['GenericPet']['x-nullable'] = True
+    polymorphic_spec = Spec.from_dict(polymorphic_dict)
+    PetList = polymorphic_spec.definitions['PetList']
+
+    response = unmarshal_response(
+        response=Mock(
+            spec=IncomingResponse,
+            status_code=200,
+            headers={'content-type': APP_JSON},
+            json=Mock(
+                return_value={
+                    'number_of_pets': 1,
+                    'list': [None],
+                },
+            ),
+        ),
+        op=polymorphic_spec.resources['pets'].operations['get_pets'],
+    )
+
+    assert response == PetList(number_of_pets=1, list=[None])
