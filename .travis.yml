@@ -1,31 +1,27 @@
 language: python
-matrix:
+os: linux
+
+python: "3.7"
+
+jobs:
   include:
   - python: "2.7"
-    env: TOXENV=py27
   - python: "3.5"
-    env: TOXENV=py35
   - python: "3.6"
-    env: TOXENV=py36
   - python: "3.7"
-    env: TOXENV=py37
-  - python: "2.7"
-    env: TOXENV=docs
-  - python: "2.7"
-    env: TOXENV=pre-commit
-  - python: "3.6"
-    env: TOXENV=benchmark
-  - python: "3.6"
-    env: TOXENV=mypy
+    env: PUBLISH_COVERAGE=y
+  - env: TOXENV=docs
+  - env: TOXENV=pre-commit
+  - env: TOXENV=benchmark
+  - env: TOXENV=mypy
   allow_failures:
   - env: TOXENV=benchmark
   fast_finish: true
 
-install: pip install tox coveralls
+install: pip install tox tox-travis coveralls
 script: tox
 after_success: |
-  if [ "$TOXENV" == "py27" ]; then coveralls; fi; \
-  if [ "$TOXENV" == "benchmark" ]; then \
-    echo $(ls .benchmarks/*/0001_benchmark.json) $(cat .benchmarks/*/0001_benchmark.json | nc termbin.com 9999); \
+  if [ "${PUBLISH_COVERAGE:-n}" == "y" ]; then coveralls; fi
+  if [ "${TOXENV}" == "benchmark" ]; then
+    echo $(ls .benchmarks/*/0001_benchmark.json) $(cat .benchmarks/*/0001_benchmark.json | nc termbin.com 9999)
   fi
-sudo: false
