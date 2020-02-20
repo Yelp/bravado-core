@@ -2,6 +2,22 @@ Changelog
 =========
 .. Make sure to link Issue and PR information as `(PR|Issue) #xxx`_ and with a link at the bottom of the document
 
+5.16.1 (2020-02-20)
+-------------------
+.. warning::
+    This is release is technically backward incompatible with 5.16.0 as it is removing the equality feature on Spec objects.
+    We're **not** releasing a major version mostly because we don't expect users are using it.
+
+    If you're a user using it please make sure to use the ``is_equal`` methods. They behave as the ``__eq__`` methods added in 5.16.0 without altering the hashability feature of the objects.
+
+    Context can be found on `PR #363`_ and `PR #364`_.
+
+- Replace __eq__ with is_equal to allow hashability - `PR #364`_
+- Drop support for Python 3.5.0 and previous Python 3 versions - `PR #366`_
+- Fix validation of nullable polymorphic objects - `Issue #359`_, `PR #367`_
+- Update ``msgpack`` depedency (as ``msgpack-python`` is deprecated) - `PR #368`_ - Thanks vanschelven for your contribution.
+- Improve typing annotations - `PR #361`_
+
 5.16.0 (2019-11-26)
 -------------------
 - Add equality and deepcopy support for Spec objects - `PR #360`_
@@ -438,6 +454,7 @@ Changelog
 .. _Issue #281: https://github.com/Yelp/bravado-core/issues/281
 .. _Issue #318: https://github.com/Yelp/bravado-core/issues/318
 .. _Issue #321: https://github.com/Yelp/bravado-core/issues/321
+.. _Issue #359: https://github.com/Yelp/bravado-core/issues/359
 .. _PR #61: https://github.com/Yelp/bravado-core/pull/61
 .. _PR #63: https://github.com/Yelp/bravado-core/pull/63
 .. _PR #64: https://github.com/Yelp/bravado-core/pull/64
@@ -557,6 +574,12 @@ Changelog
 .. _PR #356: https://github.com/Yelp/bravado-core/pull/356
 .. _PR #358: https://github.com/Yelp/bravado-core/pull/358
 .. _PR #360: https://github.com/Yelp/bravado-core/pull/360
+.. _PR #361: https://github.com/Yelp/bravado-core/pull/361
+.. _PR #363: https://github.com/Yelp/bravado-core/pull/363
+.. _PR #364: https://github.com/Yelp/bravado-core/pull/364
+.. _PR #366: https://github.com/Yelp/bravado-core/pull/366
+.. _PR #367: https://github.com/Yelp/bravado-core/pull/367
+.. _PR #368: https://github.com/Yelp/bravado-core/pull/368
 
 .. Link To Documentation pages
 .. _Configure: https://bravado-core.readthedocs.org/en/latest/config.html
