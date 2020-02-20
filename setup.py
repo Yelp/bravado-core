@@ -44,7 +44,7 @@ setup(
         "six",
         "swagger-spec-validator>=2.0.1",
         "pytz",
-        "msgpack-python>=0.5.2",
+        "msgpack>=0.5.2",
     ],
     package_data={
         'bravado_core': ['py.typed'],
