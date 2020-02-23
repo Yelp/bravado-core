@@ -140,15 +140,18 @@ class Spec(object):
         self.user_defined_formats = {}
         self.format_checker = FormatChecker()
 
-        self.resolver = RefResolver(
-            base_uri=origin_url or '',
-            referrer=self.spec_dict,
-            handlers=self.get_ref_handlers(),
-        )
-
         # spec dict used to build resources, in case internally_dereference_refs config is enabled
         # it will be overridden by the dereferenced specs (by build method). More context in PR#263
         self._internal_spec_dict = spec_dict
+
+    @cached_property
+    def resolver(self):
+        # type: () -> RefResolver
+        return RefResolver(
+            base_uri=self.origin_url or '',
+            referrer=self.spec_dict,
+            handlers=self.get_ref_handlers(),
+        )
 
     def is_equal(self, other):
         # type: (typing.Any) -> bool
