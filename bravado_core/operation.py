@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 
+import typing
 from six import iteritems
 
 from bravado_core.exception import SwaggerSchemaError
@@ -59,8 +60,19 @@ class Operation(object):
         self.params = {}
 
     def is_equal(self, other, ignore_swagger_spec=False):
-        # Not implemented as __eq__ otherwise we would need to implement __hash__ to preserve
-        # hashability of the class and it would not necessarily be performance effective
+        # type: (typing.Any, bool) -> bool
+        """
+        Compare self with `other`
+
+        NOTE: Not implemented as __eq__ otherwise we would need to implement __hash__ to preserve
+            hashability of the class and it would not necessarily be performance effective
+
+        :param other: instance to compare self against
+        :param ignore_swagger_spec: skip equality check of swagger_spec attribute.
+            This is useful as equality checks do not play well with recursive definitions.
+
+        :return: True if self and other are the same, False otherwise
+        """
         if id(self) == id(other):
             return True
 

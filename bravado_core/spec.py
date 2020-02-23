@@ -150,8 +150,20 @@ class Spec(object):
         self._internal_spec_dict = spec_dict
 
     def is_equal(self, other):
-        # Not implemented as __eq__ otherwise we would need to implement __hash__ to preserve
-        # hashability of the class and it would not necessarily be performance effective
+        # type: (typing.Any) -> bool
+        """
+        Compare self with `other`
+
+        NOTE: Not implemented as __eq__ otherwise we would need to implement __hash__ to preserve
+            hashability of the class and it would not necessarily be performance effective
+
+        WARNING: This method operates in "best-effort" mode in the sense that certain attributes are not implementing
+            any equality check and so we're might be ignoring checking them
+
+        :param other: instance to compare self against
+
+        :return: True if self and other are the same, False otherwise
+        """
         if id(self) == id(other):
             return True
 
