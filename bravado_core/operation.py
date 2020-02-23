@@ -3,6 +3,7 @@ import logging
 
 import typing
 from six import iteritems
+from six import PY2
 
 from bravado_core.exception import SwaggerSchemaError
 from bravado_core.param import Param
@@ -11,10 +12,17 @@ from bravado_core.util import AliasKeyDict
 from bravado_core.util import cached_property
 from bravado_core.util import sanitize_name
 
+
+if getattr(typing, 'TYPE_CHECKING', False):
+    from bravado_core._compat_typing import JSONDict
+    from bravado_core.spec import Spec
+
+
 log = logging.getLogger(__name__)
 
 
 def _sanitize_operation_id(operation_id, http_method, path_name):
+    # type: (typing.Optional[typing.Text], typing.Text, typing.Text) -> typing.Text
     sanitized_operation_id = sanitize_name(operation_id or '')
 
     # Handle crazy corner cases where someone explicitly sets operation
@@ -44,6 +52,7 @@ def _sanitize_operation_id(operation_id, http_method, path_name):
 class Operation(object):
 
     def __init__(self, swagger_spec, path_name, http_method, op_spec):
+        # type: (Spec, typing.Text, typing.Text, JSONDict) -> None
         """Swagger operation defined by a unique (http_method, path_name) pair.
 
         :type swagger_spec: :class:`Spec`
@@ -57,7 +66,7 @@ class Operation(object):
         self.op_spec = swagger_spec.deref(op_spec)
 
         # (key, value) = (param name, Param)
-        self.params = {}
+        self.params = {}  # type: typing.Dict[typing.Text, Param]
 
     def is_equal(self, other, ignore_swagger_spec=False):
         # type: (typing.Any, bool) -> bool
@@ -88,6 +97,7 @@ class Operation(object):
 
     @cached_property
     def consumes(self):
+        # type: () -> typing.List[typing.Text]
         """Note that the operation can override the value defined globally
         at #/consumes.
 
@@ -103,6 +113,7 @@ class Operation(object):
 
     @cached_property
     def security_specs(self):
+        # type: () -> typing.List[JSONDict]
         deref = self.swagger_spec.deref
         op_spec = deref(self.op_spec)
         spec_dict = deref(self.swagger_spec._internal_spec_dict)
@@ -113,6 +124,7 @@ class Operation(object):
 
     @cached_property
     def security_requirements(self):
+        # type: () -> typing.List[SecurityRequirement]
         return [
             SecurityRequirement(self.swagger_spec, security_item)
             for security_item in self.security_specs
@@ -120,10 +132,12 @@ class Operation(object):
 
     @property
     def acceptable_security_definition_combinations(self):
+        # type: () -> typing.List[typing.List[typing.Text]]
         return [sorted(security_item.keys()) for security_item in self.security_specs]
 
     @cached_property
     def security_parameters(self):
+        # type: () -> typing.List[Param]
         return [
             Param(self.swagger_spec, self, parameter_dict)
             for security_requirement in self.security_requirements
@@ -132,6 +146,7 @@ class Operation(object):
 
     @cached_property
     def produces(self):
+        # type: () -> typing.List[typing.Text]
         """Note that the operation can override the value defined globally
         at #/produces.
 
@@ -147,6 +162,7 @@ class Operation(object):
 
     @classmethod
     def from_spec(cls, swagger_spec, path_name, http_method, op_spec):
+        # type: (Spec, typing.Text, typing.Text, JSONDict) -> 'Operation'
         """
         Creates a :class:`Operation` and builds up its list of :class:`Param` s
 
@@ -162,6 +178,7 @@ class Operation(object):
 
     @cached_property
     def operation_id(self):
+        # type: () -> typing.Text
         """A friendly name for the operation. The id MUST be unique among all
         operations described in the API. Tools and libraries MAY use the
         operation id to uniquely identify an operation.
@@ -175,10 +192,16 @@ class Operation(object):
         return _sanitize_operation_id(op_id, self.http_method, self.path_name)
 
     def __repr__(self):
-        return u"%s(%s)" % (self.__class__.__name__, self.operation_id)
+        # type: () -> str
+        repr = u"{self.__class__.__name__}({self.operation_id})".format(self=self)
+        if PY2:
+            return repr.encode('ascii', 'backslashreplace')
+        else:
+            return repr
 
 
 def build_params(op):
+    # type: (Operation) -> AliasKeyDict
     """Builds up the list of this operation's parameters taking into account
     parameters that may be available for this operation's path component.
 
