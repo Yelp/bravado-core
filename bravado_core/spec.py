@@ -160,25 +160,39 @@ class Spec(object):
 
         # If self and other are of the same type but not pointing to the same memory location then we're going to inspect
         # all the attributes.
-        for attr_name in set(
-            chain(
-                iterkeys(self.__dict__),
-                iterkeys(other.__dict__),
-            ),
-        ):
-            # Few attributes have recursive references to Spec or do not define an equality method we're going to ignore them
+        for attr_name in set(chain(iterkeys(self.__dict__), iterkeys(other.__dict__))):
+            # Some attributes do not define equality methods.
+            # As those attributes are defined internally only we do not expect that users of the library are modifying them.
             if attr_name in {
-                'definitions',  # Recursively point back to self (Spec instance). It is built via Spec.build so we're ignoring it
-                'format_checker',  # jsonschema.FormatChecker does not define an equality method
-                'resolver',  # jsonschema.validators.RefResolver does not define an equality method
-                'resources',  # Recursively point back to self (Spec instance). It is built via Spec.build so we're ignoring it
-                'security_definitions',  # Recursively point back to self (Spec instance). It is a cached property so ignore it
+                'format_checker',   # jsonschema.FormatChecker does not define an equality method
+                'resolver',         # jsonschema.validators.RefResolver does not define an equality method
             }:
                 continue
+
+            # In case of fully dereferenced specs _deref_flattened_spec (and consequently _internal_spec_dict) will contain
+            # recursive reference to objects. Python is not capable of comparing them (weird).
+            # As _internal_spec_dict and _deref_flattened_spec are private so we don't expect users modifying them.
+            if self.config['internally_dereference_refs'] and attr_name in {
+                '_internal_spec_dict',
+                '_deref_flattened_spec',
+            }:
+                continue
+
+            # Few attributes have recursive references to Spec
+            if attr_name in {
+                'definitions',  # Recursively point back to self (Spec instance). It is built via Spec.build so we're ignoring it
+                'resources',  # Recursively point back to self (Spec instance). It is built via Spec.build so we're ignoring it
+                '_security_definitions',  # It is a private cached_property so ignore it as users should not be "touching" it
+            }:
+                continue
+
             try:
-                if getattr(self, attr_name) != getattr(other, attr_name):
-                    return False
+                self_attr = getattr(self, attr_name)
+                other_attr = getattr(other, attr_name)
             except AttributeError:
+                return False
+
+            if self_attr != other_attr:
                 return False
 
         return True
