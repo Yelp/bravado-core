@@ -180,7 +180,6 @@ class Spec(object):
 
             # Few attributes have recursive references to Spec
             if attr_name in {
-                'definitions',  # Recursively point back to self (Spec instance). It is built via Spec.build so we're ignoring it
                 '_security_definitions',  # It is a private cached_property so ignore it as users should not be "touching" it
             }:
                 continue
@@ -195,14 +194,21 @@ class Spec(object):
             if attr_name == 'resources':
                 if not is_dict_like(self_attr) or not is_dict_like(other_attr):
                     return False
-
                 for key in set(chain(iterkeys(self_attr), iterkeys(other_attr))):
                     try:
                         if not self_attr[key].is_equal(other_attr[key], ignore_swagger_spec=True):
                             return False
                     except KeyError:
                         return False
-
+            elif attr_name == 'definitions':
+                if not is_dict_like(self_attr) or not is_dict_like(other_attr):
+                    return False
+                for key in set(chain(iterkeys(self_attr), iterkeys(other_attr))):
+                    try:
+                        if not issubclass(other_attr[key], self_attr[key]):
+                            return False
+                    except KeyError:
+                        return False
             elif self_attr != other_attr:
                 return False
 
