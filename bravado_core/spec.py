@@ -24,6 +24,7 @@ from bravado_core import formatter
 from bravado_core.exception import SwaggerSchemaError
 from bravado_core.exception import SwaggerValidationError
 from bravado_core.formatter import return_true_wrapper
+from bravado_core.model import Model
 from bravado_core.model import model_discovery
 from bravado_core.resource import build_resources
 from bravado_core.schema import is_dict_like
@@ -216,7 +217,9 @@ class Spec(object):
                     return False
                 for key in set(chain(iterkeys(self_attr), iterkeys(other_attr))):
                     try:
-                        if not issubclass(other_attr[key], self_attr[key]):
+                        self_definition = self_attr[key]
+                        other_definition = other_attr[key]
+                        if not issubclass(self_definition, Model) or not issubclass(other_definition, self_definition):
                             return False
                     except KeyError:
                         return False

@@ -70,3 +70,31 @@ def test_equality_of_specs_with_recursive_definition(minimal_swagger_dict, minim
         )
 
     assert new_spec().is_equal(new_spec())
+
+
+@pytest.mark.parametrize(
+    '__dict__',
+    [
+        {'resources': []},
+        {'resources': {'tag': None}},
+        {'definitions': []},
+        {'definitions': {'model': Exception}},
+    ],
+)
+def test_equality_early_exit(
+    minimal_swagger_dict, minimal_swagger_abspath, __dict__,
+):
+    # This test is mostly meant to ensure that early exit points of Spec.is_equal are triggered during tests.
+    minimal_swagger_dict['definitions'] = {'model': {'type': 'object'}}
+    minimal_swagger_dict['paths']['/new/path'] = {
+        'get': {
+            'responses': {
+                'default': {'description': ''},
+            },
+            'tags': ['tag'],
+        },
+    }
+    spec = Spec.from_dict(minimal_swagger_dict, origin_url=get_url(minimal_swagger_abspath))
+    other_spec = Spec.from_dict(minimal_swagger_dict, origin_url=get_url(minimal_swagger_abspath))
+    other_spec.__dict__.update(__dict__)
+    assert not spec.is_equal(other_spec)
