@@ -24,6 +24,7 @@ from bravado_core import formatter
 from bravado_core.exception import SwaggerSchemaError
 from bravado_core.exception import SwaggerValidationError
 from bravado_core.formatter import return_true_wrapper
+from bravado_core.model import create_model_type
 from bravado_core.model import Model
 from bravado_core.model import model_discovery
 from bravado_core.resource import build_resources
@@ -243,6 +244,46 @@ class Spec(object):
             setattr(copied_self, attr_name, deepcopy(attr_value, memo=memo))
 
         return copied_self
+
+    def __getstate__(self):
+        state = {
+            k: v
+            for k, v in iteritems(self.__dict__)
+            if k not in (
+                # Exclude resolver as it is not easily pickable. As there are no real
+                # benefits on re-using the same Resolver respect to build a new one
+                # we're going to ignore the field and eventually re-create it if needed
+                # via cached_property
+                'resolver',
+                # Exclude definitions because it contain runtime defined type and those
+                # are not really pickable. Check below for how we're dealing with them
+                'definitions',
+            )
+        }
+
+        # Models are runtime created types and it is not possible to pickle them.
+        # A possible approach, to avoid model discovery, is to save all the models
+        # and the arguments needed to re-create them via create_model_type
+        state['definitions'] = [
+            {
+                'swagger_spec': model._swagger_spec,
+                'model_name': model_name,
+                'model_spec': model._model_spec,
+                'bases': model.__bases__,
+                'json_reference': model._json_reference,
+            }
+            for model_name, model in iteritems(self.definitions)
+        ]
+
+        return state
+
+    def __setstate__(self, state):
+        state['definitions'] = {
+            create_model_type_kwargs['model_name']: create_model_type(**create_model_type_kwargs)
+            for create_model_type_kwargs in state['definitions']
+        }
+        self.__dict__.clear()
+        self.__dict__.update(state)
 
     @cached_property
     def client_spec_dict(self):
