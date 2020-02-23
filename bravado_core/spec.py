@@ -178,10 +178,9 @@ class Spec(object):
             }:
                 continue
 
-            # Few attributes have recursive references to Spec
-            if attr_name in {
-                '_security_definitions',  # It is a private cached_property so ignore it as users should not be "touching" it
-            }:
+            # It has recursive references to Spec and it is not straight-forward defining an equality check to ignore it
+            # As it is a private cached_property we can ignore it as users should not be "touching" it.
+            if attr_name == '_security_definitions':
                 continue
 
             try:
