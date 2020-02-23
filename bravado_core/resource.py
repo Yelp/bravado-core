@@ -101,7 +101,8 @@ class Resource(object):
         self.operations = ops
 
     def __deepcopy__(self, memo=None):
-        if memo is None:
+        # type: (typing.Optional[typing.Dict[int, typing.Any]]) -> 'Resource'
+        if memo is None:  # pragma: no cover  # This should never happening, but better safe than sorry
             memo = {}
         return self.__class__(
             name=deepcopy(self.name, memo=memo),

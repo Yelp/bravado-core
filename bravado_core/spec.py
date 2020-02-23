@@ -229,7 +229,7 @@ class Spec(object):
         return True
 
     def __deepcopy__(self, memo=None):
-        if memo is None:
+        if memo is None:  # pragma: no cover  # This should never happening, but better safe than sorry
             memo = {}
 
         copied_self = self.__class__(spec_dict=None)

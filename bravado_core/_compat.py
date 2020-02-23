@@ -10,7 +10,7 @@ else:  # pragma: no cover  # py3+
 
 try:
     from collections.abc import Mapping  # noqa: F401  # pragma: no cover  # py3.3+
-except ImportError:
+except ImportError:  # pragma: no cover
     from collections import Mapping  # noqa: F401  # py3.2 or older
 
 
