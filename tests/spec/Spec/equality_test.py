@@ -31,3 +31,42 @@ def test_spec_hashability(petstore_spec):
     # The test wants to ensure that a Spec instance is hashable.
     # If calling hash does not throw an exception than we've validated the assumption
     hash(petstore_spec)
+
+
+def test_equality_checks_for_definitions(petstore_spec, petstore_dict, petstore_abspath):
+    petstore_dict['definitions']['new_model'] = {'type': 'object'}
+    other_petstore_spec_instance = Spec.from_dict(petstore_dict, origin_url=get_url(petstore_abspath))
+    assert not petstore_spec.is_equal(other_petstore_spec_instance)
+
+
+def test_equality_checks_for_resources(petstore_spec, petstore_dict, petstore_abspath):
+    petstore_dict['paths']['/new/path'] = {
+        'get': {
+            'responses': {
+                'default': {'description': ''},
+            },
+        },
+    }
+    other_petstore_spec_instance = Spec.from_dict(petstore_dict, origin_url=get_url(petstore_abspath))
+    assert not petstore_spec.is_equal(other_petstore_spec_instance)
+
+
+@pytest.mark.parametrize('internally_dereference_refs', [True, False])
+def test_equality_of_specs_with_recursive_definition(minimal_swagger_dict, minimal_swagger_abspath, internally_dereference_refs):
+    minimal_swagger_dict['definitions']['recursive_definition'] = {
+        'type': 'object',
+        'properties': {
+            'property': {
+                '$ref': '#/definitions/recursive_definition',
+            },
+        },
+    }
+
+    def new_spec():
+        return Spec.from_dict(
+            spec_dict=minimal_swagger_dict,
+            origin_url=get_url(minimal_swagger_abspath),
+            config={'internally_dereference_refs': internally_dereference_refs},
+        )
+
+    assert new_spec().is_equal(new_spec())
