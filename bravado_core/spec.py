@@ -359,11 +359,17 @@ class Spec(object):
         return user_defined_format
 
     @cached_property
+    def _security_definitions(self):
+        # type: () -> typing.Dict[typing.Text, SecurityDefinition]
+        return {
+            security_name: SecurityDefinition(self, security_def)
+            for security_name, security_def in iteritems(self.spec_dict.get('securityDefinitions', {}))
+        }
+
+    @property
     def security_definitions(self):
-        security_defs = {}
-        for security_name, security_def in iteritems(self.spec_dict.get('securityDefinitions', {})):
-            security_defs[security_name] = SecurityDefinition(self, security_def)
-        return security_defs
+        # type: () -> typing.Dict[typing.Text, SecurityDefinition]
+        return self._security_definitions
 
     @cached_property
     def flattened_spec(self):
@@ -383,7 +389,8 @@ class Spec(object):
         )
 
     @cached_property
-    def deref_flattened_spec(self):
+    def _deref_flattened_spec(self):
+        # type: () -> typing.Mapping[typing.Text, typing.Any]
         deref_spec_dict = JsonRef.replace_refs(self.flattened_spec)
 
         @memoize_by_id
@@ -410,7 +417,12 @@ class Spec(object):
             return descend(obj=deref_spec_dict)
         finally:
             # Make sure that all memory allocated, for caching, could be released
-            descend.cache.clear()
+            descend.cache.clear()  # type: ignore  # @memoize_by_id adds cache attribute to the decorated function
+
+    @property
+    def deref_flattened_spec(self):
+        # type: () -> typing.Mapping[typing.Text, typing.Any]
+        return self._deref_flattened_spec
 
 
 def is_yaml(url, content_type=None):
