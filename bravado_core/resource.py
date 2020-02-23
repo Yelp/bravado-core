@@ -126,7 +126,7 @@ class Resource(object):
         """
         return self.operations.keys()
 
-    def is_equal(self, other):
+    def is_equal(self, other, ignore_swagger_spec=False):
         # Not implemented as __eq__ otherwise we would need to implement __hash__ to preserve
         # hashability of the class and it would not necessarily be performance effective
         if id(self) == id(other):
@@ -135,10 +135,14 @@ class Resource(object):
         if not isinstance(other, self.__class__):
             return False
 
-        return (
-            self.name == other.name and
-            all(
-                operation_id in self.operations and self.operations.get(operation_id).is_equal(other.operations.get(operation_id))
-                for operation_id in set(chain(iterkeys(self.operations), iterkeys(other.operations)))
-            )
-        )
+        if self.name != other.name:
+            return False
+
+        for operation_id in set(chain(iterkeys(self.operations), iterkeys(other.operations))):
+            operation = self.operations.get(operation_id)
+            if operation is None or not operation.is_equal(
+                other.operations.get(operation_id), ignore_swagger_spec=ignore_swagger_spec,
+            ):
+                return False
+
+        return True
