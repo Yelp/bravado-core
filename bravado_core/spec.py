@@ -95,6 +95,11 @@ CONFIG_DEFAULTS = {
 }
 
 
+def _identity(obj):
+    # type: (T) -> T
+    return obj
+
+
 class Spec(object):
     """Represents a Swagger Specification for a service.
 
@@ -256,7 +261,7 @@ class Spec(object):
 
         if self.config['internally_dereference_refs']:
             # Avoid to evaluate is_ref every time, no references are possible at this time
-            self.deref = lambda ref_dict: ref_dict
+            self.deref = _identity
             self._internal_spec_dict = self.deref_flattened_spec
 
         for user_defined_format in self.config['formats']:
