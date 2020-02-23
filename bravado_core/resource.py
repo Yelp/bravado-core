@@ -109,6 +109,13 @@ class Resource(object):
             ops=deepcopy(self.operations, memo=memo),
         )
 
+    def __getstate__(self):
+        return self.__dict__
+
+    def __setstate__(self, state):
+        self.__dict__.clear()
+        self.__dict__.update(state)
+
     def __repr__(self):
         return u"%s(%s)" % (self.__class__.__name__, self.name)
 
