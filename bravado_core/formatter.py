@@ -30,7 +30,7 @@ if six.PY3:
     long = int
 
 
-def NO_OP(x):
+def NO_OP(x):  # pragma: no cover
     # type: (T) -> T
     return x
 

@@ -28,7 +28,7 @@ class SecurityDefinition(object):
 
     def __deepcopy__(self, memo=None):
         # type: (typing.Optional[typing.Dict[int, typing.Any]]) -> 'SecurityDefinition'
-        if memo is None:
+        if memo is None:  # pragma: no cover  # This should never happening, but better safe than sorry
             memo = {}
         return self.__class__(
             swagger_spec=deepcopy(self.swagger_spec, memo=memo),

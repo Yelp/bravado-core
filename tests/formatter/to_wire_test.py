@@ -2,10 +2,12 @@
 from datetime import date
 from datetime import datetime
 
+import pytest
 import six
 from mock import patch
 from pytz import timezone
 
+from bravado_core.exception import SwaggerMappingError
 from bravado_core.formatter import SwaggerFormat
 from bravado_core.formatter import to_wire
 from bravado_core.spec import Spec
@@ -162,3 +164,8 @@ def test_override(minimal_swagger_dict):
     assert '8bits' == result
     assert isinstance(result, str)
     assert type(result) is StringType
+
+
+def test_to_wire_with_wrong_format(minimal_swagger_spec):
+    with pytest.raises(SwaggerMappingError, match="Error while marshalling value=random-test to type=string/date."):
+        to_wire(minimal_swagger_spec, {'type': 'string', 'format': 'date'}, 'random-test')

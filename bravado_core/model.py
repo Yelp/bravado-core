@@ -496,7 +496,7 @@ class Model(object):
 
     def __deepcopy__(self, memo=None):
         """Deep copy all properties, but not metadata like the Swagger or Model spec attributes."""
-        if memo is None:
+        if memo is None:  # pragma: no cover  # This should never happening, but better safe than sorry
             memo = {}
         return self.__class__(**deepcopy(self.__dict, memo=memo))
 

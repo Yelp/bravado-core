@@ -24,6 +24,7 @@ from bravado_core import formatter
 from bravado_core.exception import SwaggerSchemaError
 from bravado_core.exception import SwaggerValidationError
 from bravado_core.formatter import return_true_wrapper
+from bravado_core.model import Model
 from bravado_core.model import model_discovery
 from bravado_core.resource import build_resources
 from bravado_core.schema import is_dict_like
@@ -95,6 +96,11 @@ CONFIG_DEFAULTS = {
 }
 
 
+def _identity(obj):
+    # type: (T) -> T
+    return obj
+
+
 class Spec(object):
     """Represents a Swagger Specification for a service.
 
@@ -145,8 +151,20 @@ class Spec(object):
         self._internal_spec_dict = spec_dict
 
     def is_equal(self, other):
-        # Not implemented as __eq__ otherwise we would need to implement __hash__ to preserve
-        # hashability of the class and it would not necessarily be performance effective
+        # type: (typing.Any) -> bool
+        """
+        Compare self with `other`
+
+        NOTE: Not implemented as __eq__ otherwise we would need to implement __hash__ to preserve
+            hashability of the class and it would not necessarily be performance effective
+
+        WARNING: This method operates in "best-effort" mode in the sense that certain attributes are not implementing
+            any equality check and so we're might be ignoring checking them
+
+        :param other: instance to compare self against
+
+        :return: True if self and other are the same, False otherwise
+        """
         if id(self) == id(other):
             return True
 
@@ -155,31 +173,63 @@ class Spec(object):
 
         # If self and other are of the same type but not pointing to the same memory location then we're going to inspect
         # all the attributes.
-        for attr_name in set(
-            chain(
-                iterkeys(self.__dict__),
-                iterkeys(other.__dict__),
-            ),
-        ):
-            # Few attributes have recursive references to Spec or do not define an equality method we're going to ignore them
+        for attr_name in set(chain(iterkeys(self.__dict__), iterkeys(other.__dict__))):
+            # Some attributes do not define equality methods.
+            # As those attributes are defined internally only we do not expect that users of the library are modifying them.
             if attr_name in {
-                'definitions',  # Recursively point back to self (Spec instance). It is built via Spec.build so we're ignoring it
-                'format_checker',  # jsonschema.FormatChecker does not define an equality method
-                'resolver',  # jsonschema.validators.RefResolver does not define an equality method
-                'resources',  # Recursively point back to self (Spec instance). It is built via Spec.build so we're ignoring it
-                'security_definitions',  # Recursively point back to self (Spec instance). It is a cached property so ignore it
+                'format_checker',   # jsonschema.FormatChecker does not define an equality method
+                'resolver',         # jsonschema.validators.RefResolver does not define an equality method
             }:
                 continue
+
+            # In case of fully dereferenced specs _deref_flattened_spec (and consequently _internal_spec_dict) will contain
+            # recursive reference to objects. Python is not capable of comparing them (weird).
+            # As _internal_spec_dict and _deref_flattened_spec are private so we don't expect users modifying them.
+            if self.config['internally_dereference_refs'] and attr_name in {
+                '_internal_spec_dict',
+                '_deref_flattened_spec',
+            }:
+                continue
+
+            # It has recursive references to Spec and it is not straight-forward defining an equality check to ignore it
+            # As it is a private cached_property we can ignore it as users should not be "touching" it.
+            if attr_name == '_security_definitions':
+                continue
+
             try:
-                if getattr(self, attr_name) != getattr(other, attr_name):
-                    return False
+                self_attr = getattr(self, attr_name)
+                other_attr = getattr(other, attr_name)
             except AttributeError:
+                return False
+
+            # Define some special exception handling for attributes that have recursive reference to self.
+            if attr_name == 'resources':
+                if not is_dict_like(self_attr) or not is_dict_like(other_attr):
+                    return False
+                for key in set(chain(iterkeys(self_attr), iterkeys(other_attr))):
+                    try:
+                        if not self_attr[key].is_equal(other_attr[key], ignore_swagger_spec=True):
+                            return False
+                    except KeyError:
+                        return False
+            elif attr_name == 'definitions':
+                if not is_dict_like(self_attr) or not is_dict_like(other_attr):
+                    return False
+                for key in set(chain(iterkeys(self_attr), iterkeys(other_attr))):
+                    try:
+                        self_definition = self_attr[key]
+                        other_definition = other_attr[key]
+                        if not issubclass(self_definition, Model) or not issubclass(other_definition, self_definition):
+                            return False
+                    except KeyError:
+                        return False
+            elif self_attr != other_attr:
                 return False
 
         return True
 
     def __deepcopy__(self, memo=None):
-        if memo is None:
+        if memo is None:  # pragma: no cover  # This should never happening, but better safe than sorry
             memo = {}
 
         copied_self = self.__class__(spec_dict=None)
@@ -256,7 +306,7 @@ class Spec(object):
 
         if self.config['internally_dereference_refs']:
             # Avoid to evaluate is_ref every time, no references are possible at this time
-            self.deref = lambda ref_dict: ref_dict
+            self.deref = _identity
             self._internal_spec_dict = self.deref_flattened_spec
 
         for user_defined_format in self.config['formats']:
@@ -359,11 +409,17 @@ class Spec(object):
         return user_defined_format
 
     @cached_property
+    def _security_definitions(self):
+        # type: () -> typing.Dict[typing.Text, SecurityDefinition]
+        return {
+            security_name: SecurityDefinition(self, security_def)
+            for security_name, security_def in iteritems(self.spec_dict.get('securityDefinitions', {}))
+        }
+
+    @property
     def security_definitions(self):
-        security_defs = {}
-        for security_name, security_def in iteritems(self.spec_dict.get('securityDefinitions', {})):
-            security_defs[security_name] = SecurityDefinition(self, security_def)
-        return security_defs
+        # type: () -> typing.Dict[typing.Text, SecurityDefinition]
+        return self._security_definitions
 
     @cached_property
     def flattened_spec(self):
@@ -383,7 +439,8 @@ class Spec(object):
         )
 
     @cached_property
-    def deref_flattened_spec(self):
+    def _deref_flattened_spec(self):
+        # type: () -> typing.Mapping[typing.Text, typing.Any]
         deref_spec_dict = JsonRef.replace_refs(self.flattened_spec)
 
         @memoize_by_id
@@ -410,7 +467,12 @@ class Spec(object):
             return descend(obj=deref_spec_dict)
         finally:
             # Make sure that all memory allocated, for caching, could be released
-            descend.cache.clear()
+            descend.cache.clear()  # type: ignore  # @memoize_by_id adds cache attribute to the decorated function
+
+    @property
+    def deref_flattened_spec(self):
+        # type: () -> typing.Mapping[typing.Text, typing.Any]
+        return self._deref_flattened_spec
 
 
 def is_yaml(url, content_type=None):

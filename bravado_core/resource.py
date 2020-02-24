@@ -4,6 +4,7 @@ from collections import defaultdict
 from copy import deepcopy
 from itertools import chain
 
+import typing
 from six import iteritems
 from six import iterkeys
 
@@ -100,7 +101,8 @@ class Resource(object):
         self.operations = ops
 
     def __deepcopy__(self, memo=None):
-        if memo is None:
+        # type: (typing.Optional[typing.Dict[int, typing.Any]]) -> 'Resource'
+        if memo is None:  # pragma: no cover  # This should never happening, but better safe than sorry
             memo = {}
         return self.__class__(
             name=deepcopy(self.name, memo=memo),
@@ -126,19 +128,34 @@ class Resource(object):
         """
         return self.operations.keys()
 
-    def is_equal(self, other):
-        # Not implemented as __eq__ otherwise we would need to implement __hash__ to preserve
-        # hashability of the class and it would not necessarily be performance effective
+    def is_equal(self, other, ignore_swagger_spec=False):
+        # type: (typing.Any, bool) -> bool
+        """
+        Compare self with `other`
+
+        NOTE: Not implemented as __eq__ otherwise we would need to implement __hash__ to preserve
+            hashability of the class and it would not necessarily be performance effective
+
+        :param other: instance to compare self against
+        :param ignore_swagger_spec: skip equality check of swagger_spec attribute.
+            This is useful as equality checks do not play well with recursive definitions.
+
+        :return: True if self and other are the same, False otherwise
+        """
         if id(self) == id(other):
             return True
 
         if not isinstance(other, self.__class__):
             return False
 
-        return (
-            self.name == other.name and
-            all(
-                operation_id in self.operations and self.operations.get(operation_id).is_equal(other.operations.get(operation_id))
-                for operation_id in set(chain(iterkeys(self.operations), iterkeys(other.operations)))
-            )
-        )
+        if self.name != other.name:
+            return False
+
+        for operation_id in set(chain(iterkeys(self.operations), iterkeys(other.operations))):
+            operation = self.operations.get(operation_id)
+            if operation is None or not operation.is_equal(
+                other.operations.get(operation_id), ignore_swagger_spec=ignore_swagger_spec,
+            ):
+                return False
+
+        return True
