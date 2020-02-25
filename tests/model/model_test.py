@@ -150,8 +150,13 @@ def test_model_deepcopy(user_type, user_kwargs):
     user_copy = deepcopy(user)
 
     assert isinstance(user_copy, user_type)
+    assert id(user) != id(user_copy)
     assert user == user_copy
     assert user._as_dict() == user_copy._as_dict()
+
+    user.firstName = 'An other name'
+    assert user.firstName == 'An other name'
+    assert user_copy.firstName != 'An other name'
 
 
 @pytest.mark.parametrize(
