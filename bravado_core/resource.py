@@ -7,16 +7,23 @@ from itertools import chain
 import typing
 from six import iteritems
 from six import iterkeys
+from six import PY2
 
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.operation import Operation
 from bravado_core.util import AliasKeyDict
 from bravado_core.util import sanitize_name
 
+
+if getattr(typing, 'TYPE_CHECKING', False):
+    from bravado_core.spec import Spec
+
+
 log = logging.getLogger(__name__)
 
 
 def convert_path_to_resource(path_name):
+    # type: (typing.Text) -> typing.Text
     """
     Given a path name (#/paths/{path_name}) try to convert it into a resource
     name on a best effort basis when an operation has no tags.
@@ -40,6 +47,7 @@ def convert_path_to_resource(path_name):
 
 
 def build_resources(swagger_spec):
+    # type: (Spec) -> AliasKeyDict
     """Transforms the REST resources in the json-like swagger_spec into rich
     :Resource: objects that have associated :Operation:s.
 
@@ -52,7 +60,7 @@ def build_resources(swagger_spec):
     # - If an operation has no tags, its resource name will be derived from its
     #   path
     # key = tag_name   value = { operation_id : Operation }
-    tag_to_ops = defaultdict(dict)
+    tag_to_ops = defaultdict(dict)  # type: typing.DefaultDict[typing.Text, typing.Dict[typing.Text, Operation]]
     deref = swagger_spec.deref
     spec_dict = deref(swagger_spec._internal_spec_dict)
     paths_spec = deref(spec_dict.get('paths', {}))
@@ -96,6 +104,7 @@ class Resource(object):
     """
 
     def __init__(self, name, ops):
+        # type: (typing.Text, typing.Mapping[typing.Text, Operation]) -> None
         log.debug(u"Building resource '%s'", name)
         self.name = name
         self.operations = ops
@@ -110,9 +119,15 @@ class Resource(object):
         )
 
     def __repr__(self):
-        return u"%s(%s)" % (self.__class__.__name__, self.name)
+        # type: () -> str
+        repr = u"{self.__class__.__name__}({self.name})".format(self=self)
+        if PY2:
+            return repr.encode('ascii', 'backslashreplace')
+        else:
+            return repr
 
     def __getattr__(self, item):
+        # type: (typing.Text) -> Operation
         """
         :param item: name of the operation to return
         :rtype: :class:`bravado_core.operation.Operation`
@@ -123,6 +138,7 @@ class Resource(object):
         return op
 
     def __dir__(self):
+        # type: () -> typing.Iterable[typing.Text]
         """
         :return: list of operation names
         """

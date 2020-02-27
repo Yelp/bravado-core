@@ -4,6 +4,7 @@ from functools import partial
 
 import simplejson as json
 import six
+import typing
 from six.moves.urllib.parse import quote
 
 from bravado_core import schema
@@ -12,6 +13,13 @@ from bravado_core.exception import SwaggerMappingError
 from bravado_core.marshal import marshal_schema_object
 from bravado_core.unmarshal import unmarshal_schema_object
 from bravado_core.validate import validate_schema_object
+
+
+if getattr(typing, 'TYPE_CHECKING', False):
+    from bravado_core.operation import Operation
+    from bravado_core.spec import Spec
+    from bravado_core._compat_typing import JSONDict
+
 
 log = logging.getLogger(__name__)
 
@@ -42,6 +50,7 @@ class Param(object):
     """
 
     def __init__(self, swagger_spec, op, param_spec):
+        # type: (Spec, Operation, JSONDict) -> None
         self.op = op
         self.swagger_spec = swagger_spec
         self.param_spec = swagger_spec.deref(param_spec)
