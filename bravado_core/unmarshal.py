@@ -293,15 +293,18 @@ def _unmarshal_object(
             return unmarshal_func(model_value)
 
     unmarshaled_value = model_type()
+    unmarshaled_attributes = set()
     for property_name, property_value in iteritems(model_value):
         unmarshaling_function = properties_to_unmarshaling_function.get(
             property_name, additional_properties_unmarshaling_function,
         )
         unmarshaled_value[property_name] = unmarshaling_function(property_value)
+        unmarshaled_attributes.add(property_name)
 
     if swagger_spec.config['include_missing_properties']:
         for property_name, unmarshaling_function in iteritems(properties_to_unmarshaling_function):
-            if property_name not in unmarshaled_value:
+            # if property_name not in unmarshaled_value:
+            if property_name not in unmarshaled_attributes:
                 unmarshaled_value[property_name] = properties_to_default_value.get(property_name)
 
     return unmarshaled_value
