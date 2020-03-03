@@ -3,12 +3,13 @@ import abc
 import functools
 import logging
 import re
-from copy import deepcopy
+from itertools import chain
 from warnings import warn
 
 import typing
 from six import add_metaclass
 from six import iteritems
+from six import iterkeys
 from six import string_types
 from swagger_spec_validator.ref_validators import attach_scope
 
@@ -271,8 +272,11 @@ class ModelMeta(abc.ABCMeta):
         return is_subclass
 
 
+_NOT_FOUND = object()
+
+
 @add_metaclass(ModelMeta)
-class Model(object):
+class Model(dict):
     """Base class for Swagger models.
 
     Attribute access:
@@ -327,71 +331,30 @@ class Model(object):
 
     """
 
-    # Implementation details:
-    #
-    # Property value are stored in the __dict attribute. It would have also
-    # been possible to use the instance's __dict__ itself except that then
-    # __getattribute__ would have to have been overridden instead of
-    # __getattr__.
+    _swagger_spec = None  # type: typing.ClassVar[Spec]
+    _model_spec = None  # type: typing.ClassVar[JSONDict]
+    _json_reference = None  # type: typing.ClassVar[str]
 
-    # Use slots to reduce memory footprint of the Model instance
-    __slots__ = (
-        '_Model__dict',  # Note the name mangling!
-    )
-
-    _swagger_spec = None  # type: Spec
-    _model_spec = None  # type: JSONDict
-    _json_reference = None  # type: str
-
-    def __init__(self, **kwargs):
-        """Initialize from property values in keyword arguments.
-
-        :param \\**kwargs: Property values by name.
-        """
-        self.__init_from_dict(kwargs)
-
-    def __init_from_dict(self, dct, include_missing_properties=None):
-        """Initialize model from a dictionary of property values.
-
-        :param dict dct: Dictionary of property values by name. They need not
-            actually exist in :attr:`_properties`.
-        """
-        if include_missing_properties is None:
-            include_missing_properties = self._swagger_spec.config['include_missing_properties']
-
-        # Create the attribute value dictionary
-        # We need bypass the overloaded __setattr__ method
-        # Note the name mangling!
-        object.__setattr__(self, '_Model__dict', dict())
-
-        # Additional property names in dct
-        additional = set(dct).difference(self._properties)
-
-        if additional and self._model_spec.get('additionalProperties') is False:
-            raise AttributeError(
-                "Model {0} does not have attributes for: {1}".format(
-                    type(self), list(additional),
-                ),
-            )
-
-        # Assign properties in model_spec, filling in None if missing from dct
-        for attr_name in self._properties:
-            if include_missing_properties or attr_name in dct:
-                self.__dict[attr_name] = dct.get(attr_name)
-
-        # we've got additionalProperties to set on the model
-        for attr_name in additional:
-            self.__dict[attr_name] = dct[attr_name]
+    def __init__(self, *args, **kwargs):
+        dict.__init__(self, *args, **kwargs)
+        if self._model_spec.get('additionalProperties') is False:
+            additional_properties = self._additional_props
+            if additional_properties:
+                raise AttributeError(
+                    "Model {0} does not have attributes for: {1}".format(
+                        type(self), list(additional_properties),
+                    ),
+                )
 
     @lazy_class_attribute
-    def _properties(self):
-        return collapsed_properties(self._model_spec, self._swagger_spec)
+    def _properties(cls):
+        return collapsed_properties(cls._model_spec, cls._swagger_spec)
 
     @lazy_class_attribute
-    def _inherits_from(self):
+    def _inherits_from(cls):
         inherits_from_generator = (
-            _get_model_name(self._swagger_spec.deref(schema))
-            for schema in self._model_spec.get('allOf', [])
+            _get_model_name(cls._swagger_spec.deref(schema))
+            for schema in cls._model_spec.get('allOf', [])
         )
 
         return [
@@ -399,14 +362,6 @@ class Model(object):
             for inherits_from in inherits_from_generator
             if inherits_from is not None
         ]
-
-    def __contains__(self, obj):
-        """Has a property set (including additional)."""
-        return obj in self.__dict
-
-    def __iter__(self):
-        """Iterate over property names (including additional)."""
-        return iter(self.__dict)
 
     def __getattr__(self, attr_name):
         """Only search through properties if attribute not found normally.
@@ -439,32 +394,14 @@ class Model(object):
         except KeyError:
             raise AttributeError(attr_name)
 
-    def __getitem__(self, property_name):
-        """Get a property value by name.
-
-        :type property_name: str
-        """
-        return self.__dict[property_name]
-
-    def __setitem__(self, property_name, val):
-        """Set a property value by name.
-
-        :type property_name: str
-        """
-        self.__dict[property_name] = val
-
-    def __delitem__(self, property_name):
-        """Unset a property by name.
-
-        Properties defined in the spec will be set to ``None``.
-        Additional properties will be completely removed.
-
-        :type property_name: str
-        """
-        if property_name in self._properties:
-            self.__dict[property_name] = None
-        else:
-            del self.__dict[property_name]
+    def __getitem__(self, item):
+        try:
+            return dict.__getitem__(self, item)
+        except KeyError:
+            if self.__class__._swagger_spec.config['include_missing_properties'] and item in self.__class__._properties:
+                return None
+            else:
+                raise
 
     def __eq__(self, other):
         """Check for equality with another instance.
@@ -474,36 +411,44 @@ class Model(object):
         """
         if not isinstance(other, self.__class__):
             return False
-
-        # Ignore any '_raw' keys
-        def norm_dict(d):
-            return dict((k, d[k]) for k in d if k != '_raw')
-
-        return norm_dict(self.__dict) == norm_dict(other.__dict)
+        else:
+            return dict.__eq__(self, other)
 
     def __dir__(self):
         """Return only property names (including additional)."""
-        return sorted(self.__dict.keys())
+        return sorted(iter(self))
+
+    def __iter__(self):
+        return iter(set(chain(iterkeys(self.__class__._properties), iterkeys(self))))
+
+    def __contains__(self, item):
+        if dict.__contains__(self, item):
+            return True
+        else:
+            return item in self.__class__._properties
 
     def __repr__(self):
         """Return properties (including additional)."""
-        s = [
-            "{0}={1!r}".format(attr_name, self[attr_name])
-            for attr_name in sorted(self.__dict.keys())
-            if attr_name in self
-        ]
-        return "{0}({1})".format(self.__class__.__name__, ', '.join(s))
+        string_builder = []
 
-    def __deepcopy__(self, memo=None):
-        """Deep copy all properties, but not metadata like the Swagger or Model spec attributes."""
-        if memo is None:  # pragma: no cover  # This should never happening, but better safe than sorry
-            memo = {}
-        return self.__class__(**deepcopy(self.__dict, memo=memo))
+        # NOTE: Using `dir(self)` is suboptimal as we don't have direct access to all the properties
+        # but we need to calculate them. We tend to use repr only for debugging purposes and/or REPL,
+        # so a small performance degradation here should not be a big deal
+        for attr_name in dir(self):
+            try:
+                string_builder.append("{0}={1!r}".format(attr_name, self[attr_name]))
+            except KeyError:
+                pass
+        return "{0}({1})".format(self.__class__.__name__, ', '.join(string_builder))
 
     @property
     def _additional_props(self):
         """Names of properties in instance which are not defined in spec."""
-        return set(self.__dict).difference(self._properties)
+        return set(
+            key
+            for key in self
+            if key not in self.__class__._properties
+        )
 
     def _as_dict(self, additional_properties=True, recursive=True):
         """Get property values as dictionary.
@@ -516,28 +461,40 @@ class Model(object):
         :rtype: dict
         """
 
-        dct = dict()
-        for attr_name, attr_val in iteritems(self.__dict):
-            if attr_name not in self._properties and not additional_properties:
-                continue
+        def _get_property(property_name):
+            try:
+                property_value = self[property_name]
+            except KeyError:
+                property_value = None
 
             if recursive:
-                is_list = is_list_like(attr_val)
-
-                attribute = attr_val if is_list else [attr_val]
-
-                new_attr_val = []
-                for attr in attribute:
-                    if isinstance(attr, Model):
-                        attr = attr._as_dict(
+                if is_list_like(property_value):
+                    return [
+                        item._as_dict(
                             additional_properties=additional_properties,
                             recursive=recursive,
-                        )
-                    new_attr_val.append(attr)
+                        ) if isinstance(item, Model) else item
+                        for item in property_value
+                    ]
+                else:
+                    return property_value._as_dict(
+                        additional_properties=additional_properties,
+                        recursive=recursive,
+                    ) if isinstance(property_value, Model) else property_value
+            else:
+                return property_value
 
-                attr_val = new_attr_val if is_list else new_attr_val[0]
+        dct = {
+            prop_name: _get_property(prop_name)
+            for prop_name in self.__class__._properties
+        }
 
-            dct[attr_name] = attr_val
+        if additional_properties:
+            for prop_name, attr_val in iteritems(self):
+                if prop_name in self.__class__._properties:
+                    continue
+
+                dct[prop_name] = _get_property(prop_name)
 
         return dct
 
@@ -554,12 +511,11 @@ class Model(object):
         :param dict dct: Property values by name.
         :rtype: .Model
         """
-        model = object.__new__(cls)
-        model.__init_from_dict(
-            dct=dct,
-            include_missing_properties=cls._swagger_spec.config['include_missing_properties'],
+        warn(
+            "{}.{} does extend dict - You use default constructor".format(cls.__module__, cls.__name__, ),
+            DeprecationWarning,
         )
-        return model
+        return cls(dct)
 
     def marshal(self):
         warn(
@@ -814,6 +770,7 @@ def _post_process_spec(spec_dict, spec_resolver, on_container_callbacks):
                 fragment=fragment,
                 json_reference=json_reference,
             )
+
         return wrapper
 
     @skip_already_visited_fragments
