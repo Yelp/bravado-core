@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import pytest
-
 from bravado_core.schema import collapsed_properties
 
 
@@ -52,16 +50,6 @@ def test_additionalProperties_true(definitions_spec, user_type, user_kwargs):
     assert user.foo == 'bar'
     assert 'foo' in dir(user)
     assert set(user) == set(definitions_spec['User']['properties'].keys()).union({'foo'})
-
-
-def test_additionalProperties_false(user_type, user_kwargs):
-    # verify exra kwargs are caught during model construction when
-    # additionalProperties is False
-    user_type._model_spec['additionalProperties'] = False
-    user_kwargs['foo'] = 'bar'  # additional prop
-    with pytest.raises(AttributeError) as excinfo:
-        user_type(**user_kwargs)
-    assert "does not have attributes for: ['foo']" in str(excinfo.value)
 
 
 def test_allOf(cat_swagger_spec, cat_type, cat_kwargs):

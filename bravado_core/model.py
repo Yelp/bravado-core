@@ -335,17 +335,6 @@ class Model(dict):
     _model_spec = None  # type: typing.ClassVar[JSONDict]
     _json_reference = None  # type: typing.ClassVar[str]
 
-    def __init__(self, *args, **kwargs):
-        dict.__init__(self, *args, **kwargs)
-        if self._model_spec.get('additionalProperties') is False:
-            additional_properties = self._additional_props
-            if additional_properties:
-                raise AttributeError(
-                    "Model {0} does not have attributes for: {1}".format(
-                        type(self), list(additional_properties),
-                    ),
-                )
-
     @lazy_class_attribute
     def _properties(cls):
         return collapsed_properties(cls._model_spec, cls._swagger_spec)
