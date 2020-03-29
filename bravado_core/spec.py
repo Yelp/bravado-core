@@ -24,9 +24,10 @@ from bravado_core import formatter
 from bravado_core.exception import SwaggerSchemaError
 from bravado_core.exception import SwaggerValidationError
 from bravado_core.formatter import return_true_wrapper
-from bravado_core.model import create_model_type
+from bravado_core.model import from_pickable_representation
 from bravado_core.model import Model
 from bravado_core.model import model_discovery
+from bravado_core.model import to_pickable_representation
 from bravado_core.resource import build_resources
 from bravado_core.schema import is_dict_like
 from bravado_core.schema import is_list_like
@@ -256,31 +257,28 @@ class Spec(object):
                 # via cached_property
                 'resolver',
                 # Exclude definitions because it contain runtime defined type and those
-                # are not really pickable. Check below for how we're dealing with them
+                # are not directly pickable.
+                # Check bravado_core.model.to_pickable_representation for details.
                 'definitions',
             )
         }
 
-        # Models are runtime created types and it is not possible to pickle them.
-        # A possible approach, to avoid model discovery, is to save all the models
-        # and the arguments needed to re-create them via create_model_type
-        state['definitions'] = [
-            {
-                'swagger_spec': model._swagger_spec,
-                'model_name': model_name,
-                'model_spec': model._model_spec,
-                'bases': model.__bases__,
-                'json_reference': model._json_reference,
-            }
-            for model_name, model in iteritems(self.definitions)
-        ]
+        # A possible approach would be to re-execute model discovery on the newly Spec
+        # instance (in __setstate__) but it would be very slow.
+        # To avoid model discovery we store a pickable representation of the Model types
+        # such that we can re-create them.
+        state['definitions'] = {
+            model_name: to_pickable_representation(model_name, model_type)
+            for model_name, model_type in iteritems(self.definitions)
+        }
 
         return state
 
     def __setstate__(self, state):
+        # Re-create Model types, avoiding model discovery
         state['definitions'] = {
-            create_model_type_kwargs['model_name']: create_model_type(**create_model_type_kwargs)
-            for create_model_type_kwargs in state['definitions']
+            model_name: from_pickable_representation(pickable_representation)
+            for model_name, pickable_representation in iteritems(state['definitions'])
         }
         self.__dict__.clear()
         self.__dict__.update(state)

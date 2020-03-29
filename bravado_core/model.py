@@ -923,3 +923,37 @@ def model_discovery(swagger_spec):
         # this ensures that the generated models have no references
         _run_post_processing(tmp_spec)
         swagger_spec.definitions = tmp_spec.definitions
+
+
+def to_pickable_representation(model_name, model_type):
+    # type: (typing.Text, typing.Type[Model]) -> typing.Dict[typing.Text, typing.Any]
+    """
+    Extract a pickable representation of the input Model type.
+
+    Model types are runtime created types and so they are not pickable.
+    In order to workaround this limitation we extract a representation,
+    which is pickable such that we can re-create the input Model type
+    (via ``from_pickable_representation``).
+
+    NOTE:   This API should not be considered a public API and is meant
+            only to be used by bravado_core.spec.Spec.__getstate__ .
+    """
+    return {
+        'swagger_spec': model_type._swagger_spec,
+        'model_name': model_name,
+        'model_spec': model_type._model_spec,
+        'bases': model_type.__bases__,
+        'json_reference': model_type._json_reference,
+    }
+
+
+def from_pickable_representation(model_pickable_representation):
+    # type: (typing.Dict[typing.Text, typing.Any]) -> typing.Type[Model]
+    """
+    Re-Create Model type form its pickable representation
+    ``model_pickable_representation`` is supposed to be the output of ``to_pickable_representation``.
+
+    NOTE:   This API should not be considered a public API and is meant
+            only to be used by bravado_core.spec.Spec.__getstate__ .
+    """
+    return create_model_type(**model_pickable_representation)
