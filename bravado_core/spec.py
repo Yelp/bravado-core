@@ -21,6 +21,7 @@ from swagger_spec_validator import validator20
 from swagger_spec_validator.ref_validators import in_scope
 
 from bravado_core import formatter
+from bravado_core import version as _version
 from bravado_core.exception import SwaggerSchemaError
 from bravado_core.exception import SwaggerValidationError
 from bravado_core.formatter import return_true_wrapper
@@ -271,10 +272,24 @@ class Spec(object):
             model_name: to_pickable_representation(model_name, model_type)
             for model_name, model_type in iteritems(self.definitions)
         }
-
+        # Store the bravado-core version used to create the Spec state
+        state['__bravado_core_version__'] = _version
         return state
 
     def __setstate__(self, state):
+        state_version = state.pop('__bravado_core_version__')
+        if state_version != _version:
+            warnings.warn(
+                'You are creating a Spec instance from a state created by a different '
+                'bravado-core version. We are not going to guarantee that the created '
+                'Spec instance will be correct. '
+                'State created by version {state_version}, current version {_version}'.format(
+                    state_version=state_version,
+                    _version=_version,
+                ),
+                category=UserWarning,
+            )
+
         # Re-create Model types, avoiding model discovery
         state['definitions'] = {
             model_name: from_pickable_representation(pickable_representation)

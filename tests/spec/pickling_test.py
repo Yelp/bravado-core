@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import mock
 import pytest
 from six.moves.cPickle import dumps
 from six.moves.cPickle import loads
@@ -19,3 +20,12 @@ def test_ensure_spec_is_pickable(petstore_dict, petstore_abspath, internally_der
         },
     )
     assert spec.is_equal(loads(dumps(spec)))
+
+
+def test_ensure_warning_presence_in_case_of_version_mismatch(petstore_spec):
+    with mock.patch('bravado_core.spec._version', '0.0.0'):
+        petstore_pickle = dumps(petstore_spec)
+
+    with pytest.warns(UserWarning, match='different bravado-core version.*created by version 0.0.0, current version'):
+        restored_petstore_spec = loads(petstore_pickle)
+    assert petstore_spec.is_equal(restored_petstore_spec)
