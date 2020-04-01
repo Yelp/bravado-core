@@ -10,7 +10,7 @@ from tests.conftest import get_url
 
 @pytest.mark.parametrize('validate_swagger_spec', [True, False])
 @pytest.mark.parametrize('internally_dereference_refs', [True, False])
-def test_ensure_spec_is_pickable(petstore_dict, petstore_abspath, internally_dereference_refs, validate_swagger_spec):
+def test_ensure_spec_is_pickleable(petstore_dict, petstore_abspath, internally_dereference_refs, validate_swagger_spec):
     spec = Spec.from_dict(
         spec_dict=petstore_dict,
         origin_url=get_url(petstore_abspath),

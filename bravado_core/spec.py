@@ -25,10 +25,10 @@ from bravado_core import version as _version
 from bravado_core.exception import SwaggerSchemaError
 from bravado_core.exception import SwaggerValidationError
 from bravado_core.formatter import return_true_wrapper
-from bravado_core.model import from_pickable_representation
+from bravado_core.model import from_pickleable_representation
 from bravado_core.model import Model
 from bravado_core.model import model_discovery
-from bravado_core.model import to_pickable_representation
+from bravado_core.model import to_pickleable_representation
 from bravado_core.resource import build_resources
 from bravado_core.schema import is_dict_like
 from bravado_core.schema import is_list_like
@@ -252,24 +252,24 @@ class Spec(object):
             k: v
             for k, v in iteritems(self.__dict__)
             if k not in (
-                # Exclude resolver as it is not easily pickable. As there are no real
+                # Exclude resolver as it is not easily pickleable. As there are no real
                 # benefits on re-using the same Resolver respect to build a new one
                 # we're going to ignore the field and eventually re-create it if needed
                 # via cached_property
                 'resolver',
                 # Exclude definitions because it contain runtime defined type and those
-                # are not directly pickable.
-                # Check bravado_core.model.to_pickable_representation for details.
+                # are not directly pickleable.
+                # Check bravado_core.model.to_pickleable_representation for details.
                 'definitions',
             )
         }
 
         # A possible approach would be to re-execute model discovery on the newly Spec
         # instance (in __setstate__) but it would be very slow.
-        # To avoid model discovery we store a pickable representation of the Model types
+        # To avoid model discovery we store a pickleable representation of the Model types
         # such that we can re-create them.
         state['definitions'] = {
-            model_name: to_pickable_representation(model_name, model_type)
+            model_name: to_pickleable_representation(model_name, model_type)
             for model_name, model_type in iteritems(self.definitions)
         }
         # Store the bravado-core version used to create the Spec state
@@ -292,8 +292,8 @@ class Spec(object):
 
         # Re-create Model types, avoiding model discovery
         state['definitions'] = {
-            model_name: from_pickable_representation(pickable_representation)
-            for model_name, pickable_representation in iteritems(state['definitions'])
+            model_name: from_pickleable_representation(pickleable_representation)
+            for model_name, pickleable_representation in iteritems(state['definitions'])
         }
         self.__dict__.clear()
         self.__dict__.update(state)
