@@ -925,7 +925,7 @@ def model_discovery(swagger_spec):
         swagger_spec.definitions = tmp_spec.definitions
 
 
-def to_pickleable_representation(model_name, model_type):
+def _to_pickleable_representation(model_name, model_type):
     # type: (typing.Text, typing.Type[Model]) -> typing.Dict[typing.Text, typing.Any]
     """
     Extract a pickleable representation of the input Model type.
@@ -933,7 +933,7 @@ def to_pickleable_representation(model_name, model_type):
     Model types are runtime created types and so they are not pickleable.
     In order to workaround this limitation we extract a representation,
     which is pickleable such that we can re-create the input Model type
-    (via ``from_pickleable_representation``).
+    (via ``_from_pickleable_representation``).
 
     NOTE:   This API should not be considered a public API and is meant
             only to be used by bravado_core.spec.Spec.__getstate__ .
@@ -947,11 +947,11 @@ def to_pickleable_representation(model_name, model_type):
     }
 
 
-def from_pickleable_representation(model_pickleable_representation):
+def _from_pickleable_representation(model_pickleable_representation):
     # type: (typing.Dict[typing.Text, typing.Any]) -> typing.Type[Model]
     """
     Re-Create Model type form its pickleable representation
-    ``model_pickleable_representation`` is supposed to be the output of ``to_pickleable_representation``.
+    ``model_pickleable_representation`` is supposed to be the output of ``_to_pickleable_representation``.
 
     NOTE:   This API should not be considered a public API and is meant
             only to be used by bravado_core.spec.Spec.__getstate__ .
