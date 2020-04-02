@@ -21,9 +21,12 @@ from swagger_spec_validator import validator20
 from swagger_spec_validator.ref_validators import in_scope
 
 from bravado_core import formatter
+from bravado_core import version as _version
 from bravado_core.exception import SwaggerSchemaError
 from bravado_core.exception import SwaggerValidationError
 from bravado_core.formatter import return_true_wrapper
+from bravado_core.model import _from_pickleable_representation
+from bravado_core.model import _to_pickleable_representation
 from bravado_core.model import Model
 from bravado_core.model import model_discovery
 from bravado_core.resource import build_resources
@@ -140,15 +143,18 @@ class Spec(object):
         self.user_defined_formats = {}
         self.format_checker = FormatChecker()
 
-        self.resolver = RefResolver(
-            base_uri=origin_url or '',
-            referrer=self.spec_dict,
-            handlers=self.get_ref_handlers(),
-        )
-
         # spec dict used to build resources, in case internally_dereference_refs config is enabled
         # it will be overridden by the dereferenced specs (by build method). More context in PR#263
         self._internal_spec_dict = spec_dict
+
+    @cached_property
+    def resolver(self):
+        # type: () -> RefResolver
+        return RefResolver(
+            base_uri=self.origin_url or '',
+            referrer=self.spec_dict,
+            handlers=self.get_ref_handlers(),
+        )
 
     def is_equal(self, other):
         # type: (typing.Any) -> bool
@@ -240,6 +246,57 @@ class Spec(object):
             setattr(copied_self, attr_name, deepcopy(attr_value, memo=memo))
 
         return copied_self
+
+    def __getstate__(self):
+        state = {
+            k: v
+            for k, v in iteritems(self.__dict__)
+            if k not in (
+                # Exclude resolver as it is not easily pickleable. As there are no real
+                # benefits on re-using the same Resolver respect to build a new one
+                # we're going to ignore the field and eventually re-create it if needed
+                # via cached_property
+                'resolver',
+                # Exclude definitions because it contain runtime defined type and those
+                # are not directly pickleable.
+                # Check bravado_core.model._to_pickleable_representation for details.
+                'definitions',
+            )
+        }
+
+        # A possible approach would be to re-execute model discovery on the newly Spec
+        # instance (in __setstate__) but it would be very slow.
+        # To avoid model discovery we store a pickleable representation of the Model types
+        # such that we can re-create them.
+        state['definitions'] = {
+            model_name: _to_pickleable_representation(model_name, model_type)
+            for model_name, model_type in iteritems(self.definitions)
+        }
+        # Store the bravado-core version used to create the Spec state
+        state['__bravado_core_version__'] = _version
+        return state
+
+    def __setstate__(self, state):
+        state_version = state.pop('__bravado_core_version__')
+        if state_version != _version:
+            warnings.warn(
+                'You are creating a Spec instance from a state created by a different '
+                'bravado-core version. We are not going to guarantee that the created '
+                'Spec instance will be correct. '
+                'State created by version {state_version}, current version {_version}'.format(
+                    state_version=state_version,
+                    _version=_version,
+                ),
+                category=UserWarning,
+            )
+
+        # Re-create Model types, avoiding model discovery
+        state['definitions'] = {
+            model_name: _from_pickleable_representation(pickleable_representation)
+            for model_name, pickleable_representation in iteritems(state['definitions'])
+        }
+        self.__dict__.clear()
+        self.__dict__.update(state)
 
     @cached_property
     def client_spec_dict(self):
