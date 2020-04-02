@@ -110,9 +110,11 @@ class Resource(object):
         )
 
     def __getstate__(self):
+        # type: () -> typing.Dict[str, typing.Any]
         return self.__dict__
 
     def __setstate__(self, state):
+        # type: (typing.Dict[str, typing.Any]) -> None
         self.__dict__.clear()
         self.__dict__.update(state)
 
