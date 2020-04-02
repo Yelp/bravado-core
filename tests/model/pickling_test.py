@@ -32,6 +32,9 @@ def test_ensure_that_get_model_type__from_pickleable_representation_returns_the_
                 isinstance(cat_type.__dict__[attr_name], ModelDocstring) and
                 isinstance(reconstructed_model_type.__dict__[attr_name], ModelDocstring)
             )
+        elif attr_name == '_abc_impl':
+            # _abc_impl is of type builtins._abc_data which is not really comparable. So we'll ignore it
+            return True
         else:
             return cat_type.__dict__[attr_name] == reconstructed_model_type.__dict__[attr_name]
 
