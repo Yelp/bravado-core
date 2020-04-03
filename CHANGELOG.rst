@@ -2,6 +2,11 @@ Changelog
 =========
 .. Make sure to link Issue and PR information as `(PR|Issue) #xxx`_ and with a link at the bottom of the document
 
+5.17.0 (2020-04-03)
+-------------------
+- Model instances are now pickleable - `PR #372`_
+- Improve equality checks, most notably fixing an issue when ``internally_dereference_refs`` was set to ``True`` - `PR #371`_
+
 5.16.1 (2020-02-20)
 -------------------
 .. warning::
@@ -580,6 +585,8 @@ Changelog
 .. _PR #366: https://github.com/Yelp/bravado-core/pull/366
 .. _PR #367: https://github.com/Yelp/bravado-core/pull/367
 .. _PR #368: https://github.com/Yelp/bravado-core/pull/368
+.. _PR #371: https://github.com/Yelp/bravado-core/pull/371
+.. _PR #372: https://github.com/Yelp/bravado-core/pull/372
 
 .. Link To Documentation pages
 .. _Configure: https://bravado-core.readthedocs.org/en/latest/config.html
