@@ -7,7 +7,6 @@ from copy import deepcopy
 from itertools import chain
 
 import typing
-import yaml
 from jsonref import JsonRef
 from jsonschema import FormatChecker
 from jsonschema.validators import RefResolver
@@ -19,6 +18,12 @@ from six.moves.urllib.parse import urlunparse
 from six.moves.urllib.request import url2pathname
 from swagger_spec_validator import validator20
 from swagger_spec_validator.ref_validators import in_scope
+
+import yaml
+try:
+    from yaml import CSafeLoader as SafeLoader
+except ImportError:
+    from yaml import SafeLoader
 
 from bravado_core import formatter
 from bravado_core import version as _version
@@ -564,14 +569,14 @@ def build_http_handlers(http_client):
         response = http_client.request(request_params).result()
         content_type = response.headers.get('content-type', '').lower()
         if is_yaml(uri, content_type):
-            return yaml.safe_load(response.content)
+            return yaml.load(response.content, Loader=SafeLoader)
         else:
             return response.json()
 
     def read_file(uri):
         with open(url2pathname(urlparse(uri).path), mode='rb') as fp:
             if is_yaml(uri):
-                return yaml.safe_load(fp)
+                return yaml.load(fp, Loader=SafeLoader)
             else:
                 return json.loads(fp.read().decode("utf-8"))
 
