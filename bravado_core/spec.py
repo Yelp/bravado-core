@@ -7,6 +7,7 @@ from copy import deepcopy
 from itertools import chain
 
 import typing
+import yaml
 from jsonref import JsonRef
 from jsonschema import FormatChecker
 from jsonschema.validators import RefResolver
@@ -19,11 +20,10 @@ from six.moves.urllib.request import url2pathname
 from swagger_spec_validator import validator20
 from swagger_spec_validator.ref_validators import in_scope
 
-import yaml
 try:
     from yaml import CSafeLoader as SafeLoader
 except ImportError:
-    from yaml import SafeLoader
+    from yaml import SafeLoader  # type: ignore
 
 from bravado_core import formatter
 from bravado_core import version as _version

@@ -6,3 +6,4 @@ pre-commit
 pytest
 pytest-benchmark[histogram]
 pytest-cov
+pyyaml --global-option="--without-libyaml"
