@@ -6,6 +6,7 @@ python: "3.7"
 jobs:
   include:
   - python: "2.7"
+    env: SKIP_PYYAML_INSTALL=y
   - python: "3.5"
   - python: "3.6"
   - python: "3.7"
@@ -19,6 +20,11 @@ jobs:
   fast_finish: true
 
 install: pip install tox tox-travis coveralls
+before_script: |
+  # building pyyaml package with 2.7 shows incompatibility
+  if [ "${SKIP_PYYAML_INSTALL:-n}" == "y" ]; then
+    sed -i -e 's/pyyaml --global-option="--without-libyaml"//' requirements-dev.txt
+  fi
 script: tox
 after_success: |
   if [ "${PUBLISH_COVERAGE:-n}" == "y" ]; then coveralls; fi
