@@ -3,11 +3,27 @@
 # Copyright (c) 2013, Digium, Inc.
 # Copyright (c) 2014-2015, Yelp, Inc.
 import os
+import sys
 
 from setuptools import setup
 
 import bravado_core
 
+install_requires = [
+    "jsonref",
+    "jsonschema[format]>=2.5.1",
+    "python-dateutil",
+    "pyyaml",
+    "simplejson",
+    "six",
+    "swagger-spec-validator>=2.0.1",
+    "pytz",
+    "msgpack>=0.5.2",
+]
+
+# pyrsistent dropped python2 support in 0.17.0
+if sys.version_info < (3, 5):
+    install_requires.append('pyrsistent<0.17')
 
 setup(
     name="bravado-core",
@@ -31,21 +47,10 @@ setup(
         "License :: OSI Approved :: BSD License",
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
     ],
-    install_requires=[
-        "jsonref",
-        "jsonschema[format]>=2.5.1",
-        "python-dateutil",
-        "pyyaml",
-        "simplejson",
-        "six",
-        "swagger-spec-validator>=2.0.1",
-        "pytz",
-        "msgpack>=0.5.2",
-    ],
+    install_requires=install_requires,
     package_data={
         'bravado_core': ['py.typed'],
     },
