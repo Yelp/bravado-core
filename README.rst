@@ -1,5 +1,5 @@
-.. image:: https://img.shields.io/travis/Yelp/bravado-core/master.svg?label=Linux+Build
-  :target: https://travis-ci.org/Yelp/bravado-core?branch=master
+.. image:: https://github.com/Yelp/bravado-core/workflows/build/badge.svg?branch=master
+  :target: https://github.com/Yelp/bravado-core/actions?query=workflow%3Abuild
 
 .. image:: https://img.shields.io/coveralls/Yelp/bravado-core.svg
   :target: https://coveralls.io/r/Yelp/bravado-core
