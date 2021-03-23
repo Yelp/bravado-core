@@ -161,6 +161,15 @@ class Spec(object):
             handlers=self.get_ref_handlers(),
         )
 
+    @property
+    def validation_resolver(self):
+        # type: () -> RefResolver
+        return RefResolver(
+            base_uri=self.origin_url or '',
+            referrer=self.spec_dict,
+            handlers=self.get_ref_handlers(),
+        )
+
     def is_equal(self, other):
         # type: (typing.Any) -> bool
         """

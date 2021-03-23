@@ -97,7 +97,7 @@ def validate_primitive(
     get_validator_type(swagger_spec=swagger_spec)(
         primitive_spec,
         format_checker=swagger_spec.format_checker,
-        resolver=swagger_spec.resolver,
+        resolver=swagger_spec.validation_resolver,
     ).validate(value)
 
 
@@ -116,7 +116,7 @@ def validate_array(
     get_validator_type(swagger_spec=swagger_spec)(
         array_spec,
         format_checker=swagger_spec.format_checker,
-        resolver=swagger_spec.resolver,
+        resolver=swagger_spec.validation_resolver,
     ).validate(value)
 
 
@@ -135,7 +135,7 @@ def validate_object(
     get_validator_type(swagger_spec=swagger_spec)(
         object_spec,
         format_checker=swagger_spec.format_checker,
-        resolver=swagger_spec.resolver,
+        resolver=swagger_spec.validation_resolver,
     ).validate(value)
 
 
