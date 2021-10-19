@@ -7,8 +7,10 @@ import pytest
 import simplejson as json
 import yaml
 from mock import Mock
+from six import binary_type
 from six import iteritems
 from six import iterkeys
+from six import text_type
 from six.moves.urllib import parse as urlparse
 from six.moves.urllib.request import pathname2url
 from six.moves.urllib.request import url2pathname
@@ -302,12 +304,15 @@ def check_object_deepcopy(obj):
         )
         if id(getattr(obj, attr_name, None)) == id(getattr(obj_copy, attr_name, None))
     }
-    assert not any(
+    # This is an `any` check, but it will save the offending values and allow pytest to report them
+    immutable_types = (type(None), bool, binary_type, text_type, tuple)
+    assert not {
+        attr_name: (attr_value, type(attr_value))
+        for attr_name, attr_value in iteritems(attributes_with_same_id)
         # If `attr_name: attr_value` is in attributes_with_same_id then attr_value id did not change
         # after deepcopy. As immutable types do not create new instances for deepcopy we need to ensure
         # that all the occurrences of "same-id" are related to immutable types.
-        not isinstance(attr_value, (type(None), str, tuple))
-        for attr_name, attr_value in iteritems(attributes_with_same_id)
-    )
+        if not isinstance(attr_value, immutable_types)
+    }
 
     return obj_copy
