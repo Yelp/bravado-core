@@ -1,0 +1,14 @@
+# mypy dependencies
+mypy-extensions
+mypy[python2]
+# Restrict pytest to a version which does not publish types which are
+# in Python3 format and will break on Python2.
+pytest<6
+types-enum34
+# Restrict types-mock to a version which supports Python2
+types-mock==0.1.5
+types-python-dateutil
+types-pytz
+types-PyYAML
+types-simplejson
+types-six
