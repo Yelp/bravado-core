@@ -11,7 +11,7 @@ import bravado_core
 
 install_requires = [
     "jsonref",
-    "jsonschema[format]>=2.5.1",
+    "jsonschema[format]>=2.5.1,<4.0.0",
     "python-dateutil",
     "pyyaml",
     "simplejson",
