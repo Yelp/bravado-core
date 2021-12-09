@@ -318,6 +318,9 @@ class _SpecFlattener(object):
                         for uri, value in iteritems(self.known_mappings['definitions'])
                     },
                 },
+                origin_url=self.swagger_spec.origin_url,
+                http_client=self.swagger_spec.http_client,
+                config=self.swagger_spec.config,
             ),
         )
 
