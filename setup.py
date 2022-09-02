@@ -14,6 +14,7 @@ install_requires = [
     "jsonschema[format]>=2.5.1",
     "python-dateutil",
     "pyyaml",
+    'requests',
     "simplejson",
     "six",
     "swagger-spec-validator>=2.0.1",

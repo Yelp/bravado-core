@@ -6,6 +6,7 @@ import warnings
 from copy import deepcopy
 from itertools import chain
 
+import requests
 import typing
 import yaml
 from jsonref import JsonRef
@@ -125,7 +126,7 @@ class Spec(object):
     ):
         self.spec_dict = spec_dict
         self.origin_url = origin_url
-        self.http_client = http_client
+        self.http_client = http_client or BasicHTTPClient()
         self.api_url = None
         self.config = dict(CONFIG_DEFAULTS, **(config or {}))
 
@@ -190,6 +191,7 @@ class Spec(object):
             if attr_name in {
                 'format_checker',   # jsonschema.FormatChecker does not define an equality method
                 'resolver',         # jsonschema.validators.RefResolver does not define an equality method
+                'http_client',      # this attribute may be different for the same values
             }:
                 continue
 
@@ -550,6 +552,23 @@ def is_yaml(url, content_type=None):
         return True
 
     return False
+
+
+# this has the minimal interface required for build_http_handlers, but should be
+# more or less compatible with bravado.http_future.HttpFuture
+class BasicHTTPFuture(object):
+    def __init__(self, request_params):
+        self.request_params = request_params
+
+    def result(self):
+        return requests.request(**self.request_params)
+
+
+# this has the minimal interface required for build_http_handlers, but should be
+# more or less compatible with bravado.http_client.HttpClient
+class BasicHTTPClient(object):
+    def request(self, request_params):
+        return BasicHTTPFuture(request_params)
 
 
 def build_http_handlers(http_client):
