@@ -10,7 +10,7 @@ from setuptools import setup
 import bravado_core
 
 install_requires = [
-    "jsonref",
+    "jsonref<=3.2.0",
     "jsonschema[format]>=2.5.1",
     "python-dateutil",
     "pyyaml",
