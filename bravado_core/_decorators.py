@@ -54,7 +54,7 @@ def handle_null_value(swagger_spec, object_schema, is_nullable=False, is_marshal
                     return value
             return func(value)
 
-        return wrapper
+        return wrapper  # type: ignore
 
     return external_wrapper
 
@@ -82,4 +82,4 @@ def wrap_recursive_call_exception(func):
         except RecursiveCallException:
             return lambda *new_args, **new_kawrgs: func(*args, **kwargs)(*new_args, **new_kawrgs)
 
-    return wrapper
+    return wrapper  # type: ignore
