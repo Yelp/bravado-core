@@ -12,6 +12,7 @@ import dateutil.parser
 import pytz
 import six
 import typing
+import uuid
 
 from bravado_core import schema
 from bravado_core.exception import SwaggerMappingError
@@ -200,4 +201,11 @@ DEFAULT_FORMATS = {
         validate=NO_OP,  # jsonschema validates integer
         description='Converts [wire]integer:int64 <=> python long',
     ),
+    'uuid': SwaggerFormat(
+        format='byte',
+        to_wire=lambda u: str(u) if isinstance(u, uuid.UUID) else u,
+        to_python=lambda s: s if isinstance(s, uuid.UUID) else uuid.UUID(s),
+        validate=NO_OP,  # jsonschema validates uuid
+        description='Converts [wire]string:uuid <=> python uuid.UUID',
+    )
 }
