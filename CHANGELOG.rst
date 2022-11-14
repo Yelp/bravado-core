@@ -4,7 +4,7 @@ Changelog
 
 5.17.2 (2022-11-14)
 -------------------
-- Remove memoize_by_id for caching
+- Remove memoize_by_id for caching - `PR #392`_
 
 5.17.0 (2020-04-03)
 -------------------
