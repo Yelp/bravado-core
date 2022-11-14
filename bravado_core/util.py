@@ -87,46 +87,11 @@ class RecursiveCallException(Exception):
     pass
 
 
-def memoize_by_id(func):
-    # type: (FuncType) -> FuncType
-    cache = func.cache = {}  # type: ignore  # It's not worth to modify the signature to include handling of cache attribute  # noqa: E501
-    key_in_progress_set = set()  # type: typing.Set[CacheKey]
-    _CACHE_MISS = object()
-
-    spec = get_function_spec(func)
-    default_mapping = dict(zip(reversed(spec.args), reversed(spec.defaults or [])))
-
-    def make_key(*args, **kwargs):
-        # type: (typing.Any, typing.Any) -> CacheKey
-        """
-        Create a cache key starting from *args and **kwargs.
-        The cache key is an ordered tuple containing parameter name and related id as in (name, id(value)).
-        """
-        if args:
-            param_name_to_value_mapping = sorted(iteritems(inspect.getcallargs(func, *args, **kwargs)))
-        else:
-            # Use the default values while determining the parameter name to value to be used for the cache key
-            param_name_to_value_mapping = sorted(iteritems(dict(default_mapping, **kwargs)))
-
-        return tuple(
-            (param_name, id(param_value))
-            for param_name, param_value in param_name_to_value_mapping
-        )
-
-    @wraps(func)
+def dummy_memoize_by_id(func):
     def wrapper(*args, **kwargs):
-        # type: (typing.Any, typing.Any) -> typing.Any
-        cache_key = make_key(*args, **kwargs)
-        cached_value = cache.get(cache_key, _CACHE_MISS)
-        if cached_value is _CACHE_MISS:
-            if cache_key in key_in_progress_set:
-                raise RecursiveCallException()
-            key_in_progress_set.add(cache_key)
-            cached_value = func(*args, **kwargs)
-            key_in_progress_set.remove(cache_key)
-            cache[cache_key] = cached_value
-        return cached_value
-    return wrapper  # type: ignore  # ignoring type to avoiding typing.cast call
+        return func(*args, **kwargs)
+
+    return wrapper
 
 
 def sanitize_name(name):
