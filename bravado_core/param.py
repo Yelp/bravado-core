@@ -323,6 +323,9 @@ def add_file(param, value, request):
     :param value: The raw content of the file to be uploaded
     :type request: dict
     """
+    if not value:
+        return
+
     if request.get('files') is None:
         # support multiple files by default by setting to an empty array
         request['files'] = []
