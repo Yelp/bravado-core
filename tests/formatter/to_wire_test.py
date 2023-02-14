@@ -4,7 +4,10 @@ from datetime import datetime
 
 import pytest
 import six
-from mock import patch
+try:
+    from unittest.mock import patch
+except ImportError:
+    from mock import patch
 from pytz import timezone
 
 from bravado_core.exception import SwaggerMappingError

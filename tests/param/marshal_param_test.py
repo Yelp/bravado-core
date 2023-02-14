@@ -5,8 +5,10 @@ from json import loads
 
 import pytest
 from jsonschema import ValidationError
-from mock import Mock
-from mock import patch
+try:
+    from unittest.mock import Mock, patch
+except ImportError:
+    from mock import Mock, patch
 
 from bravado_core.content_type import APP_JSON
 from bravado_core.operation import Operation

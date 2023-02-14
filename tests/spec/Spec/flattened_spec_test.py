@@ -3,7 +3,10 @@ import copy
 import functools
 import os
 
-import mock
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 import pytest
 from six.moves.urllib.parse import urlparse
 from swagger_spec_validator import validator20

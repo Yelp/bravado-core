@@ -3,7 +3,10 @@ import datetime
 from copy import deepcopy
 
 import pytest
-from mock import Mock
+try:
+    from unittest.mock import Mock
+except ImportError:
+    from mock import Mock
 from six import add_metaclass
 
 from bravado_core.content_type import APP_JSON
