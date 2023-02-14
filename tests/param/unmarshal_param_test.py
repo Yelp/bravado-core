@@ -2,8 +2,10 @@
 import datetime
 
 import pytest
-from mock import Mock
-from mock import patch
+try:
+    from unittest.mock import Mock, patch
+except ImportError:
+    from mock import Mock, patch
 
 from bravado_core.operation import Operation
 from bravado_core.param import Param

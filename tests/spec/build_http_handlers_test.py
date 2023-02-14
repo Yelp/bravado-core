@@ -2,7 +2,10 @@
 import json
 from io import StringIO
 
-import mock
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 import pytest
 import yaml
 

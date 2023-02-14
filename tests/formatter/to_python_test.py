@@ -3,7 +3,10 @@ from datetime import date
 from datetime import datetime
 
 import six
-from mock import patch
+try:
+    from unittest.mock import patch
+except ImportError:
+    from mock import patch
 
 from bravado_core.formatter import SwaggerFormat
 from bravado_core.formatter import to_python
