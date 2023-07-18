@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import sys
+import typing
 
 import six
-import typing
 
 
 if getattr(typing, 'TYPE_CHECKING', False):

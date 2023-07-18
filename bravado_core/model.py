@@ -3,10 +3,10 @@ import abc
 import functools
 import logging
 import re
+import typing
 from copy import deepcopy
 from warnings import warn
 
-import typing
 from six import add_metaclass
 from six import iteritems
 from six import string_types

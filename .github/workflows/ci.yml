@@ -3,22 +3,20 @@ name: build
 on: push
 jobs:
   tox:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
         tox:
-          - py27
-          - py36
-          - py37
+          - py310
           - pre-commit
           - mypy
           - docs
           # TODO: benchmark blocked on https://github.com/actions/toolkit/issues/399
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
-          python-version: 3.7
+          python-version: '3.10'
       - run: pip install tox
       - run: tox -e ${{ matrix.tox }}

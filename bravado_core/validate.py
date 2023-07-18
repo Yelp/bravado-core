@@ -5,9 +5,9 @@ as the single point of entry for validations should we need to further
 customize the behavior.
 """
 import sys
+import typing
 
 import jsonschema
-import typing
 from six import itervalues
 from six import reraise
 

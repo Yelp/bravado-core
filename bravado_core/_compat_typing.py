@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import typing
+
 from mypy_extensions import Arg
 
 try:
