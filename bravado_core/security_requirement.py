@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import logging
+import typing
 
 import six
-import typing
 
 from bravado_core.exception import SwaggerSchemaError
 

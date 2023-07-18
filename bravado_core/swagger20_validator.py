@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import functools
-
 import typing
+
 from jsonschema import FormatChecker
 from jsonschema import RefResolver
 from jsonschema import validators

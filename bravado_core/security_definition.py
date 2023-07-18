@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
-from copy import deepcopy
-
 import typing
+from copy import deepcopy
 
 
 if getattr(typing, 'TYPE_CHECKING', False):

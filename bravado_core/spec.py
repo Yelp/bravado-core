@@ -2,12 +2,12 @@
 import json
 import logging
 import os.path
+import typing
 import warnings
 from copy import deepcopy
 from itertools import chain
 
 import requests
-import typing
 import yaml
 from jsonref import JsonRef
 from jsonschema import FormatChecker
@@ -410,7 +410,7 @@ class Spec(object):
         # Restore attached resolution scope before resolving since the
         # resolver doesn't have a traversal history (accumulated scope_stack)
         # when asked to resolve.
-        with in_scope(self.resolver, ref_dict):
+        with in_scope(self.resolver, ref_dict):  # type: ignore
             reference_value = ref_dict['$ref']  # type: ignore
             _, target = self.resolver.resolve(reference_value)
             return target

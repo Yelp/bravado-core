@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
+import typing
 import warnings
 from functools import partial
 
-import typing
 from six import iteritems
 
 from bravado_core import _decorators

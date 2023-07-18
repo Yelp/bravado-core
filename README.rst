@@ -64,7 +64,7 @@ Setup
     tox
 
     # Install git pre-commit hooks
-    .tox/py27/bin/pre-commit install
+    .tox/py310/bin/pre-commit install
 
 
 Contributing

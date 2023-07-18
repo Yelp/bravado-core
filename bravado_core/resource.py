@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 import logging
+import typing
 from collections import defaultdict
 from copy import deepcopy
 from itertools import chain
 
-import typing
 from six import iteritems
 from six import iterkeys
 from six import PY2

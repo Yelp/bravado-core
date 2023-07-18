@@ -7,11 +7,11 @@ from __future__ import unicode_literals
 
 import base64
 import functools
+import typing
 
 import dateutil.parser
 import pytz
 import six
-import typing
 
 from bravado_core import schema
 from bravado_core.exception import SwaggerMappingError

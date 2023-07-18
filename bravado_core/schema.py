@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import copy
-
 import typing
+
 from six import iteritems
 from six import string_types
 

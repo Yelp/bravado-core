@@ -1,8 +1,16 @@
-# Unit test dependencies
+# TODO: avoids an issue with hanging forever in tests (CORESERV-12009).
+jsonschema<4
 mock
-mypy-extensions; python_version>='3.5'
-mypy; python_version>='3.5'
+mypy
+mypy-extensions
 pre-commit
+pytest
 pytest-benchmark[histogram]
 pytest-cov
-pytest<4.7  # need support for Python 2.7, see https://docs.pytest.org/en/latest/py27-py34-deprecation.html
+types-mock
+types-python-dateutil
+types-pytz
+types-pyyaml
+types-requests
+types-simplejson
+types-six
