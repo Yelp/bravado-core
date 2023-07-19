@@ -65,7 +65,7 @@ CONFIG_DEFAULTS = {
     'validate_requests': True,
 
     # Use swagger_spec_validator to validate the swagger spec
-    'validate_swagger_spec': True,
+    'validate_swagger_spec': os.environ.get("BRAVADO_CORE_SKIP_SPEC_VALIDATION") != "1",
 
     # Use Python classes (models) instead of dicts for #/definitions/{models}
     # On the client side, this applies to incoming responses.
