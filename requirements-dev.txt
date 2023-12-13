@@ -1,4 +1,8 @@
 # TODO: avoids an issue with hanging forever in tests (CORESERV-12009).
+# Inclusion of rfc3339-validator here is a workaround for an issue where
+# pip is not installing this package (defined by `jsonschema[format-nongpl]`).
+# This issue sounds similar to https://github.com/pypa/pip/issues/3903, but
+# that was fixed in pip 20.3 and we're still seeing this issue on 22.0.2.
 jsonschema<4
 mock
 mypy
@@ -7,6 +11,7 @@ pre-commit
 pytest
 pytest-benchmark[histogram]
 pytest-cov
+rfc3339-validator
 types-mock
 types-python-dateutil
 types-pytz

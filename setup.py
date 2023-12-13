@@ -40,7 +40,7 @@ setup(
     ],
     install_requires=[
         "jsonref",
-        "jsonschema[format]>=2.5.1",
+        "jsonschema[format-nogpl]>=2.5.1",
         "python-dateutil",
         "pyyaml",
         'requests',
