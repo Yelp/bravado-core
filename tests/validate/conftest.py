@@ -10,8 +10,8 @@ def validate_email_address(email_address):
 
 email_address_format = SwaggerFormat(
     format='email_address',
-    to_wire=lambda x: x,
-    to_python=lambda x: x,
+    to_wire=lambda x: x,  # type: ignore
+    to_python=lambda x: x,  # type: ignore
     validate=validate_email_address,
     description='blah',
 )
