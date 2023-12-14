@@ -141,8 +141,8 @@ def return_true_wrapper(validate_func):
 BASE64_BYTE_FORMAT = SwaggerFormat(
     format='byte',
     # Note: In Python 3, this requires a bytes-like object as input
-    to_wire=lambda b: six.ensure_str(base64.b64encode(b), encoding=str('ascii')),
-    to_python=lambda s: base64.b64decode(six.ensure_binary(s, encoding=str('ascii'))),
+    to_wire=lambda b: six.ensure_str(base64.b64encode(b), encoding=str('ascii')),  # type: ignore
+    to_python=lambda s: base64.b64decode(six.ensure_binary(s, encoding=str('ascii'))),  # type: ignore
     validate=NO_OP,  # jsonschema validates string
     description='Converts [wire]string:byte <=> python bytes',
 )
@@ -150,30 +150,30 @@ BASE64_BYTE_FORMAT = SwaggerFormat(
 DEFAULT_FORMATS = {
     'byte': SwaggerFormat(
         format='byte',
-        to_wire=lambda b: b if isinstance(b, str) else str(b),
-        to_python=lambda s: s if isinstance(s, str) else str(s),
+        to_wire=lambda b: b if isinstance(b, str) else str(b),  # type: ignore
+        to_python=lambda s: s if isinstance(s, str) else str(s),  # type: ignore
         validate=NO_OP,  # jsonschema validates string
         description='Converts [wire]string:byte <=> python byte',
     ),
     'date': SwaggerFormat(
         format='date',
-        to_wire=lambda d: d.isoformat(),
-        to_python=lambda d: dateutil.parser.parse(d).date(),
+        to_wire=lambda d: d.isoformat(),  # type: ignore
+        to_python=lambda d: dateutil.parser.parse(d).date(),  # type: ignore
         validate=NO_OP,  # jsonschema validates date
         description='Converts [wire]string:date <=> python datetime.date',
     ),
     # Python has no double. float is C's double in CPython
     'double': SwaggerFormat(
         format='double',
-        to_wire=lambda d: d if isinstance(d, float) else float(d),
-        to_python=lambda d: d if isinstance(d, float) else float(d),
+        to_wire=lambda d: d if isinstance(d, float) else float(d),  # type: ignore
+        to_python=lambda d: d if isinstance(d, float) else float(d),  # type: ignore
         validate=NO_OP,  # jsonschema validates number
         description='Converts [wire]number:double <=> python float',
     ),
     'date-time': SwaggerFormat(
         format='date-time',
-        to_wire=lambda dt: (dt if dt.tzinfo else pytz.utc.localize(dt)).isoformat(),
-        to_python=lambda dt: dateutil.parser.parse(dt),
+        to_wire=lambda dt: (dt if dt.tzinfo else pytz.utc.localize(dt)).isoformat(),  # type: ignore
+        to_python=lambda dt: dateutil.parser.parse(dt),  # type: ignore
         validate=NO_OP,  # jsonschema validates date-time
         description=(
             'Converts string:date-time <=> python datetime.datetime'
@@ -181,22 +181,22 @@ DEFAULT_FORMATS = {
     ),
     'float': SwaggerFormat(
         format='float',
-        to_wire=lambda f: f if isinstance(f, float) else float(f),
-        to_python=lambda f: f if isinstance(f, float) else float(f),
+        to_wire=lambda f: f if isinstance(f, float) else float(f),  # type: ignore
+        to_python=lambda f: f if isinstance(f, float) else float(f),  # type: ignore
         validate=NO_OP,  # jsonschema validates number
         description='Converts [wire]number:float <=> python float',
     ),
     'int32': SwaggerFormat(
         format='int32',
-        to_wire=lambda i: i if isinstance(i, int) else int(i),
-        to_python=lambda i: i if isinstance(i, int) else int(i),
+        to_wire=lambda i: i if isinstance(i, int) else int(i),  # type: ignore
+        to_python=lambda i: i if isinstance(i, int) else int(i),  # type: ignore
         validate=NO_OP,  # jsonschema validates integer
         description='Converts [wire]integer:int32 <=> python int',
     ),
     'int64': SwaggerFormat(
         format='int64',
-        to_wire=lambda i: i if isinstance(i, long) else long(i),
-        to_python=lambda i: i if isinstance(i, long) else long(i),
+        to_wire=lambda i: i if isinstance(i, long) else long(i),  # type: ignore
+        to_python=lambda i: i if isinstance(i, long) else long(i),  # type: ignore
         validate=NO_OP,  # jsonschema validates integer
         description='Converts [wire]integer:int64 <=> python long',
     ),

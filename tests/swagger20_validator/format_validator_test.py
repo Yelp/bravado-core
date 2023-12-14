@@ -108,8 +108,8 @@ def validate_dummy(dummy_string):
 
 DummyFormat = SwaggerFormat(
     format="dummy",
-    to_wire=lambda x: x,
-    to_python=lambda x: x,
+    to_wire=lambda x: x,  # type: ignore
+    to_python=lambda x: x,  # type: ignore
     validate=validate_dummy,
     description="dummy format",
 )
