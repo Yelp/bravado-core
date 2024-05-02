@@ -17,7 +17,7 @@ install_requires = [
     'requests',
     "simplejson",
     "six",
-    "swagger-spec-validator>=2.0.1",
+    "swagger-spec-validator==3.0.3",
     "pytz",
     "msgpack>=0.5.2",
 ]
