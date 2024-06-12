@@ -8,6 +8,20 @@ from bravado_core.param import add_file
 from bravado_core.param import Param
 
 
+def test_no_file(empty_swagger_spec):
+    request = {}
+    op = Mock(spec=Operation, consumes=['multipart/form-data'])
+    param_spec = {
+        'type': 'file',
+        'in': 'formData',
+        'name': 'photo'
+    }
+    param = Param(empty_swagger_spec, op, param_spec)
+    add_file(param, None, request)
+    expected_request = {}
+    assert expected_request == request
+
+
 def test_single_file(empty_swagger_spec):
     request = {}
     file_contents = "I am the contents of a file"
