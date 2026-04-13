@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 import datetime
 
+import msgpack
 import pytest
 from mock import Mock
 from mock import patch
 
+from bravado_core.content_type import APP_JSON
+from bravado_core.content_type import APP_MSGPACK
+from bravado_core.exception import SwaggerMappingError
 from bravado_core.operation import Operation
 from bravado_core.param import Param
 from bravado_core.param import unmarshal_param
@@ -232,7 +236,7 @@ def test_body(empty_swagger_spec, param_spec):
     del param_spec['type']
     del param_spec['format']
     param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
-    request = Mock(spec=IncomingRequest, json=Mock(return_value=34))
+    request = Mock(spec=IncomingRequest, headers={}, json=Mock(return_value=34))
     value = unmarshal_param(param, request)
     assert 34 == value
 
@@ -294,6 +298,130 @@ def test_body_parameter_not_present_not_required(empty_swagger_spec, body, expec
         },
     }
     param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
-    request = Mock(spec=IncomingRequest, json=Mock(return_value=body))
+    request = Mock(spec=IncomingRequest, headers={}, json=Mock(return_value=body))
     value = unmarshal_param(param, request)
     assert expected_value == value
+
+
+def test_body_msgpack(empty_swagger_spec, param_spec):
+    param_spec['in'] = 'body'
+    param_spec['schema'] = {'type': 'integer'}
+    del param_spec['type']
+    del param_spec['format']
+    param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
+    raw_bytes = msgpack.dumps(34)
+    request = Mock(
+        spec=IncomingRequest,
+        headers={'Content-Type': APP_MSGPACK},
+        raw_bytes=raw_bytes,
+    )
+    assert 34 == unmarshal_param(param, request)
+
+
+def test_body_msgpack_with_object(empty_swagger_spec):
+    param_spec = {
+        'name': 'body',
+        'in': 'body',
+        'schema': {
+            'type': 'object',
+            'properties': {
+                'name': {'type': 'string'},
+                'age': {'type': 'integer'},
+            },
+        },
+    }
+    body_value = {'name': 'Fido', 'age': 3}
+    raw_bytes = msgpack.dumps(body_value)
+    param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
+    request = Mock(
+        spec=IncomingRequest,
+        headers={'Content-Type': APP_MSGPACK},
+        raw_bytes=raw_bytes,
+    )
+    assert body_value == unmarshal_param(param, request)
+
+
+def test_body_msgpack_with_charset_in_content_type(empty_swagger_spec, param_spec):
+    param_spec['in'] = 'body'
+    param_spec['schema'] = {'type': 'integer'}
+    del param_spec['type']
+    del param_spec['format']
+    param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
+    raw_bytes = msgpack.dumps(42)
+    request = Mock(
+        spec=IncomingRequest,
+        headers={'Content-Type': APP_MSGPACK + '; charset=utf-8'},
+        raw_bytes=raw_bytes,
+    )
+    assert 42 == unmarshal_param(param, request)
+
+
+def test_body_json_content_type(empty_swagger_spec, param_spec):
+    param_spec['in'] = 'body'
+    param_spec['schema'] = {'type': 'integer'}
+    del param_spec['type']
+    del param_spec['format']
+    param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
+    request = Mock(
+        spec=IncomingRequest,
+        headers={'Content-Type': APP_JSON},
+        json=Mock(return_value=34),
+    )
+    assert 34 == unmarshal_param(param, request)
+
+
+def test_body_no_content_type_defaults_to_json(empty_swagger_spec, param_spec):
+    param_spec['in'] = 'body'
+    param_spec['schema'] = {'type': 'integer'}
+    del param_spec['type']
+    del param_spec['format']
+    param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
+    request = Mock(
+        spec=IncomingRequest,
+        headers={},
+        json=Mock(return_value=34),
+    )
+    assert 34 == unmarshal_param(param, request)
+
+
+def test_body_msgpack_decode_error_required(empty_swagger_spec, param_spec):
+    param_spec['in'] = 'body'
+    param_spec['required'] = True
+    param_spec['schema'] = {'type': 'integer'}
+    del param_spec['type']
+    del param_spec['format']
+    param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
+    request = Mock(
+        spec=IncomingRequest,
+        headers={'Content-Type': APP_MSGPACK},
+        raw_bytes=b'invalid msgpack data \xff\xfe',
+    )
+    with pytest.raises(SwaggerMappingError) as excinfo:
+        unmarshal_param(param, request)
+    assert 'Error reading request body msgpack' in str(excinfo.value)
+
+
+def test_body_msgpack_decode_error_optional(empty_swagger_spec, param_spec):
+    param_spec['in'] = 'body'
+    param_spec['required'] = False
+    param_spec['schema'] = {'type': 'integer'}
+    del param_spec['type']
+    del param_spec['format']
+    param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
+    request = Mock(
+        spec=IncomingRequest,
+        headers={'Content-Type': APP_MSGPACK},
+        raw_bytes=b'invalid msgpack data \xff\xfe',
+    )
+    assert unmarshal_param(param, request) is None
+
+
+def test_path_param_unaffected_by_msgpack_content_type(empty_swagger_spec, param_spec):
+    param_spec['in'] = 'path'
+    param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
+    request = Mock(
+        spec=IncomingRequest,
+        path={'petId': '34'},
+        headers={'Content-Type': APP_MSGPACK},
+    )
+    assert 34 == unmarshal_param(param, request)

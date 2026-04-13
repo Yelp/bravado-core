@@ -26,6 +26,28 @@ def test_missing_required_attr_throws_NotImplementedError():
     assert 'forgot to implement' in str(excinfo.value)
 
 
+def test_missing_raw_bytes_throws_NotImplementedError():
+
+    class NoRawBytesRequest(IncomingRequest):
+        pass
+
+    r = NoRawBytesRequest()
+    with pytest.raises(NotImplementedError) as excinfo:
+        r.raw_bytes
+    assert 'forgot to implement' in str(excinfo.value)
+
+
+def test_raw_bytes_attr_returned():
+
+    class CompliantRequest(IncomingRequest):
+
+        def __init__(self):
+            self.raw_bytes = b'\x93\x01\x02\x03'
+
+    r = CompliantRequest()
+    assert b'\x93\x01\x02\x03' == r.raw_bytes
+
+
 def test_any_other_attr_throws_AttributeError():
 
     class UnrelatedRequest(IncomingRequest):

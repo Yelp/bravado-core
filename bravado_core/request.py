@@ -13,12 +13,13 @@ class IncomingRequest(object):
     Subclasses are responsible for providing attrs for __required_attrs__.
     """
     __required_attrs__ = [
-        'path',     # dict of URL path parameters
-        'query',    # dict of parameters from the query string
-        'form',     # dict of form parameters from a POST
-        'headers',  # dict of request headers
+        'path',      # dict of URL path parameters
+        'query',     # dict of parameters from the query string
+        'form',      # dict of form parameters from a POST
+        'headers',   # dict of request headers
         # TODO: may need to make this more flexible based on actual usage and/or need for a file like object # noqa
-        'files',    # dict of filename to content
+        'files',     # dict of filename to content
+        'raw_bytes',  # the bytes of the body
     ]
 
     def __getattr__(self, name):

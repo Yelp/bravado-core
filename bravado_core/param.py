@@ -3,12 +3,14 @@ import logging
 import typing
 from functools import partial
 
+import msgpack
 import simplejson as json
 import six
 from six.moves.urllib.parse import quote
 
 from bravado_core import schema
 from bravado_core.content_type import APP_JSON
+from bravado_core.content_type import APP_MSGPACK
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.marshal import marshal_schema_object
 from bravado_core.unmarshal import unmarshal_schema_object
@@ -151,12 +153,36 @@ def marshal_param(param, value, request):
         else:
             request.setdefault('data', {})[param.name] = value
     elif location == 'body':
-        request['headers']['Content-Type'] = APP_JSON
-        request['data'] = json.dumps(value)
+        if _should_use_msgpack(param):
+            request['headers']['Content-Type'] = APP_MSGPACK
+            request['data'] = msgpack.dumps(value)
+        else:
+            request['headers']['Content-Type'] = APP_JSON
+            request['data'] = json.dumps(value)
     else:
         raise SwaggerMappingError(
             "Don't know how to marshal_param with location {0}".format(location),
         )
+
+
+def _should_use_msgpack(param):
+    """Determine whether to use msgpack encoding for a body parameter.
+
+    Uses msgpack only when the operation's consumes list includes
+    application/msgpack but NOT application/json. When both are
+    present or neither is present, defaults to JSON for backward
+    compatibility.
+
+    :type param: :class:`bravado_core.param.Param`
+    :rtype: bool
+    """
+    try:
+        consumes = param.op.consumes
+    except AttributeError:
+        return False
+    if not consumes or not isinstance(consumes, (list, tuple)):
+        return False
+    return APP_MSGPACK in consumes and APP_JSON not in consumes
 
 
 def unmarshal_param(param, request):
@@ -187,19 +213,27 @@ def unmarshal_param(param, request):
         else:
             raw_value = cast_param(request.form.get(param.name, default_value))
     elif location == 'body':
-        try:
-            # TODO: verify content-type header
-            raw_value = request.json()
-        except ValueError as json_error:
-            # If the body parameter is required then we should make sure that an exception
-            # is thrown, instead if the body parameter is optional is OK-ish to assume that
-            # raw_value is the default_value
-            if param.required:
-                raise SwaggerMappingError(
-                    "Error reading request body JSON: {0}".format(str(json_error)),
-                )
-            else:
-                raw_value = default_value
+        content_type = request.headers.get('Content-Type', '').lower()
+        if content_type.startswith(APP_MSGPACK):
+            try:
+                raw_value = msgpack.loads(request.raw_bytes, raw=False)
+            except Exception as msgpack_error:
+                if param.required:
+                    raise SwaggerMappingError(
+                        "Error reading request body msgpack: {0}".format(str(msgpack_error)),
+                    )
+                else:
+                    raw_value = default_value
+        else:
+            try:
+                raw_value = request.json()
+            except ValueError as json_error:
+                if param.required:
+                    raise SwaggerMappingError(
+                        "Error reading request body JSON: {0}".format(str(json_error)),
+                    )
+                else:
+                    raw_value = default_value
     else:
         raise SwaggerMappingError(
             "Don't know how to unmarshal_param with location {0}".format(location),
