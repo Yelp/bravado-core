@@ -20,7 +20,6 @@ class IncomingRequest(object):
         "headers",  # dict of request headers
         # TODO: may need to make this more flexible based on actual usage and/or need for a file like object # noqa
         "files",  # dict of filename to content
-        "raw_bytes",  # the bytes of the body
     ]
 
     def __getattr__(self, name):
