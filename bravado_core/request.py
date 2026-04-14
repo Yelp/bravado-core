@@ -12,14 +12,15 @@ class IncomingRequest(object):
 
     Subclasses are responsible for providing attrs for __required_attrs__.
     """
+
     __required_attrs__ = [
-        'path',      # dict of URL path parameters
-        'query',     # dict of parameters from the query string
-        'form',      # dict of form parameters from a POST
-        'headers',   # dict of request headers
+        "path",  # dict of URL path parameters
+        "query",  # dict of parameters from the query string
+        "form",  # dict of form parameters from a POST
+        "headers",  # dict of request headers
         # TODO: may need to make this more flexible based on actual usage and/or need for a file like object # noqa
-        'files',     # dict of filename to content
-        'raw_bytes',  # the bytes of the body
+        "files",  # dict of filename to content
+        "raw_bytes",  # the bytes of the body
     ]
 
     def __getattr__(self, name):
@@ -37,8 +38,8 @@ class IncomingRequest(object):
         """
         if name in self.__required_attrs__:
             raise NotImplementedError(
-                'This IncomingRequest type {0} forgot to implement an attr '
-                'for `{1}`'.format(type(self), name),
+                "This IncomingRequest type {0} forgot to implement an attr "
+                "for `{1}`".format(type(self), name),
             )
         raise AttributeError(
             "'{0}' object has no attribute '{1}'".format(type(self), name),
@@ -69,8 +70,8 @@ def unmarshal_request(request, op):
         param_value = unmarshal_param(param, request)
         request_data[param.name] = param_value
 
-    if op.swagger_spec.config['validate_requests']:
+    if op.swagger_spec.config["validate_requests"]:
         validate_security_object(op, request_data)
 
-    log.debug('Swagger request_data: %s', request_data)
+    log.debug("Swagger request_data: %s", request_data)
     return request_data
