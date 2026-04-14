@@ -217,7 +217,7 @@ def unmarshal_param(param, request):
         if content_type.startswith(APP_MSGPACK):
             try:
                 raw_value = msgpack.loads(request.raw_bytes, raw=False)
-            except Exception as msgpack_error:
+            except (msgpack.UnpackException, ValueError) as msgpack_error:
                 if param.required:
                     raise SwaggerMappingError(
                         "Error reading request body msgpack: {0}".format(str(msgpack_error)),
