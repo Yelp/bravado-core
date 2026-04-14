@@ -370,7 +370,7 @@ def test_body_msgpack_only_consumes(empty_swagger_spec, param_spec):
     request = {'headers': {}}
     marshal_param(param, 34, request)
     assert APP_MSGPACK == request['headers']['Content-Type']
-    assert 34 == msgpack.loads(request['data'], raw=False)
+    assert 34 == msgpack.unpackb(request['data'], raw=False)
 
 
 def test_body_msgpack_with_object(empty_swagger_spec):
@@ -392,7 +392,7 @@ def test_body_msgpack_with_object(empty_swagger_spec):
     value = {'name': 'Fido', 'age': 3}
     marshal_param(param, value, request)
     assert APP_MSGPACK == request['headers']['Content-Type']
-    assert value == msgpack.loads(request['data'], raw=False)
+    assert value == msgpack.unpackb(request['data'], raw=False)
 
 
 def test_body_json_preferred_when_both_consumes(empty_swagger_spec, param_spec):

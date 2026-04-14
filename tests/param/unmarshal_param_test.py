@@ -311,7 +311,7 @@ def test_body_msgpack(empty_swagger_spec, param_spec):
     del param_spec['type']
     del param_spec['format']
     param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
-    raw_bytes = msgpack.dumps(34)
+    raw_bytes = msgpack.packb(34, use_bin_type=True)
     request = Mock(
         spec=IncomingRequest,
         headers={'Content-Type': APP_MSGPACK},
@@ -334,7 +334,7 @@ def test_body_msgpack_with_object(empty_swagger_spec):
         },
     }
     body_value = {'name': 'Fido', 'age': 3}
-    raw_bytes = msgpack.dumps(body_value)
+    raw_bytes = msgpack.packb(body_value, use_bin_type=True)
     param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
     request = Mock(
         spec=IncomingRequest,
@@ -351,7 +351,7 @@ def test_body_msgpack_with_charset_in_content_type(empty_swagger_spec, param_spe
     del param_spec['type']
     del param_spec['format']
     param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
-    raw_bytes = msgpack.dumps(42)
+    raw_bytes = msgpack.packb(42, use_bin_type=True)
     request = Mock(
         spec=IncomingRequest,
         headers={'Content-Type': APP_MSGPACK + '; charset=utf-8'},
@@ -407,7 +407,7 @@ def test_body_msgpack_non_msgpack_exception_propagates(empty_swagger_spec, param
         headers={'Content-Type': APP_MSGPACK},
         raw_bytes=b'\x01',
     )
-    with patch('bravado_core.param.msgpack.loads', side_effect=MemoryError('out of memory')):
+    with patch('bravado_core.param.msgpack.unpackb', side_effect=MemoryError('out of memory')):
         with pytest.raises(MemoryError, match='out of memory'):
             unmarshal_param(param, request)
 

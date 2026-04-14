@@ -155,7 +155,7 @@ def marshal_param(param, value, request):
     elif location == 'body':
         if _should_use_msgpack(param):
             request['headers']['Content-Type'] = APP_MSGPACK
-            request['data'] = msgpack.dumps(value)
+            request['data'] = msgpack.packb(value, use_bin_type=True)
         else:
             request['headers']['Content-Type'] = APP_JSON
             request['data'] = json.dumps(value)
@@ -176,10 +176,7 @@ def _should_use_msgpack(param):
     :type param: :class:`bravado_core.param.Param`
     :rtype: bool
     """
-    try:
-        consumes = param.op.consumes
-    except AttributeError:
-        return False
+    consumes = getattr(param.op, 'consumes', None)
     if not consumes or not isinstance(consumes, (list, tuple)):
         return False
     return APP_MSGPACK in consumes and APP_JSON not in consumes
@@ -213,10 +210,10 @@ def unmarshal_param(param, request):
         else:
             raw_value = cast_param(request.form.get(param.name, default_value))
     elif location == 'body':
-        content_type = request.headers.get('Content-Type', '').lower()
-        if content_type.startswith(APP_MSGPACK):
+        content_type = request.headers.get('Content-Type', '').lower().split(';')[0].strip()
+        if content_type == APP_MSGPACK:
             try:
-                raw_value = msgpack.loads(request.raw_bytes, raw=False)
+                raw_value = msgpack.unpackb(request.raw_bytes, raw=False)
             except (msgpack.UnpackException, ValueError) as msgpack_error:
                 if param.required:
                     raise SwaggerMappingError(
