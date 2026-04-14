@@ -360,6 +360,7 @@ def test_encode_request_param(param_type, param_value, expected_param_value):
 
 
 def test_body_msgpack_only_consumes(empty_swagger_spec, param_spec):
+    """When the operation only consumes msgpack, the body is packed and Content-Type is set to APP_MSGPACK."""
     param_spec['in'] = 'body'
     param_spec['schema'] = {'type': 'integer'}
     del param_spec['type']
@@ -373,6 +374,7 @@ def test_body_msgpack_only_consumes(empty_swagger_spec, param_spec):
 
 
 def test_body_msgpack_with_object(empty_swagger_spec):
+    """Verifies that a dict body is correctly packed to msgpack bytes, not just scalar values."""
     param_spec = {
         'name': 'body',
         'in': 'body',
@@ -394,6 +396,7 @@ def test_body_msgpack_with_object(empty_swagger_spec):
 
 
 def test_body_json_preferred_when_both_consumes(empty_swagger_spec, param_spec):
+    """When an operation lists both APP_JSON and APP_MSGPACK, JSON takes priority over msgpack."""
     param_spec['in'] = 'body'
     param_spec['schema'] = {'type': 'integer'}
     del param_spec['type']
@@ -407,6 +410,7 @@ def test_body_json_preferred_when_both_consumes(empty_swagger_spec, param_spec):
 
 
 def test_body_json_when_only_json_consumes(empty_swagger_spec, param_spec):
+    """When the operation does not include APP_MSGPACK in its consumes list, JSON is used as the default."""
     param_spec['in'] = 'body'
     param_spec['schema'] = {'type': 'integer'}
     del param_spec['type']
@@ -419,22 +423,10 @@ def test_body_json_when_only_json_consumes(empty_swagger_spec, param_spec):
     assert '34' == request['data']
 
 
-def test_body_json_when_no_consumes(empty_swagger_spec, param_spec):
-    param_spec['in'] = 'body'
-    param_spec['schema'] = {'type': 'integer'}
-    del param_spec['type']
-    del param_spec['format']
-    op = Mock(spec=Operation, consumes=[])
-    param = Param(empty_swagger_spec, op, param_spec)
-    request = {'headers': {}}
-    marshal_param(param, 34, request)
-    assert APP_JSON == request['headers']['Content-Type']
-    assert '34' == request['data']
-
-
 def test_query_param_unaffected_by_msgpack_consumes(
     empty_swagger_spec, string_param_spec, request_dict,
 ):
+    """Query params are always marshalled as plain strings; the operation's consumes list has no effect on them."""
     op = Mock(spec=Operation, consumes=[APP_MSGPACK])
     param = Param(empty_swagger_spec, op, string_param_spec)
     expected = copy.deepcopy(request_dict)

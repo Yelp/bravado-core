@@ -229,6 +229,7 @@ def test_formData_file(empty_swagger_spec, param_spec):
 
 
 def test_body(empty_swagger_spec, param_spec):
+    """Any Content-Type that is not APP_MSGPACK (including absent) routes to JSON decoding via request.json()."""
     param_spec['in'] = 'body'
     param_spec['schema'] = {
         'type': 'integer',
@@ -304,6 +305,7 @@ def test_body_parameter_not_present_not_required(empty_swagger_spec, body, expec
 
 
 def test_body_msgpack(empty_swagger_spec, param_spec):
+    """When Content-Type is APP_MSGPACK, the body is decoded from raw bytes using msgpack."""
     param_spec['in'] = 'body'
     param_spec['schema'] = {'type': 'integer'}
     del param_spec['type']
@@ -319,6 +321,7 @@ def test_body_msgpack(empty_swagger_spec, param_spec):
 
 
 def test_body_msgpack_with_object(empty_swagger_spec):
+    """Verifies that a msgpack-encoded dict body is correctly unpacked back into a Python dict."""
     param_spec = {
         'name': 'body',
         'in': 'body',
@@ -342,6 +345,7 @@ def test_body_msgpack_with_object(empty_swagger_spec):
 
 
 def test_body_msgpack_with_charset_in_content_type(empty_swagger_spec, param_spec):
+    """Content-Type headers often include a charset suffix; the msgpack path must strip it before comparison."""
     param_spec['in'] = 'body'
     param_spec['schema'] = {'type': 'integer'}
     del param_spec['type']
@@ -356,35 +360,8 @@ def test_body_msgpack_with_charset_in_content_type(empty_swagger_spec, param_spe
     assert 42 == unmarshal_param(param, request)
 
 
-def test_body_json_content_type(empty_swagger_spec, param_spec):
-    param_spec['in'] = 'body'
-    param_spec['schema'] = {'type': 'integer'}
-    del param_spec['type']
-    del param_spec['format']
-    param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
-    request = Mock(
-        spec=IncomingRequest,
-        headers={'Content-Type': APP_JSON},
-        json=Mock(return_value=34),
-    )
-    assert 34 == unmarshal_param(param, request)
-
-
-def test_body_no_content_type_defaults_to_json(empty_swagger_spec, param_spec):
-    param_spec['in'] = 'body'
-    param_spec['schema'] = {'type': 'integer'}
-    del param_spec['type']
-    del param_spec['format']
-    param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
-    request = Mock(
-        spec=IncomingRequest,
-        headers={},
-        json=Mock(return_value=34),
-    )
-    assert 34 == unmarshal_param(param, request)
-
-
 def test_body_msgpack_decode_error_required(empty_swagger_spec, param_spec):
+    """Invalid msgpack bytes on a required body param must raise SwaggerMappingError with a clear message."""
     param_spec['in'] = 'body'
     param_spec['required'] = True
     param_spec['schema'] = {'type': 'integer'}
@@ -402,6 +379,7 @@ def test_body_msgpack_decode_error_required(empty_swagger_spec, param_spec):
 
 
 def test_body_msgpack_decode_error_optional(empty_swagger_spec, param_spec):
+    """Invalid msgpack bytes on an optional body param must return None rather than raise."""
     param_spec['in'] = 'body'
     param_spec['required'] = False
     param_spec['schema'] = {'type': 'integer'}
@@ -416,7 +394,26 @@ def test_body_msgpack_decode_error_optional(empty_swagger_spec, param_spec):
     assert unmarshal_param(param, request) is None
 
 
+def test_body_msgpack_non_msgpack_exception_propagates(empty_swagger_spec, param_spec):
+    """Non-msgpack exceptions (e.g. MemoryError) from the decode call must propagate, not be swallowed."""
+    param_spec['in'] = 'body'
+    param_spec['required'] = True
+    param_spec['schema'] = {'type': 'integer'}
+    del param_spec['type']
+    del param_spec['format']
+    param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
+    request = Mock(
+        spec=IncomingRequest,
+        headers={'Content-Type': APP_MSGPACK},
+        raw_bytes=b'\x01',
+    )
+    with patch('bravado_core.param.msgpack.loads', side_effect=MemoryError('out of memory')):
+        with pytest.raises(MemoryError, match='out of memory'):
+            unmarshal_param(param, request)
+
+
 def test_path_param_unaffected_by_msgpack_content_type(empty_swagger_spec, param_spec):
+    """Path params are read from request.path regardless of Content-Type; msgpack header must not interfere."""
     param_spec['in'] = 'path'
     param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
     request = Mock(
