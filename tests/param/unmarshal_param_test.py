@@ -6,7 +6,6 @@ import pytest
 from mock import Mock
 from mock import patch
 
-from bravado_core.content_type import APP_JSON
 from bravado_core.content_type import APP_MSGPACK
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.operation import Operation
