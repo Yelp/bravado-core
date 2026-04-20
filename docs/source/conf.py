@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import sphinx_rtd_theme
-
 from bravado_core import version
 
 # -- General configuration -----------------------------------------------
@@ -35,14 +33,11 @@ pygments_style = 'sphinx'
 
 html_theme = 'sphinx_rtd_theme'
 
-html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
-
-
 html_static_path = ['_static']
 
 htmlhelp_basename = 'bravado_core-pydoc'
 
 
 intersphinx_mapping = {
-    'http://docs.python.org/': None,
+    'python': ('https://docs.python.org/3', None),
 }
