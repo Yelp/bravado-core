@@ -2,6 +2,10 @@ Changelog
 =========
 .. Make sure to link Issue and PR information as `(PR|Issue) #xxx`_ and with a link at the bottom of the document
 
+6.2.0 (2026-04-20)
+------------------
+- Add MessagePack serialization support for request bodies - `PR #414`_
+
 5.17.0 (2020-04-03)
 -------------------
 - Model instances are now pickleable - `PR #372`_
@@ -587,6 +591,7 @@ Changelog
 .. _PR #368: https://github.com/Yelp/bravado-core/pull/368
 .. _PR #371: https://github.com/Yelp/bravado-core/pull/371
 .. _PR #372: https://github.com/Yelp/bravado-core/pull/372
+.. _PR #414: https://github.com/Yelp/bravado-core/pull/414
 
 .. Link To Documentation pages
 .. _Configure: https://bravado-core.readthedocs.org/en/latest/config.html
