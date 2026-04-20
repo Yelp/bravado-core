@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bravado-core"
+version = "6.2.0"
+license = {text = "BSD 3-Clause"}
+description = "Library for adding Swagger support to clients and servers"
+readme = {file = "README.rst", content-type = "text/x-rst"}
+authors = [{name = "Digium, Inc. and Yelp, Inc.", email = "opensource+bravado-core@yelp.com"}]
+requires-python = ">=3.8"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+dependencies = [
+    "jsonref",
+    "jsonschema[format-nongpl]>=2.5.1",
+    "python-dateutil",
+    "pyyaml",
+    "requests",
+    "simplejson",
+    "six",
+    "swagger-spec-validator>=2.0.1",
+    "pytz",
+    "msgpack>=0.5.2",
+]
+
+[project.urls]
+Homepage = "https://github.com/Yelp/bravado-core"
+
+[tool.setuptools]
+packages = ["bravado_core"]
+
+[tool.setuptools.package-data]
+bravado_core = ["py.typed"]
