@@ -2,6 +2,11 @@ Changelog
 =========
 .. Make sure to link Issue and PR information as `(PR|Issue) #xxx`_ and with a link at the bottom of the document
 
+6.3.1 (2026-04-21)
+------------------
+- Fix PyPI publish workflow for ``pyproject.toml`` builds - `PR #418`_
+- Bump ``pypa/gh-action-pypi-publish`` to 1.13.0 - `PR #413`_
+
 6.3.0 (2026-04-21)
 ------------------
 - Use ``pyproject.toml`` build-system declaration - `PR #417`_
@@ -601,6 +606,8 @@ Changelog
 .. _PR #415: https://github.com/Yelp/bravado-core/pull/415
 .. _PR #416: https://github.com/Yelp/bravado-core/pull/416
 .. _PR #417: https://github.com/Yelp/bravado-core/pull/417
+.. _PR #418: https://github.com/Yelp/bravado-core/pull/418
+.. _PR #413: https://github.com/Yelp/bravado-core/pull/413
 
 .. Link To Documentation pages
 .. _Configure: https://bravado-core.readthedocs.org/en/latest/config.html
