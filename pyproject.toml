@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bravado-core"
-version = "6.2.0"
+version = "6.3.0"
 license = {text = "BSD 3-Clause"}
 description = "Library for adding Swagger support to clients and servers"
 readme = {file = "README.rst", content-type = "text/x-rst"}

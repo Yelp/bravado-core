@@ -2,6 +2,12 @@ Changelog
 =========
 .. Make sure to link Issue and PR information as `(PR|Issue) #xxx`_ and with a link at the bottom of the document
 
+6.3.0 (2026-04-21)
+------------------
+- Use ``pyproject.toml`` build-system declaration - `PR #417`_
+- Drop Python 3.7 support - `PR #415`_
+- Fix mypy and docs build issues - `PR #416`_
+
 6.2.0 (2026-04-20)
 ------------------
 - Add MessagePack serialization support for request bodies - `PR #414`_
@@ -592,6 +598,9 @@ Changelog
 .. _PR #371: https://github.com/Yelp/bravado-core/pull/371
 .. _PR #372: https://github.com/Yelp/bravado-core/pull/372
 .. _PR #414: https://github.com/Yelp/bravado-core/pull/414
+.. _PR #415: https://github.com/Yelp/bravado-core/pull/415
+.. _PR #416: https://github.com/Yelp/bravado-core/pull/416
+.. _PR #417: https://github.com/Yelp/bravado-core/pull/417
 
 .. Link To Documentation pages
 .. _Configure: https://bravado-core.readthedocs.org/en/latest/config.html
