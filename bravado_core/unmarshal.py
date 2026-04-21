@@ -193,7 +193,7 @@ def _no_op_unmarshaling(value):
 
 
 def _unknown_type_unmarshaling(object_type, value):
-    # type: (typing.Union[typing.Type[dict], typing.Type[Model]], typing.Any) -> NoReturn
+    # type: (typing.Text, typing.Any) -> NoReturn
     raise SwaggerMappingError(
         "Don't know how to unmarshal value {0} with a type of {1}".format(
             value, object_type,

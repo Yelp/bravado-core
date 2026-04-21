@@ -193,7 +193,7 @@ def _no_op_marshaling(value):
 
 
 def _unknown_type_marshaling(object_type, value):
-    # type: (typing.Union[typing.Type[dict], typing.Type[Model]], typing.Any) -> NoReturn
+    # type: (typing.Text, typing.Any) -> NoReturn
     raise SwaggerMappingError(
         'Unknown type {0} for value {1}'.format(
             object_type, value,
@@ -415,11 +415,11 @@ def _marshaling_method_primitive_type(swagger_spec, object_schema):
     """
     format_name = schema.get_format(swagger_spec, object_schema)
     swagger_format = swagger_spec.get_format(format_name) if format_name is not None else None
-    if swagger_format is not None:
+    primitive_type = get_type_from_schema(swagger_spec, object_schema)
+    if swagger_format is not None and primitive_type is not None:
         return partial(
             _marshal_primitive_type,
-            get_type_from_schema(swagger_spec, object_schema),
+            primitive_type,
             swagger_format,
         )
-    else:
-        return _no_op_marshaling
+    return _no_op_marshaling
