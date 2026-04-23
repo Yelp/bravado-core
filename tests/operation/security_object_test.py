@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 import pytest
-from mock import Mock
+try:
+    from unittest.mock import Mock
+except ImportError:
+    from mock import Mock
 from six import iteritems
 
 from bravado_core.exception import SwaggerSchemaError

@@ -4,7 +4,7 @@
 # This issue sounds similar to https://github.com/pypa/pip/issues/3903, but
 # that was fixed in pip 20.3 and we're still seeing this issue on 22.0.2.
 jsonschema<4
-mock
+mock; python_version<'3.3'
 mypy
 mypy-extensions
 pre-commit

@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import pytest
-from mock import Mock
-from mock import patch
+try:
+    from unittest.mock import Mock, patch
+except ImportError:
+    from mock import Mock, patch
 from six import iterkeys
 from six.moves.urllib.request import pathname2url
 from swagger_spec_validator.common import SwaggerValidationError

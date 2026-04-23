@@ -3,8 +3,10 @@ import datetime
 
 import msgpack
 import pytest
-from mock import Mock
-from mock import patch
+try:
+    from unittest.mock import Mock, patch
+except ImportError:
+    from mock import Mock, patch
 
 from bravado_core.content_type import APP_MSGPACK
 from bravado_core.exception import SwaggerMappingError
