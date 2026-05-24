@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 import pytest
 from jsonschema.validators import RefResolver
-from mock import MagicMock
-from mock import Mock
+try:
+    from unittest.mock import MagicMock, Mock
+except ImportError:
+    from mock import MagicMock, Mock
 
 from bravado_core.swagger20_validator import ref_validator
 

@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 import msgpack
 import pytest
-from mock import Mock
+try:
+    from unittest.mock import Mock
+except ImportError:
+    from mock import Mock
 
 from bravado_core.content_type import APP_MSGPACK
 from bravado_core.exception import SwaggerMappingError

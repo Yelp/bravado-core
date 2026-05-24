@@ -6,7 +6,10 @@ from itertools import chain
 import pytest
 import simplejson as json
 import yaml
-from mock import Mock
+try:
+    from unittest.mock import Mock
+except ImportError:
+    from mock import Mock
 from six import iteritems
 from six import iterkeys
 from six.moves.urllib import parse as urlparse

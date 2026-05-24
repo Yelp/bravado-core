@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 import functools
 
-from mock import Mock
+try:
+    from unittest.mock import Mock
+except ImportError:
+    from mock import Mock
 
 from bravado_core.model import _post_process_spec
 from bravado_core.spec import Spec
