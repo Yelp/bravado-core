@@ -11,7 +11,7 @@ from bravado_core.unmarshal import unmarshal_schema_object
 from bravado_core.validate import validate_schema_object
 
 # Response bodies considered to be empty
-EMPTY_BODIES = (None, '', '{}', 'null')
+EMPTY_BODIES = (None, '', b'', '{}', 'null')
 
 
 class IncomingResponse(object):
