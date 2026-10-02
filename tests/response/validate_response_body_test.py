@@ -6,20 +6,27 @@ from mock import Mock
 from bravado_core.content_type import APP_MSGPACK
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.operation import Operation
-from bravado_core.response import EMPTY_BODIES
 from bravado_core.response import OutgoingResponse
 from bravado_core.response import validate_response_body
 
 
-def test_success_spec_empty_and_body_empty(minimal_swagger_spec):
+@pytest.mark.parametrize('empty_body', [None, '', '{}', 'null', b'', bytearray()])
+def test_success_spec_empty_and_body_empty(minimal_swagger_spec, empty_body):
     response_spec = {
         'description': 'I do not return anything hence I have no "schema" key',
     }
-    for empty_body in EMPTY_BODIES:
-        response = Mock(spec=OutgoingResponse, text=empty_body)
-        op = Operation(minimal_swagger_spec, '/foo', 'get', op_spec={})
-        # no exception raised == success
-        validate_response_body(op, response_spec, response)
+    response = Mock(spec=OutgoingResponse, text=empty_body)
+    op = Operation(minimal_swagger_spec, '/foo', 'get', op_spec={})
+    # no exception raised == success
+    validate_response_body(op, response_spec, response)
+
+
+@pytest.mark.parametrize('body', [b'not empty', bytearray(b'not empty')])
+def test_empty_spec_rejects_nonempty_bytes(minimal_swagger_spec, body):
+    response = Mock(spec=OutgoingResponse, text=body)
+    op = Operation(minimal_swagger_spec, '/foo', 'get', op_spec={})
+    with pytest.raises(SwaggerMappingError):
+        validate_response_body(op, {'description': 'No body'}, response)
 
 
 def test_success_json_response(minimal_swagger_spec):
