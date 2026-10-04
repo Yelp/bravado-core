@@ -76,6 +76,43 @@ def test_memoize_by_id_decorator_recursive_call():
     assert calls == [mock.sentinel.A]
 
 
+@pytest.mark.parametrize('error_type', [ValueError, KeyboardInterrupt])
+def test_memoize_by_id_retries_after_exception(error_type):
+    calls = []
+    error = error_type('first call failed')
+
+    @memoize_by_id
+    def function(a):
+        calls.append(a)
+        if len(calls) == 1:
+            raise error
+        return a
+
+    with pytest.raises(error_type) as caught:
+        function(mock.sentinel.A)
+    assert caught.value is error
+    assert function.cache == {}
+    assert function(mock.sentinel.A) is mock.sentinel.A
+    assert function(mock.sentinel.A) is mock.sentinel.A
+    assert calls == [mock.sentinel.A, mock.sentinel.A]
+
+
+def test_memoize_by_id_retries_after_recursive_call():
+    calls = []
+
+    @memoize_by_id
+    def function(a):
+        calls.append(a)
+        if len(calls) == 1:
+            return function(a)
+        return a
+
+    with pytest.raises(RecursiveCallException):
+        function(mock.sentinel.A)
+    assert function(mock.sentinel.A) is mock.sentinel.A
+    assert calls == [mock.sentinel.A, mock.sentinel.A]
+
+
 def test_memoize_by_id_decorator():
     calls = []
 
