@@ -122,8 +122,10 @@ def memoize_by_id(func):
             if cache_key in key_in_progress_set:
                 raise RecursiveCallException()
             key_in_progress_set.add(cache_key)
-            cached_value = func(*args, **kwargs)
-            key_in_progress_set.remove(cache_key)
+            try:
+                cached_value = func(*args, **kwargs)
+            finally:
+                key_in_progress_set.remove(cache_key)
             cache[cache_key] = cached_value
         return cached_value
     return wrapper  # type: ignore  # ignoring type to avoiding typing.cast call

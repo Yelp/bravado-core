@@ -2,6 +2,10 @@ Changelog
 =========
 .. Make sure to link Issue and PR information as `(PR|Issue) #xxx`_ and with a link at the bottom of the document
 
+Unreleased
+----------
+- Clear memoization recursion state after failed calls so subsequent calls can retry.
+
 6.4.1 (2026-05-12)
 ------------------
 - Fixes for mypy and autopep8 in the build - `PR #420`_
